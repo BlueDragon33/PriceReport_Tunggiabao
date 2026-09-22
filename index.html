@@ -411,6 +411,7 @@
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
           <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
           <button class="toolbar-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false">✥&nbsp; Sắp xếp</button>
+          <button class="toolbar-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden>↺&nbsp; Tự động</button>
           <span class="layout-selection" id="layoutSelection" hidden>Chọn khối để kéo</span>
           <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
           <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
@@ -484,9 +485,10 @@
           <div class="custom-group direct-layout-group">
             <label>Sắp xếp trực tiếp trên bản xem trước</label>
             <div class="btns">
+              <button class="btn primary" id="autoArrangeLayoutPanel" type="button">↺ Tự động sắp xếp</button>
               <button class="btn" id="resetBlockPositions" type="button">Đặt lại vị trí khối</button>
             </div>
-            <div class="help">Bật “Sắp xếp”, kéo khối bằng chuột/chạm. Dùng phím mũi tên để chỉnh 0,5 mm; giữ Shift để chỉnh 2 mm.</div>
+            <div class="help">Bật “Sắp xếp” một lần rồi kéo bao nhiêu khối tùy ý. Chế độ chỉ kết thúc khi bấm “Xong sắp xếp”. “Tự động sắp xếp” đưa các khối về luồng A4 an toàn và tự chọn độ gọn theo lượng nội dung.</div>
           </div>
 
           <button class="btn primary block" id="resetPreviewLayout" type="button">Khôi phục chuẩn hiện đại</button>
