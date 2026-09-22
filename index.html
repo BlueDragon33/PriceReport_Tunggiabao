@@ -15,6 +15,7 @@
       <div class="brand">BG</div>
       <button class="active" data-tab="general"><div style="font-size:20px">▣</div>Thông tin</button>
       <button data-tab="history"><div style="font-size:20px">◫</div>Báo giá</button>
+      <button data-tab="master"><div style="font-size:20px">▦</div>Danh mục</button>
       <button data-tab="customer"><div style="font-size:20px">●</div>Khách hàng</button>
       <button data-tab="products"><div style="font-size:20px">◆</div>Sản phẩm</button>
       <button data-tab="payment"><div style="font-size:20px">▤</div>Thanh toán</button>
@@ -109,6 +110,32 @@
               </div>
             </div>
             <div id="quoteHistoryList" class="history-list"></div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-master">
+          <div class="card">
+            <h3>Danh bạ khách hàng</h3>
+            <div class="btns">
+              <button class="btn primary" id="saveCurrentCustomer">Lưu khách hàng hiện tại</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <label>Tìm khách hàng</label>
+              <input id="customerLibrarySearch" placeholder="Tên, công ty, SĐT...">
+            </div>
+            <div id="customerLibraryList" class="master-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Danh mục sản phẩm</h3>
+            <div class="btns">
+              <button class="btn primary" id="saveCurrentProducts">Lưu sản phẩm trong báo giá</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <label>Tìm sản phẩm</label>
+              <input id="productCatalogSearch" placeholder="Tên sản phẩm, quy cách...">
+            </div>
+            <div id="productCatalogList" class="master-list"></div>
           </div>
         </div>
 
@@ -226,7 +253,7 @@
               <label class="btn file-btn" for="importAllData">Khôi phục toàn bộ</label>
               <input class="hidden-input" id="importAllData" type="file" accept=".json,application/json">
             </div>
-            <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử báo giá và các mẫu đã lưu.</div>
+            <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử, mẫu đã lưu, danh bạ khách hàng và danh mục sản phẩm.</div>
           </div>
           <div class="card"><h3>Đặt lại</h3><button class="btn danger block" id="reset">Khôi phục mẫu ban đầu</button></div>
         </div>
