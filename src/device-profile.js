@@ -1,6 +1,7 @@
 const DEVICE_STORAGE_KEY = 'tunggiabao-device-profile-v1';
 const APP_ID = 'price-report-tunggiabao';
 const DEVICE_NAMESPACE = 'KT-';
+const MANAGEMENT_CONTRACT_URL = './management-contract.json';
 
 export const DEVICE_PROFILES = {
   desktop: {
@@ -55,6 +56,24 @@ function uaLooksTablet(userAgent, touchPoints) {
 
 function uaLooksPhone(userAgent) {
   return /iPhone|iPod|Android.*Mobile|Windows Phone|webOS|BlackBerry/i.test(String(userAgent || ''));
+}
+
+export function resolveRemoteAdminReady(contract) {
+  if (!contract || typeof contract !== 'object' || Array.isArray(contract)) return false;
+  if (contract.application?.id !== APP_ID) return false;
+  if (contract.policy?.remoteAdminReady !== true) return false;
+  const readiness = contract.readiness || {};
+  return readiness.deviceRegistry === 'available'
+    && readiness.deviceGateway === 'available'
+    && readiness.adminApi === 'available';
+}
+
+async function readManagementContract(fetchImpl = fetch) {
+  const response = await fetchImpl(MANAGEMENT_CONTRACT_URL, { cache: 'no-store' });
+  if (!response.ok) throw new Error('Không đọc được management contract.');
+  const contract = await response.json();
+  if (contract?.application?.id !== APP_ID) throw new Error('Management contract không thuộc PriceReport Tùng Gia Bảo.');
+  return contract;
 }
 
 export function classifyDeviceProfile(input = {}) {
@@ -207,15 +226,39 @@ export function startDeviceProfileRuntime() {
     updateDeviceChip(record);
   }, 60_000);
 
-  window.PriceReportManagement = {
+  const managementRuntime = {
     application: APP_ID,
     category: 'Kế toán',
     deviceNamespace: DEVICE_NAMESPACE,
     remoteAdminReady: false,
+    managementReadiness: 'loading',
     getDeviceProfile: () => ({ ...profile }),
     getLocalDeviceRecord: () => ({ ...record }),
-    refreshDeviceProfile: refresh
+    refreshDeviceProfile: refresh,
+    refreshManagementReadiness: async () => {
+      try {
+        const contract = await readManagementContract();
+        managementRuntime.remoteAdminReady = resolveRemoteAdminReady(contract);
+        managementRuntime.managementReadiness = managementRuntime.remoteAdminReady ? 'ready' : 'classification-only';
+        managementRuntime.managementContract = contract;
+      } catch (error) {
+        managementRuntime.remoteAdminReady = false;
+        managementRuntime.managementReadiness = 'unavailable';
+        delete managementRuntime.managementContract;
+        managementRuntime.managementError = error instanceof Error ? error.message : 'Không đọc được management contract.';
+      }
+      window.dispatchEvent(new CustomEvent('pricereport:management-readiness', {
+        detail: {
+          remoteAdminReady: managementRuntime.remoteAdminReady,
+          state: managementRuntime.managementReadiness
+        }
+      }));
+      return managementRuntime.remoteAdminReady;
+    }
   };
+
+  window.PriceReportManagement = managementRuntime;
+  void managementRuntime.refreshManagementReadiness();
 
   return {
     get profile() { return profile; },
