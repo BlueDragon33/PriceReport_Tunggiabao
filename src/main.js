@@ -545,14 +545,10 @@ function renderLogo() {
     buildImage(preview, true);
     buildImage(editor);
     if (designPreview) buildImage(designPreview);
-  } else if (state.showLogo) {
-    preview.innerHTML = '<div class="logo-text">THẾ GIỚI TRỨNG®</div>';
-    editor.innerHTML = '<div class="logo-placeholder">THẾ GIỚI TRỨNG®</div>';
-    if (designPreview) designPreview.innerHTML = '<div class="logo-placeholder">THẾ GIỚI TRỨNG®</div>';
   } else {
     preview.innerHTML = '';
-    editor.innerHTML = '<div class="logo-placeholder muted-logo">Logo đang ẩn trên bản in</div>';
-    if (designPreview) designPreview.innerHTML = '<div class="logo-placeholder muted-logo">Logo đang ẩn</div>';
+    editor.innerHTML = '<div class="logo-placeholder muted-logo">Chưa có logo</div>';
+    if (designPreview) designPreview.innerHTML = '<div class="logo-placeholder muted-logo">Chưa có logo</div>';
   }
 
   const widthValue = document.getElementById('logoWidthValue');
@@ -792,29 +788,67 @@ document.getElementById('resetLogoPosition').addEventListener('click', () => {
   toast('Đã căn lại logo');
 });
 
+let logoReadToken = 0;
+
+function clearCurrentLogo({ notify = false } = {}) {
+  logoReadToken += 1;
+  state.logo = '';
+  state.showLogo = false;
+  save();
+  syncInputs();
+  render();
+
+  const input = document.getElementById('logoInput');
+  if (input) input.value = '';
+
+  if (notify) toast('Đã xóa hoàn toàn logo');
+}
+
 document.getElementById('logoInput').addEventListener('change', (event) => {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
+
   if (file.size > 1500000) {
     alert('Logo quá lớn. Hãy chọn ảnh nhỏ hơn khoảng 1,5 MB để tránh đầy bộ nhớ trình duyệt.');
     event.target.value = '';
     return;
   }
+
+  const token = ++logoReadToken;
+
+  // Replacement is destructive by design: remove the previous asset first,
+  // so the old logo can never remain underneath or be composited with the new one.
+  state.logo = '';
+  state.showLogo = false;
+  save();
+  syncInputs();
+  render();
+
   const reader = new FileReader();
   reader.onload = () => {
-    state.logo = reader.result;
+    if (token !== logoReadToken) return;
+    state.logo = String(reader.result || '');
+    state.showLogo = Boolean(state.logo);
     save();
+    syncInputs();
     render();
-    toast('Đã cập nhật logo');
+    toast('Đã thay logo mới hoàn toàn');
+  };
+  reader.onerror = () => {
+    if (token !== logoReadToken) return;
+    state.logo = '';
+    state.showLogo = false;
+    save();
+    syncInputs();
+    render();
+    alert('Không thể đọc file logo. Logo cũ đã được xóa.');
   };
   reader.readAsDataURL(file);
   event.target.value = '';
 });
 
 document.getElementById('clearLogo').addEventListener('click', () => {
-  state.logo = '';
-  save();
-  render();
+  clearCurrentLogo({ notify: true });
 });
 
 const THEME_ACCENTS = {
