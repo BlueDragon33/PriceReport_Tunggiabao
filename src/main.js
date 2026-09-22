@@ -67,6 +67,7 @@ const defaults = {
   showWebEmail: true,
   showTerms: true,
   showSignature: true,
+  showQuoteMeta: false,
   compactTable: false,
   docFont: 'Times New Roman',
   marginX: 13,
@@ -114,9 +115,9 @@ function merge(data) {
     merged.previewHeaderGap = 4;
     merged.previewMetaWidth = 44;
     merged.previewLineHeight = 1.26;
-    if (merged.docFont === 'Times New Roman' && ['modern','corporate','minimal','emerald','premium','mono'].includes(merged.theme)) {
-      merged.docFont = 'Arial';
-    }
+    merged.showQuoteMeta = false;
+    if (merged.theme === 'modern') merged.docFont = 'Times New Roman';
+    else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono'].includes(merged.theme)) merged.docFont = 'Arial';
   }
 
   const hasAdvancedLogo = data && Object.prototype.hasOwnProperty.call(data, 'logoBlendMode');
@@ -204,7 +205,7 @@ function bindInputs() {
       } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
         let value = Number(el.value || 0);
         if (key === 'discountPct' || key === 'vatPct' || key === 'logoBackdropOpacity') value = Math.min(100, Math.max(0, value));
-        else if (key === 'logoWidth') value = Math.min(90, Math.max(28, value));
+        else if (key === 'logoWidth') value = Math.min(70, Math.max(28, value));
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetY') value = Math.min(10, Math.max(-10, value));
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
@@ -568,7 +569,7 @@ function renderLogo() {
     img.src = state.logo;
     img.alt = 'Logo doanh nghiệp';
     img.style.mixBlendMode = ['multiply','darken'].includes(state.logoBlendMode) ? state.logoBlendMode : 'normal';
-    if (isPaper) img.style.width = Math.min(90, Math.max(28, Number(state.logoWidth || 58))) + 'mm';
+    if (isPaper) img.style.width = Math.min(70, Math.max(28, Number(state.logoWidth || 56))) + 'mm';
     target.appendChild(img);
   };
 
@@ -583,7 +584,7 @@ function renderLogo() {
   }
 
   const widthValue = document.getElementById('logoWidthValue');
-  if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 58)) + ' mm';
+  if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 56)) + ' mm';
   const opacityValue = document.getElementById('logoBackdropOpacityValue');
   if (opacityValue) opacityValue.textContent = opacity + '%';
   const titleSizeValue = document.getElementById('previewTitleSizeValue');
@@ -593,8 +594,7 @@ function renderLogo() {
   if (docHead) {
     docHead.classList.toggle('no-logo', !state.showLogo);
     if (state.showLogo) {
-      const logoColumn = Math.min(51, Math.max(36, 36 + (Number(state.logoWidth || 58) - 28) * 0.30));
-      docHead.style.gridTemplateColumns = logoColumn.toFixed(1) + '% 1fr';
+      docHead.style.removeProperty('grid-template-columns');
     } else {
       docHead.style.gridTemplateColumns = '1fr';
     }
@@ -662,6 +662,10 @@ function render() {
   });
   document.getElementById('termsBox').style.display = state.showTerms ? 'block' : 'none';
   document.getElementById('signatures').style.display = state.showSignature ? 'grid' : 'none';
+
+  const quoteMeta = document.querySelector('.quote-top > .qmeta');
+  if (quoteMeta) quoteMeta.style.display = state.showQuoteMeta ? 'block' : 'none';
+  paper.classList.toggle('meta-hidden', !state.showQuoteMeta);
 
   const hasPayment = [state.paymentMethod, state.bankName, state.bankAccount, state.bankOwner].some(Boolean);
   document.getElementById('paymentPrint').style.display = state.showPaymentBlock && hasPayment ? 'block' : 'none';
@@ -814,7 +818,7 @@ document.getElementById('collapseAllProducts').addEventListener('click', () => {
 });
 
 document.getElementById('resetLogoPosition').addEventListener('click', () => {
-  state.logoWidth = 58;
+  state.logoWidth = 56;
   state.logoPadding = 2;
   state.logoOffsetY = 0;
   state.logoTreatment = 'blend';
@@ -904,7 +908,7 @@ const THEME_ACCENTS = {
 };
 
 const THEME_FONTS = {
-  modern: 'Arial',
+  modern: 'Times New Roman',
   corporate: 'Arial',
   minimal: 'Arial',
   classic: 'Georgia',
@@ -1626,6 +1630,7 @@ document.getElementById('resetPreviewLayout').addEventListener('click', () => {
   state.previewHeaderGap = 4;
   state.previewMetaWidth = 44;
   state.previewLineHeight = 1.26;
+  state.showQuoteMeta = false;
   save();
   syncInputs();
   render();
