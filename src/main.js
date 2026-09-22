@@ -261,7 +261,12 @@ const tabMeta = {
 };
 
 function openTab(tab) {
-  $$('.nav button[data-tab]').forEach((el) => el.classList.toggle('active', el.dataset.tab === tab));
+  $$('.nav button[data-tab]').forEach((el) => {
+    const active = el.dataset.tab === tab;
+    el.classList.toggle('active', active);
+    if (active) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
   $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
@@ -300,7 +305,7 @@ function bindInputs() {
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetY') value = Math.min(10, Math.max(-10, value));
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
-        else if (['otherFee'].includes(key)) value = Math.max(0, value);
+        else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
         else if (key === 'docFontSize') value = Math.min(18, Math.max(9, value));
         else if (key === 'previewTitleSize') value = Math.min(32, Math.max(20, value));
@@ -530,7 +535,7 @@ function renderEditorProducts() {
 
     const updateProduct = (key, input, numeric = false) => {
       if (numeric) {
-        const value = Math.max(0, Number(input.value || 0));
+        const value = normalizeNonNegativeNumber(input.value);
         product[key] = value;
         if (Number(input.value) !== value) input.value = String(value);
       } else {
@@ -629,18 +634,21 @@ function renderPreviewProducts() {
 }
 
 function renderTotals() {
-  const subtotal = state.products.reduce((sum, p) => sum + Number(p.qty || 0) * Number(p.price || 0), 0);
-  const discount = subtotal * Number(state.discountPct || 0) / 100;
-  const taxable = subtotal - discount;
-  const vat = taxable * Number(state.vatPct || 0) / 100;
-  const fee = Number(state.otherFee || 0);
-  const total = taxable + vat + fee;
+  const subtotal = state.products.reduce((sum, p) =>
+    sum + normalizeNonNegativeNumber(p.qty) * normalizeNonNegativeNumber(p.price), 0);
+  const discountPct = Math.min(100, Math.max(0, Number(state.discountPct || 0)));
+  const vatPct = Math.min(100, Math.max(0, Number(state.vatPct || 0)));
+  const discount = subtotal * discountPct / 100;
+  const taxable = Math.max(0, subtotal - discount);
+  const vat = taxable * vatPct / 100;
+  const fee = normalizeNonNegativeNumber(state.otherFee);
+  const total = calcQuoteTotal(state);
 
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
   setText('vat', money(vat));
-  setText('discLabel', 'Giảm giá (' + Number(state.discountPct || 0) + '%)');
-  setText('vatLabel', 'VAT (' + Number(state.vatPct || 0) + '%)');
+  setText('discLabel', 'Giảm giá (' + discountPct + '%)');
+  setText('vatLabel', 'VAT (' + vatPct + '%)');
   setText('fee', money(fee));
   setText('grand', money(total));
 
@@ -836,7 +844,7 @@ function download(name, text, type) {
 function getUiState() {
   try {
     const data = JSON.parse(localStorage.getItem(UI_STATE));
-    return data && typeof data === 'object' ? data : {};
+    return isPlainObject(data) ? data : {};
   } catch {
     return {};
   }
