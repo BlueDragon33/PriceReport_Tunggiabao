@@ -92,3 +92,67 @@ test('navigation exposes the active pane to assistive technology', () => {
   expect(document.querySelector('[data-tab="products"]').getAttribute('aria-current')).toBe('page');
   expect(document.querySelector('[data-tab="general"]').hasAttribute('aria-current')).toBe(false);
 });
+
+
+test('full-backup restore rolls back when a storage write fails', async () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const presetsKey = 'tunggiabao-price-report-presets-v1';
+  const stateKey = 'tunggiabao-price-report-v1';
+
+  const company = document.getElementById('companyName');
+  company.value = 'CÔNG TY GIỮ NGUYÊN';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  const originalHistory = JSON.stringify([{
+    id: 'keep-history',
+    status: 'draft',
+    currency: 'VND',
+    total: 100,
+    data: {
+      companyName: 'CÔNG TY GIỮ NGUYÊN',
+      quoteTitle: 'BẢNG BÁO GIÁ',
+      quoteNo: 'BG-KEEP',
+      quoteStatus: 'draft',
+      products: [{ name: 'Giữ', qty: 1, price: 100 }]
+    }
+  }]);
+  localStorage.setItem(historyKey, originalHistory);
+  localStorage.setItem(presetsKey, JSON.stringify({ Keep: { companyName: 'CÔNG TY GIỮ NGUYÊN', products: [] } }));
+  const originalState = localStorage.getItem(stateKey);
+
+  const nativeSetItem = Storage.prototype.setItem;
+  let injectedFailure = false;
+  const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+    if (key === presetsKey && !injectedFailure) {
+      injectedFailure = true;
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    }
+    return nativeSetItem.call(this, key, value);
+  });
+
+  const payload = {
+    schemaVersion: 4,
+    current: {
+      companyName: 'CÔNG TY BỊ THAY',
+      quoteTitle: 'BẢNG BÁO GIÁ',
+      products: [{ name: 'Mới', qty: 1, price: 200 }]
+    },
+    history: [],
+    presets: {},
+    customers: [],
+    catalog: []
+  };
+  const input = document.getElementById('importAllData');
+  const file = new File([JSON.stringify(payload)], 'backup.json', { type: 'application/json' });
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(resolve => setTimeout(resolve, 30));
+
+  setItemSpy.mockRestore();
+
+  expect(injectedFailure).toBe(true);
+  expect(localStorage.getItem(historyKey)).toBe(originalHistory);
+  expect(localStorage.getItem(stateKey)).toBe(originalState);
+  expect(document.getElementById('companyName').value).toBe('CÔNG TY GIỮ NGUYÊN');
+  expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Dữ liệu trước đó đã được phục hồi nguyên trạng'));
+});
