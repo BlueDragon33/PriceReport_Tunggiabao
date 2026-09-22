@@ -195,3 +195,61 @@ test('logo size buttons resize visual logo independently and reset positions', (
   const stored = JSON.parse(localStorage.getItem('tunggiabao-price-report-v1'));
   expect(stored.layoutOffsets).toEqual({});
 });
+
+
+test('layout edit mode stays active across repeated drags and render until Done is pressed', () => {
+  const toggle = document.getElementById('layoutEditToggle');
+  const companyName = document.getElementById('pCompanyName');
+  const section = document.getElementById('pSection');
+
+  toggle.click();
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+
+  companyName.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 130, clientY: 115, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 130, clientY: 115, button: 0 }));
+
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(document.getElementById('paper').classList.contains('layout-edit-mode')).toBe(true);
+
+  const titleInput = document.getElementById('quoteTitle');
+  titleInput.value = 'BẢNG BÁO GIÁ MỚI';
+  titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(document.getElementById('paper').classList.contains('layout-edit-mode')).toBe(true);
+
+  section.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 80, clientY: 80, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 115, clientY: 100, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 115, clientY: 100, button: 0 }));
+
+  const stored = JSON.parse(localStorage.getItem('tunggiabao-price-report-v1'));
+  expect(stored.layoutOffsets.companyName).toBeTruthy();
+  expect(stored.layoutOffsets.section).toBeTruthy();
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+
+  toggle.click();
+  expect(toggle.getAttribute('aria-pressed')).toBe('false');
+  expect(document.getElementById('paper').classList.contains('layout-edit-mode')).toBe(false);
+});
+
+test('auto arrange resets manual offsets but keeps layout mode active for further adjustment', () => {
+  const toggle = document.getElementById('layoutEditToggle');
+  toggle.click();
+
+  const companyName = document.getElementById('pCompanyName');
+  companyName.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 90, clientY: 90, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 125, clientY: 110, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 125, clientY: 110, button: 0 }));
+
+  document.getElementById('autoArrangeLayoutPanel').click();
+  const stored = JSON.parse(localStorage.getItem('tunggiabao-price-report-v1'));
+  expect(stored.layoutOffsets).toEqual({});
+  expect(stored.logoOffsetX).toBe(0);
+  expect(stored.logoOffsetY).toBe(0);
+  expect(stored.previewTitleAlign).toBe('center');
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(document.getElementById('paper').classList.contains('layout-edit-mode')).toBe(true);
+});
