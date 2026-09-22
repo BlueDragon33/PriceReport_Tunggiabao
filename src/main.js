@@ -97,6 +97,18 @@ function merge(data) {
     products: Array.isArray(data && data.products) ? data.products : clone(defaults.products)
   });
   if (merged.theme === 'blue') merged.theme = 'corporate';
+
+  const hasAdvancedLogo = data && Object.prototype.hasOwnProperty.call(data, 'logoBlendMode');
+  if (!hasAdvancedLogo) {
+    merged.logoTreatment = 'blend';
+    merged.logoBlendMode = 'multiply';
+    merged.logoBackdropColor = merged.accent || '#0b8f83';
+    merged.logoBackdropOpacity = 6;
+    merged.logoBackdropRadius = 14;
+    merged.logoBackdropBorder = 'none';
+    merged.logoPadding = Math.min(4, Math.max(0, Number(merged.logoPadding || 2)));
+  }
+
   return merged;
 }
 let state;
