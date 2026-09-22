@@ -222,6 +222,8 @@ if (!deviceProfileJs.includes("cache: 'no-store'")) fail('Runtime management rea
 if (!deviceProfileJs.includes('refreshManagementReadiness')) fail('Runtime management readiness refresh API is missing');
 if (!deviceProfileJs.includes("'pricereport:management-readiness'")) fail('Runtime management readiness event is missing');
 if (deviceProfileJs.includes('remoteAdminReady: false,\n    getDeviceProfile')) fail('Legacy hard-coded remoteAdminReady runtime block remains');
+if (!deviceProfileJs.includes('deviceGateOwnsDeviceChip')) fail('Device Gate chip ownership guard is missing');
+if (!deviceProfileJs.includes('priceReportDeviceAccess')) fail('Profile runtime must respect Device Gate access state before updating the device chip');
 
 if (!js.includes('startPriceReportDeviceAccess')) fail('KT Device Gate runtime is not started');
 if (!fs.existsSync('src/device-access-gate.js')) fail('KT Device Gate module is missing');
