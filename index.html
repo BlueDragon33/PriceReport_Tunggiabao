@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b8f83">
+  <meta name="description" content="WebApp tạo, chỉnh sửa, lưu và in bảng báo giá của Tùng Gia Bảo.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>PriceReport Tùng Gia Bảo</title>
+</head>
+<body>
+<div id="app">
+  <div class="shell">
+    <nav class="nav">
+      <div class="brand">BG</div>
+      <button class="active" data-tab="general"><div style="font-size:20px">▣</div>Thông tin</button>
+      <button data-tab="customer"><div style="font-size:20px">●</div>Khách hàng</button>
+      <button data-tab="products"><div style="font-size:20px">◆</div>Sản phẩm</button>
+      <button data-tab="payment"><div style="font-size:20px">▤</div>Thanh toán</button>
+      <button data-tab="terms"><div style="font-size:20px">≡</div>Điều khoản</button>
+      <button data-tab="design"><div style="font-size:20px">◉</div>Thiết kế</button>
+      <button data-tab="export"><div style="font-size:20px">▰</div>Xuất / In</button>
+      <button data-tab="presets"><div style="font-size:20px">▱</div>Lưu mẫu</button>
+      <div class="spacer"></div>
+      <div class="tip"><b>Mẹo</b><br>Nhập bên trái, xem A4 bên phải. Bấm nội dung preview để tới trường chỉnh sửa.</div>
+    </nav>
+
+    <section class="editor">
+      <div class="panel-head"><h2 id="paneTitle">THÔNG TIN CHUNG</h2><p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p></div>
+      <div class="panel-body">
+        <div class="pane active" id="pane-general">
+          <div class="card">
+            <h3>Logo</h3>
+            <div class="logo-edit" id="logoEdit"><div class="logo-placeholder">THẾ GIỚI TRỨNG®</div></div>
+            <div class="btns" style="margin-top:8px">
+              <label class="btn file-btn" for="logoInput">Thay logo</label>
+              <input class="hidden-input" id="logoInput" type="file" accept="image/*">
+              <button class="btn" id="clearLogo">Bỏ logo</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Thông tin công ty</h3>
+            <div class="row"><label>Tên công ty</label><input id="companyName" data-bind="companyName"></div>
+            <div class="row"><label>Địa chỉ trụ sở</label><input id="companyAddress" data-bind="companyAddress"></div>
+            <div class="row"><label>Chi nhánh Khánh Hòa</label><input id="branchKhanhHoa" data-bind="branchKhanhHoa"></div>
+            <div class="row"><label>Chi nhánh Đồng Nai</label><input id="branchDongNai" data-bind="branchDongNai"></div>
+            <div class="row"><label>Trại / cơ sở</label><input id="farmAddress" data-bind="farmAddress"></div>
+            <div class="grid2">
+              <div class="row"><label>MST</label><input id="taxCode" data-bind="taxCode"></div>
+              <div class="row"><label>SĐT</label><input id="phone" data-bind="phone"></div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Website</label><input id="website" data-bind="website"></div>
+              <div class="row"><label>Email</label><input id="companyEmail" data-bind="companyEmail" type="email"></div>
+            </div>
+            <div class="row"><label>Slogan</label><input id="slogan" data-bind="slogan"></div>
+          </div>
+          <div class="card">
+            <h3>Thông tin báo giá</h3>
+            <div class="row"><label>Tiêu đề</label><input id="quoteTitle" data-bind="quoteTitle"></div>
+            <div class="grid2">
+              <div class="row"><label>Số báo giá</label><input id="quoteNo" data-bind="quoteNo"></div>
+              <div class="row"><label>Hiệu lực</label><input id="validity" data-bind="validity"></div>
+            </div>
+            <div class="row"><label>Ngày báo giá</label><input id="quoteDate" data-bind="quoteDate" type="date"></div>
+            <div class="row"><label>Kính gửi</label><input id="recipientLine" data-bind="recipientLine"></div>
+            <div class="row"><label>Lời mở đầu</label><textarea id="intro" data-bind="intro"></textarea></div>
+            <div class="row"><label>Tiêu đề nhóm sản phẩm</label><input id="sectionTitle" data-bind="sectionTitle"></div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-customer">
+          <div class="card">
+            <h3>Thông tin khách hàng</h3>
+            <div class="row"><label>Tên khách hàng</label><input id="customerName" data-bind="customerName"></div>
+            <div class="row"><label>Công ty / đơn vị</label><input id="customerCompany" data-bind="customerCompany"></div>
+            <div class="row"><label>Địa chỉ</label><input id="customerAddress" data-bind="customerAddress"></div>
+            <div class="grid2">
+              <div class="row"><label>SĐT</label><input id="customerPhone" data-bind="customerPhone"></div>
+              <div class="row"><label>Email</label><input id="customerEmail" data-bind="customerEmail" type="email"></div>
+            </div>
+            <div class="row"><label>Người liên hệ</label><input id="customerContact" data-bind="customerContact"></div>
+            <label class="check"><input id="showCustomer" data-bind="showCustomer" type="checkbox"> Hiện khối khách hàng trên bản in</label>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-products">
+          <div class="card">
+            <h3>Danh sách sản phẩm</h3>
+            <div class="product-wrap">
+              <table class="product-table">
+                <thead><tr><th>#</th><th>Tên sản phẩm</th><th>Quy cách</th><th>ĐVT</th><th>SL</th><th>Đơn giá</th><th>Ghi chú</th><th></th></tr></thead>
+                <tbody id="productEditor"></tbody>
+              </table>
+            </div>
+            <button class="btn primary block" id="addProduct" style="margin-top:8px">+ Thêm sản phẩm</button>
+          </div>
+          <div class="card">
+            <h3>Cột hiển thị</h3>
+            <label class="check"><input id="showStt" data-bind="showStt" type="checkbox"> Hiện STT</label>
+            <label class="check"><input id="showPrice" data-bind="showPrice" type="checkbox"> Hiện đơn giá</label>
+            <label class="check"><input id="showAmount" data-bind="showAmount" type="checkbox"> Hiện thành tiền</label>
+            <label class="check"><input id="showNote" data-bind="showNote" type="checkbox"> Hiện ghi chú</label>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-payment">
+          <div class="card">
+            <h3>Tính tiền</h3>
+            <div class="grid3">
+              <div class="row"><label>Giảm giá %</label><input id="discountPct" data-bind="discountPct" type="number"></div>
+              <div class="row"><label>VAT %</label><input id="vatPct" data-bind="vatPct" type="number"></div>
+              <div class="row"><label>Phí khác</label><input id="otherFee" data-bind="otherFee" type="number"></div>
+            </div>
+            <div class="row"><label>Tiền tệ</label><select id="currency" data-bind="currency"><option>VND</option><option>USD</option><option>RUB</option></select></div>
+            <label class="check"><input id="showTotals" data-bind="showTotals" type="checkbox"> Hiện bảng tổng cộng</label>
+            <label class="check"><input id="showWords" data-bind="showWords" type="checkbox"> Hiện số tiền bằng chữ</label>
+          </div>
+          <div class="card">
+            <h3>Thanh toán</h3>
+            <div class="row"><label>Phương thức</label><input id="paymentMethod" data-bind="paymentMethod"></div>
+            <div class="row"><label>Ngân hàng</label><input id="bankName" data-bind="bankName"></div>
+            <div class="row"><label>Số tài khoản</label><input id="bankAccount" data-bind="bankAccount"></div>
+            <div class="row"><label>Chủ tài khoản</label><input id="bankOwner" data-bind="bankOwner"></div>
+            <label class="check"><input id="showPaymentBlock" data-bind="showPaymentBlock" type="checkbox"> Hiện thông tin thanh toán trên bản in</label>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-terms">
+          <div class="card">
+            <h3>Điều khoản thương mại</h3>
+            <div class="row"><label>Tiêu đề</label><input id="termsTitle" data-bind="termsTitle"></div>
+            <div class="row"><label>Mỗi dòng = 1 điều khoản</label><textarea id="termsText" data-bind="termsText"></textarea></div>
+            <div class="row"><label>Lời kết</label><input id="closingText" data-bind="closingText"></div>
+          </div>
+          <div class="card">
+            <h3>Ngày & chữ ký</h3>
+            <div class="row"><label>Dòng ngày tháng</label><input id="dateLine" data-bind="dateLine"></div>
+            <div class="grid2">
+              <div class="row"><label>Chức danh trái</label><input id="leftTitle" data-bind="leftTitle"></div>
+              <div class="row"><label>Chức danh phải</label><input id="rightTitle" data-bind="rightTitle"></div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Ghi chú trái</label><input id="leftNote" data-bind="leftNote"></div>
+              <div class="row"><label>Ghi chú phải</label><input id="rightNote" data-bind="rightNote"></div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Họ tên trái</label><input id="leftName" data-bind="leftName"></div>
+              <div class="row"><label>Họ tên phải</label><input id="rightName" data-bind="rightName"></div>
+            </div>
+            <div class="row"><label>Chân trang</label><textarea id="footerText" data-bind="footerText"></textarea></div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-design">
+          <div class="card"><h3>Thiết kế nhanh</h3><button class="btn primary block" id="openDesign">Mở bảng thiết kế</button></div>
+          <div class="card">
+            <h3>Kích thước A4</h3>
+            <div class="grid2">
+              <div class="row"><label>Lề ngang (mm)</label><input id="marginX" data-bind="marginX" type="number"></div>
+              <div class="row"><label>Lề trên (mm)</label><input id="marginTop" data-bind="marginTop" type="number"></div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Lề dưới (mm)</label><input id="marginBottom" data-bind="marginBottom" type="number"></div>
+              <div class="row"><label>Rộng logo (mm)</label><input id="logoWidth" data-bind="logoWidth" type="number"></div>
+            </div>
+            <div class="row"><label>Cỡ chữ nội dung (px)</label><input id="docFontSize" data-bind="docFontSize" type="number" step="0.2"></div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-export">
+          <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="exportSnapshot">Xuất dữ liệu báo giá</button></div></div>
+          <div class="card"><h3>Sao lưu dữ liệu</h3><div class="btns"><button class="btn" id="exportJson">Xuất JSON</button><label class="btn file-btn" for="importJson">Nhập JSON</label><input class="hidden-input" id="importJson" type="file" accept=".json,application/json"></div></div>
+          <div class="card"><h3>Đặt lại</h3><button class="btn danger block" id="reset">Khôi phục mẫu ban đầu</button></div>
+        </div>
+
+        <div class="pane" id="pane-presets">
+          <div class="card"><h3>Lưu cấu hình báo giá</h3><div class="row"><label>Tên mẫu</label><input id="presetName" placeholder="VD: Khách sỉ Khánh Hòa"></div><button class="btn primary block" id="savePreset">Lưu mẫu hiện tại</button></div>
+          <div class="card"><h3>Các mẫu đã lưu</h3><div id="presetList"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="design" id="designPanel">
+      <div class="panel-head"><h2>CHỌN MẪU TEMPLATE</h2><p>Đổi phong cách mà không làm mất dữ liệu.</p></div>
+      <div class="panel-body">
+        <div class="card">
+          <div class="template-grid">
+            <button class="tpl" data-theme="modern"><div class="thumb modern"></div><span>Mẫu hiện đại</span></button>
+            <button class="tpl" data-theme="classic"><div class="thumb classic"></div><span>Mẫu cổ điển</span></button>
+            <button class="tpl" data-theme="minimal"><div class="thumb minimal"></div><span>Mẫu tối giản</span></button>
+            <button class="tpl" data-theme="blue"><div class="thumb blue"></div><span>Mẫu màu</span></button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Tùy chỉnh hiển thị</h3>
+          <label class="check"><input id="showLogo" data-bind="showLogo" type="checkbox"> Hiển thị logo</label>
+          <label class="check"><input id="showSlogan" data-bind="showSlogan" type="checkbox"> Hiển thị slogan</label>
+          <label class="check"><input id="showWebEmail" data-bind="showWebEmail" type="checkbox"> Hiển thị website/email</label>
+          <label class="check"><input id="showTerms" data-bind="showTerms" type="checkbox"> Hiển thị điều khoản</label>
+          <label class="check"><input id="showSignature" data-bind="showSignature" type="checkbox"> Hiển thị chữ ký</label>
+        </div>
+        <div class="card">
+          <h3>Màu chủ đạo</h3>
+          <div class="colors">
+            <button class="color" data-color="#0b8f83" style="background:#0b8f83"></button>
+            <button class="color" data-color="#1774db" style="background:#1774db"></button>
+            <button class="color" data-color="#f39c12" style="background:#f39c12"></button>
+            <button class="color" data-color="#e83e3e" style="background:#e83e3e"></button>
+            <button class="color" data-color="#7a4ae2" style="background:#7a4ae2"></button>
+            <button class="color" data-color="#263444" style="background:#263444"></button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Định dạng</h3>
+          <div class="row"><label>Font tài liệu</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
+          <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
+        </div>
+        <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
+      </div>
+    </aside>
+
+    <main class="preview">
+      <div class="preview-tools">
+        <div><button class="btn primary" id="fit">Xem toàn trang</button><button class="btn" id="actual">100%</button><span class="zoom" id="zoomText">82%</span></div>
+        <div><button class="btn green print-action">Tải PDF</button><button class="btn primary print-action">In</button></div>
+      </div>
+
+      <div class="paper-wrap" id="paperWrap">
+        <article class="paper theme-modern" id="paper">
+          <div class="decor-top"></div><div class="decor-bottom"></div>
+          <header class="doc-head">
+            <div class="logo-zone clickable" data-target="companyName" id="previewLogo"><div class="logo-text">THẾ GIỚI TRỨNG®</div></div>
+            <div class="company">
+              <div class="company-name clickable" data-target="companyName" id="pCompanyName"></div>
+              <div class="clickable" data-target="companyAddress"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
+              <div class="clickable" data-target="branchKhanhHoa"><b>CN Khánh Hòa:</b> <span id="pBranchKhanhHoa"></span></div>
+              <div class="clickable" data-target="branchDongNai"><b>CN Đồng Nai:</b> <span id="pBranchDongNai"></span></div>
+              <div class="clickable" data-target="farmAddress"><b>Trại:</b> <span id="pFarmAddress"></span></div>
+              <div class="clickable" data-target="taxCode"><b>MST:</b> <span id="pTaxCode"></span></div>
+              <div class="clickable" data-target="phone"><b>SĐT:</b> <span id="pPhone"></span></div>
+              <div class="clickable webemail" data-target="website"><b>Website:</b> <span id="pWebsite"></span></div>
+              <div class="clickable webemail" data-target="companyEmail"><b>Email:</b> <span id="pCompanyEmail"></span></div>
+            </div>
+          </header>
+
+          <div class="quote-top">
+            <div><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle"></div></div>
+            <div class="qmeta">
+              <div><b>Số báo giá:</b> <span id="pQuoteNo"></span></div>
+              <div><b>Ngày báo giá:</b> <span id="pQuoteDate"></span></div>
+              <div><b>Hiệu lực:</b> <span id="pValidity"></span></div>
+            </div>
+          </div>
+          <div class="recipient clickable" data-target="recipientLine" id="pRecipient"></div>
+          <div class="qmeta clickable" data-target="customerName" id="pCustomer" style="display:none;margin-bottom:3mm"></div>
+          <p class="intro clickable" data-target="intro" id="pIntro"></p>
+          <div class="sectionbar clickable" data-target="sectionTitle" id="pSection"></div>
+
+          <table class="qtable"><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
+
+          <table class="summary" id="summary">
+            <tbody>
+              <tr><td>Tạm tính</td><td class="val" id="sub"></td></tr>
+              <tr id="discRow"><td>Giảm giá</td><td class="val" id="disc"></td></tr>
+              <tr id="vatRow"><td>VAT</td><td class="val" id="vat"></td></tr>
+              <tr id="feeRow"><td>Phí khác</td><td class="val" id="fee"></td></tr>
+              <tr><td class="grand">Tổng cộng</td><td class="val grand" id="grand"></td></tr>
+            </tbody>
+          </table>
+          <div class="words" id="words"></div>
+
+          <section class="payment-print" id="paymentPrint">
+            <h4>THÔNG TIN THANH TOÁN</h4>
+            <div class="payment-grid">
+              <div class="clickable" data-target="paymentMethod"><b>Phương thức:</b> <span id="pPaymentMethod"></span></div>
+              <div class="clickable" data-target="bankName"><b>Ngân hàng:</b> <span id="pBankName"></span></div>
+              <div class="clickable" data-target="bankAccount"><b>Số tài khoản:</b> <span id="pBankAccount"></span></div>
+              <div class="clickable" data-target="bankOwner"><b>Chủ tài khoản:</b> <span id="pBankOwner"></span></div>
+            </div>
+          </section>
+
+          <section class="terms" id="termsBox">
+            <h4 class="clickable" data-target="termsTitle" id="pTermsTitle"></h4>
+            <ol class="clickable" data-target="termsText" id="pTerms"></ol>
+            <div class="closing clickable" data-target="closingText" id="pClosing"></div>
+          </section>
+
+          <section class="signatures" id="signatures">
+            <div>
+              <div class="clickable" data-target="dateLine" id="pDateLeft"></div>
+              <div class="sig-title" id="pLeftTitle"></div>
+              <div class="sig-note" id="pLeftNote"></div>
+              <div class="sig-name" id="pLeftName"></div>
+            </div>
+            <div>
+              <div class="clickable" data-target="dateLine" id="pDate"></div>
+              <div class="sig-title" id="pRightTitle"></div>
+              <div class="sig-note" id="pRightNote"></div>
+              <div class="sig-name" id="pRightName"></div>
+            </div>
+          </section>
+
+          <footer class="footer">
+            <span class="clickable" data-target="slogan" id="pSlogan"></span>
+            <span id="footerSep"> • </span>
+            <span class="clickable" data-target="footerText" id="pFooter"></span>
+          </footer>
+        </article>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
