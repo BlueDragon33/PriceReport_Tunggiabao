@@ -89,3 +89,15 @@ textarea{min-height:76px;resize:vertical;line-height:1.45}input:focus,textarea:f
 .status-accepted{background:#e8f8f1;color:#177650;border-color:#c8eadc}
 .status-rejected{background:#fff0f0;color:#ad3b3b;border-color:#f2d0d0}
 .status-expired{background:#fff6e7;color:#9b6418;border-color:#f2dfb9}
+
+.page-estimate{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#edf8f5;color:#217668;font-size:10px;font-weight:800;border:1px solid #d1ebe5}
+.page-estimate.warn{background:#fff5e7;color:#9a651f;border-color:#f1dfbd}
+
+@media print{
+  .qtable{break-inside:auto}
+  .qtable thead{display:table-header-group}
+  .qtable tr{break-inside:avoid;page-break-inside:avoid}
+  .qtable th,.qtable td{break-inside:avoid}
+  .payment-print,.terms,.signatures,.summary{break-inside:avoid;page-break-inside:avoid}
+  .sectionbar{break-after:avoid;page-break-after:avoid}
+}
