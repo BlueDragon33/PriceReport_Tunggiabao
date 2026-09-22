@@ -1787,3 +1787,15 @@ input[type=range]::-moz-range-thumb{
 .theme-premium .logo-image-mode-remove-bg{
   background:transparent!important;padding:0!important;border-radius:0!important
 }
+
+
+/* V3.2 headquarters two-line address */
+.paper .company-region-line{
+  padding-left:10.2mm!important;
+  color:inherit;
+}
+.paper .company-region-line:empty{display:none!important}
+
+@media(max-width:620px){
+  .paper .company-region-line{padding-left:10.2mm!important}
+}
