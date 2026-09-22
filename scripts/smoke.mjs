@@ -4,6 +4,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
 const css = fs.readFileSync('src/styles.css', 'utf8');
 const sw = fs.readFileSync('public/sw.js', 'utf8');
+const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 
 function fail(message) {
   console.error('SMOKE FAIL:', message);
@@ -214,7 +215,13 @@ if (!fs.existsSync('public/management-contract.json')) fail('Application Managem
 const managementContract = JSON.parse(fs.readFileSync('public/management-contract.json','utf8'));
 if (managementContract.application?.category !== 'Kế toán') fail('PriceReport must be classified as Kế toán');
 if (managementContract.device?.namespace !== 'KT-') fail('Accounting device namespace must be KT-');
-if (managementContract.policy?.remoteAdminReady !== false) fail('Static client must not claim remote admin readiness');
+if (managementContract.policy?.remoteAdminReady !== false) fail('Checked-in source contract must remain rollout-off before production materialization');
+if (!deviceProfileJs.includes('resolveRemoteAdminReady')) fail('Runtime management readiness resolver is missing');
+if (!deviceProfileJs.includes("MANAGEMENT_CONTRACT_URL = './management-contract.json'")) fail('Runtime must read the deployed management contract');
+if (!deviceProfileJs.includes("cache: 'no-store'")) fail('Runtime management readiness must bypass stale HTTP caches');
+if (!deviceProfileJs.includes('refreshManagementReadiness')) fail('Runtime management readiness refresh API is missing');
+if (!deviceProfileJs.includes("'pricereport:management-readiness'")) fail('Runtime management readiness event is missing');
+if (deviceProfileJs.includes('remoteAdminReady: false,\n    getDeviceProfile')) fail('Legacy hard-coded remoteAdminReady runtime block remains');
 
 if (!js.includes('startPriceReportDeviceAccess')) fail('KT Device Gate runtime is not started');
 if (!fs.existsSync('src/device-access-gate.js')) fail('KT Device Gate module is missing');
