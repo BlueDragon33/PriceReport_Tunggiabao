@@ -265,8 +265,9 @@
               <div class="row"><label>Rộng logo (mm)</label><input id="logoWidth" data-bind="logoWidth" type="number" min="18" max="90"></div>
             </div>
             <div class="row">
-            <label>Cỡ chữ nội dung <span class="range-value" id="docFontSizeValue">12.2 px</span></label>
-            <input id="docFontSize" data-bind="docFontSize" type="range" min="9" max="18" step="0.2">
+            <label>Cỡ chữ trong bảng <span class="range-value" id="tableFontSizeValue">9.0 px</span></label>
+            <input id="tableFontSize" data-bind="tableFontSize" type="range" min="7.5" max="14" step="0.2">
+            <div class="help">Chỉ thay đổi chữ trong bảng hàng hóa. Chữ ngoài bảng được cố định để báo cáo luôn đồng nhất.</div>
           </div>
           </div>
         </div>
@@ -447,7 +448,8 @@
           <h3>Định dạng</h3>
           <div class="row"><label>Khổ giấy</label><select id="paperSize" disabled><option>A4 (210 × 297 mm)</option></select></div>
           <div class="row"><label>Font chữ</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
-          <div class="row"><label>Cỡ chữ nội dung</label><input id="designFontSize" data-bind="docFontSize" type="range" min="9" max="18" step="0.2"></div>
+          <div class="row"><label>Cỡ chữ trong bảng</label><input id="designTableFontSize" data-bind="tableFontSize" type="range" min="7.5" max="14" step="0.2"></div>
+          <div class="help">Tên đơn vị, địa chỉ, tiêu đề, kính gửi, lời mở đầu, điều khoản và chữ ký dùng cỡ cố định.</div>
           <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
         </div>
         <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
@@ -504,9 +506,9 @@
             </div>
           </div>
 
-          <div class="custom-group">
-            <label>Cỡ tiêu đề <span class="range-value" id="previewTitleSizeValue">25 px</span></label>
-            <input id="previewTitleSize" data-bind="previewTitleSize" type="range" min="20" max="32" step="1">
+          <div class="custom-group fixed-type-note">
+            <label>Cỡ chữ ngoài bảng</label>
+            <div class="help">Đã khóa theo chuẩn báo cáo; tiêu đề và các khối văn bản không thay đổi khi chỉnh cỡ chữ bảng.</div>
           </div>
 
           <div class="custom-group">
