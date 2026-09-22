@@ -492,7 +492,7 @@ function renderPreviewProducts() {
     standard: '1.7mm 1.25mm',
     comfortable: '2.25mm 1.45mm'
   };
-  $('.qtable th,.qtable td').forEach((el) => {
+  $$('.qtable th,.qtable td').forEach((el) => {
     el.style.padding = tablePadding[density] || tablePadding.standard;
   });
 }
@@ -671,9 +671,9 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
-  $('[data-title-align]').forEach((el) => el.classList.toggle('active', el.dataset.titleAlign === (state.previewTitleAlign || 'center')));
+  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $$('[data-title-align]').forEach((el) => el.classList.toggle('active', el.dataset.titleAlign === (state.previewTitleAlign || 'center')));
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
@@ -1610,7 +1610,7 @@ document.getElementById('customizePreview').addEventListener('click', () => {
 
 document.getElementById('closePreviewCustomizer').addEventListener('click', () => setPreviewCustomizer(false));
 
-$('[data-title-align]').forEach((button) => {
+$$('[data-title-align]').forEach((button) => {
   button.addEventListener('click', () => {
     state.previewTitleAlign = button.dataset.titleAlign;
     save();
