@@ -3,9 +3,11 @@ import {
   calcQuoteTotal,
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
+  normalizeBoundedNumber,
   normalizeCatalogCurrency,
   normalizeNonNegativeNumber,
   normalizePhone,
+  isValidISODate,
   localDateISO
 } from './core.js';
 
@@ -131,9 +133,19 @@ function merge(data) {
   merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
   merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
   merged.otherFee = normalizeNonNegativeNumber(merged.otherFee);
-  merged.marginX = Math.min(30, Math.max(6, Number(merged.marginX || defaults.marginX)));
-  merged.marginTop = Math.min(30, Math.max(6, Number(merged.marginTop || defaults.marginTop)));
-  merged.marginBottom = Math.min(30, Math.max(6, Number(merged.marginBottom || defaults.marginBottom)));
+  merged.marginX = normalizeBoundedNumber(merged.marginX, 6, 30, defaults.marginX);
+  merged.marginTop = normalizeBoundedNumber(merged.marginTop, 6, 30, defaults.marginTop);
+  merged.marginBottom = normalizeBoundedNumber(merged.marginBottom, 6, 30, defaults.marginBottom);
+  merged.logoWidth = normalizeBoundedNumber(merged.logoWidth, 28, 70, defaults.logoWidth);
+  merged.logoPadding = normalizeBoundedNumber(merged.logoPadding, 0, 12, defaults.logoPadding);
+  merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -10, 10, defaults.logoOffsetY);
+  merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
+  merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
+  merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
+  merged.previewTitleSize = normalizeBoundedNumber(merged.previewTitleSize, 20, 32, defaults.previewTitleSize);
+  merged.previewHeaderGap = normalizeBoundedNumber(merged.previewHeaderGap, 2, 12, defaults.previewHeaderGap);
+  merged.previewMetaWidth = normalizeBoundedNumber(merged.previewMetaWidth, 38, 56, defaults.previewMetaWidth);
+  merged.previewLineHeight = normalizeBoundedNumber(merged.previewLineHeight, 1.15, 1.5, defaults.previewLineHeight);
 
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
@@ -194,20 +206,29 @@ function merge(data) {
   return merged;
 }
 let state;
+let rawStored = null;
 try {
-  const rawStored = JSON.parse(localStorage.getItem(STORAGE));
+  rawStored = JSON.parse(localStorage.getItem(STORAGE));
   state = merge(rawStored);
+} catch {
+  state = clone(defaults);
+}
+
+try {
   const separateLogo = localStorage.getItem(LOGO_STORAGE);
   state.logo = separateLogo || String(rawStored?.logo || '');
   if (!separateLogo && rawStored?.logo) {
-    localStorage.setItem(LOGO_STORAGE, rawStored.logo);
-    const migrated = clone(rawStored);
-    delete migrated.logo;
-    localStorage.setItem(STORAGE, JSON.stringify(migrated));
+    try {
+      localStorage.setItem(LOGO_STORAGE, rawStored.logo);
+      const migrated = clone(rawStored);
+      delete migrated.logo;
+      localStorage.setItem(STORAGE, JSON.stringify(migrated));
+    } catch (error) {
+      console.warn('Legacy logo migration deferred; keeping loaded quotation state intact.', error);
+    }
   }
 } catch {
-  state = clone(defaults);
-  try { state.logo = localStorage.getItem(LOGO_STORAGE) || ''; } catch {}
+  state.logo = String(rawStored?.logo || state.logo || '');
 }
 
 const $ = (s) => document.querySelector(s);
@@ -1346,6 +1367,9 @@ function validateQuote(data = state) {
   const finalStatus = data.quoteStatus && data.quoteStatus !== 'draft';
   if (finalStatus && !String(data.quoteNo || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có số báo giá.');
   if (finalStatus && !String(data.quoteDate || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có ngày báo giá.');
+  if (data.quoteDate && !isValidISODate(data.quoteDate)) {
+    (finalStatus ? errors : warnings).push('Ngày báo giá không hợp lệ; cần dùng định dạng ngày hợp lệ.');
+  }
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (data.companyEmail && !emailPattern.test(String(data.companyEmail))) warnings.push('Email công ty có vẻ chưa đúng định dạng.');
@@ -1643,13 +1667,15 @@ function createNewQuote() {
     leftTitle: state.leftTitle,
     rightTitle: state.rightTitle,
     leftNote: state.leftNote,
-    rightNote: state.rightNote
+    rightNote: state.rightNote,
+    dateLine: state.dateLine,
+    rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
   state.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
-  state.quoteDate = d.toISOString().slice(0, 10);
+  state.quoteDate = localDateISO(d);
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
   save();
@@ -2047,6 +2073,7 @@ function createPresetState(source) {
   preset.customerPhone = '';
   preset.customerEmail = '';
   preset.customerContact = '';
+  preset.leftName = '';
   preset.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
   preset.discountPct = 0;
   preset.otherFee = 0;
