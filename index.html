@@ -417,7 +417,7 @@
           <h3>Định dạng</h3>
           <div class="row"><label>Khổ giấy</label><select id="paperSize" disabled><option>A4 (210 × 297 mm)</option></select></div>
           <div class="row"><label>Font chữ</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
-          <div class="row"><label>Cỡ chữ</label><select id="designFontSize" data-bind="docFontSize"><option value="11">Nhỏ</option><option value="12.2">Mặc định</option><option value="13">Vừa</option><option value="14">Lớn</option></select></div>
+          <div class="row"><label>Cỡ chữ nội dung</label><input id="designFontSize" data-bind="docFontSize" type="range" min="9" max="18" step="0.2"></div>
           <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
         </div>
         <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
