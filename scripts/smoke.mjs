@@ -51,7 +51,7 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
 
 if (!js.includes("serviceWorker.register('./sw.js')")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
-if (!js.includes('schemaVersion: 3')) fail('Full backup schema v3 is missing');
+if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
 if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
