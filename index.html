@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b8f83">
+  <meta name="description" content="PriceReport - webapp tạo và in bảng báo giá A4 chuyên nghiệp">
+  <title>PriceReport — Bảng báo giá</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+<div class="app">
+  <nav class="nav">
+    <a class="brand" href="#" aria-label="PriceReport"><img src="./assets/icon.svg" alt=""><b>PR</b></a>
+    <button class="nav-item active" data-tab="general"><span>▣</span><small>Thông tin</small></button>
+    <button class="nav-item" data-tab="customer"><span>●</span><small>Khách hàng</small></button>
+    <button class="nav-item" data-tab="products"><span>◆</span><small>Sản phẩm</small></button>
+    <button class="nav-item" data-tab="finance"><span>▤</span><small>Thanh toán</small></button>
+    <button class="nav-item" data-tab="terms"><span>≡</span><small>Điều khoản</small></button>
+    <button class="nav-item" data-tab="design"><span>◉</span><small>Thiết kế</small></button>
+    <button class="nav-item" data-tab="export"><span>▰</span><small>Xuất / In</small></button>
+    <div class="nav-spacer"></div><div class="autosave">Tự lưu</div>
+  </nav>
+
+  <aside class="editor">
+    <header class="editor-head"><h1 id="tabTitle">THÔNG TIN CHUNG</h1><p id="tabSub">Doanh nghiệp và dữ liệu báo giá.</p></header>
+    <div class="editor-body">
+      <section class="tab active" id="tab-general">
+        <div class="card">
+          <h2>Nhận diện</h2>
+          <div class="brand-preview" id="brandPreview"><img src="./assets/icon.svg" alt=""><div><b>THẾ GIỚI TRỨNG</b><small>Foods for health</small></div></div>
+          <div class="button-row"><label class="btn secondary" for="logoInput">Thay logo</label><input id="logoInput" type="file" accept="image/*" hidden><button class="btn ghost" id="clearLogo">Logo mặc định</button></div>
+        </div>
+        <div class="card"><h2>Thông tin công ty</h2><div id="companyForm"></div></div>
+        <div class="card"><h2>Thông tin báo giá</h2><div id="quoteForm"></div></div>
+      </section>
+
+      <section class="tab" id="tab-customer">
+        <div class="card"><h2>Khách hàng</h2><div id="customerForm"></div></div>
+      </section>
+
+      <section class="tab" id="tab-products">
+        <div class="card wide">
+          <div class="card-head"><h2>Sản phẩm</h2><button id="addProduct" class="btn primary">+ Thêm</button></div>
+          <div class="product-editor" id="productEditor"></div>
+        </div>
+        <div class="card"><h2>Cột hiển thị</h2><div id="displayToggles"></div></div>
+      </section>
+
+      <section class="tab" id="tab-finance">
+        <div class="card"><h2>Tính tiền</h2><div id="financeForm"></div></div>
+        <div class="card"><h2>Thông tin thanh toán</h2><div id="bankForm"></div></div>
+      </section>
+
+      <section class="tab" id="tab-terms">
+        <div class="card"><h2>Điều khoản thương mại</h2><div id="termsForm"></div></div>
+        <div class="card"><h2>Ngày & chữ ký</h2><div id="signatureForm"></div></div>
+      </section>
+
+      <section class="tab" id="tab-design">
+        <div class="card"><h2>Template</h2><div class="templates" id="templateGrid"></div></div>
+        <div class="card"><h2>Màu chủ đạo</h2><div class="colors" id="colorGrid"></div></div>
+        <div class="card"><h2>Định dạng A4</h2><div id="layoutForm"></div></div>
+      </section>
+
+      <section class="tab" id="tab-export">
+        <div class="card"><h2>Xuất tài liệu</h2>
+          <div class="action-stack">
+            <button class="btn success" id="printBtn">In / Lưu PDF</button>
+            <button class="btn primary" id="exportJson">Xuất dữ liệu JSON</button>
+            <label class="btn secondary" for="importJson">Nhập dữ liệu JSON</label><input id="importJson" type="file" accept=".json,application/json" hidden>
+          </div>
+          <p class="hint">Dữ liệu được lưu trên trình duyệt. PDF dùng đúng vùng A4 bên phải.</p>
+        </div>
+        <div class="card"><h2>Khôi phục</h2><button class="btn danger full" id="resetBtn">Khôi phục dữ liệu mẫu</button></div>
+      </section>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <div class="toolbar">
+      <div><b>Xem trước A4</b><span id="zoomText">82%</span></div>
+      <div class="toolbar-actions"><button class="btn secondary" id="fitBtn">Vừa màn hình</button><button class="btn ghost" id="actualBtn">100%</button><button class="btn primary" id="printTopBtn">In</button></div>
+    </div>
+    <div class="canvas" id="canvas">
+      <div class="paper-scale" id="paperScale">
+        <article class="paper theme-modern" id="paper">
+          <div class="decor top"></div><div class="decor bottom"></div>
+          <header class="doc-head">
+            <div class="doc-brand" id="docBrand"></div>
+            <div class="company-copy" id="companyCopy"></div>
+          </header>
+          <div class="title-row">
+            <div><h2 id="docTitle"></h2><div class="recipient" id="docRecipient"></div></div>
+            <div class="meta" id="docMeta"></div>
+          </div>
+          <div class="customer-box" id="customerBox"></div>
+          <p class="intro" id="docIntro"></p>
+          <div class="section-title" id="docSection"></div>
+          <table class="quote-table"><thead id="quoteHead"></thead><tbody id="quoteBody"></tbody></table>
+          <table class="totals" id="totals"></table>
+          <div class="words" id="words"></div>
+          <section class="terms" id="docTerms"><h3 id="docTermsTitle"></h3><ol id="termsList"></ol><p id="closing"></p></section>
+          <section class="signatures" id="signatures"></section>
+          <footer id="docFooter"></footer>
+        </article>
+      </div>
+    </div>
+  </main>
+</div>
+<script type="module" src="./src/app.js"></script>
+</body>
+</html>
