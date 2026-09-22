@@ -20,6 +20,30 @@ const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
+const LAYOUT_BLOCK_KEYS = [
+  'logo','company','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+  'taxCode','phone','website','companyEmail','quote','quoteTitle','quoteMeta','recipient','customer',
+  'intro','section','table','summary','words','payment','paymentMethod','bankName','bankAccount','bankOwner',
+  'terms','termsTitle','termsText','closing','signatures','footer','slogan','footerText'
+];
+const PX_PER_MM = 96 / 25.4;
+
+function normalizeLayoutOffsets(value) {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const normalized = {};
+  LAYOUT_BLOCK_KEYS.forEach((key) => {
+    const item = source[key];
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return;
+    const x = normalizeBoundedNumber(item.x, -80, 80, 0);
+    const y = normalizeBoundedNumber(item.y, -120, 120, 0);
+    if (x || y) normalized[key] = {
+      x: Math.round(x * 10) / 10,
+      y: Math.round(y * 10) / 10
+    };
+  });
+  return normalized;
+}
+
 const defaults = {
   logo: '',
   companyName: 'CÔNG TY TNHH TMDV BIỂN UYÊN BẢO',
@@ -89,6 +113,7 @@ const defaults = {
   marginBottom: 12,
   logoWidth: 58,
   logoPadding: 2,
+  logoOffsetX: 0,
   logoOffsetY: 0,
   logoTreatment: 'blend',
   logoBlendMode: 'multiply',
@@ -104,6 +129,7 @@ const defaults = {
   previewHeaderGap: 4,
   previewMetaWidth: 44,
   previewLineHeight: 1.26,
+  layoutOffsets: {},
   products: [
     { name: 'Trứng gà tươi', pack: 'Hộp 10 quả', unit: 'Hộp', qty: 100, price: 28000, note: '' },
     { name: 'Trứng gà Omega-3', pack: 'Hộp 10 quả', unit: 'Hộp', qty: 50, price: 32000, note: '' },
@@ -137,9 +163,10 @@ function merge(data) {
   merged.marginX = normalizeBoundedNumber(merged.marginX, 6, 30, defaults.marginX);
   merged.marginTop = normalizeBoundedNumber(merged.marginTop, 6, 30, defaults.marginTop);
   merged.marginBottom = normalizeBoundedNumber(merged.marginBottom, 6, 30, defaults.marginBottom);
-  merged.logoWidth = normalizeBoundedNumber(merged.logoWidth, 28, 70, defaults.logoWidth);
+  merged.logoWidth = normalizeBoundedNumber(merged.logoWidth, 18, 90, defaults.logoWidth);
   merged.logoPadding = normalizeBoundedNumber(merged.logoPadding, 0, 12, defaults.logoPadding);
-  merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -10, 10, defaults.logoOffsetY);
+  merged.logoOffsetX = normalizeBoundedNumber(merged.logoOffsetX, -40, 40, defaults.logoOffsetX);
+  merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -30, 30, defaults.logoOffsetY);
   merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
   merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
   merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
@@ -147,6 +174,7 @@ function merge(data) {
   merged.previewHeaderGap = normalizeBoundedNumber(merged.previewHeaderGap, 2, 12, defaults.previewHeaderGap);
   merged.previewMetaWidth = normalizeBoundedNumber(merged.previewMetaWidth, 38, 56, defaults.previewMetaWidth);
   merged.previewLineHeight = normalizeBoundedNumber(merged.previewLineHeight, 1.15, 1.5, defaults.previewLineHeight);
+  merged.layoutOffsets = normalizeLayoutOffsets(merged.layoutOffsets);
 
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
@@ -360,12 +388,13 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
+      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetX','logoOffsetY','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
         let value = Number(el.value || 0);
         if (key === 'discountPct' || key === 'vatPct' || key === 'logoBackdropOpacity') value = Math.min(100, Math.max(0, value));
-        else if (key === 'logoWidth') value = Math.min(70, Math.max(28, value));
+        else if (key === 'logoWidth') value = Math.min(90, Math.max(18, value));
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
-        else if (key === 'logoOffsetY') value = Math.min(10, Math.max(-10, value));
+        else if (key === 'logoOffsetX') value = Math.min(40, Math.max(-40, value));
+        else if (key === 'logoOffsetY') value = Math.min(30, Math.max(-30, value));
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
         else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
@@ -763,7 +792,9 @@ function renderLogo() {
   });
 
   preview.style.padding = Math.max(0, Number(state.logoPadding || 0)) + 'mm';
-  preview.style.transform = 'translateY(' + Number(state.logoOffsetY || 0) + 'mm)';
+  preview.style.setProperty('--logo-x', Number(state.logoOffsetX || 0) + 'mm');
+  preview.style.setProperty('--logo-y', Number(state.logoOffsetY || 0) + 'mm');
+  preview.style.setProperty('--logo-scale', String(Math.min(90, Math.max(18, Number(state.logoWidth || 58))) / 58));
   preview.style.setProperty('--logo-wash', hexToRgba(state.accent || backgroundColor, Math.max(3, Math.min(12, opacity || 6))));
 
   const buildImage = (target, isPaper = false) => {
@@ -771,7 +802,12 @@ function renderLogo() {
     img.src = state.logo;
     img.alt = 'Logo doanh nghiệp';
     img.style.mixBlendMode = ['multiply','darken'].includes(state.logoBlendMode) ? state.logoBlendMode : 'normal';
-    if (isPaper) img.style.width = Math.min(70, Math.max(28, Number(state.logoWidth || 56))) + 'mm';
+    if (isPaper) {
+      img.style.width = '58mm';
+      img.style.maxWidth = 'none';
+      img.style.maxHeight = 'none';
+      img.draggable = false;
+    }
     target.appendChild(img);
   };
 
@@ -801,6 +837,33 @@ function renderLogo() {
       docHead.style.gridTemplateColumns = '1fr';
     }
   }
+}
+
+
+function layoutOffset(key) {
+  const item = state.layoutOffsets && state.layoutOffsets[key];
+  return {
+    x: normalizeBoundedNumber(item?.x, -80, 80, 0),
+    y: normalizeBoundedNumber(item?.y, -120, 120, 0)
+  };
+}
+
+function setLayoutOffset(key, x, y) {
+  if (!LAYOUT_BLOCK_KEYS.includes(key)) return;
+  const next = Object.assign({}, state.layoutOffsets || {});
+  const normalized = normalizeLayoutOffsets(Object.assign({}, next, { [key]: { x, y } }));
+  state.layoutOffsets = normalized;
+}
+
+function applyLayoutOffsets() {
+  LAYOUT_BLOCK_KEYS.forEach((key) => {
+    const element = document.querySelector('[data-layout-block="' + key + '"]');
+    if (!element) return;
+    const offset = layoutOffset(key);
+    element.classList.add('layout-block');
+    element.style.setProperty('--layout-x', offset.x + 'mm');
+    element.style.setProperty('--layout-y', offset.y + 'mm');
+  });
 }
 
 function updatePageEstimate() {
@@ -845,6 +908,7 @@ function render() {
 
   setText('pQuoteDate', formatDate(state.quoteDate));
   renderLogo();
+  applyLayoutOffsets();
 
   $$('.webemail').forEach((el) => {
     el.style.display = state.showWebEmail ? 'block' : 'none';
@@ -1021,9 +1085,12 @@ document.getElementById('collapseAllProducts').addEventListener('click', () => {
 });
 
 document.getElementById('resetLogoPosition').addEventListener('click', () => {
-  state.logoWidth = 56;
+  state.logoWidth = 58;
   state.logoPadding = 2;
+  state.logoOffsetX = 0;
   state.logoOffsetY = 0;
+  state.layoutOffsets = Object.assign({}, state.layoutOffsets || {});
+  delete state.layoutOffsets.logo;
   state.logoTreatment = 'blend';
   state.logoBlendMode = 'multiply';
   state.logoBackdropColor = state.accent || '#0b8f83';
@@ -1638,7 +1705,9 @@ function createNewQuote() {
     marginBottom: state.marginBottom,
     logoWidth: state.logoWidth,
     logoPadding: state.logoPadding,
+    logoOffsetX: state.logoOffsetX,
     logoOffsetY: state.logoOffsetY,
+    layoutOffsets: clone(state.layoutOffsets || {}),
     logoTreatment: state.logoTreatment,
     logoBlendMode: state.logoBlendMode,
     logoBackdropColor: state.logoBackdropColor,
@@ -2156,8 +2225,158 @@ function renderPresets() {
   });
 }
 
+
+let layoutEditEnabled = false;
+let selectedLayoutKey = '';
+let layoutDrag = null;
+
+function updateLayoutSelection() {
+  const badge = document.getElementById('layoutSelection');
+  if (!badge) return;
+  badge.hidden = !layoutEditEnabled;
+  if (!layoutEditEnabled) return;
+  const selected = selectedLayoutKey
+    ? document.querySelector('[data-layout-block="' + selectedLayoutKey + '"]')
+    : null;
+  if (!selected) {
+    badge.textContent = 'Chọn khối để kéo';
+    return;
+  }
+  const offset = layoutOffset(selectedLayoutKey);
+  badge.textContent = (selected.dataset.layoutLabel || selectedLayoutKey) +
+    ' · X ' + offset.x.toFixed(1) + ' / Y ' + offset.y.toFixed(1) + ' mm';
+}
+
+function selectLayoutBlock(key) {
+  selectedLayoutKey = LAYOUT_BLOCK_KEYS.includes(key) ? key : '';
+  document.querySelectorAll('[data-layout-block]').forEach((element) => {
+    element.classList.toggle('layout-selected', element.dataset.layoutBlock === selectedLayoutKey);
+  });
+  updateLayoutSelection();
+}
+
+function setLayoutEditMode(enabled) {
+  layoutEditEnabled = Boolean(enabled);
+  const paper = document.getElementById('paper');
+  paper?.classList.toggle('layout-edit-mode', layoutEditEnabled);
+  const button = document.getElementById('layoutEditToggle');
+  if (button) {
+    button.classList.toggle('active-arrange', layoutEditEnabled);
+    button.setAttribute('aria-pressed', layoutEditEnabled ? 'true' : 'false');
+    button.innerHTML = layoutEditEnabled ? '✓&nbsp; Xong sắp xếp' : '✥&nbsp; Sắp xếp';
+  }
+  if (!layoutEditEnabled) {
+    layoutDrag = null;
+    selectLayoutBlock('');
+  } else {
+    updateLayoutSelection();
+  }
+}
+
+function nudgeSelectedLayout(dx, dy) {
+  if (!selectedLayoutKey) return;
+  const current = layoutOffset(selectedLayoutKey);
+  setLayoutOffset(selectedLayoutKey, current.x + dx, current.y + dy);
+  applyLayoutOffsets();
+  save();
+  updateLayoutSelection();
+}
+
+function setupLayoutEditor() {
+  const paper = document.getElementById('paper');
+  if (!paper) return;
+
+  document.getElementById('layoutEditToggle')?.addEventListener('click', () => {
+    setLayoutEditMode(!layoutEditEnabled);
+  });
+
+  document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
+    state.layoutOffsets = {};
+    applyLayoutOffsets();
+    save();
+    selectLayoutBlock('');
+    toast('Đã đưa các khối về vị trí chuẩn');
+  });
+
+  const resizeLogo = (delta) => {
+    state.logoWidth = Math.min(90, Math.max(18, Number(state.logoWidth || 58) + delta));
+    save();
+    syncInputs();
+    renderLogo();
+    applyLayoutOffsets();
+  };
+  document.getElementById('logoShrink')?.addEventListener('click', () => resizeLogo(-2));
+  document.getElementById('logoGrow')?.addEventListener('click', () => resizeLogo(2));
+
+  paper.addEventListener('pointerdown', (event) => {
+    if (!layoutEditEnabled) return;
+    const block = event.target.closest?.('[data-layout-block]');
+    if (!block || !paper.contains(block)) return;
+    if (event.button != null && event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const key = block.dataset.layoutBlock;
+    const current = layoutOffset(key);
+    selectLayoutBlock(key);
+    layoutDrag = {
+      key,
+      startX: event.clientX,
+      startY: event.clientY,
+      baseX: current.x,
+      baseY: current.y
+    };
+    block.classList.add('layout-dragging');
+  });
+
+  document.addEventListener('pointermove', (event) => {
+    if (!layoutDrag || !layoutEditEnabled) return;
+    const paperRect = paper.getBoundingClientRect();
+    const fallbackScale = Math.max(0.01, Number(zoom || 100) / 100);
+    const scale = paper.offsetWidth && paperRect.width
+      ? Math.max(0.01, paperRect.width / paper.offsetWidth)
+      : fallbackScale;
+    const dx = (event.clientX - layoutDrag.startX) / scale / PX_PER_MM;
+    const dy = (event.clientY - layoutDrag.startY) / scale / PX_PER_MM;
+    const snap = (value) => Math.round(value * 2) / 2;
+    setLayoutOffset(layoutDrag.key, snap(layoutDrag.baseX + dx), snap(layoutDrag.baseY + dy));
+    applyLayoutOffsets();
+    updateLayoutSelection();
+  });
+
+  const finishDrag = () => {
+    if (!layoutDrag) return;
+    document.querySelector('[data-layout-block="' + layoutDrag.key + '"]')?.classList.remove('layout-dragging');
+    layoutDrag = null;
+    save();
+    updateLayoutSelection();
+  };
+  document.addEventListener('pointerup', finishDrag);
+  document.addEventListener('pointercancel', finishDrag);
+
+  document.addEventListener('keydown', (event) => {
+    if (!layoutEditEnabled || !selectedLayoutKey) return;
+    if (event.target?.closest?.('input,textarea,select,button,[contenteditable="true"]')) return;
+    const step = event.shiftKey ? 2 : 0.5;
+    const deltas = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step]
+    };
+    const delta = deltas[event.key];
+    if (!delta) return;
+    event.preventDefault();
+    nudgeSelectedLayout(delta[0], delta[1]);
+  });
+}
+
 $$('.clickable').forEach((el) => {
-  el.addEventListener('click', () => {
+  el.addEventListener('click', (event) => {
+    if (layoutEditEnabled) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     const target = document.getElementById(el.dataset.target);
     if (!target) return;
     const pane = target.closest('.pane');
@@ -2170,6 +2389,7 @@ $$('.clickable').forEach((el) => {
 });
 
 let zoom = 82;
+setupLayoutEditor();
 function setZoom(value) {
   zoom = Math.max(50, Math.min(120, value));
   document.getElementById('paperWrap').style.transform = 'scale(' + (zoom / 100) + ')';
@@ -2230,6 +2450,7 @@ document.getElementById('resetPreviewLayout').addEventListener('click', () => {
   state.previewMetaWidth = 44;
   state.previewLineHeight = 1.26;
   state.showQuoteMeta = false;
+  state.layoutOffsets = {};
   save();
   syncInputs();
   render();
@@ -2271,6 +2492,7 @@ window.addEventListener('resize', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  setLayoutEditMode(false);
   setPreviewCustomizer(false);
   document.getElementById('designPanel')?.classList.remove('open');
 });

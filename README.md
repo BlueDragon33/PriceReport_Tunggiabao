@@ -2,11 +2,13 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V2.3 data-safety / print / offline hardened
+## Trạng thái hiện tại — V2.4 direct preview layout editor
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
 - Preview A4 thời gian thực, ước tính số trang, chế độ rộng, zoom, tùy chỉnh nhịp khoảng cách và mật độ bảng.
+- Chế độ **Sắp xếp trực tiếp** trên preview: kéo bằng chuột/chạm các khối và nhiều trường con, lưu offset theo mm, tinh chỉnh bằng phím mũi tên và khôi phục vị trí nhanh.
+- Logo có resize 18–90 mm theo cơ chế scale thị giác trong slot header cố định; phóng/thu không làm thay đổi chiều cao header hay đẩy nội dung. Có dịch X/Y độc lập và vẫn kéo trực tiếp trên preview.
 - Product editor dạng card, focus mode, thu gọn/mở rộng, nhân bản, sắp xếp và ghi chú co giãn.
 - Tự tính tạm tính, giảm giá, VAT, phí khác, tổng cộng và đọc số tiền VND bằng chữ.
 - Preflight trước in/PDF: phát hiện thiếu dữ liệu, mâu thuẫn VAT/điều khoản, thông tin thanh toán chưa đủ, logo thiếu và cấu hình tổng tiền không nhất quán.
@@ -18,7 +20,7 @@ WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo 
 - Full backup/restore schema v4; dữ liệu import được normalize/clamp, từ chối schema tương lai và rollback về snapshot cũ nếu LocalStorage ghi lỗi giữa chừng.
 - Ngày báo giá dùng lịch địa phương của trình duyệt, tránh lệch ngày do UTC; preflight chặn ngày không hợp lệ ở trạng thái phát hành.
 - Print nhiều trang cho phép nội dung A4 tràn sang trang kế tiếp, lặp header bảng và hạn chế cắt các block tổng tiền/điều khoản/chữ ký.
-- PWA/offline với Service Worker cache v13; lần cài đầu precache cả tài nguyên JS/CSS liên kết từ bản build để offline đáng tin cậy hơn.
+- PWA/offline với Service Worker cache v14; lần cài đầu precache cả tài nguyên JS/CSS liên kết từ bản build để offline đáng tin cậy hơn.
 - Dữ liệu nằm trên trình duyệt hiện tại.
 - Responsive desktop/mobile.
 
@@ -34,7 +36,7 @@ npm run build
 `npm test` gồm:
 - syntax check cho `src/main.js`;
 - business-logic tests cho tổng tiền, currency, duplicate quote number, phone normalization, ngày địa phương, ngày ISO, numeric bounds và color normalization;
-- DOM integration tests cho boot app, product editing, template switching, history, reset, print preflight, dữ liệu local sai kiểu, accessibility trạng thái tab và rollback restore khi giả lập hết dung lượng;
+- DOM integration tests cho boot app, product editing, template switching, history, reset, print preflight, dữ liệu local sai kiểu, accessibility trạng thái tab, rollback restore khi giả lập hết dung lượng, kéo trường trên preview và resize/reset logo;
 - static smoke tests cho các contract UI/logic quan trọng.
 
 ## Chạy local
