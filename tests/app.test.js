@@ -314,3 +314,31 @@ test('title and subtitle preserve professional vertical hierarchy', () => {
   expect(document.getElementById('pQuoteTitle').textContent).not.toBe('');
   expect(document.getElementById('pQuoteSubtitle')).toBeTruthy();
 });
+
+
+test('large Tùng Gia Bảo product set starts collapsed for practical editing', () => {
+  const cards = [...document.querySelectorAll('.product-card')];
+  expect(cards.length).toBeGreaterThanOrEqual(72);
+  expect(cards.filter(card => card.classList.contains('collapsed')).length).toBeGreaterThanOrEqual(72);
+});
+
+test('all eight report templates preserve the full grouped price-list content', () => {
+  const themes = ['modern','corporate','minimal','classic','emerald','warm','premium','mono'];
+  const expectedProducts = document.querySelectorAll('.product-card').length;
+  for (const theme of themes) {
+    document.querySelector('.tpl[data-theme="' + theme + '"]').click();
+    expect(document.getElementById('paper').classList.contains('theme-' + theme)).toBe(true);
+    expect(document.querySelectorAll('#qBody tr:not(.qgroup-row)').length).toBe(expectedProducts);
+    expect(document.querySelectorAll('#qBody .qgroup-row').length).toBe(3);
+    expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
+  }
+  document.querySelector('.tpl[data-theme="modern"]').click();
+});
+
+test('airy spacing survives binding normalization instead of silently becoming standard', () => {
+  const select = document.getElementById('previewSpacing');
+  select.value = 'airy';
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('paper').dataset.spacing).toBe('airy');
+  expect(JSON.parse(localStorage.getItem('tunggiabao-price-report-v1')).previewSpacing).toBe('airy');
+});
