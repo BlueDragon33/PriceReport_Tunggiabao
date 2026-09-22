@@ -1884,6 +1884,7 @@ document.getElementById('resetLogoPosition').addEventListener('click', () => {
   toast('Đã căn lại logo');
 });
 
+const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024;
 let logoReadToken = 0;
 
 function clearCurrentLogo({ notify = false } = {}) {
@@ -1905,8 +1906,8 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
 
-  if (file.size > 1500000) {
-    alert('Logo quá lớn. Hãy chọn ảnh nhỏ hơn khoảng 1,5 MB để tránh đầy bộ nhớ trình duyệt.');
+  if (file.size > MAX_LOGO_FILE_BYTES) {
+    alert('Logo quá lớn. Kích thước tối đa là 3 MB. Hãy chọn ảnh nhỏ hơn để tránh đầy bộ nhớ trình duyệt.');
     event.target.value = '';
     return;
   }
