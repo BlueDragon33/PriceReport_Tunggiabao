@@ -1417,7 +1417,7 @@ function setupSmartImport() {
   document.getElementById('reparseOcrText')?.addEventListener('click', () => {
     const text = document.getElementById('ocrRawText')?.value || '';
     const parsed = parseHandwritingText(text);
-    smartImportDraft = mergeSmartImportSource(parsed, { replaceSourceFields: true, preferNext: true });
+    smartImportDraft = mergeSmartImportSource(parsed, { replaceSourceFields: true });
     renderSmartImportReview();
     setSmartImportProgress('Đã phân tích lại văn bản OCR đã chỉnh.', 'success');
   });
