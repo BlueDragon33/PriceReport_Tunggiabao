@@ -102,7 +102,8 @@
             <h3>Quản lý báo giá</h3>
             <div class="history-stats">
               <div class="history-kpi"><span>Đã lưu</span><strong id="historyCount">0</strong></div>
-              <div class="history-kpi"><span>Tổng giá trị</span><strong id="historyRevenue">0 ₫</strong></div>
+              <div class="history-kpi"><span>Đã chấp nhận</span><strong id="historyAcceptedCount">0</strong></div>
+              <div class="history-kpi history-kpi-wide"><span>Tổng giá trị đã lưu theo tiền tệ</span><strong id="historyRevenue">0 VND</strong></div>
             </div>
             <div class="btns" style="margin-top:10px">
               <button class="btn primary" id="saveQuoteToHistory">Lưu báo giá hiện tại</button>
@@ -274,7 +275,7 @@
             </div>
             <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử, mẫu đã lưu, danh bạ khách hàng và danh mục sản phẩm.</div>
           </div>
-          <div class="card"><h3>Đặt lại</h3><button class="btn danger block" id="reset">Khôi phục mẫu ban đầu</button></div>
+          <div class="card"><h3>Đặt lại báo giá hiện tại</h3><div class="help">Chỉ đưa báo giá đang mở về mẫu ban đầu; không xóa lịch sử, danh bạ, danh mục hay mẫu đã lưu.</div><button class="btn danger block" id="reset">Khôi phục báo giá hiện tại</button></div>
         </div>
 
         <div class="pane" id="pane-presets">
@@ -403,6 +404,8 @@
             <button class="zoom-btn" id="zoomIn" aria-label="Phóng to">+</button>
           </div>
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
+          <span class="document-health" id="documentHealth">Đang kiểm tra</span>
+          <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
           <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
           <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
           <button class="toolbar-btn print print-action">▣&nbsp; In</button>
