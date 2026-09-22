@@ -936,6 +936,7 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
   // so the old logo can never remain underneath or be composited with the new one.
   state.logo = '';
   state.showLogo = false;
+  saveLogoAsset('');
   save();
   syncInputs();
   render();
