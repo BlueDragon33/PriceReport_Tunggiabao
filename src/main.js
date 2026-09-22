@@ -635,8 +635,8 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
@@ -714,7 +714,7 @@ function cardCollapseKey(card, index) {
 function enhanceCollapsibleCards() {
   const ui = getUiState();
   const cardState = ui.cards || {};
-  const cards = $('.editor .card, .editor .section-block.quick-customer, .design .card');
+  const cards = $$('.editor .card, .editor .section-block.quick-customer, .design .card');
 
   cards.forEach((card, index) => {
     if (card.dataset.collapseReady === '1') return;
