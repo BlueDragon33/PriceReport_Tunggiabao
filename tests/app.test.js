@@ -58,3 +58,30 @@ test('reset wording and current-only behavior do not wipe history', () => {
   document.querySelector('[data-tab="history"]').click();
   expect(document.getElementById('historyCount').textContent).toBe('1');
 });
+
+test('malformed local collections are normalized instead of crashing management screens', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const customersKey = 'tunggiabao-price-report-customers-v1';
+  const catalogKey = 'tunggiabao-price-report-catalog-v1';
+  const oldHistory = localStorage.getItem(historyKey);
+  const oldCustomers = localStorage.getItem(customersKey);
+  const oldCatalog = localStorage.getItem(catalogKey);
+
+  localStorage.setItem(historyKey, JSON.stringify([
+    null,
+    { id: 'broken', data: null },
+    { id: 'valid', currency: 'EUR', data: { quoteNo: 'BG-BAD', products: 'wrong-type' } }
+  ]));
+  localStorage.setItem(customersKey, JSON.stringify([null, { name: ['Sai kiểu'], phone: 12345 }]));
+  localStorage.setItem(catalogKey, JSON.stringify([null, { name: 'SP', price: 'Infinity', currency: 'EUR' }]));
+
+  expect(() => document.querySelector('[data-tab="history"]').click()).not.toThrow();
+  expect(document.getElementById('historyCount').textContent).toBe('1');
+  expect(() => document.querySelector('[data-tab="master"]').click()).not.toThrow();
+  expect(document.getElementById('productCatalogList').textContent).toContain('SP');
+  expect(document.getElementById('productCatalogList').textContent).toContain('0 VND');
+
+  if (oldHistory == null) localStorage.removeItem(historyKey); else localStorage.setItem(historyKey, oldHistory);
+  if (oldCustomers == null) localStorage.removeItem(customersKey); else localStorage.setItem(customersKey, oldCustomers);
+  if (oldCatalog == null) localStorage.removeItem(catalogKey); else localStorage.setItem(catalogKey, oldCatalog);
+});
