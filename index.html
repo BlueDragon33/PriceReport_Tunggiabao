@@ -63,7 +63,18 @@
               <div class="row"><label>Số báo giá</label><input id="quoteNo" data-bind="quoteNo"></div>
               <div class="row"><label>Hiệu lực</label><input id="validity" data-bind="validity"></div>
             </div>
-            <div class="row"><label>Ngày báo giá</label><input id="quoteDate" data-bind="quoteDate" type="date"></div>
+            <div class="grid2">
+              <div class="row"><label>Ngày báo giá</label><input id="quoteDate" data-bind="quoteDate" type="date"></div>
+              <div class="row"><label>Trạng thái</label>
+                <select id="quoteStatus" data-bind="quoteStatus">
+                  <option value="draft">Bản nháp</option>
+                  <option value="sent">Đã gửi</option>
+                  <option value="accepted">Đã chấp nhận</option>
+                  <option value="rejected">Từ chối</option>
+                  <option value="expired">Hết hiệu lực</option>
+                </select>
+              </div>
+            </div>
             <div class="row"><label>Kính gửi</label><input id="recipientLine" data-bind="recipientLine"></div>
             <div class="row"><label>Lời mở đầu</label><textarea id="intro" data-bind="intro"></textarea></div>
             <div class="row"><label>Tiêu đề nhóm sản phẩm</label><input id="sectionTitle" data-bind="sectionTitle"></div>
@@ -84,7 +95,19 @@
           </div>
           <div class="card">
             <h3>Lịch sử báo giá</h3>
-            <div class="row"><label>Tìm theo số báo giá / khách hàng</label><input id="quoteSearch" placeholder="Nhập từ khóa..."></div>
+            <div class="grid2">
+              <div class="row"><label>Tìm theo số báo giá / khách hàng</label><input id="quoteSearch" placeholder="Nhập từ khóa..."></div>
+              <div class="row"><label>Lọc trạng thái</label>
+                <select id="quoteStatusFilter">
+                  <option value="">Tất cả</option>
+                  <option value="draft">Bản nháp</option>
+                  <option value="sent">Đã gửi</option>
+                  <option value="accepted">Đã chấp nhận</option>
+                  <option value="rejected">Từ chối</option>
+                  <option value="expired">Hết hiệu lực</option>
+                </select>
+              </div>
+            </div>
             <div id="quoteHistoryList" class="history-list"></div>
           </div>
         </div>
@@ -190,7 +213,21 @@
 
         <div class="pane" id="pane-export">
           <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="exportSnapshot">Xuất dữ liệu báo giá</button></div></div>
-          <div class="card"><h3>Sao lưu dữ liệu</h3><div class="btns"><button class="btn" id="exportJson">Xuất JSON</button><label class="btn file-btn" for="importJson">Nhập JSON</label><input class="hidden-input" id="importJson" type="file" accept=".json,application/json"></div></div>
+          <div class="card">
+            <h3>Sao lưu dữ liệu</h3>
+            <div class="btns">
+              <button class="btn" id="exportJson">Xuất báo giá hiện tại</button>
+              <label class="btn file-btn" for="importJson">Nhập báo giá</label>
+              <input class="hidden-input" id="importJson" type="file" accept=".json,application/json">
+            </div>
+            <div class="backup-divider"></div>
+            <div class="btns">
+              <button class="btn primary" id="exportAllData">Sao lưu toàn bộ WebApp</button>
+              <label class="btn file-btn" for="importAllData">Khôi phục toàn bộ</label>
+              <input class="hidden-input" id="importAllData" type="file" accept=".json,application/json">
+            </div>
+            <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử báo giá và các mẫu đã lưu.</div>
+          </div>
           <div class="card"><h3>Đặt lại</h3><button class="btn danger block" id="reset">Khôi phục mẫu ban đầu</button></div>
         </div>
 
