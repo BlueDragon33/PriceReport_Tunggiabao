@@ -994,7 +994,7 @@ document.getElementById('closeDesign').addEventListener('click', () => {
   if (window.innerWidth > 1280) setMajorPanelState('design', true);
 });
 
-$('.print-action').forEach((el) => el.addEventListener('click', () => {
+$$('.print-action').forEach((el) => el.addEventListener('click', () => {
   if (runPreflight({ forPrint: true })) window.print();
 }));
 
