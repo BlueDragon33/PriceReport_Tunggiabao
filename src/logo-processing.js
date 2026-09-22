@@ -26,20 +26,25 @@ function colorDistance(a, b) {
   return Math.sqrt(dr * dr + dg * dg + db * db);
 }
 
-function averageCorner(data, width, height, cornerX, cornerY, radius = 2) {
+function averageCorner(data, width, height, cornerX, cornerY, radius = 4) {
   const colors = [];
-  const xStart = cornerX === 0 ? 0 : Math.max(0, width - 1 - radius * 2);
-  const xEnd = cornerX === 0 ? Math.min(width - 1, radius * 2) : width - 1;
-  const yStart = cornerY === 0 ? 0 : Math.max(0, height - 1 - radius * 2);
-  const yEnd = cornerY === 0 ? Math.min(height - 1, radius * 2) : height - 1;
+  const cornerPx = cornerX === 0 ? 0 : width - 1;
+  const cornerPy = cornerY === 0 ? 0 : height - 1;
+  const xStep = cornerX === 0 ? 1 : -1;
+  const yStep = cornerY === 0 ? 1 : -1;
+  const maxDx = Math.min(radius, width - 1);
+  const maxDy = Math.min(radius, height - 1);
 
-  for (let y = yStart; y <= yEnd; y += 1) {
-    for (let x = xStart; x <= xEnd; x += 1) {
-      const i = (y * width + x) * 4;
-      if (data[i + 3] < 20) continue;
-      colors.push([data[i], data[i + 1], data[i + 2]]);
-    }
-  }
+  const pushPixel = (x, y) => {
+    const i = (y * width + x) * 4;
+    if (data[i + 3] < 20) return;
+    colors.push([data[i], data[i + 1], data[i + 2]]);
+  };
+
+  // Sample only the two outer edges meeting at the corner. This prevents
+  // subject pixels inside the logo from contaminating the background model.
+  for (let d = 0; d <= maxDx; d += 1) pushPixel(cornerPx + d * xStep, cornerPy);
+  for (let d = 1; d <= maxDy; d += 1) pushPixel(cornerPx, cornerPy + d * yStep);
 
   if (!colors.length) return [255, 255, 255];
   return [0,1,2].map((channel) =>
