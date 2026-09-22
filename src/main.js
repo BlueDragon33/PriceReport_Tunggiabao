@@ -242,6 +242,40 @@ function stateForStorage() {
 }
 
 const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
+
+function captureStorageSnapshot(keys) {
+  const snapshot = {};
+  try {
+    keys.forEach((key) => {
+      snapshot[key] = localStorage.getItem(key);
+    });
+    return snapshot;
+  } catch (error) {
+    console.error('Unable to capture storage snapshot:', error);
+    return null;
+  }
+}
+
+function restoreStorageSnapshot(snapshot) {
+  if (!snapshot) return false;
+  try {
+    Object.entries(snapshot).forEach(([key, value]) => {
+      if (value == null) localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    });
+    return true;
+  } catch (error) {
+    console.error('Unable to roll back storage snapshot:', error);
+    return false;
+  }
+}
+
+function storageWriteError(rollbackOk = true) {
+  const error = new Error(rollbackOk ? 'storage-write-failed' : 'storage-rollback-failed');
+  error.code = rollbackOk ? 'STORAGE_WRITE_FAILED' : 'STORAGE_ROLLBACK_FAILED';
+  return error;
+}
+
 const setText = (id, value) => {
   const el = document.getElementById(id);
   if (el) el.textContent = value == null ? '' : value;
@@ -1146,19 +1180,43 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
+    let previousState = null;
+    let snapshot = null;
     try {
       const imported = JSON.parse(reader.result);
       if (!isPlainObject(imported)) throw new Error('invalid quote schema');
-      state = merge(imported);
-      state.historyRecordId = '';
-      saveLogoAsset(state.logo || '');
-      save();
+      const importedState = merge(imported);
+      importedState.historyRecordId = '';
+
+      previousState = clone(state);
+      snapshot = captureStorageSnapshot([STORAGE, LOGO_STORAGE]);
+      if (!snapshot) throw storageWriteError(false);
+
+      state = importedState;
+      if (!saveLogoAsset(state.logo || '') || !save()) {
+        state = previousState;
+        const rollbackOk = restoreStorageSnapshot(snapshot);
+        throw storageWriteError(rollbackOk);
+      }
+
       syncInputs();
       renderEditorProducts();
       render();
       toast('Đã nhập dữ liệu');
-    } catch {
-      alert('File JSON không hợp lệ.');
+    } catch (error) {
+      if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
+        state = previousState;
+        syncInputs();
+        renderEditorProducts();
+        render();
+      }
+      if (error?.code === 'STORAGE_WRITE_FAILED') {
+        alert('Không thể nhập dữ liệu vì bộ nhớ trình duyệt không ghi được. Dữ liệu trước đó đã được giữ nguyên.');
+      } else if (error?.code === 'STORAGE_ROLLBACK_FAILED') {
+        alert('Không thể hoàn tất nhập dữ liệu và việc khôi phục bộ nhớ cũ cũng gặp lỗi. Hãy xuất sao lưu hiện có trước khi thao tác tiếp.');
+      } else {
+        alert('File JSON không hợp lệ.');
+      }
     }
   };
   reader.readAsText(file, 'utf-8');
@@ -1183,6 +1241,8 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
+    let previousState = null;
+    let snapshot = null;
     try {
       const payload = JSON.parse(reader.result);
       if (!isPlainObject(payload) || !isPlainObject(payload.current) || !Array.isArray(payload.history) || !isPlainObject(payload.presets)) {
@@ -1192,19 +1252,33 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
         throw new Error('unsupported backup schema');
       }
+
       const restoredState = merge(payload.current);
       const restoredHistory = normalizeHistoryRecords(payload.history);
       const restoredPresets = normalizePresetStore(payload.presets);
       const restoredCustomers = normalizeCustomerLibrary(payload.customers);
       const restoredCatalog = normalizeProductCatalog(payload.catalog);
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
+
+      previousState = clone(state);
+      snapshot = captureStorageSnapshot([STORAGE, HISTORY, PRESETS, CUSTOMERS, CATALOG, LOGO_STORAGE]);
+      if (!snapshot) throw storageWriteError(false);
+
       state = restoredState;
-      saveLogoAsset(state.logo || '');
-      setHistory(restoredHistory);
-      safeStore(PRESETS, JSON.stringify(restoredPresets));
-      setCustomerLibrary(restoredCustomers);
-      setProductCatalog(restoredCatalog);
-      save();
+      const writeOk =
+        saveLogoAsset(state.logo || '') &&
+        setHistory(restoredHistory) &&
+        safeStore(PRESETS, JSON.stringify(restoredPresets)) &&
+        setCustomerLibrary(restoredCustomers) &&
+        setProductCatalog(restoredCatalog) &&
+        save();
+
+      if (!writeOk) {
+        state = previousState;
+        const rollbackOk = restoreStorageSnapshot(snapshot);
+        throw storageWriteError(rollbackOk);
+      }
+
       syncInputs();
       renderEditorProducts();
       render();
@@ -1212,8 +1286,23 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       renderPresets();
       renderMasterData();
       toast('Đã khôi phục toàn bộ dữ liệu');
-    } catch {
-      alert('File sao lưu không hợp lệ hoặc không đúng định dạng PriceReport.');
+    } catch (error) {
+      if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
+        state = previousState;
+        syncInputs();
+        renderEditorProducts();
+        render();
+        renderHistory();
+        renderPresets();
+        renderMasterData();
+      }
+      if (error?.code === 'STORAGE_WRITE_FAILED') {
+        alert('Không thể khôi phục vì bộ nhớ trình duyệt không ghi được. Dữ liệu trước đó đã được phục hồi nguyên trạng.');
+      } else if (error?.code === 'STORAGE_ROLLBACK_FAILED') {
+        alert('Khôi phục dữ liệu bị gián đoạn và rollback bộ nhớ cũ cũng gặp lỗi. Không thao tác thêm trước khi xuất sao lưu các dữ liệu còn đọc được.');
+      } else {
+        alert('File sao lưu không hợp lệ hoặc không đúng định dạng PriceReport.');
+      }
     }
   };
   reader.readAsText(file, 'utf-8');
