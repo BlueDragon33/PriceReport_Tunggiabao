@@ -1,12 +1,12 @@
 {
   "name": "pricereport-tunggiabao",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "test": "node --check src/main.js && node scripts/smoke.mjs",
+    "test": "node --check src/main.js && node scripts/core.test.mjs && node scripts/smoke.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },
   "devDependencies": {
