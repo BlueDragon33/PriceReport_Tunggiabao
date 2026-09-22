@@ -828,7 +828,7 @@ const THEME_ACCENTS = {
   mono: '#30343a'
 };
 
-$('.tpl').forEach((el) => {
+$$('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
     if (description) description.textContent = el.dataset.description || '';
