@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v12';
+const CACHE = 'pricereport-shell-v13';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
@@ -6,8 +6,34 @@ const CORE = [
   './icon-512.svg'
 ];
 
+async function precacheLinkedAssets() {
+  const cache = await caches.open(CACHE);
+  await cache.addAll(CORE);
+  const indexResponse = await cache.match('./index.html');
+  if (!indexResponse) return;
+
+  const html = await indexResponse.clone().text();
+  const refs = [...html.matchAll(/(?:src|href)=["']([^"'#]+)["']/g)].map(match => match[1]);
+  const urls = [...new Set(refs.map(ref => {
+    try {
+      return new URL(ref, self.location.href);
+    } catch {
+      return null;
+    }
+  }).filter(url => url && url.origin === self.location.origin).map(url => url.href))];
+
+  await Promise.all(urls.map(async (url) => {
+    try {
+      const response = await fetch(url, { cache: 'reload' });
+      if (response.ok) await cache.put(url, response.clone());
+    } catch {
+      // CORE remains available even if one optional linked asset cannot be fetched.
+    }
+  }));
+}
+
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)));
+  event.waitUntil(precacheLinkedAssets());
   self.skipWaiting();
 });
 
