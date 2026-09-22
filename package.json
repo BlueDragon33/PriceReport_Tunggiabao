@@ -1,0 +1,14 @@
+{
+  "name": "pricereport-tunggiabao",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PriceReport quotation PWA",
+  "scripts": {
+    "check": "node --check src/app.js && node --check sw.js && node scripts/validate.mjs",
+    "test": "node --test tests/webapp.test.mjs",
+    "ci": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
