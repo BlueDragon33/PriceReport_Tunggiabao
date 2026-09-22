@@ -28,6 +28,7 @@ import {
   writeTextToPcDirectory
 } from './pc-storage.js';
 import { startDeviceProfileRuntime } from './device-profile.js';
+import { startPriceReportDeviceAccess } from './device-access-gate.js';
 import {
   normalizeLogoDisplayMode,
   normalizeRemoveBgTolerance,
@@ -367,6 +368,13 @@ try {
   console.warn('Device classification is unavailable; PriceReport continues without management metadata.', error);
 }
 void deviceProfileRuntime;
+
+let deviceAccessRuntime = null;
+Promise.resolve()
+  .then(() => startPriceReportDeviceAccess())
+  .then((runtime) => { deviceAccessRuntime = runtime; })
+  .catch((error) => console.warn('KT Device Gate could not start.', error));
+void deviceAccessRuntime;
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
