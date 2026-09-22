@@ -10,32 +10,120 @@
 </head>
 <body>
 <div id="app">
-  <div class="shell">
-    <nav class="nav">
-      <div class="brand" title="PriceReport">▤</div>
-      <button class="active" data-tab="general"><span class="nav-glyph">▤</span><span>Thông tin<br>chung</span></button>
+  <div class="shell app-workspace">
+    <nav class="nav" aria-label="Điều hướng ứng dụng">
+      <div class="app-brand">
+        <div class="brand" title="Tunggiabao">TGB</div>
+        <div class="brand-copy"><strong>Tunggiabao</strong><small>Báo giá chuyên nghiệp</small></div>
+      </div>
+
+      <div class="nav-section-label">Tổng quan</div>
+      <button class="active nav-dashboard" data-tab="dashboard"><span class="nav-glyph">⌂</span><span>Trang chủ</span></button>
+      <button data-tab="general"><span class="nav-glyph">＋</span><span>Tạo báo giá</span></button>
+      <button class="nav-secondary" data-tab="history"><span class="nav-glyph">▤</span><span>Quản lý báo giá</span></button>
+
+      <div class="nav-section-label">Dữ liệu</div>
+      <button class="nav-secondary" data-tab="master"><span class="nav-glyph">▦</span><span>Khách hàng & sản phẩm</span></button>
       <button data-tab="customer"><span class="nav-glyph">●</span><span>Khách hàng</span></button>
       <button data-tab="products"><span class="nav-glyph">◆</span><span>Sản phẩm</span></button>
-      <button data-tab="payment"><span class="nav-glyph">▣</span><span>Thanh toán</span></button>
-      <button data-tab="terms"><span class="nav-glyph">▤</span><span>Điều khoản</span></button>
+
+      <div class="nav-section-label">Báo giá</div>
+      <button data-tab="payment"><span class="nav-glyph">₫</span><span>Thanh toán</span></button>
+      <button data-tab="terms"><span class="nav-glyph">≡</span><span>Điều khoản</span></button>
       <button data-tab="design"><span class="nav-glyph">◉</span><span>Thiết kế</span></button>
-      <button data-tab="view"><span class="nav-glyph">▣</span><span>Xem<br>báo cáo</span></button>
-      <button data-tab="export"><span class="nav-glyph">▰</span><span>Xuất/<br>Nhập/In</span></button>
+      <button data-tab="view"><span class="nav-glyph">▣</span><span>Xem báo cáo</span></button>
+      <button data-tab="export"><span class="nav-glyph">⇅</span><span>Xuất / Nhập / In</span></button>
       <button data-tab="presets"><span class="nav-glyph">▱</span><span>Lưu mẫu</span></button>
-      <button class="nav-secondary" data-tab="history"><span class="nav-glyph">◫</span><span>Báo giá</span></button>
-      <button class="nav-secondary" data-tab="master"><span class="nav-glyph">▦</span><span>Danh mục</span></button>
+
       <div class="spacer"></div>
       <div class="device-profile-chip" id="deviceProfileChip" aria-live="polite">
         <strong>Đang nhận diện thiết bị</strong><small>KT- · client runtime</small>
       </div>
-      <div class="tip"><b>Mẹo</b><br>Nhập bên trái, xem A4 bên phải. Bấm nội dung preview để tới trường chỉnh sửa.</div>
+      <div class="tip"><b>Chế độ ứng dụng</b><br>Trang chủ để quản lý. Tạo báo giá để vào studio A4.</div>
     </nav>
 
     <section class="editor">
       <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
       <div class="panel-head"><h2 id="paneTitle">THÔNG TIN CHUNG</h2><p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p></div>
       <div class="panel-body">
-        <div class="pane active" id="pane-general">
+        <div class="pane active app-dashboard" id="pane-dashboard">
+          <header class="dashboard-topbar">
+            <div>
+              <span class="eyebrow">TUNGGIABAO WORKSPACE</span>
+              <h1>Quản lý báo giá dễ dàng hơn mỗi ngày</h1>
+              <p>Tập trung báo giá, khách hàng, sản phẩm và thiết bị trong một ứng dụng.</p>
+            </div>
+            <div class="dashboard-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="dashboardSearch" type="search" placeholder="Tìm mã báo giá hoặc khách hàng..." autocomplete="off">
+            </div>
+          </header>
+
+          <section class="dashboard-hero">
+            <div class="dashboard-hero-copy">
+              <span class="hero-kicker">WORKSPACE BÁO GIÁ</span>
+              <h2>Tạo báo giá nhanh, theo dõi rõ, quản lý tập trung.</h2>
+              <p>Bắt đầu từ một báo giá mới hoặc tiếp tục công việc gần đây mà không phải tìm trong nhiều màn hình.</p>
+              <div class="hero-actions">
+                <button class="btn primary dashboard-primary" type="button" data-open-tab="general">＋ Tạo báo giá mới</button>
+                <button class="btn dashboard-secondary" type="button" data-open-tab="history">Xem danh sách báo giá</button>
+              </div>
+            </div>
+            <div class="hero-progress-card">
+              <span class="hero-progress-label">Tình trạng tháng này</span>
+              <strong id="dashMonthCount">0 báo giá</strong>
+              <div class="hero-progress-track"><span id="dashProgressBar"></span></div>
+              <small id="dashProgressText">Bắt đầu bằng báo giá đầu tiên của tháng.</small>
+            </div>
+          </section>
+
+          <section class="dashboard-quick-grid" aria-label="Thao tác nhanh">
+            <button type="button" class="quick-app-card quick-blue" data-open-tab="general"><span class="quick-icon">＋</span><b>Tạo báo giá</b><small>Khởi tạo và nhập nội dung</small></button>
+            <button type="button" class="quick-app-card quick-green" data-open-tab="master"><span class="quick-icon">●</span><b>Khách hàng</b><small>Danh bạ và thông tin mua hàng</small></button>
+            <button type="button" class="quick-app-card quick-orange" data-open-tab="products"><span class="quick-icon">◆</span><b>Sản phẩm</b><small>Danh mục, giá và quy cách</small></button>
+            <button type="button" class="quick-app-card quick-purple" data-open-tab="export"><span class="quick-icon">⇅</span><b>Xuất báo cáo</b><small>PDF, Excel, nhập và sao lưu</small></button>
+          </section>
+
+          <section class="dashboard-kpis">
+            <article class="kpi-card"><span class="kpi-icon kpi-blue">▤</span><div><small>Tổng báo giá</small><strong id="dashQuoteCount">0</strong><em>Tất cả trạng thái</em></div></article>
+            <article class="kpi-card"><span class="kpi-icon kpi-cyan">●</span><div><small>Khách hàng</small><strong id="dashCustomerCount">0</strong><em>Trong danh bạ</em></div></article>
+            <article class="kpi-card"><span class="kpi-icon kpi-orange">◆</span><div><small>Sản phẩm</small><strong id="dashProductCount">0</strong><em>Trong danh mục</em></div></article>
+            <article class="kpi-card"><span class="kpi-icon kpi-green">₫</span><div><small>Giá trị báo giá</small><strong id="dashRevenue">0 VND</strong><em>Tổng dữ liệu đã lưu</em></div></article>
+            <article class="kpi-card"><span class="kpi-icon kpi-yellow">◷</span><div><small>Đang xử lý</small><strong id="dashPendingCount">0</strong><em>Nháp hoặc đã gửi</em></div></article>
+            <article class="kpi-card"><span class="kpi-icon kpi-emerald">✓</span><div><small>Đã chấp nhận</small><strong id="dashAcceptedCount">0</strong><em>Báo giá thành công</em></div></article>
+          </section>
+
+          <section class="dashboard-main-grid">
+            <article class="dashboard-panel dashboard-recent">
+              <div class="dashboard-panel-head">
+                <div><h3>Báo giá gần đây</h3><p>Tiếp tục từ những báo giá vừa lưu.</p></div>
+                <button class="link-button" type="button" data-open-tab="history">Xem tất cả →</button>
+              </div>
+              <div class="recent-quote-table">
+                <div class="recent-quote-head"><span>Mã báo giá</span><span>Khách hàng</span><span>Ngày</span><span>Giá trị</span><span>Trạng thái</span></div>
+                <div id="dashRecentQuotes" class="recent-quote-body"></div>
+              </div>
+            </article>
+
+            <aside class="dashboard-side-stack">
+              <article class="dashboard-panel">
+                <div class="dashboard-panel-head"><div><h3>Thao tác nhanh</h3><p>Công việc thường dùng.</p></div></div>
+                <div class="side-actions">
+                  <button type="button" data-open-tab="general"><span>＋</span><b>Tạo báo giá mới</b><small>Mở studio soạn báo giá</small></button>
+                  <button type="button" data-open-tab="master"><span>▦</span><b>Quản lý danh mục</b><small>Khách hàng và sản phẩm</small></button>
+                  <button type="button" data-open-tab="view"><span>▣</span><b>Xem báo cáo</b><small>Đọc bản A4 toàn màn hình</small></button>
+                  <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất / sao lưu</b><small>PDF, Excel và backup</small></button>
+                </div>
+              </article>
+              <article class="dashboard-panel system-card">
+                <div class="system-indicator" aria-hidden="true">✓</div>
+                <div><small>Trạng thái hệ thống</small><strong id="dashSystemState">Đang kiểm tra</strong><p id="dashSystemDetail">Đang đọc trạng thái thiết bị và kết nối quản trị.</p></div>
+              </article>
+            </aside>
+          </section>
+        </div>
+
+        <div class="pane" id="pane-general">
           <div class="card">
             <h3>Logo</h3>
             <div class="logo-edit" id="logoEdit"><div class="logo-placeholder">THẾ GIỚI TRỨNG®</div></div>
