@@ -27,6 +27,7 @@ import {
   supportsPcFolderAccess,
   writeTextToPcDirectory
 } from './pc-storage.js';
+import { startDeviceProfileRuntime } from './device-profile.js';
 import {
   normalizeLogoDisplayMode,
   normalizeRemoveBgTolerance,
@@ -338,6 +339,8 @@ try {
     }
   }
   state = merge(rawStored);
+const deviceProfileRuntime = startDeviceProfileRuntime();
+void deviceProfileRuntime;
 } catch {
   state = clone(defaults);
 }
