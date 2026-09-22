@@ -322,15 +322,18 @@ test('large Tùng Gia Bảo product set starts collapsed for practical editing',
   expect(cards.filter(card => card.classList.contains('collapsed')).length).toBeGreaterThanOrEqual(72);
 });
 
-test('all eight report templates preserve the full grouped price-list content', () => {
+test('all eight report templates preserve the full grouped price-list content and business data', () => {
   const themes = ['modern','corporate','minimal','classic','emerald','warm','premium','mono'];
   const expectedProducts = document.querySelectorAll('.product-card').length;
+  const companyBefore = document.getElementById('pCompanyName').textContent;
+  const firstProductBefore = document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent;
   for (const theme of themes) {
     document.querySelector('.tpl[data-theme="' + theme + '"]').click();
     expect(document.getElementById('paper').classList.contains('theme-' + theme)).toBe(true);
     expect(document.querySelectorAll('#qBody tr:not(.qgroup-row)').length).toBe(expectedProducts);
     expect(document.querySelectorAll('#qBody .qgroup-row').length).toBe(3);
-    expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
+    expect(document.getElementById('pCompanyName').textContent).toBe(companyBefore);
+    expect(document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent).toBe(firstProductBefore);
   }
   document.querySelector('.tpl[data-theme="modern"]').click();
 });
