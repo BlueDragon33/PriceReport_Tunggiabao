@@ -1972,6 +1972,33 @@ document.getElementById('resetPreviewLayout').addEventListener('click', () => {
   toast('Đã khôi phục bố cục chuẩn hiện đại');
 });
 
+function compactLegacyBrandAssets() {
+  const activeLogo = String(state.logo || '');
+  if (!activeLogo) return;
+
+  const history = getHistory();
+  let historyChanged = false;
+  history.forEach((record) => {
+    if (record?.data?.logo && record.data.logo === activeLogo) {
+      record.data.logo = '';
+      historyChanged = true;
+    }
+  });
+  if (historyChanged) setHistory(history);
+
+  const presets = getPresets();
+  let presetsChanged = false;
+  Object.keys(presets).forEach((name) => {
+    if (presets[name]?.logo && presets[name].logo === activeLogo) {
+      presets[name].logo = '';
+      presetsChanged = true;
+    }
+  });
+  if (presetsChanged) safeStore(PRESETS, JSON.stringify(presets));
+}
+
+compactLegacyBrandAssets();
+
 setTimeout(() => document.getElementById('fit').click(), 60);
 window.addEventListener('resize', () => {
   if (window.innerWidth > 1050) document.getElementById('fit').click();
