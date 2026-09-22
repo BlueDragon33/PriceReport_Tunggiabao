@@ -1,4 +1,11 @@
 import './styles.css';
+import {
+  calcQuoteTotal,
+  historyTotalsByCurrency,
+  nextDuplicateQuoteNo,
+  normalizeCatalogCurrency,
+  normalizePhone
+} from './core.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -101,10 +108,28 @@ const defaults = {
 
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 function merge(data) {
+  const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
-    products: Array.isArray(data && data.products) ? data.products : clone(defaults.products)
+    products: rawProducts.map((product) => ({
+      name: String(product?.name || ''),
+      pack: String(product?.pack || ''),
+      unit: String(product?.unit || ''),
+      qty: Math.max(0, Number(product?.qty || 0)),
+      price: Math.max(0, Number(product?.price || 0)),
+      note: String(product?.note || '')
+    }))
   });
+  if (!merged.products.length) merged.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   if (merged.theme === 'blue') merged.theme = 'corporate';
+  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
+  if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
+  else merged.currency = String(merged.currency).toUpperCase();
+  merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
+  merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
+  merged.otherFee = Math.max(0, Number(merged.otherFee || 0));
+  merged.marginX = Math.min(30, Math.max(6, Number(merged.marginX || defaults.marginX)));
+  merged.marginTop = Math.min(30, Math.max(6, Number(merged.marginTop || defaults.marginTop)));
+  merged.marginBottom = Math.min(30, Math.max(6, Number(merged.marginBottom || defaults.marginBottom)));
 
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
@@ -177,7 +202,10 @@ function openTab(tab) {
   $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
-  if (tab === 'design') document.getElementById('designPanel').classList.add('open');
+  if (tab === 'design') {
+    document.getElementById('designPanel').classList.add('open');
+    setMajorPanelState('design', false);
+  }
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
   if (tab === 'master') renderMasterData();
@@ -257,6 +285,15 @@ function money(value) {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
   }).format(Number(value || 0)) + ' ' + state.currency;
+}
+
+function moneyForCurrency(value, currency = 'VND') {
+  const code = normalizeCatalogCurrency(currency);
+  const digits = code === 'VND' ? 0 : 2;
+  return new Intl.NumberFormat('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  }).format(Number(value || 0)) + ' ' + code;
 }
 
 const units = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
@@ -681,6 +718,7 @@ function render() {
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
+  updateDocumentHealth();
   requestAnimationFrame(updatePageEstimate);
 }
 
@@ -947,10 +985,31 @@ $$('.color').forEach((el) => {
   });
 });
 
-document.getElementById('openDesign').addEventListener('click', () => document.getElementById('designPanel').classList.add('open'));
-document.getElementById('closeDesign').addEventListener('click', () => document.getElementById('designPanel').classList.remove('open'));
+document.getElementById('openDesign').addEventListener('click', () => {
+  document.getElementById('designPanel').classList.add('open');
+  setMajorPanelState('design', false);
+});
+document.getElementById('closeDesign').addEventListener('click', () => {
+  document.getElementById('designPanel').classList.remove('open');
+  if (window.innerWidth > 1280) setMajorPanelState('design', true);
+});
 
-$$('.print-action').forEach((el) => el.addEventListener('click', () => window.print()));
+$('.print-action').forEach((el) => el.addEventListener('click', () => {
+  if (runPreflight({ forPrint: true })) window.print();
+}));
+
+document.getElementById('preflightCheck')?.addEventListener('click', () => {
+  const result = validateQuote();
+  updateDocumentHealth();
+  if (!result.errors.length && !result.warnings.length) {
+    toast('Báo giá đã sẵn sàng để in');
+    return;
+  }
+  const lines = [];
+  if (result.errors.length) lines.push('LỖI:\n• ' + result.errors.join('\n• '));
+  if (result.warnings.length) lines.push('CẦN KIỂM TRA:\n• ' + result.warnings.join('\n• '));
+  alert(lines.join('\n\n'));
+});
 
 document.getElementById('exportJson').addEventListener('click', () => {
   download('bao-gia-du-lieu.json', JSON.stringify(state, null, 2), 'application/json');
@@ -1038,7 +1097,7 @@ document.getElementById('customerLibrarySearch').addEventListener('input', rende
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
 
 document.getElementById('reset').addEventListener('click', () => {
-  if (!confirm('Khôi phục toàn bộ dữ liệu về mẫu ban đầu?')) return;
+  if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
   state = clone(defaults);
   save();
   syncInputs();
@@ -1047,9 +1106,69 @@ document.getElementById('reset').addEventListener('click', () => {
   toast('Đã khôi phục mẫu');
 });
 
+function validateQuote(data = state) {
+  const errors = [];
+  const warnings = [];
+
+  if (!String(data.companyName || '').trim()) errors.push('Thiếu tên công ty.');
+  if (!String(data.quoteTitle || '').trim()) errors.push('Thiếu tiêu đề báo giá.');
+  if (!String(data.recipientLine || '').trim()) warnings.push('Chưa có dòng Kính gửi.');
+
+  const products = Array.isArray(data.products) ? data.products : [];
+  const namedProducts = products.filter(product => String(product?.name || '').trim());
+  if (!namedProducts.length) errors.push('Chưa có sản phẩm hợp lệ.');
+
+  products.forEach((product, index) => {
+    const name = String(product?.name || '').trim();
+    const qty = Number(product?.qty || 0);
+    const price = Number(product?.price || 0);
+    if (!name && (qty > 0 || price > 0)) warnings.push('Dòng sản phẩm ' + (index + 1) + ' chưa có tên.');
+    if (name && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
+    if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
+  });
+
+  if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
+  if (data.showPaymentBlock && data.paymentMethod && !data.bankName && /chuyển khoản/i.test(data.paymentMethod)) {
+    warnings.push('Có phương thức chuyển khoản nhưng chưa nhập ngân hàng.');
+  }
+
+  return { errors, warnings };
+}
+
+function updateDocumentHealth() {
+  const badge = document.getElementById('documentHealth');
+  if (!badge) return;
+  const result = validateQuote();
+  badge.classList.remove('ok','warn','error');
+  if (result.errors.length) {
+    badge.classList.add('error');
+    badge.textContent = result.errors.length + ' lỗi cần sửa';
+  } else if (result.warnings.length) {
+    badge.classList.add('warn');
+    badge.textContent = result.warnings.length + ' mục cần kiểm tra';
+  } else {
+    badge.classList.add('ok');
+    badge.textContent = 'Sẵn sàng in';
+  }
+}
+
+function runPreflight({ forPrint = false } = {}) {
+  const result = validateQuote();
+  updateDocumentHealth();
+  if (result.errors.length) {
+    alert('Chưa thể ' + (forPrint ? 'in/xuất PDF' : 'hoàn tất') + ':\n\n• ' + result.errors.join('\n• '));
+    return false;
+  }
+  if (forPrint && result.warnings.length) {
+    return confirm('Báo giá có ' + result.warnings.length + ' mục cần kiểm tra:\n\n• ' + result.warnings.join('\n• ') + '\n\nVẫn tiếp tục in/xuất PDF?');
+  }
+  return true;
+}
+
 function getHistory() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY)) || [];
+    const value = JSON.parse(localStorage.getItem(HISTORY));
+    return Array.isArray(value) ? value : [];
   } catch {
     return [];
   }
@@ -1060,13 +1179,7 @@ function setHistory(items) {
 }
 
 function calcTotal(data) {
-  const products = Array.isArray(data.products) ? data.products : [];
-  const subtotal = products.reduce((sum, p) => sum + Number(p.qty || 0) * Number(p.price || 0), 0);
-  const discountPct = Math.min(100, Math.max(0, Number(data.discountPct || 0)));
-  const discount = subtotal * discountPct / 100;
-  const taxable = subtotal - discount;
-  const vat = taxable * Math.max(0, Number(data.vatPct || 0)) / 100;
-  return taxable + vat + Math.max(0, Number(data.otherFee || 0));
+  return calcQuoteTotal(data);
 }
 
 const STATUS_LABELS = {
@@ -1086,6 +1199,11 @@ function statusLabel(status) {
 }
 
 function saveCurrentQuote() {
+  const validation = validateQuote();
+  if (state.quoteStatus !== 'draft' && validation.errors.length) {
+    alert('Báo giá không thể lưu ở trạng thái "' + statusLabel(state.quoteStatus) + '" khi còn lỗi:\n\n• ' + validation.errors.join('\n• '));
+    return;
+  }
   const items = getHistory();
   const now = new Date().toISOString();
   const existingIndex = state.quoteNo
@@ -1095,6 +1213,7 @@ function saveCurrentQuote() {
     id: existingIndex >= 0 ? items[existingIndex].id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
     savedAt: now,
     status: state.quoteStatus || 'draft',
+    currency: normalizeCatalogCurrency(state.currency),
     total: calcTotal(state),
     data: clone(state)
   };
@@ -1117,15 +1236,16 @@ function loadQuoteRecord(record) {
 
 function duplicateQuoteRecord(record) {
   state = merge(clone(record.data));
-  const base = state.quoteNo || 'BG';
-  state.quoteNo = base + '-COPY';
+  const used = getHistory().map(item => item?.data?.quoteNo).filter(Boolean);
+  state.quoteNo = nextDuplicateQuoteNo(state.quoteNo || 'BG', used);
   state.quoteDate = new Date().toISOString().slice(0, 10);
+  state.quoteStatus = 'draft';
   save();
   syncInputs();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã nhân bản báo giá');
+  toast('Đã nhân bản thành ' + state.quoteNo);
 }
 
 function generateUniqueQuoteNo() {
@@ -1173,7 +1293,36 @@ function createNewQuote() {
     logoBackdropOpacity: state.logoBackdropOpacity,
     logoBackdropRadius: state.logoBackdropRadius,
     logoBackdropBorder: state.logoBackdropBorder,
-    docFontSize: state.docFontSize
+    docFontSize: state.docFontSize,
+    previewTitleAlign: state.previewTitleAlign,
+    previewTitleSize: state.previewTitleSize,
+    previewSpacing: state.previewSpacing,
+    previewTableDensity: state.previewTableDensity,
+    previewHeaderGap: state.previewHeaderGap,
+    previewMetaWidth: state.previewMetaWidth,
+    previewLineHeight: state.previewLineHeight,
+    showQuoteMeta: state.showQuoteMeta,
+    compactTable: state.compactTable,
+    showStt: state.showStt,
+    showPrice: state.showPrice,
+    showAmount: state.showAmount,
+    showNote: state.showNote,
+    showTotals: state.showTotals,
+    showWords: state.showWords,
+    showTerms: state.showTerms,
+    showSignature: state.showSignature,
+    showPaymentBlock: state.showPaymentBlock,
+    paymentMethod: state.paymentMethod,
+    bankName: state.bankName,
+    bankAccount: state.bankAccount,
+    bankOwner: state.bankOwner,
+    termsTitle: state.termsTitle,
+    termsText: state.termsText,
+    closingText: state.closingText,
+    leftTitle: state.leftTitle,
+    rightTitle: state.rightTitle,
+    leftNote: state.leftNote,
+    rightNote: state.rightNote
   };
   state = Object.assign(clone(defaults), keep);
   const d = new Date();
@@ -1204,8 +1353,24 @@ function renderHistory() {
   });
 
   document.getElementById('historyCount').textContent = String(all.length);
-  const revenue = all.reduce((sum, record) => sum + Number(record.total || calcTotal(record.data || {})), 0);
-  document.getElementById('historyRevenue').textContent = new Intl.NumberFormat('vi-VN').format(revenue) + ' ₫';
+  const acceptedCount = all.filter(record => (record?.data?.quoteStatus || record?.status || 'draft') === 'accepted').length;
+  const acceptedEl = document.getElementById('historyAcceptedCount');
+  if (acceptedEl) acceptedEl.textContent = String(acceptedCount);
+
+  const totalsByCurrency = historyTotalsByCurrency(all);
+  const revenueEl = document.getElementById('historyRevenue');
+  revenueEl.innerHTML = '';
+  const currencies = Object.keys(totalsByCurrency);
+  if (!currencies.length) {
+    revenueEl.textContent = '0 VND';
+  } else {
+    currencies.sort().forEach((currency) => {
+      const line = document.createElement('span');
+      line.className = 'history-money-line';
+      line.textContent = moneyForCurrency(totalsByCurrency[currency], currency);
+      revenueEl.appendChild(line);
+    });
+  }
 
   list.innerHTML = '';
   if (!items.length) {
@@ -1232,8 +1397,9 @@ function renderHistory() {
 
     const meta = document.createElement('span');
     const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
+    const recordCurrency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
     meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
-      new Intl.NumberFormat('vi-VN').format(Number(record.total || calcTotal(data))) + ' ₫';
+      moneyForCurrency(Number(record.total ?? calcTotal(data)), recordCurrency);
     info.append(titleLine, meta);
 
     const actions = document.createElement('div');
@@ -1278,7 +1444,7 @@ function setCustomerLibrary(items) {
 }
 
 function customerKey(customer) {
-  const phone = String(customer.phone || '').replace(/\s+/g, '');
+  const phone = normalizePhone(customer.phone);
   if (phone) return 'phone:' + phone;
   return 'name:' + [customer.name, customer.company].filter(Boolean).join('|').trim().toLowerCase();
 }
@@ -1355,6 +1521,7 @@ function saveCurrentProductsToCatalog() {
       pack: product.pack || '',
       unit: product.unit || '',
       price: Math.max(0, Number(product.price || 0)),
+      currency: normalizeCatalogCurrency(state.currency),
       note: product.note || ''
     };
     const key = productKey(item);
@@ -1374,17 +1541,21 @@ function saveCurrentProductsToCatalog() {
 
 function addCatalogProduct(product) {
   const key = productKey(product);
+  const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+  const targetCurrency = normalizeCatalogCurrency(state.currency);
+  const currencyMatches = sourceCurrency === targetCurrency;
+  const catalogPrice = currencyMatches ? Math.max(0, Number(product.price || 0)) : 0;
   const existing = state.products.find(item => productKey(item) === key);
   if (existing) {
     existing.qty = Math.max(0, Number(existing.qty || 0)) + 1;
-    existing.price = Math.max(0, Number(product.price || existing.price || 0));
+    if (currencyMatches) existing.price = catalogPrice;
   } else {
     state.products.push({
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
       qty: 1,
-      price: Math.max(0, Number(product.price || 0)),
+      price: catalogPrice,
       note: product.note || ''
     });
   }
@@ -1392,7 +1563,7 @@ function addCatalogProduct(product) {
   renderEditorProducts();
   render();
   openTab('products');
-  toast('Đã thêm sản phẩm vào báo giá');
+  toast(currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ');
 }
 
 function renderMasterData() {
@@ -1458,7 +1629,8 @@ function renderMasterData() {
       const title = document.createElement('strong');
       title.textContent = product.name || 'Sản phẩm';
       const meta = document.createElement('span');
-      meta.textContent = [product.pack, product.unit, new Intl.NumberFormat('vi-VN').format(Number(product.price || 0)) + ' ₫']
+      const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+      meta.textContent = [product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
         .filter(Boolean).join(' • ');
       info.append(title, meta);
 
@@ -1641,6 +1813,12 @@ setTimeout(() => document.getElementById('fit').click(), 60);
 window.addEventListener('resize', () => {
   if (window.innerWidth > 1050) document.getElementById('fit').click();
   requestAnimationFrame(updatePageEstimate);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  setPreviewCustomizer(false);
+  document.getElementById('designPanel')?.classList.remove('open');
 });
 
 if ('serviceWorker' in navigator) {
