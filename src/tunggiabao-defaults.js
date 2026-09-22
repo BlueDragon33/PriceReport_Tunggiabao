@@ -1,6 +1,9 @@
 export const TUNGGIABAO_PROFILE = {
   companyName: 'HKD - Tùng Gia Bảo',
   companyAddress: 'Lô BT02-25 đường số 29 KĐT Nam Nha Trang',
+  companyAddressDetail: 'Lô BT02-25 đường số 29 KĐT Nam Nha Trang',
+  companyProvince: 'Khánh Hòa',
+  companyWard: '',
   branchKhanhHoa: '',
   branchDongNai: '',
   farmAddress: '',
