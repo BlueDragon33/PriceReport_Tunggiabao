@@ -7,6 +7,13 @@ const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
 const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
 
+function localISODate(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+}
+
 const defaults = {
   logo: '',
   companyName: 'CÔNG TY TNHH TMDV BIỂN UYÊN BẢO',
@@ -21,10 +28,11 @@ const defaults = {
   slogan: 'Vì sức khỏe cộng đồng',
   quoteTitle: 'BẢNG BÁO GIÁ',
   quoteNo: 'BG-2026-001',
-  quoteDate: new Date().toISOString().slice(0, 10),
+  quoteDate: localISODate(),
   quoteStatus: 'draft',
   validity: '7 ngày',
   recipientLine: 'Kính gửi: QUÝ KHÁCH HÀNG',
+  autoRecipient: true,
   intro: 'Công ty TNHH TM DV Biển Uyên Bảo xin trân trọng gửi đến Quý khách hàng bảng báo giá sản phẩm của chúng tôi như sau:',
   sectionTitle: 'I. CÁC SẢN PHẨM TRỨNG',
   customerName: 'QUÝ KHÁCH HÀNG',
@@ -59,7 +67,7 @@ const defaults = {
   rightNote: '(Ký, ghi rõ họ tên, đóng dấu)',
   leftName: '',
   rightName: '',
-  footerText: 'Vì sức khỏe cộng đồng  •  0888.458.222  •  contact@thegioitrung.vn  •  www.thegioitrung.vn',
+  footerText: '0888.458.222  •  contact@thegioitrung.vn  •  www.thegioitrung.vn',
   theme: 'modern',
   accent: '#0b8f83',
   showLogo: true,
@@ -105,6 +113,21 @@ function merge(data) {
     products: Array.isArray(data && data.products) ? data.products : clone(defaults.products)
   });
   if (merged.theme === 'blue') merged.theme = 'corporate';
+
+  if (typeof merged.logo === 'string' && merged.logo.length > 2100000) {
+    merged.logo = '';
+    merged.showLogo = false;
+  }
+
+  if (data && !Object.prototype.hasOwnProperty.call(data, 'autoRecipient')) {
+    const recipient = String(data.recipientLine || '').trim();
+    merged.autoRecipient = !recipient || recipient === 'Kính gửi: QUÝ KHÁCH HÀNG';
+  }
+
+  const duplicatedFooterPrefix = String(merged.slogan || '').trim() + '  •  ';
+  if (duplicatedFooterPrefix.trim() && String(merged.footerText || '').startsWith(duplicatedFooterPrefix)) {
+    merged.footerText = String(merged.footerText).slice(duplicatedFooterPrefix.length);
+  }
 
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
@@ -222,7 +245,19 @@ function bindInputs() {
         state[key] = el.value;
       }
 
-      $$('[data-bind]').forEach((peer) => {
+      if (key === 'recipientLine') {
+        state.autoRecipient = false;
+        $('[data-bind="autoRecipient"]').forEach((peer) => { peer.checked = false; });
+      }
+
+      if ((key === 'customerName' || key === 'customerCompany' || key === 'autoRecipient') && state.autoRecipient) {
+        state.recipientLine = 'Kính gửi: ' + (state.customerCompany || state.customerName || 'QUÝ KHÁCH HÀNG');
+        $('[data-bind="recipientLine"]').forEach((peer) => {
+          peer.value = state.recipientLine;
+        });
+      }
+
+      $('[data-bind]').forEach((peer) => {
         if (peer === el || peer.dataset.bind !== key) return;
         if (peer.type === 'checkbox') peer.checked = Boolean(state[key]);
         else peer.value = state[key] == null ? '' : state[key];
@@ -251,12 +286,16 @@ function formatDate(value) {
   return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : value;
 }
 
-function money(value) {
-  const digits = state.currency === 'VND' ? 0 : 2;
+function formatMoney(value, currency = 'VND') {
+  const digits = currency === 'VND' ? 0 : 2;
   return new Intl.NumberFormat('vi-VN', {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
-  }).format(Number(value || 0)) + ' ' + state.currency;
+  }).format(Number(value || 0)) + ' ' + currency;
+}
+
+function money(value) {
+  return formatMoney(value, state.currency);
 }
 
 const units = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
@@ -449,6 +488,14 @@ function renderEditorProducts() {
   }
 }
 
+function printableProducts(products = state.products) {
+  return (Array.isArray(products) ? products : []).filter((product) => {
+    const hasText = [product.name, product.pack, product.unit, product.note]
+      .some((value) => String(value || '').trim());
+    return hasText || Number(product.price || 0) > 0;
+  });
+}
+
 function renderPreviewProducts() {
   const cols = [];
   if (state.showStt) cols.push(['STT', 'stt']);
@@ -470,7 +517,7 @@ function renderPreviewProducts() {
   });
   head.appendChild(hrow);
 
-  state.products.forEach((product, index) => {
+  printableProducts().forEach((product, index) => {
     const row = document.createElement('tr');
     cols.forEach(([, key]) => {
       const td = document.createElement('td');
@@ -634,7 +681,7 @@ function render() {
     ['pBranchDongNai','branchDongNai'],['pFarmAddress','farmAddress'],['pTaxCode','taxCode'],['pPhone','phone'],
     ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteNo','quoteNo'],
     ['pValidity','validity'],['pRecipient','recipientLine'],['pIntro','intro'],['pSection','sectionTitle'],
-    ['pTermsTitle','termsTitle'],['pClosing','closingText'],['pDate','dateLine'],['pDateLeft','dateLine'],
+    ['pTermsTitle','termsTitle'],['pClosing','closingText'],['pDate','dateLine'],
     ['pLeftTitle','leftTitle'],['pRightTitle','rightTitle'],['pLeftNote','leftNote'],['pRightNote','rightNote'],
     ['pLeftName','leftName'],['pRightName','rightName'],['pFooter','footerText'],
     ['pSlogan','slogan'],['pPaymentMethod','paymentMethod'],['pBankName','bankName'],
@@ -642,6 +689,7 @@ function render() {
   ].forEach(([id, key]) => setText(id, state[key]));
 
   setText('pQuoteDate', formatDate(state.quoteDate));
+  setText('pDateLeft', '');
   renderLogo();
 
   $$('.webemail').forEach((el) => {
@@ -1038,7 +1086,7 @@ document.getElementById('customerLibrarySearch').addEventListener('input', rende
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
 
 document.getElementById('reset').addEventListener('click', () => {
-  if (!confirm('Khôi phục toàn bộ dữ liệu về mẫu ban đầu?')) return;
+  if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ, danh mục và mẫu đã lưu sẽ được giữ nguyên.')) return;
   state = clone(defaults);
   save();
   syncInputs();
@@ -1095,6 +1143,7 @@ function saveCurrentQuote() {
     id: existingIndex >= 0 ? items[existingIndex].id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
     savedAt: now,
     status: state.quoteStatus || 'draft',
+    currency: state.currency || 'VND',
     total: calcTotal(state),
     data: clone(state)
   };
@@ -1115,11 +1164,22 @@ function loadQuoteRecord(record) {
   toast('Đã mở ' + quoteLabel(record.data));
 }
 
+function generateUniqueCopyQuoteNo(sourceQuoteNo) {
+  const used = new Set(getHistory().map(item => item.data && item.data.quoteNo).filter(Boolean));
+  const base = String(sourceQuoteNo || 'BG').replace(/-COPY(?:-\d+)?$/, '');
+  let seq = 1;
+  let candidate = '';
+  do {
+    candidate = base + '-COPY-' + String(seq).padStart(2, '0');
+    seq += 1;
+  } while (used.has(candidate));
+  return candidate;
+}
+
 function duplicateQuoteRecord(record) {
   state = merge(clone(record.data));
-  const base = state.quoteNo || 'BG';
-  state.quoteNo = base + '-COPY';
-  state.quoteDate = new Date().toISOString().slice(0, 10);
+  state.quoteNo = generateUniqueCopyQuoteNo(state.quoteNo);
+  state.quoteDate = localISODate();
   save();
   syncInputs();
   renderEditorProducts();
@@ -1173,12 +1233,31 @@ function createNewQuote() {
     logoBackdropOpacity: state.logoBackdropOpacity,
     logoBackdropRadius: state.logoBackdropRadius,
     logoBackdropBorder: state.logoBackdropBorder,
-    docFontSize: state.docFontSize
+    docFontSize: state.docFontSize,
+    compactTable: state.compactTable,
+    showStt: state.showStt,
+    showPrice: state.showPrice,
+    showAmount: state.showAmount,
+    showNote: state.showNote,
+    showTotals: state.showTotals,
+    showWords: state.showWords,
+    showPaymentBlock: state.showPaymentBlock,
+    showTerms: state.showTerms,
+    showSignature: state.showSignature,
+    showQuoteMeta: state.showQuoteMeta,
+    previewTitleAlign: state.previewTitleAlign,
+    previewTitleSize: state.previewTitleSize,
+    previewSpacing: state.previewSpacing,
+    previewTableDensity: state.previewTableDensity,
+    previewHeaderGap: state.previewHeaderGap,
+    previewMetaWidth: state.previewMetaWidth,
+    previewLineHeight: state.previewLineHeight,
+    autoRecipient: state.autoRecipient
   };
   state = Object.assign(clone(defaults), keep);
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
-  state.quoteDate = d.toISOString().slice(0, 10);
+  state.quoteDate = localISODate(d);
   state.quoteStatus = 'draft';
   save();
   syncInputs();
@@ -1204,8 +1283,16 @@ function renderHistory() {
   });
 
   document.getElementById('historyCount').textContent = String(all.length);
-  const revenue = all.reduce((sum, record) => sum + Number(record.total || calcTotal(record.data || {})), 0);
-  document.getElementById('historyRevenue').textContent = new Intl.NumberFormat('vi-VN').format(revenue) + ' ₫';
+  const totalsByCurrency = all.reduce((acc, record) => {
+    const data = record.data || {};
+    const currency = data.currency || record.currency || 'VND';
+    acc[currency] = (acc[currency] || 0) + Number(record.total ?? calcTotal(data));
+    return acc;
+  }, {});
+  const revenueText = Object.entries(totalsByCurrency)
+    .map(([currency, value]) => formatMoney(value, currency))
+    .join(' · ');
+  document.getElementById('historyRevenue').textContent = revenueText || '0 VND';
 
   list.innerHTML = '';
   if (!items.length) {
@@ -1232,8 +1319,9 @@ function renderHistory() {
 
     const meta = document.createElement('span');
     const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
+    const currency = data.currency || record.currency || 'VND';
     meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
-      new Intl.NumberFormat('vi-VN').format(Number(record.total || calcTotal(data))) + ' ₫';
+      formatMoney(Number(record.total ?? calcTotal(data)), currency);
     info.append(titleLine, meta);
 
     const actions = document.createElement('div');
