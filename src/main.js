@@ -161,7 +161,7 @@ function bindInputs() {
         state[key] = el.value;
       }
 
-      $('[data-bind]').forEach((peer) => {
+      $$('[data-bind]').forEach((peer) => {
         if (peer === el || peer.dataset.bind !== key) return;
         if (peer.type === 'checkbox') peer.checked = Boolean(state[key]);
         else peer.value = state[key] == null ? '' : state[key];
@@ -443,8 +443,8 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
   requestAnimationFrame(updatePageEstimate);
 }
 
