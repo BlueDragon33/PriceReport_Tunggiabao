@@ -1073,3 +1073,6 @@ input[type=range]::-moz-range-thumb{
     right:10px;left:10px;top:72px;width:auto;max-height:calc(100vh - 92px)
   }
 }
+
+.paper[data-title-align="center"] .qtitle{text-align:center!important}
+.paper[data-title-align="center"] .qtitle:after{margin-left:auto!important;margin-right:auto!important}
