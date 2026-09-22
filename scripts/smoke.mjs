@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v20")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v21")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -175,3 +175,12 @@ if (!js.includes('exportCurrentQuoteExcel')) fail('Excel export implementation i
 if (!js.includes('saveCurrentToPc({ notify: false })')) fail('Explicit quote save does not trigger PC autosave');
 if (!js.includes('getRememberedPcDirectory')) fail('Remembered PC folder retrieval is missing');
 if (!css.includes('.shell.report-view .preview')) fail('Responsive report-view CSS is missing');
+
+if (!html.includes('id="logoDisplayMode"')) fail('Logo display mode selector is missing');
+if (!html.includes('Giữ nguyên ảnh gốc (mặc định)')) fail('Original logo mode is not the explicit default in UI');
+if (!html.includes('id="restoreLogoOriginal"')) fail('Restore original logo action is missing');
+if (!js.includes("logoDisplayMode: 'original'")) fail('Logo state does not default to original mode');
+if (!js.includes("state.logoDisplayMode = 'original'")) fail('Logo upload/reset does not force original mode');
+if (!js.includes('removeLightBackgroundDataUrl')) fail('Optional background removal implementation is missing');
+if (!css.includes('.logo-image-mode-original img')) fail('Original mode pixel-preserving CSS is missing');
+if (!css.includes('mix-blend-mode:normal!important')) fail('Original mode must disable blend effects');
