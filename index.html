@@ -28,6 +28,7 @@
     </nav>
 
     <section class="editor">
+      <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
       <div class="panel-head"><h2 id="paneTitle">THÔNG TIN CHUNG</h2><p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p></div>
       <div class="panel-body">
         <div class="pane active" id="pane-general">
@@ -284,43 +285,74 @@
     </section>
 
     <aside class="design" id="designPanel">
+      <button class="panel-edge-toggle design-edge-toggle" id="toggleDesignPanel" type="button" aria-label="Thu gọn bảng thiết kế" title="Thu gọn / mở bảng thiết kế">‹</button>
       <div class="panel-head"><h2>CHỌN MẪU TEMPLATE</h2><p>Đổi phong cách mà không làm mất dữ liệu.</p></div>
       <div class="panel-body">
         <div class="card">
           <div class="template-grid">
-            <button class="tpl" data-theme="modern"><div class="thumb modern"></div><span>Hiện đại Teal</span></button>
-            <button class="tpl" data-theme="corporate"><div class="thumb corporate"></div><span>Doanh nghiệp</span></button>
-            <button class="tpl" data-theme="minimal"><div class="thumb minimal"></div><span>Tối giản</span></button>
-            <button class="tpl" data-theme="classic"><div class="thumb classic"></div><span>Cổ điển</span></button>
-            <button class="tpl" data-theme="emerald"><div class="thumb emerald"></div><span>Eco Emerald</span></button>
-            <button class="tpl" data-theme="warm"><div class="thumb warm"></div><span>Warm Orange</span></button>
-            <button class="tpl" data-theme="premium"><div class="thumb premium"></div><span>Premium Dark</span></button>
-            <button class="tpl" data-theme="mono"><div class="thumb mono"></div><span>Mono Clean</span></button>
+            <button class="tpl" data-theme="modern" data-description="Mềm, sạch, dùng nhận diện teal làm điểm nhấn."><div class="thumb modern"></div><span>Brand Flow</span></button>
+            <button class="tpl" data-theme="corporate" data-description="Gọn, chắc, phù hợp báo giá doanh nghiệp và khách sỉ."><div class="thumb corporate"></div><span>Corporate Grid</span></button>
+            <button class="tpl" data-theme="minimal" data-description="Nhiều khoảng trắng, ưu tiên nội dung và số liệu."><div class="thumb minimal"></div><span>Essential</span></button>
+            <button class="tpl" data-theme="classic" data-description="Serif tinh tế, phù hợp tài liệu trang trọng."><div class="thumb classic"></div><span>Heritage</span></button>
+            <button class="tpl" data-theme="emerald" data-description="Organic nhưng tiết chế, hợp thương hiệu thực phẩm."><div class="thumb emerald"></div><span>Organic</span></button>
+            <button class="tpl" data-theme="warm" data-description="Ấm áp, thân thiện, phù hợp báo giá bán lẻ."><div class="thumb warm"></div><span>Warm Retail</span></button>
+            <button class="tpl" data-theme="premium" data-description="Header tối cao cấp, dùng cho báo giá chọn lọc."><div class="thumb premium"></div><span>Executive</span></button>
+            <button class="tpl" data-theme="mono" data-description="Đen trắng sắc nét, in nhanh và tiết kiệm mực màu."><div class="thumb mono"></div><span>Mono Pro</span></button>
           </div>
+          <div class="template-description" id="templateDescription">Chọn một mẫu để xem phong cách và mục đích sử dụng.</div>
         </div>
         <div class="card logo-design-card">
           <h3>Logo & nhận diện</h3>
           <div class="logo-design-preview" id="logoDesignPreview"></div>
           <div class="btns logo-design-actions">
             <label class="btn file-btn" for="logoInput">Thay logo</label>
-            <button class="btn" id="resetLogoPosition">Căn lại logo</button>
+            <button class="btn" id="resetLogoPosition">Đặt lại</button>
           </div>
+
           <div class="row">
             <label>Kích thước logo <span class="range-value" id="logoWidthValue">60 mm</span></label>
             <input id="logoWidthRange" data-bind="logoWidth" type="range" min="28" max="90" step="1">
           </div>
+
           <div class="grid2">
             <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="28" max="90"></div>
-            <div class="row"><label>Đệm logo (mm)</label><input id="logoPadding" data-bind="logoPadding" type="number" min="0" max="12" step="1"></div>
+            <div class="row"><label>Khoảng thở (mm)</label><input id="logoPadding" data-bind="logoPadding" type="number" min="0" max="12" step="1"></div>
           </div>
-          <div class="row"><label>Dịch dọc logo</label><input id="logoOffsetY" data-bind="logoOffsetY" type="range" min="-10" max="10" step="1"></div>
+
           <div class="row">
-            <label>Cách hòa logo với mẫu</label>
-            <select id="logoTreatment" data-bind="logoTreatment">
-              <option value="soft">Nền mềm theo màu mẫu</option>
-              <option value="clean">Nền trắng sạch</option>
-              <option value="none">Không khung</option>
+            <label>Dịch dọc logo</label>
+            <input id="logoOffsetY" data-bind="logoOffsetY" type="range" min="-10" max="10" step="1">
+          </div>
+
+          <div class="row">
+            <label>Hòa trộn logo</label>
+            <select id="logoBlendMode" data-bind="logoBlendMode">
+              <option value="normal">Giữ nguyên màu</option>
+              <option value="multiply">Hòa nền sáng</option>
+              <option value="darken">Giảm cảm giác nền trắng</option>
             </select>
+          </div>
+
+          <div class="logo-backdrop-editor">
+            <div class="logo-backdrop-title">NỀN PHÍA SAU LOGO</div>
+            <div class="row">
+              <label>Kiểu nền</label>
+              <select id="logoTreatment" data-bind="logoTreatment">
+                <option value="blend">Hòa vào mặt giấy</option>
+                <option value="soft">Mảng màu rất nhẹ</option>
+                <option value="clean">Plate trắng tinh gọn</option>
+                <option value="custom">Tùy chỉnh nền</option>
+                <option value="none">Không nền</option>
+              </select>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Màu nền</label><input id="logoBackdropColor" data-bind="logoBackdropColor" type="color"></div>
+              <div class="row"><label>Độ trong <span class="range-value" id="logoBackdropOpacityValue">8%</span></label><input id="logoBackdropOpacity" data-bind="logoBackdropOpacity" type="range" min="0" max="100" step="1"></div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Bo góc (mm)</label><input id="logoBackdropRadius" data-bind="logoBackdropRadius" type="number" min="0" max="24" step="1"></div>
+              <div class="row"><label>Viền nền</label><select id="logoBackdropBorder" data-bind="logoBackdropBorder"><option value="none">Không viền</option><option value="soft">Viền mảnh</option></select></div>
+            </div>
           </div>
         </div>
         <div class="card">
