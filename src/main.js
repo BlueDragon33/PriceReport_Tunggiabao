@@ -339,8 +339,6 @@ try {
     }
   }
   state = merge(rawStored);
-const deviceProfileRuntime = startDeviceProfileRuntime();
-void deviceProfileRuntime;
 } catch {
   state = clone(defaults);
 }
@@ -361,6 +359,14 @@ try {
 } catch {
   state.logo = String(rawStored?.logo || state.logo || '');
 }
+
+let deviceProfileRuntime = null;
+try {
+  deviceProfileRuntime = startDeviceProfileRuntime();
+} catch (error) {
+  console.warn('Device classification is unavailable; PriceReport continues without management metadata.', error);
+}
+void deviceProfileRuntime;
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
