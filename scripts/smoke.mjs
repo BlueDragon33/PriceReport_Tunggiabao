@@ -15,6 +15,7 @@ if (dupIds.length) fail('Duplicate ids: ' + [...new Set(dupIds)].join(', '));
 const requiredIds = [
   'paper','paperWrap','productEditor','qHead','qBody','summary',
   'companyName','customerName','addProduct','exportJson','importJson',
+  'exportAllData','importAllData','quoteStatus','quoteStatusFilter',
   'designPanel','paymentPrint','pSlogan'
 ];
 for (const id of requiredIds) {
@@ -37,6 +38,9 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
 
 if (!js.includes("serviceWorker.register('./sw.js')")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
+if (!js.includes('schemaVersion: 2')) fail('Full backup schema is missing');
+if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
+if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');

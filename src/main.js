@@ -19,6 +19,7 @@ const defaults = {
   quoteTitle: 'BẢNG BÁO GIÁ',
   quoteNo: 'BG-2026-001',
   quoteDate: new Date().toISOString().slice(0, 10),
+  quoteStatus: 'draft',
   validity: '7 ngày',
   recipientLine: 'Kính gửi: QUÝ KHÁCH HÀNG',
   intro: 'Công ty TNHH TM DV Biển Uyên Bảo xin trân trọng gửi đến Quý khách hàng bảng báo giá sản phẩm của chúng tôi như sau:',
@@ -133,9 +134,17 @@ function bindInputs() {
     else el.value = state[key] == null ? '' : state[key];
 
     const onChange = () => {
-      if (el.type === 'checkbox') state[key] = el.checked;
-      else if (el.type === 'number') state[key] = Number(el.value || 0);
-      else state[key] = el.value;
+      if (el.type === 'checkbox') {
+        state[key] = el.checked;
+      } else if (el.type === 'number') {
+        let value = Number(el.value || 0);
+        if (key === 'discountPct') value = Math.min(100, Math.max(0, value));
+        else if (['vatPct','otherFee','marginX','marginTop','marginBottom','logoWidth','docFontSize'].includes(key)) value = Math.max(0, value);
+        state[key] = value;
+        if (Number(el.value) !== value) el.value = String(value);
+      } else {
+        state[key] = el.value;
+      }
       save();
       render();
     };
@@ -225,7 +234,13 @@ function renderEditorProducts() {
       input.type = type;
       input.value = product[key] == null ? '' : product[key];
       input.addEventListener('input', () => {
-        product[key] = type === 'number' ? Number(input.value || 0) : input.value;
+        if (type === 'number') {
+          const value = Math.max(0, Number(input.value || 0));
+          product[key] = value;
+          if (Number(input.value) !== value) input.value = String(value);
+        } else {
+          product[key] = input.value;
+        }
         save();
         renderPreviewProducts();
         renderTotals();
@@ -495,11 +510,52 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   event.target.value = '';
 });
 
+document.getElementById('exportAllData').addEventListener('click', () => {
+  const payload = {
+    schemaVersion: 2,
+    exportedAt: new Date().toISOString(),
+    current: clone(state),
+    history: getHistory(),
+    presets: getPresets()
+  };
+  download('PriceReport_Tunggiabao-backup.json', JSON.stringify(payload, null, 2), 'application/json');
+});
+
+document.getElementById('importAllData').addEventListener('change', (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const payload = JSON.parse(reader.result);
+      if (!payload || typeof payload !== 'object' || !payload.current || !Array.isArray(payload.history) || typeof payload.presets !== 'object') {
+        throw new Error('invalid backup schema');
+      }
+      if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
+      state = merge(payload.current);
+      setHistory(payload.history);
+      localStorage.setItem(PRESETS, JSON.stringify(payload.presets || {}));
+      save();
+      syncInputs();
+      renderEditorProducts();
+      render();
+      renderHistory();
+      renderPresets();
+      toast('Đã khôi phục toàn bộ dữ liệu');
+    } catch {
+      alert('File sao lưu không hợp lệ hoặc không đúng định dạng PriceReport.');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+  event.target.value = '';
+});
+
 document.getElementById('saveQuoteToHistory').addEventListener('click', saveCurrentQuote);
 document.getElementById('newQuote').addEventListener('click', () => {
   if (confirm('Tạo báo giá mới? Dữ liệu hiện tại vẫn có thể lưu vào lịch sử trước khi tạo mới.')) createNewQuote();
 });
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
+document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
 
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục toàn bộ dữ liệu về mẫu ban đầu?')) return;
@@ -533,8 +589,20 @@ function calcTotal(data) {
   return taxable + vat + Math.max(0, Number(data.otherFee || 0));
 }
 
+const STATUS_LABELS = {
+  draft: 'Bản nháp',
+  sent: 'Đã gửi',
+  accepted: 'Đã chấp nhận',
+  rejected: 'Từ chối',
+  expired: 'Hết hiệu lực'
+};
+
 function quoteLabel(data) {
   return data.quoteNo || 'Chưa có số báo giá';
+}
+
+function statusLabel(status) {
+  return STATUS_LABELS[status] || STATUS_LABELS.draft;
 }
 
 function saveCurrentQuote() {
@@ -546,6 +614,7 @@ function saveCurrentQuote() {
   const record = {
     id: existingIndex >= 0 ? items[existingIndex].id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
     savedAt: now,
+    status: state.quoteStatus || 'draft',
     total: calcTotal(state),
     data: clone(state)
   };
@@ -579,6 +648,19 @@ function duplicateQuoteRecord(record) {
   toast('Đã nhân bản báo giá');
 }
 
+function generateUniqueQuoteNo() {
+  const used = new Set(getHistory().map(item => item.data && item.data.quoteNo).filter(Boolean));
+  const d = new Date();
+  const stamp = String(d.getFullYear()) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  let seq = 1;
+  let candidate = '';
+  do {
+    candidate = 'BG-' + stamp + '-' + String(seq).padStart(3, '0');
+    seq += 1;
+  } while (used.has(candidate));
+  return candidate;
+}
+
 function createNewQuote() {
   const keep = {
     logo: state.logo,
@@ -606,11 +688,10 @@ function createNewQuote() {
     docFontSize: state.docFontSize
   };
   state = Object.assign(clone(defaults), keep);
-  const count = getHistory().length + 1;
   const d = new Date();
-  const stamp = String(d.getFullYear()) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
-  state.quoteNo = 'BG-' + stamp + '-' + String(count).padStart(3, '0');
+  state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = d.toISOString().slice(0, 10);
+  state.quoteStatus = 'draft';
   save();
   syncInputs();
   renderEditorProducts();
@@ -624,10 +705,14 @@ function renderHistory() {
   if (!list) return;
   const all = getHistory();
   const query = (document.getElementById('quoteSearch')?.value || '').trim().toLowerCase();
+  const statusFilter = document.getElementById('quoteStatusFilter')?.value || '';
   const items = all.filter(record => {
     const data = record.data || {};
-    return !query || [data.quoteNo, data.customerName, data.customerCompany, data.customerPhone]
+    const status = data.quoteStatus || record.status || 'draft';
+    const matchesQuery = !query || [data.quoteNo, data.customerName, data.customerCompany, data.customerPhone]
       .filter(Boolean).join(' ').toLowerCase().includes(query);
+    const matchesStatus = !statusFilter || status === statusFilter;
+    return matchesQuery && matchesStatus;
   });
 
   document.getElementById('historyCount').textContent = String(all.length);
@@ -647,13 +732,21 @@ function renderHistory() {
 
     const info = document.createElement('div');
     info.className = 'history-info';
+    const titleLine = document.createElement('div');
+    titleLine.className = 'history-title-line';
     const title = document.createElement('strong');
     title.textContent = quoteLabel(data);
+    const badge = document.createElement('span');
+    const currentStatus = data.quoteStatus || record.status || 'draft';
+    badge.className = 'status-badge status-' + currentStatus;
+    badge.textContent = statusLabel(currentStatus);
+    titleLine.append(title, badge);
+
     const meta = document.createElement('span');
     const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
     meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
       new Intl.NumberFormat('vi-VN').format(Number(record.total || calcTotal(data))) + ' ₫';
-    info.append(title, meta);
+    info.append(titleLine, meta);
 
     const actions = document.createElement('div');
     actions.className = 'history-actions';

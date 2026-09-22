@@ -78,3 +78,14 @@ textarea{min-height:76px;resize:vertical;line-height:1.45}input:focus,textarea:f
   .history-item{align-items:flex-start;flex-direction:column}
   .history-actions{width:100%;flex-wrap:wrap}
 }
+
+.backup-divider{height:1px;background:#e6ebf1;margin:10px 0}
+.help{font-size:10px;color:#7d8b9f;line-height:1.45;margin-top:8px}
+.history-title-line{display:flex;align-items:center;gap:7px;min-width:0}
+.history-title-line strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-badge{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap;border:1px solid transparent}
+.status-draft{background:#f1f4f8;color:#627085;border-color:#dfe5ec}
+.status-sent{background:#eaf3ff;color:#2268b5;border-color:#cfe3fb}
+.status-accepted{background:#e8f8f1;color:#177650;border-color:#c8eadc}
+.status-rejected{background:#fff0f0;color:#ad3b3b;border-color:#f2d0d0}
+.status-expired{background:#fff6e7;color:#9b6418;border-color:#f2dfb9}
