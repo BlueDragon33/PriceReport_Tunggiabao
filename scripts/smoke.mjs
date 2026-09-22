@@ -66,6 +66,7 @@ if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data nor
 if (!js.includes('normalizeCustomerLibrary')) fail('Customer import/local-data normalization is missing');
 if (!js.includes('normalizeProductCatalog')) fail('Catalog import/local-data normalization is missing');
 if (!js.includes('normalizePresetStore')) fail('Preset import normalization is missing');
+if (!js.includes('captureStorageSnapshot') || !js.includes('restoreStorageSnapshot')) fail('Import/restore transaction rollback is missing');
 if (!js.includes('localDateISO()')) fail('Local calendar date helper is not used for quotation dates');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
