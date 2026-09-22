@@ -198,9 +198,9 @@
           <div class="card">
             <h3>Tính tiền</h3>
             <div class="grid3">
-              <div class="row"><label>Giảm giá %</label><input id="discountPct" data-bind="discountPct" type="number"></div>
-              <div class="row"><label>VAT %</label><input id="vatPct" data-bind="vatPct" type="number"></div>
-              <div class="row"><label>Phí khác</label><input id="otherFee" data-bind="otherFee" type="number"></div>
+              <div class="row"><label>Giảm giá %</label><input id="discountPct" data-bind="discountPct" type="number" min="0" max="100" step="0.1"></div>
+              <div class="row"><label>VAT %</label><input id="vatPct" data-bind="vatPct" type="number" min="0" max="100" step="0.1"></div>
+              <div class="row"><label>Phí khác</label><input id="otherFee" data-bind="otherFee" type="number" min="0" step="1000"></div>
             </div>
             <div class="row"><label>Tiền tệ</label><select id="currency" data-bind="currency"><option>VND</option><option>USD</option><option>RUB</option></select></div>
             <label class="check"><input id="showTotals" data-bind="showTotals" type="checkbox"> Hiện bảng tổng cộng</label>
@@ -259,7 +259,7 @@
         </div>
 
         <div class="pane" id="pane-export">
-          <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="exportSnapshot">Xuất dữ liệu báo giá</button></div></div>
+          <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="preflightExport">Kiểm tra báo giá</button></div><div class="help">Nên chạy kiểm tra trước khi gửi khách hàng để phát hiện dữ liệu thiếu hoặc mâu thuẫn.</div></div>
           <div class="card">
             <h3>Sao lưu dữ liệu</h3>
             <div class="btns">
@@ -519,8 +519,8 @@
           <table class="summary" id="summary">
             <tbody>
               <tr><td>Tạm tính</td><td class="val" id="sub"></td></tr>
-              <tr id="discRow"><td>Giảm giá</td><td class="val" id="disc"></td></tr>
-              <tr id="vatRow"><td>VAT</td><td class="val" id="vat"></td></tr>
+              <tr id="discRow"><td id="discLabel">Giảm giá</td><td class="val" id="disc"></td></tr>
+              <tr id="vatRow"><td id="vatLabel">VAT</td><td class="val" id="vat"></td></tr>
               <tr id="feeRow"><td>Phí khác</td><td class="val" id="fee"></td></tr>
               <tr><td class="grand">Tổng cộng</td><td class="val grand" id="grand"></td></tr>
             </tbody>
