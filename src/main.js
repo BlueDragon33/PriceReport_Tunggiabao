@@ -1473,6 +1473,7 @@ function useCustomer(customer) {
   state.customerPhone = customer.phone || '';
   state.customerEmail = customer.email || '';
   state.customerContact = customer.contact || '';
+  state.autoRecipient = true;
   state.recipientLine = 'Kính gửi: ' + (state.customerCompany || state.customerName || 'QUÝ KHÁCH HÀNG');
   save();
   syncInputs();
@@ -1494,9 +1495,13 @@ function setProductCatalog(items) {
   safeStore(CATALOG, JSON.stringify(items));
 }
 
-function productKey(product) {
-  return [product.name, product.pack, product.unit, product.currency || 'VND']
+function quoteProductKey(product) {
+  return [product.name, product.pack, product.unit]
     .map(value => String(value || '').trim().toLowerCase()).join('|');
+}
+
+function productKey(product) {
+  return quoteProductKey(product) + '|' + String(product.currency || 'VND').trim().toLowerCase();
 }
 
 function saveCurrentProductsToCatalog() {
@@ -1538,8 +1543,8 @@ function addCatalogProduct(product) {
     alert('Sản phẩm này được lưu theo ' + productCurrency + '. Hãy đổi tiền tệ của báo giá sang ' + productCurrency + ' trước khi thêm.');
     return;
   }
-  const key = productKey(product);
-  const existing = state.products.find(item => productKey(item) === key);
+  const key = quoteProductKey(product);
+  const existing = state.products.find(item => quoteProductKey(item) === key);
   if (existing) {
     existing.qty = Math.max(0, Number(existing.qty || 0)) + 1;
     existing.price = Math.max(0, Number(product.price || existing.price || 0));
