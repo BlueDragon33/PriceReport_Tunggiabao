@@ -26,7 +26,7 @@ const requiredIds = [
   'logoWidthDesign','logoPadding','logoOffsetX','logoOffsetY','logoShrink','logoGrow','logoTreatment','resetLogoPosition',
   'logoBlendMode','logoBackdropColor','logoBackdropOpacity','logoBackdropRadius',
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
-  'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
+  'customizePreview','previewCustomizer','closePreviewCustomizer',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
   'previewLineHeight','resetPreviewLayout','showQuoteMeta','layoutEditToggle','autoArrangeLayoutToolbar','autoArrangeLayoutPanel','layoutSelection','resetBlockPositions',
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols',
@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v23")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v24")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -197,3 +197,12 @@ if (!html.includes('Xóa nền (tạo PNG trong suốt)')) fail('Remove-backgrou
 if (!js.includes('normalizeRemoveBgTolerance')) fail('Background deletion tolerance normalization is missing');
 if (!js.includes('removeBackgroundDataUrl')) fail('Connected background deletion is not wired into logo rendering');
 if (!html.includes('min="8" max="140"')) fail('Background deletion tolerance control is missing');
+
+if (!html.includes('id="tableFontSize"') || !html.includes('id="designTableFontSize"')) fail('Adjustable table-font controls are missing');
+if (html.includes('id="docFontSize"') || html.includes('id="designFontSize"') || html.includes('id="previewTitleSize"')) fail('Outside-table font-size controls must be removed');
+if (!js.includes("tableFontSize: 9")) fail('Table font-size state default is missing');
+if (!js.includes("paper.style.setProperty('--fs-table'")) fail('Table font size is not wired to product table');
+if (!js.includes("['--fs-company-name', '15.2px']")) fail('Fixed company-name typography is missing');
+if (!js.includes("paper.style.setProperty('--preview-title-size', '27px')")) fail('Fixed title typography is missing');
+if (!css.includes('.paper .qtitle{font-size:27px!important}')) fail('Fixed outside-table title CSS is missing');
+if (!html.includes('Chỉ thay đổi chữ trong bảng hàng hóa')) fail('Table-only font sizing help is missing');
