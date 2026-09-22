@@ -29,8 +29,8 @@ import {
 } from './pc-storage.js';
 import {
   normalizeLogoDisplayMode,
-  normalizeRemoveBgThreshold,
-  removeLightBackgroundDataUrl
+  normalizeRemoveBgTolerance,
+  removeBackgroundDataUrl
 } from './logo-processing.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
@@ -42,7 +42,7 @@ const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
 const LAYOUT_BLOCK_KEYS = [
-  'logo','company','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+  'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
   'taxCode','phone','website','companyEmail','quote','quoteTitle','quoteSubtitle','quoteMeta','recipient','customer',
   'intro','section','table','summary','words','payment','paymentMethod','bankName','bankAccount','bankOwner',
   'terms','termsTitle','termsText','closing','signatures','footer','slogan','footerText'
@@ -72,6 +72,9 @@ const defaults = {
   logo: '',
   companyName: 'CÔNG TY TNHH TMDV BIỂN UYÊN BẢO',
   companyAddress: '12/1 đường 3/4, Phường Xuân Hương - Đà Lạt, Lâm Đồng',
+  companyAddressDetail: '12/1 đường 3/4',
+  companyProvince: 'Lâm Đồng',
+  companyWard: 'Xuân Hương - Đà Lạt',
   branchKhanhHoa: 'Số 55 Nguyễn Xiển, P Bắc Nha Trang, Khánh Hòa',
   branchDongNai: 'Tổ 8, Khu phố 3A, Phường Trảng Dài, Đồng Nai',
   farmAddress: 'Ấp Bàu Mây, Xã Tân Phú, Tỉnh Đồng Nai',
@@ -141,7 +144,7 @@ const defaults = {
   logoOffsetX: 0,
   logoOffsetY: 0,
   logoDisplayMode: 'original',
-  logoRemoveBgThreshold: 244,
+  logoRemoveBgThreshold: 46,
   logoTreatment: 'none',
   logoBlendMode: 'normal',
   logoBackdropColor: '#0b8f83',
@@ -202,6 +205,23 @@ function merge(data) {
     }))
   });
   if (!merged.products.length) merged.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+
+  const hasStructuredCompanyAddress = data && (
+    Object.prototype.hasOwnProperty.call(data, 'companyAddressDetail') ||
+    Object.prototype.hasOwnProperty.call(data, 'companyProvince') ||
+    Object.prototype.hasOwnProperty.call(data, 'companyWard')
+  );
+  if (!hasStructuredCompanyAddress) {
+    merged.companyAddressDetail = String(data?.companyAddress || merged.companyAddress || '').trim();
+    merged.companyProvince = '';
+    merged.companyWard = '';
+    const foldedCompany = String(merged.companyName || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const foldedAddress = merged.companyAddressDetail.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (foldedCompany.includes('tung gia bao') && foldedAddress.includes('nam nha trang')) {
+      merged.companyProvince = 'Khánh Hòa';
+    }
+  }
+
   if (merged.theme === 'blue') merged.theme = 'corporate';
   if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
@@ -216,7 +236,7 @@ function merge(data) {
   merged.logoPadding = normalizeBoundedNumber(merged.logoPadding, 0, 12, defaults.logoPadding);
   merged.logoOffsetX = normalizeBoundedNumber(merged.logoOffsetX, -40, 40, defaults.logoOffsetX);
   merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -30, 30, defaults.logoOffsetY);
-  merged.logoRemoveBgThreshold = normalizeRemoveBgThreshold(merged.logoRemoveBgThreshold, defaults.logoRemoveBgThreshold);
+  merged.logoRemoveBgThreshold = normalizeRemoveBgTolerance(merged.logoRemoveBgThreshold, defaults.logoRemoveBgThreshold);
   merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
   merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
   merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
@@ -245,7 +265,7 @@ function merge(data) {
     // Existing projects migrate to original-first behavior so a previously
     // stored blend/multiply setting can no longer alter the uploaded pixels.
     merged.logoDisplayMode = 'original';
-    merged.logoRemoveBgThreshold = 244;
+    merged.logoRemoveBgThreshold = 46;
     merged.logoTreatment = 'none';
     merged.logoBlendMode = 'normal';
     merged.logoBackdropOpacity = 0;
@@ -254,7 +274,7 @@ function merge(data) {
   }
 
   const stringKeys = [
-    'logo','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+    'logo','companyName','companyAddress','companyAddressDetail','companyProvince','companyWard','branchKhanhHoa','branchDongNai','farmAddress',
     'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteSubtitle','quoteNo','quoteDate',
     'historyRecordId','validity','recipientLine','intro','sectionTitle','customerName',
     'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
@@ -459,6 +479,7 @@ function applyTungGiaBaoToCurrentQuote({ confirmReplace = true } = {}) {
   const currentLogo = state.logo;
   state = merge(applyTungGiaBaoBaseline(state));
   state.logo = currentLogo;
+  syncLegacyCompanyAddress();
   const persisted = save();
   syncInputs();
   resetCollapsedProductsForState?.();
@@ -486,7 +507,7 @@ function bindInputs() {
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetX') value = Math.min(40, Math.max(-40, value));
         else if (key === 'logoOffsetY') value = Math.min(30, Math.max(-30, value));
-        else if (key === 'logoRemoveBgThreshold') value = normalizeRemoveBgThreshold(value, 244);
+        else if (key === 'logoRemoveBgThreshold') value = normalizeRemoveBgTolerance(value, 46);
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
         else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
@@ -507,6 +528,7 @@ function bindInputs() {
         else peer.value = state[key] == null ? '' : state[key];
       });
 
+      if (['companyAddressDetail','companyProvince','companyWard'].includes(key)) syncLegacyCompanyAddress();
       save();
       render();
       if (key === 'currency') renderEditorProducts();
@@ -528,6 +550,27 @@ function formatDate(value) {
   if (!value) return '';
   const p = value.split('-');
   return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : value;
+}
+
+function adminLabel(prefix, value) {
+  const clean = String(value || '').trim();
+  if (!clean) return '';
+  const normalized = clean.replace(new RegExp('^' + prefix + '\\s+', 'i'), '').trim();
+  return prefix + ' ' + normalized;
+}
+
+function companyRegionLine(source = state) {
+  return [
+    adminLabel('Phường', source.companyWard),
+    adminLabel('Tỉnh', source.companyProvince)
+  ].filter(Boolean).join(', ');
+}
+
+function syncLegacyCompanyAddress() {
+  state.companyAddress = [
+    String(state.companyAddressDetail || '').trim(),
+    companyRegionLine(state)
+  ].filter(Boolean).join(', ');
 }
 
 function money(value) {
@@ -896,7 +939,7 @@ function syncLogoModeControls(mode) {
     badge.textContent = mode === 'original'
       ? 'Ảnh gốc • không xử lý nền'
       : mode === 'remove-bg'
-        ? 'Tách nền sáng • ảnh gốc vẫn được giữ'
+        ? 'Đã xóa nền • vùng nền được chuyển thành trong suốt'
         : 'Hiệu ứng nâng cao • ảnh gốc vẫn được giữ';
     badge.dataset.mode = mode;
   }
@@ -910,7 +953,7 @@ async function processedLogoSource(source, threshold) {
     logoProcessedCache.dataUrl
   ) return logoProcessedCache.dataUrl;
 
-  const processed = await removeLightBackgroundDataUrl(source, threshold);
+  const processed = await removeBackgroundDataUrl(source, threshold);
   logoProcessedCache = { source, threshold, dataUrl: processed };
   return processed;
 }
@@ -990,7 +1033,7 @@ function renderLogo() {
 
     if (removeBgMode) {
       const originalSource = state.logo;
-      const threshold = normalizeRemoveBgThreshold(state.logoRemoveBgThreshold, 244);
+      const threshold = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
       processedLogoSource(originalSource, threshold)
         .then((processed) => {
           if (renderToken !== logoRenderToken || state.logo !== originalSource || normalizeLogoDisplayMode(state.logoDisplayMode) !== 'remove-bg') return;
@@ -1011,7 +1054,7 @@ function renderLogo() {
   const opacityValue = document.getElementById('logoBackdropOpacityValue');
   if (opacityValue) opacityValue.textContent = opacity + '%';
   const thresholdValue = document.getElementById('logoRemoveBgThresholdValue');
-  if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgThreshold(state.logoRemoveBgThreshold, 244);
+  if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
   const titleSizeValue = document.getElementById('previewTitleSizeValue');
   if (titleSizeValue) titleSizeValue.textContent = Math.round(Number(state.previewTitleSize || 25)) + ' px';
   const docFontSizeValue = document.getElementById('docFontSizeValue');
@@ -1101,7 +1144,7 @@ function render() {
   paper.dataset.tableDensity = state.previewTableDensity || 'standard';
 
   [
-    ['pCompanyName','companyName'],['pCompanyAddress','companyAddress'],['pBranchKhanhHoa','branchKhanhHoa'],
+    ['pCompanyName','companyName'],['pCompanyAddressDetail','companyAddressDetail'],['pBranchKhanhHoa','branchKhanhHoa'],
     ['pBranchDongNai','branchDongNai'],['pFarmAddress','farmAddress'],['pTaxCode','taxCode'],['pPhone','phone'],
     ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteSubtitle','quoteSubtitle'],['pQuoteNo','quoteNo'],
     ['pValidity','validity'],['pRecipient','recipientLine'],['pIntro','intro'],['pSection','sectionTitle'],
@@ -1111,6 +1154,10 @@ function render() {
     ['pSlogan','slogan'],['pPaymentMethod','paymentMethod'],['pBankName','bankName'],
     ['pBankAccount','bankAccount'],['pBankOwner','bankOwner']
   ].forEach(([id, key]) => setText(id, state[key]));
+
+  setText('pCompanyRegion', companyRegionLine(state));
+  const companyRegionRow = document.getElementById('pCompanyRegionRow');
+  if (companyRegionRow) companyRegionRow.style.display = companyRegionLine(state) ? 'block' : 'none';
 
   setText('pQuoteDate', formatDate(state.quoteDate));
   renderLogo();
@@ -1198,7 +1245,8 @@ function fullBackupPayload() {
 function excelRowsForCurrentQuote() {
   const rows = [];
   rows.push([state.companyName || '']);
-  if (state.companyAddress) rows.push(['Địa chỉ:', state.companyAddress]);
+  if (state.companyAddressDetail) rows.push(['Địa chỉ chi tiết:', state.companyAddressDetail]);
+  if (companyRegionLine(state)) rows.push(['Khu vực:', companyRegionLine(state)]);
   if (state.phone) rows.push(['Điện thoại:', state.phone]);
   if (state.taxCode) rows.push(['MST:', state.taxCode]);
   rows.push([]);
@@ -1450,6 +1498,7 @@ function mergeSmartImportSource(parsed, options = {}) {
 
 function supplementImportFields(draft) {
   const fields = Object.assign({}, draft?.fields || {});
+  if (!fields.companyAddressDetail && fields.companyAddress) fields.companyAddressDetail = fields.companyAddress;
   const company = String(fields.companyName || '').trim();
   const phone = String(fields.phone || '').replace(/\D/g, '');
 
@@ -1634,6 +1683,7 @@ function applySmartImportDraft() {
   }
 
   state = merge(next);
+  syncLegacyCompanyAddress();
   const persisted = save();
   syncInputs();
   resetCollapsedProductsForState();
@@ -1871,7 +1921,7 @@ document.getElementById('resetLogoPosition').addEventListener('click', () => {
   state.layoutOffsets = Object.assign({}, state.layoutOffsets || {});
   delete state.layoutOffsets.logo;
   state.logoDisplayMode = 'original';
-  state.logoRemoveBgThreshold = 244;
+  state.logoRemoveBgThreshold = 46;
   state.logoTreatment = 'none';
   state.logoBlendMode = 'normal';
   state.logoBackdropColor = state.accent || '#0b8f83';
@@ -1929,7 +1979,7 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     state.logo = String(reader.result || '');
     state.showLogo = Boolean(state.logo);
     state.logoDisplayMode = 'original';
-    state.logoRemoveBgThreshold = 244;
+    state.logoRemoveBgThreshold = 46;
     state.logoTreatment = 'none';
     state.logoBlendMode = 'normal';
     state.logoBackdropOpacity = 0;
@@ -2501,6 +2551,9 @@ function createNewQuote() {
     logo: state.logo,
     companyName: state.companyName,
     companyAddress: state.companyAddress,
+    companyAddressDetail: state.companyAddressDetail,
+    companyProvince: state.companyProvince,
+    companyWard: state.companyWard,
     branchKhanhHoa: state.branchKhanhHoa,
     branchDongNai: state.branchDongNai,
     farmAddress: state.farmAddress,
@@ -3118,7 +3171,7 @@ function autoArrangePreview() {
   const namedProducts = (Array.isArray(state.products) ? state.products : [])
     .filter((product) => String(product?.name || '').trim());
   const textWeight = [
-    state.companyName,state.companyAddress,state.branchKhanhHoa,state.branchDongNai,state.farmAddress,
+    state.companyName,state.companyAddressDetail,state.companyProvince,state.companyWard,state.branchKhanhHoa,state.branchDongNai,state.farmAddress,
     state.intro,state.termsText,state.footerText
   ].map((value) => String(value || '')).join(' ').length;
   const dense = namedProducts.length >= 26 || textWeight >= 1150;

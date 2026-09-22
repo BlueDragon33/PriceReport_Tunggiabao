@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v22")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v23")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -181,10 +181,19 @@ if (!html.includes('Giữ nguyên ảnh gốc (mặc định)')) fail('Original 
 if (!html.includes('id="restoreLogoOriginal"')) fail('Restore original logo action is missing');
 if (!js.includes("logoDisplayMode: 'original'")) fail('Logo state does not default to original mode');
 if (!js.includes("state.logoDisplayMode = 'original'")) fail('Logo upload/reset does not force original mode');
-if (!js.includes('removeLightBackgroundDataUrl')) fail('Optional background removal implementation is missing');
+if (!js.includes('removeBackgroundDataUrl')) fail('True background deletion implementation is missing');
 if (!css.includes('.logo-image-mode-original img')) fail('Original mode pixel-preserving CSS is missing');
 if (!css.includes('mix-blend-mode:normal!important')) fail('Original mode must disable blend effects');
 
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('Logo upload limit must be exactly 3 MB');
 if (!js.includes('file.size > MAX_LOGO_FILE_BYTES')) fail('Logo upload validation must use the 3 MB constant');
 if (!html.includes('Kích thước tối đa 3 MB')) fail('Logo UI must state the 3 MB limit');
+
+if (!html.includes('id="companyAddressDetail"') || !html.includes('id="companyProvince"') || !html.includes('id="companyWard"')) fail('Structured headquarters fields are missing');
+if (html.includes('id="companyAddress"')) fail('Legacy one-line headquarters input must not remain visible');
+if (!html.includes('id="pCompanyAddressDetail"') || !html.includes('id="pCompanyRegion"')) fail('Two-line headquarters preview is missing');
+if (!js.includes("adminLabel('Phường'") || !js.includes("adminLabel('Tỉnh'")) fail('Headquarters region must render Ward before Province');
+if (!html.includes('Xóa nền (tạo PNG trong suốt)')) fail('Remove-background UI does not describe actual deletion');
+if (!js.includes('normalizeRemoveBgTolerance')) fail('Background deletion tolerance normalization is missing');
+if (!js.includes('removeBackgroundDataUrl')) fail('Connected background deletion is not wired into logo rendering');
+if (!html.includes('min="8" max="140"')) fail('Background deletion tolerance control is missing');

@@ -424,7 +424,8 @@ test('legacy Biển Uyên Bảo variants are recognized and replaced with the T�
   const migrated = applyTungGiaBaoBaseline(legacyVariant);
   expect(migrated.companyName).toBe('HKD - Tùng Gia Bảo');
   expect(migrated.phone).toBe('0962944688');
-  expect(migrated.companyAddress).toContain('BT02-25');
+  expect(migrated.companyAddressDetail).toContain('BT02-25');
+  expect(migrated.companyProvince).toBe('Khánh Hòa');
   expect(migrated.products.length).toBe(72);
   expect(migrated.showNote).toBe(false);
 });
@@ -439,7 +440,10 @@ test('manual Tùng Gia Bảo apply button replaces visible business data and pro
 
   expect(document.getElementById('companyName').value).toBe('HKD - Tùng Gia Bảo');
   expect(document.getElementById('phone').value).toBe('0962944688');
-  expect(document.getElementById('companyAddress').value).toContain('BT02-25');
+  expect(document.getElementById('companyAddressDetail').value).toContain('BT02-25');
+  expect(document.getElementById('companyProvince').value).toBe('Khánh Hòa');
+  expect(document.getElementById('companyWard').value).toBe('');
+  expect(document.getElementById('pCompanyRegion').textContent).toBe('Tỉnh Khánh Hòa');
   expect(document.querySelectorAll('.product-card').length).toBe(72);
   expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
 });
@@ -536,4 +540,40 @@ test('restore original logo display disables blend, backdrop and processing', ()
   expect(document.getElementById('logoBlendMode').value).toBe('normal');
   expect(document.getElementById('logoTreatment').value).toBe('none');
   expect(document.getElementById('previewLogo').dataset.logoMode).toBe('original');
+});
+
+
+test('headquarters is edited as detail + province + ward and preview shows ward before province', () => {
+  const detail = document.getElementById('companyAddressDetail');
+  const province = document.getElementById('companyProvince');
+  const ward = document.getElementById('companyWard');
+
+  detail.value = 'Lô BT02-25 đường số 29 KĐT Nam Nha Trang';
+  detail.dispatchEvent(new Event('input', { bubbles:true }));
+  province.value = 'Khánh Hòa';
+  province.dispatchEvent(new Event('input', { bubbles:true }));
+  ward.value = 'Nam Nha Trang';
+  ward.dispatchEvent(new Event('input', { bubbles:true }));
+
+  expect(document.getElementById('pCompanyAddressDetail').textContent)
+    .toBe('Lô BT02-25 đường số 29 KĐT Nam Nha Trang');
+  expect(document.getElementById('pCompanyRegion').textContent)
+    .toBe('Phường Nam Nha Trang, Tỉnh Khánh Hòa');
+
+  const stored = JSON.parse(localStorage.getItem('tunggiabao-price-report-v1'));
+  expect(stored.companyAddressDetail).toContain('BT02-25');
+  expect(stored.companyProvince).toBe('Khánh Hòa');
+  expect(stored.companyWard).toBe('Nam Nha Trang');
+  expect(stored.companyAddress).toContain('Phường Nam Nha Trang, Tỉnh Khánh Hòa');
+});
+
+test('remove-background UI describes deletion rather than light-background styling', () => {
+  const mode = document.getElementById('logoDisplayMode');
+  mode.value = 'remove-bg';
+  mode.dispatchEvent(new Event('change', { bubbles:true }));
+
+  expect(mode.selectedOptions[0].textContent).toContain('Xóa nền');
+  expect(document.getElementById('logoModeStatus').textContent).toContain('xóa nền');
+  expect(document.getElementById('logoRemoveBgThreshold').min).toBe('8');
+  expect(document.getElementById('logoRemoveBgThreshold').max).toBe('140');
 });

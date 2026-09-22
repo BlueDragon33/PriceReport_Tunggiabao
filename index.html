@@ -49,7 +49,12 @@
               <button class="btn primary" id="applyTungGiaBaoProfile" type="button">Áp dụng dữ liệu Tùng Gia Bảo</button>
             </div>
             <div class="row"><label>Tên công ty</label><input id="companyName" data-bind="companyName"></div>
-            <div class="row"><label>Địa chỉ trụ sở</label><input id="companyAddress" data-bind="companyAddress"></div>
+            <div class="row"><label>Địa chỉ chi tiết</label><input id="companyAddressDetail" data-bind="companyAddressDetail" placeholder="Số nhà, đường, khu đô thị..."></div>
+            <div class="grid2">
+              <div class="row"><label>Tỉnh</label><input id="companyProvince" data-bind="companyProvince" placeholder="Ví dụ: Khánh Hòa"></div>
+              <div class="row"><label>Phường</label><input id="companyWard" data-bind="companyWard" placeholder="Ví dụ: Nam Nha Trang"></div>
+            </div>
+            <div class="help">Trên báo cáo: dòng 1 là địa chỉ chi tiết; dòng 2 hiển thị theo thứ tự Phường trước, Tỉnh sau.</div>
             <div class="grid2">
               <div class="row"><label>MST</label><input id="taxCode" data-bind="taxCode"></div>
               <div class="row"><label>SĐT</label><input id="phone" data-bind="phone"></div>
@@ -364,7 +369,7 @@
             <label>Chế độ ảnh logo</label>
             <select id="logoDisplayMode" data-bind="logoDisplayMode">
               <option value="original">Giữ nguyên ảnh gốc (mặc định)</option>
-              <option value="remove-bg">Tách nền sáng</option>
+              <option value="remove-bg">Xóa nền (tạo PNG trong suốt)</option>
               <option value="styled">Hiệu ứng / hòa nền nâng cao</option>
             </select>
           </div>
@@ -372,10 +377,10 @@
 
           <div class="logo-remove-bg-controls" id="logoRemoveBgControls" hidden>
             <div class="row">
-              <label>Ngưỡng nền sáng <span class="range-value" id="logoRemoveBgThresholdValue">244</span></label>
-              <input id="logoRemoveBgThreshold" data-bind="logoRemoveBgThreshold" type="range" min="210" max="254" step="1">
+              <label>Dung sai màu nền <span class="range-value" id="logoRemoveBgThresholdValue">46</span></label>
+              <input id="logoRemoveBgThreshold" data-bind="logoRemoveBgThreshold" type="range" min="8" max="140" step="1">
             </div>
-            <div class="help">Chỉ xử lý bản hiển thị. File logo gốc luôn được giữ nguyên để có thể khôi phục ngay.</div>
+            <div class="help">Xóa thật vùng nền liên thông từ mép ảnh và chuyển vùng đó thành trong suốt. Tăng dung sai khi nền có nhiều sắc độ. Logo gốc vẫn được giữ nguyên để khôi phục.</div>
           </div>
 
           <div class="logo-styled-controls" id="logoStyledControls" hidden>
@@ -560,7 +565,8 @@
               <div class="company-block">
                 <div class="company-name clickable" data-target="companyName" id="pCompanyName" data-layout-block="companyName" data-layout-label="Tên công ty"></div>
                 <div class="company-lines">
-                  <div class="clickable" data-target="companyAddress" data-company-key="companyAddress" data-layout-block="companyAddress" data-layout-label="Địa chỉ trụ sở"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
+                  <div class="clickable" data-target="companyAddressDetail" data-company-key="companyAddressDetail" data-layout-block="companyAddressDetail" data-layout-label="Địa chỉ chi tiết"><b>Trụ sở:</b> <span id="pCompanyAddressDetail"></span></div>
+                  <div class="clickable company-region-line" id="pCompanyRegionRow" data-target="companyWard" data-layout-block="companyRegion" data-layout-label="Phường / Tỉnh"><span id="pCompanyRegion"></span></div>
                   <div class="clickable" data-target="taxCode" data-company-key="taxCode" data-layout-block="taxCode" data-layout-label="Mã số thuế"><b>MST:</b> <span id="pTaxCode"></span></div>
                   <div class="clickable" data-target="phone" data-company-key="phone" data-layout-block="phone" data-layout-label="Số điện thoại"><b>SĐT:</b> <span id="pPhone"></span></div>
                   <div class="clickable webemail" data-target="website" data-company-key="website" data-layout-block="website" data-layout-label="Website"><b>Website:</b> <span id="pWebsite"></span></div>
@@ -685,7 +691,9 @@
           <div class="import-field-grid">
             <label><span>Tên đơn vị</span><input data-import-field="companyName"></label>
             <label><span>Số điện thoại</span><input data-import-field="phone"></label>
-            <label class="wide"><span>Địa chỉ</span><input data-import-field="companyAddress"></label>
+            <label class="wide"><span>Địa chỉ chi tiết</span><input data-import-field="companyAddressDetail"></label>
+            <label><span>Tỉnh</span><input data-import-field="companyProvince"></label>
+            <label><span>Phường</span><input data-import-field="companyWard"></label>
             <label><span>Tiêu đề</span><input data-import-field="quoteTitle"></label>
             <label><span>Phụ đề / kỳ báo giá</span><input data-import-field="quoteSubtitle"></label>
             <label class="wide"><span>Kính gửi</span><input data-import-field="recipientLine"></label>

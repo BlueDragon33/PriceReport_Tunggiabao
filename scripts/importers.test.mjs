@@ -3,7 +3,8 @@ import { mergeImportDraft, parseHandwritingText, parseSpreadsheetRows } from '..
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
-  ['Địa chỉ:','Lô BT02-25 đường số 29 KĐT Nam Nha Trang','','',''],
+  ['Địa chỉ chi tiết:','Lô BT02-25 đường số 29 KĐT Nam Nha Trang','','',''],
+  ['Khu vực:','Phường Nam Nha Trang, Tỉnh Khánh Hòa','','',''],
   [],
   ['THÔNG BÁO','','','',''],
   ['Gía lương thực , thực phẩm tháng 09/2026','','','',''],
@@ -24,7 +25,9 @@ const rows = [
 
 const excel = parseSpreadsheetRows(rows);
 assert.equal(excel.fields.companyName, 'HKD - Tùng Gia Bảo');
-assert.equal(excel.fields.companyAddress, 'Lô BT02-25 đường số 29 KĐT Nam Nha Trang');
+assert.equal(excel.fields.companyAddressDetail, 'Lô BT02-25 đường số 29 KĐT Nam Nha Trang');
+assert.equal(excel.fields.companyWard, 'Nam Nha Trang');
+assert.equal(excel.fields.companyProvince, 'Khánh Hòa');
 assert.equal(excel.fields.quoteTitle, 'THÔNG BÁO');
 assert.equal(excel.fields.quoteSubtitle, 'Giá lương thực , thực phẩm tháng 09/2026');
 assert.equal(excel.fields.recipientLine, 'Kính gửi: QUÝ KHÁCH HÀNG');
@@ -49,7 +52,8 @@ assert.equal(handwriting.fields.companyName, 'HKD - Tùng Gia Bảo');
 assert.equal(handwriting.fields.phone, '0962944688');
 assert.equal(handwriting.fields.quoteTitle, 'BẢNG BÁO GIÁ');
 assert.match(handwriting.fields.recipientLine, /^Kính gửi:/);
-assert.match(handwriting.fields.companyAddress, /Nam Nha Trang/);
+assert.match(handwriting.fields.companyAddressDetail, /Nam Nha Trang/);
+assert.equal(handwriting.fields.companyProvince, 'Khánh Hòa');
 
 const merged = mergeImportDraft(excel, handwriting);
 assert.equal(merged.fields.phone, '0962944688');
@@ -101,12 +105,19 @@ assert.equal(reparsedOcr.fields.companyName, 'HKD - Tùng Gia Bảo');
 assert.equal(reparsedOcr.fields.phone, '0962944688');
 assert.equal(reparsedOcr.fieldSources.companyName, 'handwriting');
 
-const excelFirst = mergeImportDraft(null, { source:'excel', fields:{ companyName:'HKD Excel', companyAddress:'Địa chỉ Excel' } });
+const excelFirst = mergeImportDraft(null, { source:'excel', fields:{
+  companyName:'HKD Excel',
+  companyAddressDetail:'Địa chỉ Excel',
+  companyProvince:'Khánh Hòa',
+  companyWard:'Nam Nha Trang'
+} });
 const mixedReparse = mergeImportDraft(
   mergeImportDraft(excelFirst, parseHandwritingText('HKD - OCR sai\nĐT. 0900000000')),
   parseHandwritingText('HKD - OCR mới\nĐT. 0962944688'),
   { replaceSourceFields:true, preferNext:true }
 );
 assert.equal(mixedReparse.fields.companyName, 'HKD Excel');
-assert.equal(mixedReparse.fields.companyAddress, 'Địa chỉ Excel');
+assert.equal(mixedReparse.fields.companyAddressDetail, 'Địa chỉ Excel');
+assert.equal(mixedReparse.fields.companyWard, 'Nam Nha Trang');
+assert.equal(mixedReparse.fields.companyProvince, 'Khánh Hòa');
 assert.equal(mixedReparse.fields.phone, '0962944688');
