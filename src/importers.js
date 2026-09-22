@@ -276,7 +276,8 @@ export function mergeImportDraft(base, next, options = {}) {
     const cleaned = clean(value);
     if (!cleaned) return;
     const empty = !clean(result.fields[key]);
-    const replace = Boolean(options.preferNext) || key === 'phone';
+    const sameSource = Boolean(nextSource) && result.fieldSources[key] === nextSource;
+    const replace = key === 'phone' || (Boolean(options.preferNext) && sameSource);
     if (empty || replace) {
       result.fields[key] = cleaned;
       result.fieldSources[key] = nextSource || 'unknown';
