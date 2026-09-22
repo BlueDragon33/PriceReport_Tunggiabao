@@ -24,15 +24,18 @@ beforeAll(async () => {
 test('app boots and renders reference quotation without runtime failure', () => {
   expect(document.getElementById('paper')).toBeTruthy();
   expect(document.querySelectorAll('#qBody tr').length).toBeGreaterThan(0);
-  expect(document.getElementById('pCompanyName').textContent).toContain('BIỂN UYÊN BẢO');
+  expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
+  expect(document.getElementById('pQuoteSubtitle').textContent).toContain('09/2026');
+  expect(document.querySelectorAll('.qgroup-row').length).toBe(3);
   expect(document.getElementById('documentHealth').textContent).toBe('Sẵn sàng in');
 });
 
 test('product editor can add a row and keep preview in sync', () => {
-  const before = document.querySelectorAll('.product-card').length;
+  const beforeCards = document.querySelectorAll('.product-card').length;
+  const beforeRows = document.querySelectorAll('#qBody tr').length;
   document.getElementById('addProduct').click();
-  expect(document.querySelectorAll('.product-card').length).toBe(before + 1);
-  expect(document.querySelectorAll('#qBody tr').length).toBe(before + 1);
+  expect(document.querySelectorAll('.product-card').length).toBe(beforeCards + 1);
+  expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows + 1);
 });
 
 test('template selection applies real document profile', () => {
@@ -252,4 +255,22 @@ test('auto arrange resets manual offsets but keeps layout mode active for furthe
   expect(stored.previewTitleAlign).toBe('center');
   expect(toggle.getAttribute('aria-pressed')).toBe('true');
   expect(document.getElementById('paper').classList.contains('layout-edit-mode')).toBe(true);
+});
+
+
+test('smart import dialog can parse corrected handwriting text for review without applying automatically', () => {
+  document.getElementById('openSmartImport').click();
+  expect(document.getElementById('smartImportModal').hidden).toBe(false);
+
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - Tùng Gia Bảo\nĐT. 0962944688\nBảng báo giá\nKính gửi Quý khách hàng';
+  document.getElementById('reparseOcrText').click();
+
+  expect(document.querySelector('[data-import-field="companyName"]').value).toContain('Tùng Gia Bảo');
+  expect(document.querySelector('[data-import-field="phone"]').value).toBe('0962944688');
+  expect(document.querySelector('[data-import-field="quoteTitle"]').value).toBe('BẢNG BÁO GIÁ');
+  expect(document.getElementById('applySmartImport').disabled).toBe(false);
+
+  document.getElementById('cancelSmartImport').click();
+  expect(document.getElementById('smartImportModal').hidden).toBe(true);
 });
