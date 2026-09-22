@@ -2,7 +2,7 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V3.0 mobile report view / Excel I-O / PC workspace
+## Trạng thái hiện tại — V3.1 original-first logo pipeline
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
@@ -115,4 +115,34 @@ CI #234 trên code head:
 - PC Storage logic: **PASS**;
 - DOM integration + migration: **32/32 PASS**;
 - Smoke: **PASS** (258 IDs, 79 bindings, 22 preview targets);
+- Production build: **PASS**.
+
+
+## V3.1 — Logo giữ nguyên bản gốc theo mặc định
+
+V3.1 sửa nguyên nhân logo JPG/PNG bị “tự tách/hòa nền” dù người dùng chưa yêu cầu.
+
+- Logo mới upload luôn vào chế độ **Giữ nguyên ảnh gốc**.
+- Project cũ chưa có `logoDisplayMode` được migrate sang Original-first, vì vậy các giá trị legacy `blend + multiply` không còn tự tác động lên ảnh.
+- Original mode ép:
+  - `mix-blend-mode: normal`;
+  - không filter;
+  - không mask;
+  - không clip-path;
+  - không pseudo wash;
+  - không plate nền cưỡng bức;
+  - opacity 100%.
+- Resize và kéo-thả chỉ thay kích thước/vị trí hiển thị, không sửa pixel nguồn.
+- Có chế độ **Tách nền sáng** tùy chọn. Việc tách nền chỉ chạy trên bản render trong bộ nhớ; file logo gốc trong storage không bị thay.
+- Có chế độ **Hiệu ứng / hòa nền nâng cao** để người dùng chủ động bật lại blend/backdrop khi cần.
+- Nút **Khôi phục logo gốc** trả ngay về Original mode.
+
+Gate code V3.1:
+- runtime audit: **0 vulnerabilities**;
+- Core logic: **PASS**;
+- Importer logic: **PASS**;
+- PC Storage logic: **PASS**;
+- Logo Processing logic: **PASS**;
+- DOM: **35/35 PASS**;
+- Smoke: **PASS** — 265 IDs, 81 bindings, 22 preview targets;
 - Production build: **PASS**.
