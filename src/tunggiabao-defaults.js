@@ -93,3 +93,43 @@ export const TUNGGIABAO_PRODUCTS = GROUPS.flatMap(({ group, items }) =>
     note: ''
   }))
 );
+
+
+const legacyText = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/đ/g, 'd');
+
+export function looksLikeLegacyBienUyenBaoProfile(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  let score = 0;
+  const company = legacyText(data.companyName);
+  const intro = legacyText(data.intro);
+  const address = legacyText(data.companyAddress);
+  const footer = legacyText(data.footerText);
+  const phone = String(data.phone || '').replace(/\D/g, '');
+
+  if (company.includes('bien uyen bao')) score += 4;
+  if (String(data.website || '').toLowerCase().includes('thegioitrung.vn')) score += 2;
+  if (String(data.companyEmail || '').toLowerCase().includes('contact@thegioitrung.vn')) score += 2;
+  if (String(data.taxCode || '').replace(/\D/g, '') === '5801476262') score += 2;
+  if (phone === '0888458222') score += 1;
+  if (address.includes('da lat') && address.includes('3/4')) score += 1;
+  if (intro.includes('bien uyen bao')) score += 2;
+  if (footer.includes('thegioitrung.vn') || footer.includes('bien uyen bao')) score += 1;
+  return score >= 3;
+}
+
+export function applyTungGiaBaoBaseline(data = {}) {
+  return Object.assign({}, data || {}, TUNGGIABAO_PROFILE, {
+    showPack: false,
+    showQty: false,
+    showPrice: true,
+    showAmount: false,
+    showNote: false,
+    showTotals: false,
+    showWords: false,
+    showPaymentBlock: false,
+    showTerms: false,
+    showWebEmail: false,
+    showSlogan: false,
+    products: TUNGGIABAO_PRODUCTS.map((product) => ({ ...product }))
+  });
+}
