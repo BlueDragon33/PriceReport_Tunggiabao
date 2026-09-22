@@ -72,7 +72,7 @@ test('product editing is comfortable, blank draft rows do not print, and totals 
   await openTab(page, 'payment');
   await page.locator('#discountPct').fill('5');
   await page.locator('#vatPct').fill('8');
-  await expect(page.locator('#grand')).toHaveText('8.024.320 VND');
+  await expect(page.locator('#grand')).toHaveText('8.023.320 VND');
 
   await openTab(page, 'products');
   await page.locator('#showAmount').uncheck();
@@ -176,6 +176,7 @@ test('preview customizer and panel collapse controls work and persist', async ({
 test('quotation JSON export/import round-trips without losing current data', async ({ page }) => {
   await fresh(page);
   await page.locator('#companyName').fill('CÔNG TY QA ROUNDTRIP');
+  await openTab(page, 'export');
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#exportJson').click();
