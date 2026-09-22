@@ -2,7 +2,7 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V3.1 original-first logo pipeline
+## Trạng thái hiện tại — V3.2 true background removal / structured headquarters
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
@@ -146,3 +146,43 @@ Gate code V3.1:
 - DOM: **35/35 PASS**;
 - Smoke: **PASS** — 265 IDs, 81 bindings, 22 preview targets;
 - Production build: **PASS**.
+
+
+## V3.2 — Xóa nền thật + địa chỉ trụ sở 2 dòng
+
+### Logo
+
+Chế độ **Xóa nền** giờ thực sự tạo vùng trong suốt:
+- lấy mẫu màu nền từ các mép/góc ảnh;
+- flood-fill chỉ các vùng nền nối với mép ảnh;
+- đặt alpha nền về 0;
+- giữ các pixel bên trong logo nếu không nối với nền, kể cả khi có cùng màu;
+- không chỉnh màu chủ thể;
+- ảnh gốc vẫn nằm nguyên trong storage và có thể khôi phục.
+
+Thanh điều chỉnh giờ là **Dung sai màu nền** (8–140), không còn là ngưỡng “nền sáng”.
+
+### Địa chỉ trụ sở
+
+Thông tin trụ sở được tách thành:
+- **Địa chỉ chi tiết**
+- **Tỉnh**
+- **Phường**
+
+Preview/in báo cáo hiển thị:
+- dòng 1: địa chỉ chi tiết;
+- dòng 2: **Phường trước, Tỉnh sau**.
+
+Dữ liệu một dòng cũ tự migrate vào Địa chỉ chi tiết. Hồ sơ Tùng Gia Bảo cũ tại Nam Nha Trang tự bổ sung Tỉnh Khánh Hòa. Excel import/export và OCR cũng dùng cấu trúc mới.
+
+### Gate V3.2
+
+CI #243:
+- runtime audit: **0 vulnerabilities**
+- Core logic: **PASS**
+- Importer logic: **PASS**
+- PC Storage logic: **PASS**
+- Logo Processing logic: **PASS**
+- DOM integration/migration: **37/37 PASS**
+- Smoke: **PASS** — 269 IDs, 83 bindings, 23 preview targets
+- Production build: **PASS**
