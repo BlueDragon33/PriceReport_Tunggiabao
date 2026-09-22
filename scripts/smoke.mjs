@@ -22,7 +22,9 @@ const requiredIds = [
   'quickCustomerName','designShowStt','designShowPrice','designShowAmount','designShowTotals',
   'wideView','zoomOut','zoomIn','toolbarMenu',
   'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
-  'logoWidthDesign','logoPadding','logoOffsetY','logoTreatment','resetLogoPosition'
+  'logoWidthDesign','logoPadding','logoOffsetY','logoTreatment','resetLogoPosition',
+  'logoBlendMode','logoBackdropColor','logoBackdropOpacity','logoBackdropRadius',
+  'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -52,7 +54,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v7")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v8")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
@@ -64,6 +66,12 @@ if (!js.includes("product-focus")) fail('Comfortable product focus mode is missi
 if (!js.includes("logoTreatment")) fail('Logo treatment controls are missing');
 if (!js.includes("logoColumn")) fail('Logo size does not affect header layout');
 if (html.includes("<table class=\"product-table\"")) fail('Legacy cramped product table is still present');
+if (!js.includes("enhanceCollapsibleCards")) fail('Card collapse behavior is missing');
+if (!js.includes("setMajorPanelState")) fail('Major panel collapse behavior is missing');
+if (!js.includes("logoBackdropOpacity")) fail('Editable logo backdrop is missing');
+if (!js.includes("logoBlendMode")) fail('Logo blend-mode control is missing');
+if (!html.includes("NỀN PHÍA SAU LOGO")) fail('Logo backdrop editor UI is missing');
+if (!html.includes("Brand Flow") || !html.includes("Corporate Grid") || !html.includes("Executive")) fail('Refined template set is missing');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
