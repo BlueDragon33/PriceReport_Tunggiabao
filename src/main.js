@@ -474,6 +474,7 @@ function applyTungGiaBaoToCurrentQuote({ confirmReplace = true } = {}) {
   const currentLogo = state.logo;
   state = merge(applyTungGiaBaoBaseline(state));
   state.logo = currentLogo;
+  syncLegacyCompanyAddress();
   const persisted = save();
   syncInputs();
   resetCollapsedProductsForState?.();
@@ -501,7 +502,7 @@ function bindInputs() {
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetX') value = Math.min(40, Math.max(-40, value));
         else if (key === 'logoOffsetY') value = Math.min(30, Math.max(-30, value));
-        else if (key === 'logoRemoveBgThreshold') value = normalizeRemoveBgThreshold(value, 244);
+        else if (key === 'logoRemoveBgThreshold') value = normalizeRemoveBgTolerance(value, 46);
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
         else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
@@ -522,6 +523,7 @@ function bindInputs() {
         else peer.value = state[key] == null ? '' : state[key];
       });
 
+      if (['companyAddressDetail','companyProvince','companyWard'].includes(key)) syncLegacyCompanyAddress();
       save();
       render();
       if (key === 'currency') renderEditorProducts();
@@ -543,6 +545,27 @@ function formatDate(value) {
   if (!value) return '';
   const p = value.split('-');
   return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : value;
+}
+
+function adminLabel(prefix, value) {
+  const clean = String(value || '').trim();
+  if (!clean) return '';
+  const normalized = clean.replace(new RegExp('^' + prefix + '\\s+', 'i'), '').trim();
+  return prefix + ' ' + normalized;
+}
+
+function companyRegionLine(source = state) {
+  return [
+    adminLabel('Phường', source.companyWard),
+    adminLabel('Tỉnh', source.companyProvince)
+  ].filter(Boolean).join(', ');
+}
+
+function syncLegacyCompanyAddress() {
+  state.companyAddress = [
+    String(state.companyAddressDetail || '').trim(),
+    companyRegionLine(state)
+  ].filter(Boolean).join(', ');
 }
 
 function money(value) {
@@ -925,7 +948,7 @@ async function processedLogoSource(source, threshold) {
     logoProcessedCache.dataUrl
   ) return logoProcessedCache.dataUrl;
 
-  const processed = await removeLightBackgroundDataUrl(source, threshold);
+  const processed = await removeBackgroundDataUrl(source, threshold);
   logoProcessedCache = { source, threshold, dataUrl: processed };
   return processed;
 }
@@ -1005,7 +1028,7 @@ function renderLogo() {
 
     if (removeBgMode) {
       const originalSource = state.logo;
-      const threshold = normalizeRemoveBgThreshold(state.logoRemoveBgThreshold, 244);
+      const threshold = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
       processedLogoSource(originalSource, threshold)
         .then((processed) => {
           if (renderToken !== logoRenderToken || state.logo !== originalSource || normalizeLogoDisplayMode(state.logoDisplayMode) !== 'remove-bg') return;
@@ -1026,7 +1049,7 @@ function renderLogo() {
   const opacityValue = document.getElementById('logoBackdropOpacityValue');
   if (opacityValue) opacityValue.textContent = opacity + '%';
   const thresholdValue = document.getElementById('logoRemoveBgThresholdValue');
-  if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgThreshold(state.logoRemoveBgThreshold, 244);
+  if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
   const titleSizeValue = document.getElementById('previewTitleSizeValue');
   if (titleSizeValue) titleSizeValue.textContent = Math.round(Number(state.previewTitleSize || 25)) + ' px';
   const docFontSizeValue = document.getElementById('docFontSizeValue');
@@ -1116,7 +1139,7 @@ function render() {
   paper.dataset.tableDensity = state.previewTableDensity || 'standard';
 
   [
-    ['pCompanyName','companyName'],['pCompanyAddress','companyAddress'],['pBranchKhanhHoa','branchKhanhHoa'],
+    ['pCompanyName','companyName'],['pCompanyAddressDetail','companyAddressDetail'],['pBranchKhanhHoa','branchKhanhHoa'],
     ['pBranchDongNai','branchDongNai'],['pFarmAddress','farmAddress'],['pTaxCode','taxCode'],['pPhone','phone'],
     ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteSubtitle','quoteSubtitle'],['pQuoteNo','quoteNo'],
     ['pValidity','validity'],['pRecipient','recipientLine'],['pIntro','intro'],['pSection','sectionTitle'],
@@ -1126,6 +1149,10 @@ function render() {
     ['pSlogan','slogan'],['pPaymentMethod','paymentMethod'],['pBankName','bankName'],
     ['pBankAccount','bankAccount'],['pBankOwner','bankOwner']
   ].forEach(([id, key]) => setText(id, state[key]));
+
+  setText('pCompanyRegion', companyRegionLine(state));
+  const companyRegionRow = document.getElementById('pCompanyRegionRow');
+  if (companyRegionRow) companyRegionRow.style.display = companyRegionLine(state) ? 'block' : 'none';
 
   setText('pQuoteDate', formatDate(state.quoteDate));
   renderLogo();
@@ -1213,7 +1240,8 @@ function fullBackupPayload() {
 function excelRowsForCurrentQuote() {
   const rows = [];
   rows.push([state.companyName || '']);
-  if (state.companyAddress) rows.push(['Địa chỉ:', state.companyAddress]);
+  if (state.companyAddressDetail) rows.push(['Địa chỉ chi tiết:', state.companyAddressDetail]);
+  if (companyRegionLine(state)) rows.push(['Khu vực:', companyRegionLine(state)]);
   if (state.phone) rows.push(['Điện thoại:', state.phone]);
   if (state.taxCode) rows.push(['MST:', state.taxCode]);
   rows.push([]);
@@ -1465,6 +1493,7 @@ function mergeSmartImportSource(parsed, options = {}) {
 
 function supplementImportFields(draft) {
   const fields = Object.assign({}, draft?.fields || {});
+  if (!fields.companyAddressDetail && fields.companyAddress) fields.companyAddressDetail = fields.companyAddress;
   const company = String(fields.companyName || '').trim();
   const phone = String(fields.phone || '').replace(/\D/g, '');
 
@@ -1649,6 +1678,7 @@ function applySmartImportDraft() {
   }
 
   state = merge(next);
+  syncLegacyCompanyAddress();
   const persisted = save();
   syncInputs();
   resetCollapsedProductsForState();
@@ -1886,7 +1916,7 @@ document.getElementById('resetLogoPosition').addEventListener('click', () => {
   state.layoutOffsets = Object.assign({}, state.layoutOffsets || {});
   delete state.layoutOffsets.logo;
   state.logoDisplayMode = 'original';
-  state.logoRemoveBgThreshold = 244;
+  state.logoRemoveBgThreshold = 46;
   state.logoTreatment = 'none';
   state.logoBlendMode = 'normal';
   state.logoBackdropColor = state.accent || '#0b8f83';
@@ -1944,7 +1974,7 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     state.logo = String(reader.result || '');
     state.showLogo = Boolean(state.logo);
     state.logoDisplayMode = 'original';
-    state.logoRemoveBgThreshold = 244;
+    state.logoRemoveBgThreshold = 46;
     state.logoTreatment = 'none';
     state.logoBlendMode = 'normal';
     state.logoBackdropOpacity = 0;
@@ -2516,6 +2546,9 @@ function createNewQuote() {
     logo: state.logo,
     companyName: state.companyName,
     companyAddress: state.companyAddress,
+    companyAddressDetail: state.companyAddressDetail,
+    companyProvince: state.companyProvince,
+    companyWard: state.companyWard,
     branchKhanhHoa: state.branchKhanhHoa,
     branchDongNai: state.branchDongNai,
     farmAddress: state.farmAddress,
@@ -3133,7 +3166,7 @@ function autoArrangePreview() {
   const namedProducts = (Array.isArray(state.products) ? state.products : [])
     .filter((product) => String(product?.name || '').trim());
   const textWeight = [
-    state.companyName,state.companyAddress,state.branchKhanhHoa,state.branchDongNai,state.farmAddress,
+    state.companyName,state.companyAddressDetail,state.companyProvince,state.companyWard,state.branchKhanhHoa,state.branchDongNai,state.farmAddress,
     state.intro,state.termsText,state.footerText
   ].map((value) => String(value || '')).join(' ').length;
   const dense = namedProducts.length >= 26 || textWeight >= 1150;
