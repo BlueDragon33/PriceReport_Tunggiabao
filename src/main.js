@@ -39,6 +39,7 @@ const defaults = {
   currency: 'VND',
   showTotals: true,
   showWords: true,
+  showPaymentBlock: true,
   paymentMethod: 'Tiền mặt hoặc chuyển khoản',
   bankName: '',
   bankAccount: '',
@@ -57,6 +58,7 @@ const defaults = {
   theme: 'modern',
   accent: '#0b8f83',
   showLogo: true,
+  showSlogan: true,
   showWebEmail: true,
   showTerms: true,
   showSignature: true,
@@ -326,10 +328,15 @@ function renderLogo() {
     a.style.width = state.logoWidth + 'mm';
     preview.appendChild(a);
     editor.appendChild(b);
-  } else {
+  } else if (state.showLogo) {
     preview.innerHTML = '<div class="logo-text">THẾ GIỚI TRỨNG®</div>';
     editor.innerHTML = '<div class="logo-placeholder">THẾ GIỚI TRỨNG®</div>';
+  } else {
+    preview.innerHTML = '';
+    editor.innerHTML = '<div class="logo-placeholder">Logo đang ẩn trên bản in</div>';
   }
+  const docHead = document.querySelector('.doc-head');
+  if (docHead) docHead.classList.toggle('no-logo', !state.showLogo);
 }
 
 function render() {
@@ -350,7 +357,9 @@ function render() {
     ['pValidity','validity'],['pRecipient','recipientLine'],['pIntro','intro'],['pSection','sectionTitle'],
     ['pTermsTitle','termsTitle'],['pClosing','closingText'],['pDate','dateLine'],['pDateLeft','dateLine'],
     ['pLeftTitle','leftTitle'],['pRightTitle','rightTitle'],['pLeftNote','leftNote'],['pRightNote','rightNote'],
-    ['pLeftName','leftName'],['pRightName','rightName'],['pFooter','footerText']
+    ['pLeftName','leftName'],['pRightName','rightName'],['pFooter','footerText'],
+    ['pSlogan','slogan'],['pPaymentMethod','paymentMethod'],['pBankName','bankName'],
+    ['pBankAccount','bankAccount'],['pBankOwner','bankOwner']
   ].forEach(([id, key]) => setText(id, state[key]));
 
   setText('pQuoteDate', formatDate(state.quoteDate));
@@ -374,6 +383,11 @@ function render() {
   });
   document.getElementById('termsBox').style.display = state.showTerms ? 'block' : 'none';
   document.getElementById('signatures').style.display = state.showSignature ? 'grid' : 'none';
+
+  const hasPayment = [state.paymentMethod, state.bankName, state.bankAccount, state.bankOwner].some(Boolean);
+  document.getElementById('paymentPrint').style.display = state.showPaymentBlock && hasPayment ? 'block' : 'none';
+  document.getElementById('pSlogan').style.display = state.showSlogan && state.slogan ? 'inline' : 'none';
+  document.getElementById('footerSep').style.display = state.showSlogan && state.slogan && state.footerText ? 'inline' : 'none';
 
   renderPreviewProducts();
   renderTotals();
