@@ -113,6 +113,7 @@ export async function verifyControlHealth(baseUrl, fetchImpl = fetch) {
     if (payload.protocol !== CONTROL_PROTOCOL) throw new Error('KT Control health protocol mismatch');
     if (payload.databaseReady !== true) throw new Error('KT Control D1 is not ready');
     if (payload.appOriginConfigured !== true) throw new Error('KT Control app origin is not configured');
+    if (payload.applicationManagementOriginConfigured !== true) throw new Error('KT Control Application Management origin is not configured');
     if (payload.controlSecretConfigured !== true) throw new Error('KT Control secret is not configured');
     return payload;
   } finally {

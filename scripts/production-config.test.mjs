@@ -85,6 +85,7 @@ const healthy = await verifyControlHealth('https://control.example.com', async (
   protocol: 'price-report-control-v1',
   databaseReady: true,
   appOriginConfigured: true,
+  applicationManagementOriginConfigured: true,
   controlSecretConfigured: true,
 }));
 assert.equal(healthy.databaseReady, true);

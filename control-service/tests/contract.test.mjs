@@ -73,6 +73,7 @@ test("control status only advertises live capabilities when D1/app origin are re
   assert.match(worker, /optimisticConcurrency: ready/);
   assert.match(worker, /p256ChallengeProof: ready && appOriginReady/);
   assert.match(worker, /deviceRegistry: \{ owner: "PriceReport_Tunggiabao", namespace: "KT-" \}/);
+  assert.match(worker, /applicationManagementOriginConfigured/);
 });
 
 test("local worker config uses an isolated D1 binding", async () => {

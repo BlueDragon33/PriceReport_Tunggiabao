@@ -84,6 +84,7 @@ jobs:
           if(value.protocol!=='price-report-control-v1') throw new Error('protocol mismatch');
           if(value.databaseReady!==true) throw new Error('D1 not ready');
           if(value.appOriginConfigured!==true) throw new Error('app origin not configured');
+          if(value.applicationManagementOriginConfigured!==true) throw new Error('Application Management origin not configured');
           if(value.controlSecretConfigured!==true) throw new Error('control secret not configured');
           console.log('KT Control production read-back PASS');
           NODE
@@ -94,5 +95,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh workflow run pages.yml --ref main
-          echo "Triggered Pages rollout; pages.yml will inject PRICE_REPORT_CONTROL_ORIGIN and enable the Device Gate."
+          gh workflow run pages.yml --ref main -f control_origin="$PRICE_REPORT_CONTROL_ORIGIN"
+          echo "Triggered Pages rollout with the verified environment-scoped KT Control origin."

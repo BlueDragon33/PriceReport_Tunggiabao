@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      control_origin:
+        description: "Verified KT Control origin forwarded by the production deploy workflow"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -27,7 +32,7 @@ jobs:
       - run: npm test
       - name: Verify KT Control and materialize production management config
         env:
-          PRICE_REPORT_CONTROL_ORIGIN: ${{ vars.PRICE_REPORT_CONTROL_ORIGIN }}
+          PRICE_REPORT_CONTROL_ORIGIN: ${{ inputs.control_origin || vars.PRICE_REPORT_CONTROL_ORIGIN }}
         run: node scripts/production-config.mjs
       - run: npm run build
       - uses: actions/configure-pages@v5
