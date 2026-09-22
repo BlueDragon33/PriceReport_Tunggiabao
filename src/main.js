@@ -1,4 +1,11 @@
 import './styles.css';
+import {
+  calcQuoteTotal,
+  historyTotalsByCurrency,
+  nextDuplicateQuoteNo,
+  normalizeCatalogCurrency,
+  normalizePhone
+} from './core.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -6,6 +13,7 @@ const HISTORY = 'tunggiabao-price-report-history-v1';
 const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
 const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
+const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
 const defaults = {
   logo: '',
@@ -23,6 +31,7 @@ const defaults = {
   quoteNo: 'BG-2026-001',
   quoteDate: new Date().toISOString().slice(0, 10),
   quoteStatus: 'draft',
+  historyRecordId: '',
   validity: '7 ngày',
   recipientLine: 'Kính gửi: QUÝ KHÁCH HÀNG',
   intro: 'Công ty TNHH TM DV Biển Uyên Bảo xin trân trọng gửi đến Quý khách hàng bảng báo giá sản phẩm của chúng tôi như sau:',
@@ -64,7 +73,7 @@ const defaults = {
   accent: '#0b8f83',
   showLogo: true,
   showSlogan: true,
-  showWebEmail: true,
+  showWebEmail: false,
   showTerms: true,
   showSignature: true,
   showQuoteMeta: false,
@@ -101,10 +110,28 @@ const defaults = {
 
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 function merge(data) {
+  const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
-    products: Array.isArray(data && data.products) ? data.products : clone(defaults.products)
+    products: rawProducts.map((product) => ({
+      name: String(product?.name || ''),
+      pack: String(product?.pack || ''),
+      unit: String(product?.unit || ''),
+      qty: Math.max(0, Number(product?.qty || 0)),
+      price: Math.max(0, Number(product?.price || 0)),
+      note: String(product?.note || '')
+    }))
   });
+  if (!merged.products.length) merged.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   if (merged.theme === 'blue') merged.theme = 'corporate';
+  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
+  if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
+  else merged.currency = String(merged.currency).toUpperCase();
+  merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
+  merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
+  merged.otherFee = Math.max(0, Number(merged.otherFee || 0));
+  merged.marginX = Math.min(30, Math.max(6, Number(merged.marginX || defaults.marginX)));
+  merged.marginTop = Math.min(30, Math.max(6, Number(merged.marginTop || defaults.marginTop)));
+  merged.marginBottom = Math.min(30, Math.max(6, Number(merged.marginBottom || defaults.marginBottom)));
 
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
@@ -135,9 +162,19 @@ function merge(data) {
 }
 let state;
 try {
-  state = merge(JSON.parse(localStorage.getItem(STORAGE)));
+  const rawStored = JSON.parse(localStorage.getItem(STORAGE));
+  state = merge(rawStored);
+  const separateLogo = localStorage.getItem(LOGO_STORAGE);
+  state.logo = separateLogo || String(rawStored?.logo || '');
+  if (!separateLogo && rawStored?.logo) {
+    localStorage.setItem(LOGO_STORAGE, rawStored.logo);
+    const migrated = clone(rawStored);
+    delete migrated.logo;
+    localStorage.setItem(STORAGE, JSON.stringify(migrated));
+  }
 } catch {
   state = clone(defaults);
+  try { state.logo = localStorage.getItem(LOGO_STORAGE) || ''; } catch {}
 }
 
 const $ = (s) => document.querySelector(s);
@@ -153,7 +190,25 @@ function safeStore(key, value) {
     return false;
   }
 }
-const save = () => safeStore(STORAGE, JSON.stringify(state));
+function saveLogoAsset(value) {
+  try {
+    if (value) localStorage.setItem(LOGO_STORAGE, value);
+    else localStorage.removeItem(LOGO_STORAGE);
+    return true;
+  } catch (error) {
+    console.error('Logo storage write failed:', error);
+    toast('Không thể lưu logo: bộ nhớ trình duyệt có thể đã đầy.');
+    return false;
+  }
+}
+
+function stateForStorage() {
+  const data = clone(state);
+  delete data.logo;
+  return data;
+}
+
+const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
 const setText = (id, value) => {
   const el = document.getElementById(id);
   if (el) el.textContent = value == null ? '' : value;
@@ -177,7 +232,10 @@ function openTab(tab) {
   $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
-  if (tab === 'design') document.getElementById('designPanel').classList.add('open');
+  if (tab === 'design') {
+    document.getElementById('designPanel').classList.add('open');
+    setMajorPanelState('design', false);
+  }
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
   if (tab === 'master') renderMasterData();
@@ -257,6 +315,24 @@ function money(value) {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
   }).format(Number(value || 0)) + ' ' + state.currency;
+}
+
+function moneyForCurrency(value, currency = 'VND') {
+  const code = normalizeCatalogCurrency(currency);
+  const digits = code === 'VND' ? 0 : 2;
+  return new Intl.NumberFormat('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  }).format(Number(value || 0)) + ' ' + code;
+}
+
+function numericMoney(value, currency = state.currency) {
+  const code = normalizeCatalogCurrency(currency);
+  const digits = code === 'VND' ? 0 : 2;
+  return new Intl.NumberFormat('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  }).format(Number(value || 0));
 }
 
 const units = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
@@ -354,6 +430,7 @@ function renderEditorProducts() {
     collapse.className = 'mini-action';
     collapse.type = 'button';
     collapse.title = collapsedProducts.has(index) ? 'Mở rộng' : 'Thu gọn';
+    collapse.setAttribute('aria-label', collapse.title + ' sản phẩm ' + (index + 1));
     collapse.textContent = collapsedProducts.has(index) ? '＋' : '−';
     collapse.addEventListener('click', () => {
       if (collapsedProducts.has(index)) collapsedProducts.delete(index);
@@ -365,6 +442,7 @@ function renderEditorProducts() {
     up.className = 'mini-action';
     up.type = 'button';
     up.title = 'Đưa lên';
+    up.setAttribute('aria-label', 'Đưa sản phẩm ' + (index + 1) + ' lên');
     up.textContent = '↑';
     up.disabled = index === 0;
     up.addEventListener('click', () => {
@@ -377,6 +455,7 @@ function renderEditorProducts() {
     down.className = 'mini-action';
     down.type = 'button';
     down.title = 'Đưa xuống';
+    down.setAttribute('aria-label', 'Đưa sản phẩm ' + (index + 1) + ' xuống');
     down.textContent = '↓';
     down.disabled = index === state.products.length - 1;
     down.addEventListener('click', () => {
@@ -389,6 +468,7 @@ function renderEditorProducts() {
     duplicate.className = 'mini-action';
     duplicate.type = 'button';
     duplicate.title = 'Nhân bản';
+    duplicate.setAttribute('aria-label', 'Nhân bản sản phẩm ' + (index + 1));
     duplicate.textContent = '⧉';
     duplicate.addEventListener('click', () => {
       state.products.splice(index + 1, 0, clone(product));
@@ -399,6 +479,7 @@ function renderEditorProducts() {
     remove.className = 'mini-action danger-icon';
     remove.type = 'button';
     remove.title = 'Xóa';
+    remove.setAttribute('aria-label', 'Xóa sản phẩm ' + (index + 1));
     remove.textContent = '×';
     remove.addEventListener('click', () => {
       if (state.products.length > 1 && !confirm('Xóa sản phẩm này?')) return;
@@ -459,13 +540,28 @@ function renderPreviewProducts() {
 
   const head = document.getElementById('qHead');
   const body = document.getElementById('qBody');
+  const colgroup = document.getElementById('qCols');
   head.innerHTML = '';
   body.innerHTML = '';
+  if (colgroup) colgroup.innerHTML = '';
+
+  const columnWeights = { stt: 5, name: 27, pack: 15, unit: 8, qty: 9, price: 15, amount: 17, note: 18 };
+  const totalWeight = cols.reduce((sum, [, key]) => sum + (columnWeights[key] || 10), 0);
+
+  if (colgroup) {
+    cols.forEach(([, key]) => {
+      const col = document.createElement('col');
+      col.className = 'col-' + key;
+      col.style.width = ((columnWeights[key] || 10) / totalWeight * 100).toFixed(2) + '%';
+      colgroup.appendChild(col);
+    });
+  }
 
   const hrow = document.createElement('tr');
-  cols.forEach(([label]) => {
+  cols.forEach(([label, key]) => {
     const th = document.createElement('th');
     th.textContent = label;
+    th.classList.add('col-' + key);
     hrow.appendChild(th);
   });
   head.appendChild(hrow);
@@ -476,12 +572,13 @@ function renderPreviewProducts() {
       const td = document.createElement('td');
       let value = '';
       if (key === 'stt') value = index + 1;
-      else if (key === 'price') value = money(product.price);
-      else if (key === 'amount') value = money(Number(product.qty || 0) * Number(product.price || 0));
+      else if (key === 'price') value = numericMoney(product.price);
+      else if (key === 'amount') value = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
       else value = product[key] == null ? '' : product[key];
       td.textContent = value;
-      if (['stt','unit','qty'].includes(key)) td.className = 'center';
-      if (['price','amount'].includes(key)) td.className = 'num';
+      td.classList.add('col-' + key);
+      if (['stt','unit','qty'].includes(key)) td.classList.add('center');
+      if (['price','amount'].includes(key)) td.classList.add('num');
       row.appendChild(td);
     });
     body.appendChild(row);
@@ -509,6 +606,8 @@ function renderTotals() {
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
   setText('vat', money(vat));
+  setText('discLabel', 'Giảm giá (' + Number(state.discountPct || 0) + '%)');
+  setText('vatLabel', 'VAT (' + Number(state.vatPct || 0) + '%)');
   setText('fee', money(fee));
   setText('grand', money(total));
 
@@ -681,6 +780,7 @@ function render() {
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
+  updateDocumentHealth();
   requestAnimationFrame(updatePageEstimate);
 }
 
@@ -839,6 +939,7 @@ function clearCurrentLogo({ notify = false } = {}) {
   logoReadToken += 1;
   state.logo = '';
   state.showLogo = false;
+  saveLogoAsset('');
   save();
   syncInputs();
   render();
@@ -865,6 +966,7 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
   // so the old logo can never remain underneath or be composited with the new one.
   state.logo = '';
   state.showLogo = false;
+  saveLogoAsset('');
   save();
   syncInputs();
   render();
@@ -874,6 +976,10 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     if (token !== logoReadToken) return;
     state.logo = String(reader.result || '');
     state.showLogo = Boolean(state.logo);
+    if (!saveLogoAsset(state.logo)) {
+      state.logo = '';
+      state.showLogo = false;
+    }
     save();
     syncInputs();
     render();
@@ -883,6 +989,7 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     if (token !== logoReadToken) return;
     state.logo = '';
     state.showLogo = false;
+    saveLogoAsset('');
     save();
     syncInputs();
     render();
@@ -918,6 +1025,17 @@ const THEME_FONTS = {
   mono: 'Arial'
 };
 
+const THEME_PROFILES = {
+  modern: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  corporate: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  minimal: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'airy', previewTableDensity: 'standard' },
+  classic: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  emerald: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  warm: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  premium: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' }
+};
+
 $$('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
@@ -932,6 +1050,7 @@ $$('.tpl').forEach((el) => {
     state.theme = el.dataset.theme;
     if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
     if (THEME_FONTS[state.theme]) state.docFont = THEME_FONTS[state.theme];
+    Object.assign(state, THEME_PROFILES[state.theme] || {});
     if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
     save();
     syncInputs();
@@ -947,17 +1066,38 @@ $$('.color').forEach((el) => {
   });
 });
 
-document.getElementById('openDesign').addEventListener('click', () => document.getElementById('designPanel').classList.add('open'));
-document.getElementById('closeDesign').addEventListener('click', () => document.getElementById('designPanel').classList.remove('open'));
+document.getElementById('openDesign').addEventListener('click', () => {
+  document.getElementById('designPanel').classList.add('open');
+  setMajorPanelState('design', false);
+});
+document.getElementById('closeDesign').addEventListener('click', () => {
+  document.getElementById('designPanel').classList.remove('open');
+  if (window.innerWidth > 1280) setMajorPanelState('design', true);
+});
 
-$$('.print-action').forEach((el) => el.addEventListener('click', () => window.print()));
+$$('.print-action').forEach((el) => el.addEventListener('click', () => {
+  if (runPreflight({ forPrint: true })) window.print();
+}));
+
+document.getElementById('preflightCheck')?.addEventListener('click', () => {
+  const result = validateQuote();
+  updateDocumentHealth();
+  if (!result.errors.length && !result.warnings.length) {
+    toast('Báo giá đã sẵn sàng để in');
+    return;
+  }
+  const lines = [];
+  if (result.errors.length) lines.push('LỖI:\n• ' + result.errors.join('\n• '));
+  if (result.warnings.length) lines.push('CẦN KIỂM TRA:\n• ' + result.warnings.join('\n• '));
+  alert(lines.join('\n\n'));
+});
 
 document.getElementById('exportJson').addEventListener('click', () => {
   download('bao-gia-du-lieu.json', JSON.stringify(state, null, 2), 'application/json');
 });
 
-document.getElementById('exportSnapshot').addEventListener('click', () => {
-  download('bao-gia-snapshot.json', JSON.stringify(state, null, 2), 'application/json');
+document.getElementById('preflightExport')?.addEventListener('click', () => {
+  document.getElementById('preflightCheck')?.click();
 });
 
 document.getElementById('importJson').addEventListener('change', (event) => {
@@ -966,7 +1106,10 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      state = merge(JSON.parse(reader.result));
+      const imported = JSON.parse(reader.result);
+      state = merge(imported);
+      state.historyRecordId = '';
+      saveLogoAsset(state.logo || '');
       save();
       syncInputs();
       renderEditorProducts();
@@ -982,7 +1125,7 @@ document.getElementById('importJson').addEventListener('change', (event) => {
 
 document.getElementById('exportAllData').addEventListener('click', () => {
   const payload = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt: new Date().toISOString(),
     current: clone(state),
     history: getHistory(),
@@ -1003,8 +1146,13 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       if (!payload || typeof payload !== 'object' || !payload.current || !Array.isArray(payload.history) || typeof payload.presets !== 'object') {
         throw new Error('invalid backup schema');
       }
+      const schemaVersion = Number(payload.schemaVersion || 1);
+      if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
+        throw new Error('unsupported backup schema');
+      }
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
       state = merge(payload.current);
+      saveLogoAsset(state.logo || '');
       setHistory(payload.history);
       safeStore(PRESETS, JSON.stringify(payload.presets || {}));
       setCustomerLibrary(Array.isArray(payload.customers) ? payload.customers : []);
@@ -1027,7 +1175,11 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
 
 document.getElementById('saveQuoteToHistory').addEventListener('click', saveCurrentQuote);
 document.getElementById('newQuote').addEventListener('click', () => {
-  if (confirm('Tạo báo giá mới? Dữ liệu hiện tại vẫn có thể lưu vào lịch sử trước khi tạo mới.')) createNewQuote();
+  if (confirm('Lưu báo giá hiện tại vào lịch sử trước khi tạo báo giá mới?')) {
+    if (saveCurrentQuote()) createNewQuote();
+    return;
+  }
+  if (confirm('Tạo báo giá mới mà không lưu báo giá hiện tại vào lịch sử?')) createNewQuote();
 });
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
 document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
@@ -1038,8 +1190,9 @@ document.getElementById('customerLibrarySearch').addEventListener('input', rende
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
 
 document.getElementById('reset').addEventListener('click', () => {
-  if (!confirm('Khôi phục toàn bộ dữ liệu về mẫu ban đầu?')) return;
+  if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
   state = clone(defaults);
+  saveLogoAsset('');
   save();
   syncInputs();
   renderEditorProducts();
@@ -1047,26 +1200,98 @@ document.getElementById('reset').addEventListener('click', () => {
   toast('Đã khôi phục mẫu');
 });
 
+function validateQuote(data = state) {
+  const errors = [];
+  const warnings = [];
+
+  if (!String(data.companyName || '').trim()) errors.push('Thiếu tên công ty.');
+  if (!String(data.quoteTitle || '').trim()) errors.push('Thiếu tiêu đề báo giá.');
+  if (!String(data.recipientLine || '').trim()) warnings.push('Chưa có dòng Kính gửi.');
+  const finalStatus = data.quoteStatus && data.quoteStatus !== 'draft';
+  if (finalStatus && !String(data.quoteNo || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có số báo giá.');
+  if (finalStatus && !String(data.quoteDate || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có ngày báo giá.');
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (data.companyEmail && !emailPattern.test(String(data.companyEmail))) warnings.push('Email công ty có vẻ chưa đúng định dạng.');
+  if (data.customerEmail && !emailPattern.test(String(data.customerEmail))) warnings.push('Email khách hàng có vẻ chưa đúng định dạng.');
+
+  const products = Array.isArray(data.products) ? data.products : [];
+  const namedProducts = products.filter(product => String(product?.name || '').trim());
+  if (!namedProducts.length) errors.push('Chưa có sản phẩm hợp lệ.');
+
+  products.forEach((product, index) => {
+    const name = String(product?.name || '').trim();
+    const qty = Number(product?.qty || 0);
+    const price = Number(product?.price || 0);
+    if (!name && (qty > 0 || price > 0)) warnings.push('Dòng sản phẩm ' + (index + 1) + ' chưa có tên.');
+    if (name && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
+    if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
+  });
+
+  if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
+  if (data.showLogo && !data.logo) warnings.push('Đang bật hiển thị logo nhưng chưa có file logo.');
+  if ((Number(data.discountPct || 0) > 0 || Number(data.vatPct || 0) > 0 || Number(data.otherFee || 0) > 0) && !data.showTotals) {
+    warnings.push('Có giảm giá/VAT/phí khác nhưng bảng tổng cộng đang bị ẩn.');
+  }
+  if (Number(data.vatPct || 0) > 0 && /đã bao gồm\s*VAT/i.test(String(data.termsText || ''))) {
+    warnings.push('Điều khoản ghi "đã bao gồm VAT" trong khi bảng tổng cộng đang cộng VAT riêng.');
+  }
+  if (data.showTerms && !String(data.termsText || '').trim()) warnings.push('Đang bật điều khoản nhưng nội dung điều khoản đang trống.');
+  if (data.showSignature && !String(data.rightTitle || '').trim()) warnings.push('Đang bật chữ ký nhưng chức danh đại diện công ty đang trống.');
+  const transferOnly = /^\s*chuyển khoản\s*$/i.test(String(data.paymentMethod || ''));
+  const partialBank = [data.bankName, data.bankAccount, data.bankOwner].some(Boolean) &&
+    ![data.bankName, data.bankAccount, data.bankOwner].every(Boolean);
+  if (data.showPaymentBlock && transferOnly && !data.bankName) warnings.push('Phương thức là chuyển khoản nhưng chưa nhập ngân hàng.');
+  if (data.showPaymentBlock && partialBank) warnings.push('Thông tin tài khoản ngân hàng đang nhập dở.');
+
+  return { errors, warnings };
+}
+
+function updateDocumentHealth() {
+  const badge = document.getElementById('documentHealth');
+  if (!badge) return;
+  const result = validateQuote();
+  badge.classList.remove('ok','warn','error');
+  if (result.errors.length) {
+    badge.classList.add('error');
+    badge.textContent = result.errors.length + ' lỗi cần sửa';
+  } else if (result.warnings.length) {
+    badge.classList.add('warn');
+    badge.textContent = result.warnings.length + ' mục cần kiểm tra';
+  } else {
+    badge.classList.add('ok');
+    badge.textContent = 'Sẵn sàng in';
+  }
+}
+
+function runPreflight({ forPrint = false } = {}) {
+  const result = validateQuote();
+  updateDocumentHealth();
+  if (result.errors.length) {
+    alert('Chưa thể ' + (forPrint ? 'in/xuất PDF' : 'hoàn tất') + ':\n\n• ' + result.errors.join('\n• '));
+    return false;
+  }
+  if (forPrint && result.warnings.length) {
+    return confirm('Báo giá có ' + result.warnings.length + ' mục cần kiểm tra:\n\n• ' + result.warnings.join('\n• ') + '\n\nVẫn tiếp tục in/xuất PDF?');
+  }
+  return true;
+}
+
 function getHistory() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY)) || [];
+    const value = JSON.parse(localStorage.getItem(HISTORY));
+    return Array.isArray(value) ? value : [];
   } catch {
     return [];
   }
 }
 
 function setHistory(items) {
-  safeStore(HISTORY, JSON.stringify(items));
+  return safeStore(HISTORY, JSON.stringify(items));
 }
 
 function calcTotal(data) {
-  const products = Array.isArray(data.products) ? data.products : [];
-  const subtotal = products.reduce((sum, p) => sum + Number(p.qty || 0) * Number(p.price || 0), 0);
-  const discountPct = Math.min(100, Math.max(0, Number(data.discountPct || 0)));
-  const discount = subtotal * discountPct / 100;
-  const taxable = subtotal - discount;
-  const vat = taxable * Math.max(0, Number(data.vatPct || 0)) / 100;
-  return taxable + vat + Math.max(0, Number(data.otherFee || 0));
+  return calcQuoteTotal(data);
 }
 
 const STATUS_LABELS = {
@@ -1086,27 +1311,59 @@ function statusLabel(status) {
 }
 
 function saveCurrentQuote() {
+  const validation = validateQuote();
+  if (state.quoteStatus !== 'draft' && validation.errors.length) {
+    alert('Báo giá không thể lưu ở trạng thái "' + statusLabel(state.quoteStatus) + '" khi còn lỗi:\n\n• ' + validation.errors.join('\n• '));
+    return false;
+  }
+
   const items = getHistory();
   const now = new Date().toISOString();
-  const existingIndex = state.quoteNo
-    ? items.findIndex(item => item.data && item.data.quoteNo === state.quoteNo)
+  let existingIndex = state.historyRecordId
+    ? items.findIndex(item => item.id === state.historyRecordId)
     : -1;
+
+  if (existingIndex < 0 && state.quoteNo) {
+    const collision = items.some(item => item?.data?.quoteNo === state.quoteNo);
+    if (collision) {
+      state.quoteNo = generateUniqueQuoteNo();
+      toast('Mã báo giá trùng; đã đổi thành ' + state.quoteNo);
+    }
+  }
+
+  const id = existingIndex >= 0
+    ? items[existingIndex].id
+    : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  state.historyRecordId = id;
+
+  const historyData = clone(state);
+  historyData.logo = '';
   const record = {
-    id: existingIndex >= 0 ? items[existingIndex].id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    id,
     savedAt: now,
     status: state.quoteStatus || 'draft',
+    currency: normalizeCatalogCurrency(state.currency),
     total: calcTotal(state),
-    data: clone(state)
+    data: historyData
   };
-  if (existingIndex >= 0) items[existingIndex] = record;
-  else items.unshift(record);
-  setHistory(items);
+
+  if (existingIndex >= 0) items.splice(existingIndex, 1);
+  items.unshift(record);
+  if (!setHistory(items)) return false;
+  save();
+  syncInputs();
   renderHistory();
   toast(existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá');
+  return true;
 }
 
 function loadQuoteRecord(record) {
+  const activeLogo = state.logo;
+  const recordLogo = String(record?.data?.logo || '');
   state = merge(record.data);
+  state.logo = recordLogo || activeLogo;
+  if (recordLogo) saveLogoAsset(recordLogo);
+  state.historyRecordId = record.id || '';
   save();
   syncInputs();
   renderEditorProducts();
@@ -1116,16 +1373,22 @@ function loadQuoteRecord(record) {
 }
 
 function duplicateQuoteRecord(record) {
+  const activeLogo = state.logo;
+  const recordLogo = String(record?.data?.logo || '');
   state = merge(clone(record.data));
-  const base = state.quoteNo || 'BG';
-  state.quoteNo = base + '-COPY';
+  state.logo = recordLogo || activeLogo;
+  if (recordLogo) saveLogoAsset(recordLogo);
+  const used = getHistory().map(item => item?.data?.quoteNo).filter(Boolean);
+  state.quoteNo = nextDuplicateQuoteNo(state.quoteNo || 'BG', used);
   state.quoteDate = new Date().toISOString().slice(0, 10);
+  state.quoteStatus = 'draft';
+  state.historyRecordId = '';
   save();
   syncInputs();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã nhân bản báo giá');
+  toast('Đã nhân bản thành ' + state.quoteNo);
 }
 
 function generateUniqueQuoteNo() {
@@ -1155,6 +1418,7 @@ function createNewQuote() {
     companyEmail: state.companyEmail,
     slogan: state.slogan,
     footerText: state.footerText,
+    currency: state.currency,
     theme: state.theme,
     accent: state.accent,
     showLogo: state.showLogo,
@@ -1173,13 +1437,44 @@ function createNewQuote() {
     logoBackdropOpacity: state.logoBackdropOpacity,
     logoBackdropRadius: state.logoBackdropRadius,
     logoBackdropBorder: state.logoBackdropBorder,
-    docFontSize: state.docFontSize
+    docFontSize: state.docFontSize,
+    previewTitleAlign: state.previewTitleAlign,
+    previewTitleSize: state.previewTitleSize,
+    previewSpacing: state.previewSpacing,
+    previewTableDensity: state.previewTableDensity,
+    previewHeaderGap: state.previewHeaderGap,
+    previewMetaWidth: state.previewMetaWidth,
+    previewLineHeight: state.previewLineHeight,
+    showQuoteMeta: state.showQuoteMeta,
+    compactTable: state.compactTable,
+    showStt: state.showStt,
+    showPrice: state.showPrice,
+    showAmount: state.showAmount,
+    showNote: state.showNote,
+    showTotals: state.showTotals,
+    showWords: state.showWords,
+    showTerms: state.showTerms,
+    showSignature: state.showSignature,
+    showPaymentBlock: state.showPaymentBlock,
+    paymentMethod: state.paymentMethod,
+    bankName: state.bankName,
+    bankAccount: state.bankAccount,
+    bankOwner: state.bankOwner,
+    termsTitle: state.termsTitle,
+    termsText: state.termsText,
+    closingText: state.closingText,
+    leftTitle: state.leftTitle,
+    rightTitle: state.rightTitle,
+    leftNote: state.leftNote,
+    rightNote: state.rightNote
   };
   state = Object.assign(clone(defaults), keep);
+  state.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = d.toISOString().slice(0, 10);
   state.quoteStatus = 'draft';
+  state.historyRecordId = '';
   save();
   syncInputs();
   renderEditorProducts();
@@ -1204,8 +1499,24 @@ function renderHistory() {
   });
 
   document.getElementById('historyCount').textContent = String(all.length);
-  const revenue = all.reduce((sum, record) => sum + Number(record.total || calcTotal(record.data || {})), 0);
-  document.getElementById('historyRevenue').textContent = new Intl.NumberFormat('vi-VN').format(revenue) + ' ₫';
+  const acceptedCount = all.filter(record => (record?.data?.quoteStatus || record?.status || 'draft') === 'accepted').length;
+  const acceptedEl = document.getElementById('historyAcceptedCount');
+  if (acceptedEl) acceptedEl.textContent = String(acceptedCount);
+
+  const totalsByCurrency = historyTotalsByCurrency(all);
+  const revenueEl = document.getElementById('historyRevenue');
+  revenueEl.innerHTML = '';
+  const currencies = Object.keys(totalsByCurrency);
+  if (!currencies.length) {
+    revenueEl.textContent = '0 VND';
+  } else {
+    currencies.sort().forEach((currency) => {
+      const line = document.createElement('span');
+      line.className = 'history-money-line';
+      line.textContent = moneyForCurrency(totalsByCurrency[currency], currency);
+      revenueEl.appendChild(line);
+    });
+  }
 
   list.innerHTML = '';
   if (!items.length) {
@@ -1232,8 +1543,9 @@ function renderHistory() {
 
     const meta = document.createElement('span');
     const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
+    const recordCurrency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
     meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
-      new Intl.NumberFormat('vi-VN').format(Number(record.total || calcTotal(data))) + ' ₫';
+      moneyForCurrency(Number(record.total ?? calcTotal(data)), recordCurrency);
     info.append(titleLine, meta);
 
     const actions = document.createElement('div');
@@ -1278,7 +1590,7 @@ function setCustomerLibrary(items) {
 }
 
 function customerKey(customer) {
-  const phone = String(customer.phone || '').replace(/\s+/g, '');
+  const phone = normalizePhone(customer.phone);
   if (phone) return 'phone:' + phone;
   return 'name:' + [customer.name, customer.company].filter(Boolean).join('|').trim().toLowerCase();
 }
@@ -1340,6 +1652,10 @@ function productKey(product) {
   return [product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
 }
 
+function catalogKey(product) {
+  return productKey(product) + '|' + normalizeCatalogCurrency(product?.currency || 'VND');
+}
+
 function saveCurrentProductsToCatalog() {
   const products = state.products.filter(product => String(product.name || '').trim());
   if (!products.length) {
@@ -1355,10 +1671,11 @@ function saveCurrentProductsToCatalog() {
       pack: product.pack || '',
       unit: product.unit || '',
       price: Math.max(0, Number(product.price || 0)),
+      currency: normalizeCatalogCurrency(state.currency),
       note: product.note || ''
     };
-    const key = productKey(item);
-    const index = items.findIndex(existing => productKey(existing) === key);
+    const key = catalogKey(item);
+    const index = items.findIndex(existing => catalogKey(existing) === key);
     if (index >= 0) {
       item.id = items[index].id;
       items[index] = item;
@@ -1374,17 +1691,21 @@ function saveCurrentProductsToCatalog() {
 
 function addCatalogProduct(product) {
   const key = productKey(product);
+  const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+  const targetCurrency = normalizeCatalogCurrency(state.currency);
+  const currencyMatches = sourceCurrency === targetCurrency;
+  const catalogPrice = currencyMatches ? Math.max(0, Number(product.price || 0)) : 0;
   const existing = state.products.find(item => productKey(item) === key);
   if (existing) {
     existing.qty = Math.max(0, Number(existing.qty || 0)) + 1;
-    existing.price = Math.max(0, Number(product.price || existing.price || 0));
+    if (currencyMatches) existing.price = catalogPrice;
   } else {
     state.products.push({
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
       qty: 1,
-      price: Math.max(0, Number(product.price || 0)),
+      price: catalogPrice,
       note: product.note || ''
     });
   }
@@ -1392,7 +1713,7 @@ function addCatalogProduct(product) {
   renderEditorProducts();
   render();
   openTab('products');
-  toast('Đã thêm sản phẩm vào báo giá');
+  toast(currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ');
 }
 
 function renderMasterData() {
@@ -1458,7 +1779,8 @@ function renderMasterData() {
       const title = document.createElement('strong');
       title.textContent = product.name || 'Sản phẩm';
       const meta = document.createElement('span');
-      meta.textContent = [product.pack, product.unit, new Intl.NumberFormat('vi-VN').format(Number(product.price || 0)) + ' ₫']
+      const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+      meta.textContent = [product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
         .filter(Boolean).join(' • ');
       info.append(title, meta);
 
@@ -1491,6 +1813,26 @@ function getPresets() {
   }
 }
 
+function createPresetState(source) {
+  const preset = clone(source);
+  preset.historyRecordId = '';
+  preset.logo = '';
+  preset.quoteNo = '';
+  preset.quoteDate = new Date().toISOString().slice(0, 10);
+  preset.quoteStatus = 'draft';
+  preset.customerName = 'QUÝ KHÁCH HÀNG';
+  preset.customerCompany = '';
+  preset.customerAddress = '';
+  preset.customerPhone = '';
+  preset.customerEmail = '';
+  preset.customerContact = '';
+  preset.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
+  preset.discountPct = 0;
+  preset.otherFee = 0;
+  preset.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  return preset;
+}
+
 document.getElementById('savePreset').addEventListener('click', () => {
   const name = document.getElementById('presetName').value.trim();
   if (!name) {
@@ -1498,7 +1840,7 @@ document.getElementById('savePreset').addEventListener('click', () => {
     return;
   }
   const presets = getPresets();
-  presets[name] = clone(state);
+  presets[name] = createPresetState(state);
   safeStore(PRESETS, JSON.stringify(presets));
   document.getElementById('presetName').value = '';
   renderPresets();
@@ -1536,7 +1878,9 @@ function renderPresets() {
     del.textContent = 'Xóa';
 
     use.addEventListener('click', () => {
-      state = merge(presets[name]);
+      const activeLogo = state.logo;
+      state = merge(createPresetState(presets[name]));
+      state.logo = activeLogo;
       save();
       syncInputs();
       renderEditorProducts();
@@ -1637,10 +1981,43 @@ document.getElementById('resetPreviewLayout').addEventListener('click', () => {
   toast('Đã khôi phục bố cục chuẩn hiện đại');
 });
 
+function compactLegacyBrandAssets() {
+  const activeLogo = String(state.logo || '');
+  if (!activeLogo) return;
+
+  const history = getHistory();
+  let historyChanged = false;
+  history.forEach((record) => {
+    if (record?.data?.logo && record.data.logo === activeLogo) {
+      record.data.logo = '';
+      historyChanged = true;
+    }
+  });
+  if (historyChanged) setHistory(history);
+
+  const presets = getPresets();
+  let presetsChanged = false;
+  Object.keys(presets).forEach((name) => {
+    if (presets[name]?.logo && presets[name].logo === activeLogo) {
+      presets[name].logo = '';
+      presetsChanged = true;
+    }
+  });
+  if (presetsChanged) safeStore(PRESETS, JSON.stringify(presets));
+}
+
+compactLegacyBrandAssets();
+
 setTimeout(() => document.getElementById('fit').click(), 60);
 window.addEventListener('resize', () => {
   if (window.innerWidth > 1050) document.getElementById('fit').click();
   requestAnimationFrame(updatePageEstimate);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  setPreviewCustomizer(false);
+  document.getElementById('designPanel')?.classList.remove('open');
 });
 
 if ('serviceWorker' in navigator) {

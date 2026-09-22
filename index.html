@@ -102,7 +102,8 @@
             <h3>Quản lý báo giá</h3>
             <div class="history-stats">
               <div class="history-kpi"><span>Đã lưu</span><strong id="historyCount">0</strong></div>
-              <div class="history-kpi"><span>Tổng giá trị</span><strong id="historyRevenue">0 ₫</strong></div>
+              <div class="history-kpi"><span>Đã chấp nhận</span><strong id="historyAcceptedCount">0</strong></div>
+              <div class="history-kpi history-kpi-wide"><span>Tổng giá trị đã lưu theo tiền tệ</span><strong id="historyRevenue">0 VND</strong></div>
             </div>
             <div class="btns" style="margin-top:10px">
               <button class="btn primary" id="saveQuoteToHistory">Lưu báo giá hiện tại</button>
@@ -197,9 +198,9 @@
           <div class="card">
             <h3>Tính tiền</h3>
             <div class="grid3">
-              <div class="row"><label>Giảm giá %</label><input id="discountPct" data-bind="discountPct" type="number"></div>
-              <div class="row"><label>VAT %</label><input id="vatPct" data-bind="vatPct" type="number"></div>
-              <div class="row"><label>Phí khác</label><input id="otherFee" data-bind="otherFee" type="number"></div>
+              <div class="row"><label>Giảm giá %</label><input id="discountPct" data-bind="discountPct" type="number" min="0" max="100" step="0.1"></div>
+              <div class="row"><label>VAT %</label><input id="vatPct" data-bind="vatPct" type="number" min="0" max="100" step="0.1"></div>
+              <div class="row"><label>Phí khác</label><input id="otherFee" data-bind="otherFee" type="number" min="0" step="1000"></div>
             </div>
             <div class="row"><label>Tiền tệ</label><select id="currency" data-bind="currency"><option>VND</option><option>USD</option><option>RUB</option></select></div>
             <label class="check"><input id="showTotals" data-bind="showTotals" type="checkbox"> Hiện bảng tổng cộng</label>
@@ -258,7 +259,7 @@
         </div>
 
         <div class="pane" id="pane-export">
-          <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="exportSnapshot">Xuất dữ liệu báo giá</button></div></div>
+          <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="preflightExport">Kiểm tra báo giá</button></div><div class="help">Nên chạy kiểm tra trước khi gửi khách hàng để phát hiện dữ liệu thiếu hoặc mâu thuẫn.</div></div>
           <div class="card">
             <h3>Sao lưu dữ liệu</h3>
             <div class="btns">
@@ -274,11 +275,11 @@
             </div>
             <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử, mẫu đã lưu, danh bạ khách hàng và danh mục sản phẩm.</div>
           </div>
-          <div class="card"><h3>Đặt lại</h3><button class="btn danger block" id="reset">Khôi phục mẫu ban đầu</button></div>
+          <div class="card"><h3>Đặt lại báo giá hiện tại</h3><div class="help">Chỉ đưa báo giá đang mở về mẫu ban đầu; không xóa lịch sử, danh bạ, danh mục hay mẫu đã lưu.</div><button class="btn danger block" id="reset">Khôi phục báo giá hiện tại</button></div>
         </div>
 
         <div class="pane" id="pane-presets">
-          <div class="card"><h3>Lưu cấu hình báo giá</h3><div class="row"><label>Tên mẫu</label><input id="presetName" placeholder="VD: Khách sỉ Khánh Hòa"></div><button class="btn primary block" id="savePreset">Lưu mẫu hiện tại</button></div>
+          <div class="card"><h3>Lưu cấu hình báo giá</h3><div class="help">Mẫu chỉ lưu thông tin công ty, thiết kế, điều khoản và thanh toán; không lưu khách hàng, mã báo giá hay sản phẩm giao dịch.</div><div class="row"><label>Tên mẫu</label><input id="presetName" placeholder="VD: Mẫu khách sỉ Khánh Hòa"></div><button class="btn primary block" id="savePreset">Lưu cấu hình hiện tại</button></div>
           <div class="card"><h3>Các mẫu đã lưu</h3><div id="presetList"></div></div>
         </div>
       </div>
@@ -371,12 +372,12 @@
         <div class="card">
           <h3>Màu chủ đạo</h3>
           <div class="colors">
-            <button class="color" data-color="#0b8f83" style="background:#0b8f83"></button>
-            <button class="color" data-color="#1774db" style="background:#1774db"></button>
-            <button class="color" data-color="#f39c12" style="background:#f39c12"></button>
-            <button class="color" data-color="#e83e3e" style="background:#e83e3e"></button>
-            <button class="color" data-color="#7a4ae2" style="background:#7a4ae2"></button>
-            <button class="color" data-color="#263444" style="background:#263444"></button>
+            <button class="color" data-color="#0b8f83" style="background:#0b8f83" aria-label="Màu xanh teal" title="Xanh teal"></button>
+            <button class="color" data-color="#1774db" style="background:#1774db" aria-label="Màu xanh dương" title="Xanh dương"></button>
+            <button class="color" data-color="#f39c12" style="background:#f39c12" aria-label="Màu cam" title="Cam"></button>
+            <button class="color" data-color="#e83e3e" style="background:#e83e3e" aria-label="Màu đỏ" title="Đỏ"></button>
+            <button class="color" data-color="#7a4ae2" style="background:#7a4ae2" aria-label="Màu tím" title="Tím"></button>
+            <button class="color" data-color="#263444" style="background:#263444" aria-label="Màu than" title="Than"></button>
           </div>
         </div>
         <div class="card">
@@ -403,6 +404,8 @@
             <button class="zoom-btn" id="zoomIn" aria-label="Phóng to">+</button>
           </div>
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
+          <span class="document-health" id="documentHealth">Đang kiểm tra</span>
+          <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
           <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
           <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
           <button class="toolbar-btn print print-action">▣&nbsp; In</button>
@@ -511,13 +514,13 @@
           <p class="intro clickable" data-target="intro" id="pIntro"></p>
           <div class="sectionbar clickable" data-target="sectionTitle" id="pSection"></div>
 
-          <table class="qtable"><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
+          <table class="qtable"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
 
           <table class="summary" id="summary">
             <tbody>
               <tr><td>Tạm tính</td><td class="val" id="sub"></td></tr>
-              <tr id="discRow"><td>Giảm giá</td><td class="val" id="disc"></td></tr>
-              <tr id="vatRow"><td>VAT</td><td class="val" id="vat"></td></tr>
+              <tr id="discRow"><td id="discLabel">Giảm giá</td><td class="val" id="disc"></td></tr>
+              <tr id="vatRow"><td id="vatLabel">VAT</td><td class="val" id="vat"></td></tr>
               <tr id="feeRow"><td>Phí khác</td><td class="val" id="fee"></td></tr>
               <tr><td class="grand">Tổng cộng</td><td class="val grand" id="grand"></td></tr>
             </tbody>

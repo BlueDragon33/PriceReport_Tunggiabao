@@ -1434,3 +1434,45 @@ input[type=range]::-moz-range-thumb{
 }
 .paper .qtitle-wrap{width:100%!important;box-sizing:border-box!important}
 .paper.meta-hidden .qtitle-wrap{padding-left:0!important;padding-right:0!important}
+
+/* V2.2 audit UX */
+.history-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.history-kpi-wide{grid-column:1/-1}
+.history-money-line{display:block;font-size:13px;line-height:1.4}
+.document-health{
+  display:inline-flex;align-items:center;height:28px;padding:0 9px;border-radius:999px;
+  border:1px solid #d7e0e8;background:#f5f7f9;color:#627085;font-size:9.5px;font-weight:800;white-space:nowrap
+}
+.document-health.ok{background:#e9f8f1;border-color:#c9e8d9;color:#15724d}
+.document-health.warn{background:#fff6e8;border-color:#efdcb7;color:#946119}
+.document-health.error{background:#fff0f0;border-color:#efcccc;color:#ad3737}
+@media(max-width:1280px){
+  .document-health{display:none}
+}
+
+/* V2.2 report-design audit */
+.theme-modern .company-lines{
+  font-family:"Times New Roman",Times,serif!important;
+  font-style:italic!important;
+}
+.theme-modern .company-lines b{font-style:normal!important}
+.tpl[data-theme="modern"]{position:relative}
+.tpl[data-theme="modern"]:before{
+  content:"KHUYÊN DÙNG";
+  position:absolute;left:8px;top:8px;z-index:3;
+  padding:3px 6px;border-radius:999px;background:#0d7ff2;color:#fff;
+  font-size:7.5px;font-weight:900;letter-spacing:.35px;
+  box-shadow:0 2px 6px rgba(13,127,242,.2)
+}
+
+/* V2.2 table readability audit */
+.qtable td.col-name{font-weight:600}
+.qtable td.col-name,.qtable td.col-pack,.qtable td.col-note{
+  overflow-wrap:anywhere;
+  hyphens:auto
+}
+.qtable td.num{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.05px
+}
+.qtable th.col-stt,.qtable td.col-stt{white-space:nowrap}

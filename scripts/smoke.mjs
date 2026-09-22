@@ -28,7 +28,8 @@ const requiredIds = [
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
   'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
-  'previewLineHeight','resetPreviewLayout','showQuoteMeta'
+  'previewLineHeight','resetPreviewLayout','showQuoteMeta',
+  'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -50,7 +51,7 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
 
 if (!js.includes("serviceWorker.register('./sw.js')")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
-if (!js.includes('schemaVersion: 3')) fail('Full backup schema v3 is missing');
+if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
 if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
@@ -58,7 +59,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v11")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v12")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
@@ -72,6 +73,7 @@ if (js.includes("const logoColumn =")) fail('Logo size must not push the company
 if (!css.includes("grid-template-columns:minmax(0,41.5%) minmax(0,58.5%)")) fail('Balanced logo/company header grid is missing');
 if (!html.includes('class="company-col"') || !html.includes('class="company-block"') || !html.includes('class="company-lines"')) fail('Centered company header structure is missing');
 if (!css.includes(".paper .company-lines")) fail('Company detail alignment block is missing');
+if (!css.includes(".theme-modern .company-lines")) fail('Reference company detail typography is missing');
 if (!css.includes("width:min(96mm,100%)")) fail('Company block controlled width is missing');
 if (!css.includes(".theme-modern .qtitle:after{display:none")) fail('Reference template should match the supplied PDF title treatment');
 if (html.includes("<table class=\"product-table\"")) fail('Legacy cramped product table is still present');
