@@ -1756,3 +1756,34 @@ input[type=range]::-moz-range-thumb{
   .shell.report-view .preview-right-tools .toolbar-btn.pdf{display:none}
   .shell.report-view .preview-tools{gap:5px}
 }
+
+
+/* V3.1 original-first logo pipeline */
+.logo-upload-note{
+  margin-top:7px;padding:7px 8px;border-radius:7px;background:#edf8f2;border:1px solid #cce8d8;
+  color:#287052;font-size:9.8px;line-height:1.4
+}
+.logo-mode-status{
+  margin:7px 0 10px;padding:7px 9px;border:1px solid #dce5ee;border-radius:8px;
+  background:#f7f9fb;color:#586b83;font-size:9.8px;font-weight:700
+}
+.logo-mode-status[data-mode="original"]{background:#edf9f4;border-color:#cceadb;color:#197252}
+.logo-mode-status[data-mode="remove-bg"]{background:#fff8e8;border-color:#efdcb0;color:#8a6216}
+.logo-mode-status[data-mode="styled"]{background:#f3efff;border-color:#dbd0fb;color:#6849ae}
+.logo-remove-bg-controls,.logo-styled-controls{margin-top:10px}
+.logo-original-actions{margin-top:11px}
+.logo-image-mode-original,
+.logo-image-mode-remove-bg{
+  background:transparent!important;border-color:transparent!important;box-shadow:none!important
+}
+.logo-image-mode-original:before,
+.logo-image-mode-remove-bg:before{display:none!important;content:none!important}
+.logo-image-mode-original img,
+.logo-image-mode-remove-bg img{
+  mix-blend-mode:normal!important;filter:none!important;mask:none!important;-webkit-mask:none!important;
+  clip-path:none!important;opacity:1!important
+}
+.theme-premium .logo-image-mode-original,
+.theme-premium .logo-image-mode-remove-bg{
+  background:transparent!important;padding:0!important;border-radius:0!important
+}
