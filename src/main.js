@@ -1120,7 +1120,7 @@ document.getElementById('importJson').addEventListener('change', (event) => {
 
 document.getElementById('exportAllData').addEventListener('click', () => {
   const payload = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt: new Date().toISOString(),
     current: clone(state),
     history: getHistory(),
@@ -1140,6 +1140,10 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       const payload = JSON.parse(reader.result);
       if (!payload || typeof payload !== 'object' || !payload.current || !Array.isArray(payload.history) || typeof payload.presets !== 'object') {
         throw new Error('invalid backup schema');
+      }
+      const schemaVersion = Number(payload.schemaVersion || 1);
+      if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
+        throw new Error('unsupported backup schema');
       }
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
       state = merge(payload.current);
