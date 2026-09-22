@@ -274,3 +274,43 @@ test('smart import dialog can parse corrected handwriting text for review withou
   document.getElementById('cancelSmartImport').click();
   expect(document.getElementById('smartImportModal').hidden).toBe(true);
 });
+
+
+test('collection writes do not show false success when localStorage rejects a customer save', () => {
+  const nativeSetItem = Storage.prototype.setItem;
+  const key = 'tunggiabao-price-report-customers-v1';
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (storageKey === key) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    return nativeSetItem.call(this, storageKey, value);
+  });
+
+  const name = document.getElementById('customerName');
+  name.value = 'Khách thử quota';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('saveCurrentCustomer').click();
+  spy.mockRestore();
+
+  expect(localStorage.getItem(key) || '').not.toContain('Khách thử quota');
+  expect(document.getElementById('toast').textContent).toContain('Không thể lưu dữ liệu');
+});
+
+test('smart import cancel discards stale draft and a new session starts empty', () => {
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - Phiên cũ\nĐT. 0912345678';
+  document.getElementById('reparseOcrText').click();
+  expect(document.querySelector('[data-import-field="companyName"]').value).toContain('Phiên cũ');
+
+  document.getElementById('cancelSmartImport').click();
+  document.getElementById('openSmartImport').click();
+  expect(document.querySelector('[data-import-field="companyName"]').value).toBe('');
+  expect(document.getElementById('applySmartImport').disabled).toBe(true);
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('title and subtitle preserve professional vertical hierarchy', () => {
+  const wrap = document.querySelector('.qtitle-wrap');
+  expect(wrap).toBeTruthy();
+  expect(document.getElementById('pQuoteTitle').textContent).not.toBe('');
+  expect(document.getElementById('pQuoteSubtitle')).toBeTruthy();
+});
