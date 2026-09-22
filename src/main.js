@@ -244,6 +244,7 @@ function renderEditorProducts() {
         save();
         renderPreviewProducts();
         renderTotals();
+        requestAnimationFrame(updatePageEstimate);
       });
       cell.appendChild(input);
       row.appendChild(cell);
@@ -357,6 +358,16 @@ function renderLogo() {
   if (docHead) docHead.classList.toggle('no-logo', !state.showLogo);
 }
 
+function updatePageEstimate() {
+  const paper = document.getElementById('paper');
+  const badge = document.getElementById('pageEstimate');
+  if (!paper || !badge) return;
+  const a4Px = (297 / 25.4) * 96;
+  const pages = Math.max(1, Math.ceil(paper.scrollHeight / a4Px));
+  badge.textContent = '≈ ' + pages + ' trang A4';
+  badge.classList.toggle('warn', pages > 1);
+}
+
 function render() {
   const paper = document.getElementById('paper');
   paper.className = 'paper theme-' + state.theme;
@@ -410,8 +421,9 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  requestAnimationFrame(updatePageEstimate);
 }
 
 function toast(message) {
@@ -870,6 +882,7 @@ function setZoom(value) {
   document.getElementById('zoomText').textContent = zoom + '%';
   document.getElementById('paperWrap').style.marginBottom =
     (((zoom / 100) - 1) * document.getElementById('paper').offsetHeight) + 'px';
+  updatePageEstimate();
 }
 
 document.getElementById('actual').addEventListener('click', () => setZoom(100));
@@ -882,6 +895,7 @@ document.getElementById('fit').addEventListener('click', () => {
 setTimeout(() => document.getElementById('fit').click(), 60);
 window.addEventListener('resize', () => {
   if (window.innerWidth > 1050) document.getElementById('fit').click();
+  requestAnimationFrame(updatePageEstimate);
 });
 
 if ('serviceWorker' in navigator) {
