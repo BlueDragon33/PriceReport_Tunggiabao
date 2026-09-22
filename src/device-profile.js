@@ -173,7 +173,13 @@ export function currentDeviceInput() {
   };
 }
 
+export function deviceGateOwnsDeviceChip(state) {
+  const value = String(state || '');
+  return Boolean(value && value !== 'classification-only');
+}
+
 function updateDeviceChip(record) {
+  if (deviceGateOwnsDeviceChip(document.documentElement?.dataset?.priceReportDeviceAccess)) return;
   const chip = document.getElementById('deviceProfileChip');
   if (!chip) return;
   chip.innerHTML = '<strong>' + record.deviceLabel + '</strong><small>' + record.deviceCode + ' · ' + record.uiProfile + '</small>';
