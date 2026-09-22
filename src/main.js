@@ -794,6 +794,7 @@ function renderLogo() {
   preview.style.padding = Math.max(0, Number(state.logoPadding || 0)) + 'mm';
   preview.style.setProperty('--logo-x', Number(state.logoOffsetX || 0) + 'mm');
   preview.style.setProperty('--logo-y', Number(state.logoOffsetY || 0) + 'mm');
+  preview.style.setProperty('--logo-scale', String(Math.min(90, Math.max(18, Number(state.logoWidth || 58))) / 58));
   preview.style.setProperty('--logo-wash', hexToRgba(state.accent || backgroundColor, Math.max(3, Math.min(12, opacity || 6))));
 
   const buildImage = (target, isPaper = false) => {
@@ -802,7 +803,7 @@ function renderLogo() {
     img.alt = 'Logo doanh nghiệp';
     img.style.mixBlendMode = ['multiply','darken'].includes(state.logoBlendMode) ? state.logoBlendMode : 'normal';
     if (isPaper) {
-      img.style.width = Math.min(90, Math.max(18, Number(state.logoWidth || 58))) + 'mm';
+      img.style.width = '58mm';
       img.style.maxWidth = 'none';
       img.style.maxHeight = 'none';
       img.draggable = false;
