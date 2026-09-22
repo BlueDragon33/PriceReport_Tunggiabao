@@ -23,12 +23,12 @@ const requiredIds = [
   'quickCustomerName','designShowStt','designShowPrice','designShowAmount','designShowTotals',
   'wideView','zoomOut','zoomIn','toolbarMenu',
   'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
-  'logoWidthDesign','logoPadding','logoOffsetY','logoTreatment','resetLogoPosition',
+  'logoWidthDesign','logoPadding','logoOffsetX','logoOffsetY','logoShrink','logoGrow','logoTreatment','resetLogoPosition',
   'logoBlendMode','logoBackdropColor','logoBackdropOpacity','logoBackdropRadius',
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
   'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
-  'previewLineHeight','resetPreviewLayout','showQuoteMeta',
+  'previewLineHeight','resetPreviewLayout','showQuoteMeta','layoutEditToggle','layoutSelection','resetBlockPositions',
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols'
 ];
 for (const id of requiredIds) {
@@ -112,3 +112,12 @@ if (!html.includes("Tùy chỉnh xem trước") && !html.includes("TÙY CHỈNH 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
 }
+
+if (!js.includes('normalizeLayoutOffsets')) fail('Layout offset normalization is missing');
+if (!js.includes('setupLayoutEditor')) fail('Direct preview layout editor is missing');
+if (!js.includes("data-layout-block")) {
+  // marker lives in HTML, asserted below
+}
+if (!html.includes('data-layout-block="logo"') || !html.includes('data-layout-block="table"')) fail('Preview draggable block markers are missing');
+if (!css.includes('.paper.layout-edit-mode .layout-block')) fail('Layout edit mode styling is missing');
+if (!js.includes("logoOffsetX")) fail('Independent horizontal logo offset is missing');
