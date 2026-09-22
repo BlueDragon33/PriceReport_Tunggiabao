@@ -13,6 +13,7 @@ const HISTORY = 'tunggiabao-price-report-history-v1';
 const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
 const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
+const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
 const defaults = {
   logo: '',
@@ -161,9 +162,19 @@ function merge(data) {
 }
 let state;
 try {
-  state = merge(JSON.parse(localStorage.getItem(STORAGE)));
+  const rawStored = JSON.parse(localStorage.getItem(STORAGE));
+  state = merge(rawStored);
+  const separateLogo = localStorage.getItem(LOGO_STORAGE);
+  state.logo = separateLogo || String(rawStored?.logo || '');
+  if (!separateLogo && rawStored?.logo) {
+    localStorage.setItem(LOGO_STORAGE, rawStored.logo);
+    const migrated = clone(rawStored);
+    delete migrated.logo;
+    localStorage.setItem(STORAGE, JSON.stringify(migrated));
+  }
 } catch {
   state = clone(defaults);
+  try { state.logo = localStorage.getItem(LOGO_STORAGE) || ''; } catch {}
 }
 
 const $ = (s) => document.querySelector(s);
@@ -179,7 +190,25 @@ function safeStore(key, value) {
     return false;
   }
 }
-const save = () => safeStore(STORAGE, JSON.stringify(state));
+function saveLogoAsset(value) {
+  try {
+    if (value) localStorage.setItem(LOGO_STORAGE, value);
+    else localStorage.removeItem(LOGO_STORAGE);
+    return true;
+  } catch (error) {
+    console.error('Logo storage write failed:', error);
+    toast('Không thể lưu logo: bộ nhớ trình duyệt có thể đã đầy.');
+    return false;
+  }
+}
+
+function stateForStorage() {
+  const data = clone(state);
+  delete data.logo;
+  return data;
+}
+
+const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
 const setText = (id, value) => {
   const el = document.getElementById(id);
   if (el) el.textContent = value == null ? '' : value;
@@ -880,6 +909,7 @@ function clearCurrentLogo({ notify = false } = {}) {
   logoReadToken += 1;
   state.logo = '';
   state.showLogo = false;
+  saveLogoAsset('');
   save();
   syncInputs();
   render();
@@ -915,6 +945,10 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     if (token !== logoReadToken) return;
     state.logo = String(reader.result || '');
     state.showLogo = Boolean(state.logo);
+    if (!saveLogoAsset(state.logo)) {
+      state.logo = '';
+      state.showLogo = false;
+    }
     save();
     syncInputs();
     render();
@@ -924,6 +958,7 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     if (token !== logoReadToken) return;
     state.logo = '';
     state.showLogo = false;
+    saveLogoAsset('');
     save();
     syncInputs();
     render();
@@ -1040,8 +1075,10 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      state = merge(JSON.parse(reader.result));
+      const imported = JSON.parse(reader.result);
+      state = merge(imported);
       state.historyRecordId = '';
+      saveLogoAsset(state.logo || '');
       save();
       syncInputs();
       renderEditorProducts();
@@ -1080,6 +1117,7 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       }
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
       state = merge(payload.current);
+      saveLogoAsset(state.logo || '');
       setHistory(payload.history);
       safeStore(PRESETS, JSON.stringify(payload.presets || {}));
       setCustomerLibrary(Array.isArray(payload.customers) ? payload.customers : []);
@@ -1119,6 +1157,7 @@ document.getElementById('productCatalogSearch').addEventListener('input', render
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
   state = clone(defaults);
+  saveLogoAsset('');
   save();
   syncInputs();
   renderEditorProducts();
@@ -1262,13 +1301,15 @@ function saveCurrentQuote() {
     : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
   state.historyRecordId = id;
 
+  const historyData = clone(state);
+  historyData.logo = '';
   const record = {
     id,
     savedAt: now,
     status: state.quoteStatus || 'draft',
     currency: normalizeCatalogCurrency(state.currency),
     total: calcTotal(state),
-    data: clone(state)
+    data: historyData
   };
 
   if (existingIndex >= 0) items.splice(existingIndex, 1);
@@ -1282,7 +1323,11 @@ function saveCurrentQuote() {
 }
 
 function loadQuoteRecord(record) {
+  const activeLogo = state.logo;
+  const recordLogo = String(record?.data?.logo || '');
   state = merge(record.data);
+  state.logo = recordLogo || activeLogo;
+  if (recordLogo) saveLogoAsset(recordLogo);
   state.historyRecordId = record.id || '';
   save();
   syncInputs();
@@ -1293,7 +1338,11 @@ function loadQuoteRecord(record) {
 }
 
 function duplicateQuoteRecord(record) {
+  const activeLogo = state.logo;
+  const recordLogo = String(record?.data?.logo || '');
   state = merge(clone(record.data));
+  state.logo = recordLogo || activeLogo;
+  if (recordLogo) saveLogoAsset(recordLogo);
   const used = getHistory().map(item => item?.data?.quoteNo).filter(Boolean);
   state.quoteNo = nextDuplicateQuoteNo(state.quoteNo || 'BG', used);
   state.quoteDate = new Date().toISOString().slice(0, 10);
@@ -1732,6 +1781,7 @@ function getPresets() {
 function createPresetState(source) {
   const preset = clone(source);
   preset.historyRecordId = '';
+  preset.logo = '';
   preset.quoteNo = '';
   preset.quoteDate = new Date().toISOString().slice(0, 10);
   preset.quoteStatus = 'draft';
@@ -1793,7 +1843,9 @@ function renderPresets() {
     del.textContent = 'Xóa';
 
     use.addEventListener('click', () => {
+      const activeLogo = state.logo;
       state = merge(createPresetState(presets[name]));
+      state.logo = activeLogo;
       save();
       syncInputs();
       renderEditorProducts();
