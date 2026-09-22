@@ -500,24 +500,24 @@
             <div class="logo-zone clickable" data-target="companyName" id="previewLogo" data-layout-block="logo" data-layout-label="Logo"></div>
             <div class="company-col" data-layout-block="company" data-layout-label="Thông tin công ty">
               <div class="company-block">
-                <div class="company-name clickable" data-target="companyName" id="pCompanyName"></div>
+                <div class="company-name clickable" data-target="companyName" id="pCompanyName" data-layout-block="companyName" data-layout-label="Tên công ty"></div>
                 <div class="company-lines">
-                  <div class="clickable" data-target="companyAddress"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
-                  <div class="clickable" data-target="branchKhanhHoa"><b>CN Khánh Hòa:</b> <span id="pBranchKhanhHoa"></span></div>
-                  <div class="clickable" data-target="branchDongNai"><b>CN Đồng Nai:</b> <span id="pBranchDongNai"></span></div>
-                  <div class="clickable" data-target="farmAddress"><b>Trại:</b> <span id="pFarmAddress"></span></div>
-                  <div class="clickable" data-target="taxCode"><b>MST:</b> <span id="pTaxCode"></span></div>
-                  <div class="clickable" data-target="phone"><b>SĐT:</b> <span id="pPhone"></span></div>
-                  <div class="clickable webemail" data-target="website"><b>Website:</b> <span id="pWebsite"></span></div>
-                  <div class="clickable webemail" data-target="companyEmail"><b>Email:</b> <span id="pCompanyEmail"></span></div>
+                  <div class="clickable" data-target="companyAddress" data-layout-block="companyAddress" data-layout-label="Địa chỉ trụ sở"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
+                  <div class="clickable" data-target="branchKhanhHoa" data-layout-block="branchKhanhHoa" data-layout-label="CN Khánh Hòa"><b>CN Khánh Hòa:</b> <span id="pBranchKhanhHoa"></span></div>
+                  <div class="clickable" data-target="branchDongNai" data-layout-block="branchDongNai" data-layout-label="CN Đồng Nai"><b>CN Đồng Nai:</b> <span id="pBranchDongNai"></span></div>
+                  <div class="clickable" data-target="farmAddress" data-layout-block="farmAddress" data-layout-label="Trại / cơ sở"><b>Trại:</b> <span id="pFarmAddress"></span></div>
+                  <div class="clickable" data-target="taxCode" data-layout-block="taxCode" data-layout-label="Mã số thuế"><b>MST:</b> <span id="pTaxCode"></span></div>
+                  <div class="clickable" data-target="phone" data-layout-block="phone" data-layout-label="Số điện thoại"><b>SĐT:</b> <span id="pPhone"></span></div>
+                  <div class="clickable webemail" data-target="website" data-layout-block="website" data-layout-label="Website"><b>Website:</b> <span id="pWebsite"></span></div>
+                  <div class="clickable webemail" data-target="companyEmail" data-layout-block="companyEmail" data-layout-label="Email"><b>Email:</b> <span id="pCompanyEmail"></span></div>
                 </div>
               </div>
             </div>
           </header>
 
           <div class="quote-top" data-layout-block="quote" data-layout-label="Tiêu đề báo giá">
-            <div class="qtitle-wrap"><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle"></div></div>
-            <div class="qmeta">
+            <div class="qtitle-wrap"><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle" data-layout-block="quoteTitle" data-layout-label="Tiêu đề"></div></div>
+            <div class="qmeta" data-layout-block="quoteMeta" data-layout-label="Số / ngày / hiệu lực">
               <div><b>Số báo giá:</b> <span id="pQuoteNo"></span></div>
               <div><b>Ngày báo giá:</b> <span id="pQuoteDate"></span></div>
               <div><b>Hiệu lực:</b> <span id="pValidity"></span></div>
@@ -544,17 +544,17 @@
           <section class="payment-print" id="paymentPrint" data-layout-block="payment" data-layout-label="Thanh toán">
             <h4>THÔNG TIN THANH TOÁN</h4>
             <div class="payment-grid">
-              <div class="clickable" data-target="paymentMethod"><b>Phương thức:</b> <span id="pPaymentMethod"></span></div>
-              <div class="clickable" data-target="bankName"><b>Ngân hàng:</b> <span id="pBankName"></span></div>
-              <div class="clickable" data-target="bankAccount"><b>Số tài khoản:</b> <span id="pBankAccount"></span></div>
-              <div class="clickable" data-target="bankOwner"><b>Chủ tài khoản:</b> <span id="pBankOwner"></span></div>
+              <div class="clickable" data-target="paymentMethod" data-layout-block="paymentMethod" data-layout-label="Phương thức thanh toán"><b>Phương thức:</b> <span id="pPaymentMethod"></span></div>
+              <div class="clickable" data-target="bankName" data-layout-block="bankName" data-layout-label="Ngân hàng"><b>Ngân hàng:</b> <span id="pBankName"></span></div>
+              <div class="clickable" data-target="bankAccount" data-layout-block="bankAccount" data-layout-label="Số tài khoản"><b>Số tài khoản:</b> <span id="pBankAccount"></span></div>
+              <div class="clickable" data-target="bankOwner" data-layout-block="bankOwner" data-layout-label="Chủ tài khoản"><b>Chủ tài khoản:</b> <span id="pBankOwner"></span></div>
             </div>
           </section>
 
           <section class="terms" id="termsBox" data-layout-block="terms" data-layout-label="Điều khoản">
-            <h4 class="clickable" data-target="termsTitle" id="pTermsTitle"></h4>
-            <ol class="clickable" data-target="termsText" id="pTerms"></ol>
-            <div class="closing clickable" data-target="closingText" id="pClosing"></div>
+            <h4 class="clickable" data-target="termsTitle" id="pTermsTitle" data-layout-block="termsTitle" data-layout-label="Tiêu đề điều khoản"></h4>
+            <ol class="clickable" data-target="termsText" id="pTerms" data-layout-block="termsText" data-layout-label="Nội dung điều khoản"></ol>
+            <div class="closing clickable" data-target="closingText" id="pClosing" data-layout-block="closing" data-layout-label="Lời kết"></div>
           </section>
 
           <section class="signatures" id="signatures" data-layout-block="signatures" data-layout-label="Chữ ký">
@@ -573,9 +573,9 @@
           </section>
 
           <footer class="footer" data-layout-block="footer" data-layout-label="Chân trang">
-            <span class="clickable" data-target="slogan" id="pSlogan"></span>
+            <span class="clickable" data-target="slogan" id="pSlogan" data-layout-block="slogan" data-layout-label="Slogan"></span>
             <span id="footerSep"> • </span>
-            <span class="clickable" data-target="footerText" id="pFooter"></span>
+            <span class="clickable" data-target="footerText" id="pFooter" data-layout-block="footerText" data-layout-label="Nội dung chân trang"></span>
           </footer>
         </article>
       </div>
