@@ -30,6 +30,7 @@ const defaults = {
   quoteNo: 'BG-2026-001',
   quoteDate: new Date().toISOString().slice(0, 10),
   quoteStatus: 'draft',
+  historyRecordId: '',
   validity: '7 ngày',
   recipientLine: 'Kính gửi: QUÝ KHÁCH HÀNG',
   intro: 'Công ty TNHH TM DV Biển Uyên Bảo xin trân trọng gửi đến Quý khách hàng bảng báo giá sản phẩm của chúng tôi như sau:',
@@ -1026,6 +1027,7 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   reader.onload = () => {
     try {
       state = merge(JSON.parse(reader.result));
+      state.historyRecordId = '';
       save();
       syncInputs();
       renderEditorProducts();
@@ -1087,8 +1089,7 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
 document.getElementById('saveQuoteToHistory').addEventListener('click', saveCurrentQuote);
 document.getElementById('newQuote').addEventListener('click', () => {
   if (confirm('Lưu báo giá hiện tại vào lịch sử trước khi tạo báo giá mới?')) {
-    saveCurrentQuote();
-    createNewQuote();
+    if (saveCurrentQuote()) createNewQuote();
     return;
   }
   if (confirm('Tạo báo giá mới mà không lưu báo giá hiện tại vào lịch sử?')) createNewQuote();
@@ -1182,7 +1183,7 @@ function getHistory() {
 }
 
 function setHistory(items) {
-  safeStore(HISTORY, JSON.stringify(items));
+  return safeStore(HISTORY, JSON.stringify(items));
 }
 
 function calcTotal(data) {
@@ -1209,30 +1210,50 @@ function saveCurrentQuote() {
   const validation = validateQuote();
   if (state.quoteStatus !== 'draft' && validation.errors.length) {
     alert('Báo giá không thể lưu ở trạng thái "' + statusLabel(state.quoteStatus) + '" khi còn lỗi:\n\n• ' + validation.errors.join('\n• '));
-    return;
+    return false;
   }
+
   const items = getHistory();
   const now = new Date().toISOString();
-  const existingIndex = state.quoteNo
-    ? items.findIndex(item => item.data && item.data.quoteNo === state.quoteNo)
+  let existingIndex = state.historyRecordId
+    ? items.findIndex(item => item.id === state.historyRecordId)
     : -1;
+
+  if (existingIndex < 0 && state.quoteNo) {
+    const collision = items.some(item => item?.data?.quoteNo === state.quoteNo);
+    if (collision) {
+      state.quoteNo = generateUniqueQuoteNo();
+      toast('Mã báo giá trùng; đã đổi thành ' + state.quoteNo);
+    }
+  }
+
+  const id = existingIndex >= 0
+    ? items[existingIndex].id
+    : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  state.historyRecordId = id;
+
   const record = {
-    id: existingIndex >= 0 ? items[existingIndex].id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    id,
     savedAt: now,
     status: state.quoteStatus || 'draft',
     currency: normalizeCatalogCurrency(state.currency),
     total: calcTotal(state),
     data: clone(state)
   };
-  if (existingIndex >= 0) items[existingIndex] = record;
-  else items.unshift(record);
-  setHistory(items);
+
+  if (existingIndex >= 0) items.splice(existingIndex, 1);
+  items.unshift(record);
+  if (!setHistory(items)) return false;
+  save();
+  syncInputs();
   renderHistory();
   toast(existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá');
+  return true;
 }
 
 function loadQuoteRecord(record) {
   state = merge(record.data);
+  state.historyRecordId = record.id || '';
   save();
   syncInputs();
   renderEditorProducts();
@@ -1247,6 +1268,7 @@ function duplicateQuoteRecord(record) {
   state.quoteNo = nextDuplicateQuoteNo(state.quoteNo || 'BG', used);
   state.quoteDate = new Date().toISOString().slice(0, 10);
   state.quoteStatus = 'draft';
+  state.historyRecordId = '';
   save();
   syncInputs();
   renderEditorProducts();
@@ -1336,6 +1358,7 @@ function createNewQuote() {
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = d.toISOString().slice(0, 10);
   state.quoteStatus = 'draft';
+  state.historyRecordId = '';
   save();
   syncInputs();
   renderEditorProducts();
@@ -1513,6 +1536,10 @@ function productKey(product) {
   return [product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
 }
 
+function catalogKey(product) {
+  return productKey(product) + '|' + normalizeCatalogCurrency(product?.currency || 'VND');
+}
+
 function saveCurrentProductsToCatalog() {
   const products = state.products.filter(product => String(product.name || '').trim());
   if (!products.length) {
@@ -1531,8 +1558,8 @@ function saveCurrentProductsToCatalog() {
       currency: normalizeCatalogCurrency(state.currency),
       note: product.note || ''
     };
-    const key = productKey(item);
-    const index = items.findIndex(existing => productKey(existing) === key);
+    const key = catalogKey(item);
+    const index = items.findIndex(existing => catalogKey(existing) === key);
     if (index >= 0) {
       item.id = items[index].id;
       items[index] = item;
@@ -1677,7 +1704,9 @@ document.getElementById('savePreset').addEventListener('click', () => {
     return;
   }
   const presets = getPresets();
-  presets[name] = clone(state);
+  const presetState = clone(state);
+  presetState.historyRecordId = '';
+  presets[name] = presetState;
   safeStore(PRESETS, JSON.stringify(presets));
   document.getElementById('presetName').value = '';
   renderPresets();
@@ -1716,6 +1745,7 @@ function renderPresets() {
 
     use.addEventListener('click', () => {
       state = merge(presets[name]);
+      state.historyRecordId = '';
       save();
       syncInputs();
       renderEditorProducts();
