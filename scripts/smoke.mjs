@@ -59,8 +59,20 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v12")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v13")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
+if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
+if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
+if (!js.includes('normalizeCustomerLibrary')) fail('Customer import/local-data normalization is missing');
+if (!js.includes('normalizeProductCatalog')) fail('Catalog import/local-data normalization is missing');
+if (!js.includes('normalizePresetStore')) fail('Preset import normalization is missing');
+if (!js.includes('captureStorageSnapshot') || !js.includes('restoreStorageSnapshot')) fail('Import/restore transaction rollback is missing');
+if (!js.includes('localDateISO()') || !js.includes('localDateISO(d)')) fail('Local calendar date helper is not used for all quotation-date flows');
+if (!js.includes('normalizeBoundedNumber')) fail('Imported layout numeric clamping is missing');
+if (!js.includes('normalizeHexColor')) fail('Imported color normalization is missing');
+if (!js.includes("['Times New Roman','Georgia','Arial']")) fail('Imported document-font whitelist is missing');
+if (!js.includes('Legacy logo migration deferred')) fail('Legacy logo migration must not discard loaded state on storage failure');
+if (!js.includes('isValidISODate')) fail('Quote-date preflight validation is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
 if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
@@ -92,6 +104,8 @@ if (!js.includes("setPreviewCustomizer")) fail('Preview customizer behavior is m
 if (!js.includes("THEME_FONTS")) fail('Template typography mapping is missing');
 if (!css.includes(".paper[data-title-align=\"center\"] .qtitle")) fail('Centered title override is missing');
 if (!css.includes("--rhythm-md")) fail('Consistent document spacing system is missing');
+if (!css.includes("overflow:visible!important")) fail('Print document must allow multi-page overflow');
+if (!js.includes("aria-current")) fail('Active navigation accessibility state is missing');
 if (!css.includes(".preview-customizer")) fail('Preview customizer styles are missing');
 if (!html.includes("Tùy chỉnh xem trước") && !html.includes("TÙY CHỈNH XEM TRƯỚC")) fail('Preview customizer UI is missing');
 

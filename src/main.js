@@ -3,8 +3,13 @@ import {
   calcQuoteTotal,
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
+  normalizeBoundedNumber,
   normalizeCatalogCurrency,
-  normalizePhone
+  normalizeHexColor,
+  normalizeNonNegativeNumber,
+  normalizePhone,
+  isValidISODate,
+  localDateISO
 } from './core.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
@@ -29,7 +34,7 @@ const defaults = {
   slogan: 'Vì sức khỏe cộng đồng',
   quoteTitle: 'BẢNG BÁO GIÁ',
   quoteNo: 'BG-2026-001',
-  quoteDate: new Date().toISOString().slice(0, 10),
+  quoteDate: localDateISO(),
   quoteStatus: 'draft',
   historyRecordId: '',
   validity: '7 ngày',
@@ -116,8 +121,8 @@ function merge(data) {
       name: String(product?.name || ''),
       pack: String(product?.pack || ''),
       unit: String(product?.unit || ''),
-      qty: Math.max(0, Number(product?.qty || 0)),
-      price: Math.max(0, Number(product?.price || 0)),
+      qty: normalizeNonNegativeNumber(product?.qty),
+      price: normalizeNonNegativeNumber(product?.price),
       note: String(product?.note || '')
     }))
   });
@@ -126,12 +131,22 @@ function merge(data) {
   if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
   else merged.currency = String(merged.currency).toUpperCase();
-  merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
-  merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
-  merged.otherFee = Math.max(0, Number(merged.otherFee || 0));
-  merged.marginX = Math.min(30, Math.max(6, Number(merged.marginX || defaults.marginX)));
-  merged.marginTop = Math.min(30, Math.max(6, Number(merged.marginTop || defaults.marginTop)));
-  merged.marginBottom = Math.min(30, Math.max(6, Number(merged.marginBottom || defaults.marginBottom)));
+  merged.discountPct = normalizeBoundedNumber(merged.discountPct, 0, 100, defaults.discountPct);
+  merged.vatPct = normalizeBoundedNumber(merged.vatPct, 0, 100, defaults.vatPct);
+  merged.otherFee = normalizeNonNegativeNumber(merged.otherFee);
+  merged.marginX = normalizeBoundedNumber(merged.marginX, 6, 30, defaults.marginX);
+  merged.marginTop = normalizeBoundedNumber(merged.marginTop, 6, 30, defaults.marginTop);
+  merged.marginBottom = normalizeBoundedNumber(merged.marginBottom, 6, 30, defaults.marginBottom);
+  merged.logoWidth = normalizeBoundedNumber(merged.logoWidth, 28, 70, defaults.logoWidth);
+  merged.logoPadding = normalizeBoundedNumber(merged.logoPadding, 0, 12, defaults.logoPadding);
+  merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -10, 10, defaults.logoOffsetY);
+  merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
+  merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
+  merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
+  merged.previewTitleSize = normalizeBoundedNumber(merged.previewTitleSize, 20, 32, defaults.previewTitleSize);
+  merged.previewHeaderGap = normalizeBoundedNumber(merged.previewHeaderGap, 2, 12, defaults.previewHeaderGap);
+  merged.previewMetaWidth = normalizeBoundedNumber(merged.previewMetaWidth, 38, 56, defaults.previewMetaWidth);
+  merged.previewLineHeight = normalizeBoundedNumber(merged.previewLineHeight, 1.15, 1.5, defaults.previewLineHeight);
 
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
@@ -158,23 +173,69 @@ function merge(data) {
     merged.logoPadding = Math.min(4, Math.max(0, Number(merged.logoPadding || 2)));
   }
 
+  const stringKeys = [
+    'logo','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+    'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteNo','quoteDate',
+    'historyRecordId','validity','recipientLine','intro','sectionTitle','customerName',
+    'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
+    'paymentMethod','bankName','bankAccount','bankOwner','termsTitle','termsText','closingText',
+    'dateLine','leftTitle','rightTitle','leftNote','rightNote','leftName','rightName','footerText',
+    'accent','docFont','logoTreatment','logoBlendMode','logoBackdropColor','logoBackdropBorder',
+    'previewTitleAlign','previewSpacing','previewTableDensity'
+  ];
+  stringKeys.forEach((key) => {
+    const fallback = defaults[key] == null ? '' : defaults[key];
+    merged[key] = typeof merged[key] === 'string' ? merged[key] : String(merged[key] ?? fallback);
+  });
+
+  const booleanKeys = [
+    'showCustomer','showStt','showPrice','showAmount','showNote','showTotals','showWords',
+    'showPaymentBlock','showLogo','showSlogan','showWebEmail','showTerms','showSignature',
+    'showQuoteMeta','compactTable'
+  ];
+  booleanKeys.forEach((key) => {
+    const value = merged[key];
+    if (typeof value === 'string') merged[key] = value.toLowerCase() === 'true';
+    else merged[key] = Boolean(value);
+  });
+
+  merged.accent = normalizeHexColor(merged.accent, defaults.accent);
+  merged.logoBackdropColor = normalizeHexColor(merged.logoBackdropColor, merged.accent);
+  if (!['Times New Roman','Georgia','Arial'].includes(merged.docFont)) merged.docFont = defaults.docFont;
+  if (!['blend','soft','clean','custom','none'].includes(merged.logoTreatment)) merged.logoTreatment = defaults.logoTreatment;
+  if (!['normal','multiply','darken'].includes(merged.logoBlendMode)) merged.logoBlendMode = defaults.logoBlendMode;
+  if (!['none','soft'].includes(merged.logoBackdropBorder)) merged.logoBackdropBorder = defaults.logoBackdropBorder;
+  if (!['draft','sent','accepted','rejected','expired'].includes(merged.quoteStatus)) merged.quoteStatus = 'draft';
+  if (!['center','left','right'].includes(merged.previewTitleAlign)) merged.previewTitleAlign = 'center';
+  if (!['compact','standard','comfortable'].includes(merged.previewTableDensity)) merged.previewTableDensity = 'standard';
+  if (!['compact','standard','relaxed'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
+
   return merged;
 }
 let state;
+let rawStored = null;
 try {
-  const rawStored = JSON.parse(localStorage.getItem(STORAGE));
+  rawStored = JSON.parse(localStorage.getItem(STORAGE));
   state = merge(rawStored);
+} catch {
+  state = clone(defaults);
+}
+
+try {
   const separateLogo = localStorage.getItem(LOGO_STORAGE);
   state.logo = separateLogo || String(rawStored?.logo || '');
   if (!separateLogo && rawStored?.logo) {
-    localStorage.setItem(LOGO_STORAGE, rawStored.logo);
-    const migrated = clone(rawStored);
-    delete migrated.logo;
-    localStorage.setItem(STORAGE, JSON.stringify(migrated));
+    try {
+      localStorage.setItem(LOGO_STORAGE, rawStored.logo);
+      const migrated = clone(rawStored);
+      delete migrated.logo;
+      localStorage.setItem(STORAGE, JSON.stringify(migrated));
+    } catch (error) {
+      console.warn('Legacy logo migration deferred; keeping loaded quotation state intact.', error);
+    }
   }
 } catch {
-  state = clone(defaults);
-  try { state.logo = localStorage.getItem(LOGO_STORAGE) || ''; } catch {}
+  state.logo = String(rawStored?.logo || state.logo || '');
 }
 
 const $ = (s) => document.querySelector(s);
@@ -209,6 +270,40 @@ function stateForStorage() {
 }
 
 const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
+
+function captureStorageSnapshot(keys) {
+  const snapshot = {};
+  try {
+    keys.forEach((key) => {
+      snapshot[key] = localStorage.getItem(key);
+    });
+    return snapshot;
+  } catch (error) {
+    console.error('Unable to capture storage snapshot:', error);
+    return null;
+  }
+}
+
+function restoreStorageSnapshot(snapshot) {
+  if (!snapshot) return false;
+  try {
+    Object.entries(snapshot).forEach(([key, value]) => {
+      if (value == null) localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    });
+    return true;
+  } catch (error) {
+    console.error('Unable to roll back storage snapshot:', error);
+    return false;
+  }
+}
+
+function storageWriteError(rollbackOk = true) {
+  const error = new Error(rollbackOk ? 'storage-write-failed' : 'storage-rollback-failed');
+  error.code = rollbackOk ? 'STORAGE_WRITE_FAILED' : 'STORAGE_ROLLBACK_FAILED';
+  return error;
+}
+
 const setText = (id, value) => {
   const el = document.getElementById(id);
   if (el) el.textContent = value == null ? '' : value;
@@ -228,7 +323,12 @@ const tabMeta = {
 };
 
 function openTab(tab) {
-  $$('.nav button[data-tab]').forEach((el) => el.classList.toggle('active', el.dataset.tab === tab));
+  $$('.nav button[data-tab]').forEach((el) => {
+    const active = el.dataset.tab === tab;
+    el.classList.toggle('active', active);
+    if (active) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
   $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
@@ -267,7 +367,7 @@ function bindInputs() {
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetY') value = Math.min(10, Math.max(-10, value));
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
-        else if (['otherFee'].includes(key)) value = Math.max(0, value);
+        else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
         else if (key === 'docFontSize') value = Math.min(18, Math.max(9, value));
         else if (key === 'previewTitleSize') value = Math.min(32, Math.max(20, value));
@@ -497,7 +597,7 @@ function renderEditorProducts() {
 
     const updateProduct = (key, input, numeric = false) => {
       if (numeric) {
-        const value = Math.max(0, Number(input.value || 0));
+        const value = normalizeNonNegativeNumber(input.value);
         product[key] = value;
         if (Number(input.value) !== value) input.value = String(value);
       } else {
@@ -596,18 +696,21 @@ function renderPreviewProducts() {
 }
 
 function renderTotals() {
-  const subtotal = state.products.reduce((sum, p) => sum + Number(p.qty || 0) * Number(p.price || 0), 0);
-  const discount = subtotal * Number(state.discountPct || 0) / 100;
-  const taxable = subtotal - discount;
-  const vat = taxable * Number(state.vatPct || 0) / 100;
-  const fee = Number(state.otherFee || 0);
-  const total = taxable + vat + fee;
+  const subtotal = state.products.reduce((sum, p) =>
+    sum + normalizeNonNegativeNumber(p.qty) * normalizeNonNegativeNumber(p.price), 0);
+  const discountPct = normalizeBoundedNumber(state.discountPct, 0, 100, 0);
+  const vatPct = normalizeBoundedNumber(state.vatPct, 0, 100, 0);
+  const discount = subtotal * discountPct / 100;
+  const taxable = Math.max(0, subtotal - discount);
+  const vat = taxable * vatPct / 100;
+  const fee = normalizeNonNegativeNumber(state.otherFee);
+  const total = calcQuoteTotal(state);
 
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
   setText('vat', money(vat));
-  setText('discLabel', 'Giảm giá (' + Number(state.discountPct || 0) + '%)');
-  setText('vatLabel', 'VAT (' + Number(state.vatPct || 0) + '%)');
+  setText('discLabel', 'Giảm giá (' + discountPct + '%)');
+  setText('vatLabel', 'VAT (' + vatPct + '%)');
   setText('fee', money(fee));
   setText('grand', money(total));
 
@@ -803,7 +906,7 @@ function download(name, text, type) {
 function getUiState() {
   try {
     const data = JSON.parse(localStorage.getItem(UI_STATE));
-    return data && typeof data === 'object' ? data : {};
+    return isPlainObject(data) ? data : {};
   } catch {
     return {};
   }
@@ -1105,18 +1208,43 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
+    let previousState = null;
+    let snapshot = null;
     try {
       const imported = JSON.parse(reader.result);
-      state = merge(imported);
-      state.historyRecordId = '';
-      saveLogoAsset(state.logo || '');
-      save();
+      if (!isPlainObject(imported)) throw new Error('invalid quote schema');
+      const importedState = merge(imported);
+      importedState.historyRecordId = '';
+
+      previousState = clone(state);
+      snapshot = captureStorageSnapshot([STORAGE, LOGO_STORAGE]);
+      if (!snapshot) throw storageWriteError(false);
+
+      state = importedState;
+      if (!saveLogoAsset(state.logo || '') || !save()) {
+        state = previousState;
+        const rollbackOk = restoreStorageSnapshot(snapshot);
+        throw storageWriteError(rollbackOk);
+      }
+
       syncInputs();
       renderEditorProducts();
       render();
       toast('Đã nhập dữ liệu');
-    } catch {
-      alert('File JSON không hợp lệ.');
+    } catch (error) {
+      if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
+        state = previousState;
+        syncInputs();
+        renderEditorProducts();
+        render();
+      }
+      if (error?.code === 'STORAGE_WRITE_FAILED') {
+        alert('Không thể nhập dữ liệu vì bộ nhớ trình duyệt không ghi được. Dữ liệu trước đó đã được giữ nguyên.');
+      } else if (error?.code === 'STORAGE_ROLLBACK_FAILED') {
+        alert('Không thể hoàn tất nhập dữ liệu và việc khôi phục bộ nhớ cũ cũng gặp lỗi. Hãy xuất sao lưu hiện có trước khi thao tác tiếp.');
+      } else {
+        alert('File JSON không hợp lệ.');
+      }
     }
   };
   reader.readAsText(file, 'utf-8');
@@ -1141,23 +1269,44 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
+    let previousState = null;
+    let snapshot = null;
     try {
       const payload = JSON.parse(reader.result);
-      if (!payload || typeof payload !== 'object' || !payload.current || !Array.isArray(payload.history) || typeof payload.presets !== 'object') {
+      if (!isPlainObject(payload) || !isPlainObject(payload.current) || !Array.isArray(payload.history) || !isPlainObject(payload.presets)) {
         throw new Error('invalid backup schema');
       }
       const schemaVersion = Number(payload.schemaVersion || 1);
       if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
         throw new Error('unsupported backup schema');
       }
+
+      const restoredState = merge(payload.current);
+      const restoredHistory = normalizeHistoryRecords(payload.history);
+      const restoredPresets = normalizePresetStore(payload.presets);
+      const restoredCustomers = normalizeCustomerLibrary(payload.customers);
+      const restoredCatalog = normalizeProductCatalog(payload.catalog);
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
-      state = merge(payload.current);
-      saveLogoAsset(state.logo || '');
-      setHistory(payload.history);
-      safeStore(PRESETS, JSON.stringify(payload.presets || {}));
-      setCustomerLibrary(Array.isArray(payload.customers) ? payload.customers : []);
-      setProductCatalog(Array.isArray(payload.catalog) ? payload.catalog : []);
-      save();
+
+      previousState = clone(state);
+      snapshot = captureStorageSnapshot([STORAGE, HISTORY, PRESETS, CUSTOMERS, CATALOG, LOGO_STORAGE]);
+      if (!snapshot) throw storageWriteError(false);
+
+      state = restoredState;
+      const writeOk =
+        saveLogoAsset(state.logo || '') &&
+        setHistory(restoredHistory) &&
+        safeStore(PRESETS, JSON.stringify(restoredPresets)) &&
+        setCustomerLibrary(restoredCustomers) &&
+        setProductCatalog(restoredCatalog) &&
+        save();
+
+      if (!writeOk) {
+        state = previousState;
+        const rollbackOk = restoreStorageSnapshot(snapshot);
+        throw storageWriteError(rollbackOk);
+      }
+
       syncInputs();
       renderEditorProducts();
       render();
@@ -1165,8 +1314,23 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       renderPresets();
       renderMasterData();
       toast('Đã khôi phục toàn bộ dữ liệu');
-    } catch {
-      alert('File sao lưu không hợp lệ hoặc không đúng định dạng PriceReport.');
+    } catch (error) {
+      if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
+        state = previousState;
+        syncInputs();
+        renderEditorProducts();
+        render();
+        renderHistory();
+        renderPresets();
+        renderMasterData();
+      }
+      if (error?.code === 'STORAGE_WRITE_FAILED') {
+        alert('Không thể khôi phục vì bộ nhớ trình duyệt không ghi được. Dữ liệu trước đó đã được phục hồi nguyên trạng.');
+      } else if (error?.code === 'STORAGE_ROLLBACK_FAILED') {
+        alert('Khôi phục dữ liệu bị gián đoạn và rollback bộ nhớ cũ cũng gặp lỗi. Không thao tác thêm trước khi xuất sao lưu các dữ liệu còn đọc được.');
+      } else {
+        alert('File sao lưu không hợp lệ hoặc không đúng định dạng PriceReport.');
+      }
     }
   };
   reader.readAsText(file, 'utf-8');
@@ -1210,6 +1374,9 @@ function validateQuote(data = state) {
   const finalStatus = data.quoteStatus && data.quoteStatus !== 'draft';
   if (finalStatus && !String(data.quoteNo || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có số báo giá.');
   if (finalStatus && !String(data.quoteDate || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có ngày báo giá.');
+  if (data.quoteDate && !isValidISODate(data.quoteDate)) {
+    (finalStatus ? errors : warnings).push('Ngày báo giá không hợp lệ; cần dùng định dạng ngày hợp lệ.');
+  }
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (data.companyEmail && !emailPattern.test(String(data.companyEmail))) warnings.push('Email công ty có vẻ chưa đúng định dạng.');
@@ -1277,17 +1444,58 @@ function runPreflight({ forPrint = false } = {}) {
   return true;
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeHistoryRecords(value) {
+  const records = Array.isArray(value) ? value : [];
+  const seenIds = new Set();
+  return records.flatMap((record, index) => {
+    if (!isPlainObject(record) || !isPlainObject(record.data)) return [];
+    const rawData = Object.assign({}, record.data, {
+      products: Array.isArray(record.data.products) ? record.data.products : []
+    });
+    const data = merge(rawData);
+    data.logo = '';
+    const currency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
+    data.currency = currency;
+    let id = String(record.id || '').trim();
+    if (!id || seenIds.has(id)) {
+      const stamp = String(record.savedAt || '').replace(/\W+/g, '').slice(0, 24) || 'legacy';
+      id = 'restored-' + stamp + '-' + (index + 1);
+      let suffix = 2;
+      while (seenIds.has(id)) {
+        id = 'restored-' + stamp + '-' + (index + 1) + '-' + suffix;
+        suffix += 1;
+      }
+    }
+    seenIds.add(id);
+    const status = ['draft','sent','accepted','rejected','expired'].includes(record.status)
+      ? record.status
+      : data.quoteStatus;
+    data.quoteStatus = status;
+    return [{
+      id,
+      savedAt: typeof record.savedAt === 'string' ? record.savedAt : '',
+      status,
+      currency,
+      total: calcQuoteTotal(data),
+      data
+    }];
+  });
+}
+
 function getHistory() {
   try {
-    const value = JSON.parse(localStorage.getItem(HISTORY));
-    return Array.isArray(value) ? value : [];
+    return normalizeHistoryRecords(JSON.parse(localStorage.getItem(HISTORY)));
   } catch {
     return [];
   }
 }
 
 function setHistory(items) {
-  return safeStore(HISTORY, JSON.stringify(items));
+  return safeStore(HISTORY, JSON.stringify(normalizeHistoryRecords(items)));
 }
 
 function calcTotal(data) {
@@ -1380,7 +1588,7 @@ function duplicateQuoteRecord(record) {
   if (recordLogo) saveLogoAsset(recordLogo);
   const used = getHistory().map(item => item?.data?.quoteNo).filter(Boolean);
   state.quoteNo = nextDuplicateQuoteNo(state.quoteNo || 'BG', used);
-  state.quoteDate = new Date().toISOString().slice(0, 10);
+  state.quoteDate = localDateISO();
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
   save();
@@ -1466,13 +1674,15 @@ function createNewQuote() {
     leftTitle: state.leftTitle,
     rightTitle: state.rightTitle,
     leftNote: state.leftNote,
-    rightNote: state.rightNote
+    rightNote: state.rightNote,
+    dateLine: state.dateLine,
+    rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
   state.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
-  state.quoteDate = d.toISOString().slice(0, 10);
+  state.quoteDate = localDateISO(d);
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
   save();
@@ -1576,17 +1786,32 @@ function renderHistory() {
   });
 }
 
+function normalizeCustomerLibrary(items) {
+  const source = Array.isArray(items) ? items : [];
+  return source.flatMap((item, index) => {
+    if (!isPlainObject(item)) return [];
+    return [{
+      id: String(item.id || ('customer-' + (index + 1))),
+      name: String(item.name || ''),
+      company: String(item.company || ''),
+      address: String(item.address || ''),
+      phone: String(item.phone || ''),
+      email: String(item.email || ''),
+      contact: String(item.contact || '')
+    }];
+  });
+}
+
 function getCustomerLibrary() {
   try {
-    const value = JSON.parse(localStorage.getItem(CUSTOMERS));
-    return Array.isArray(value) ? value : [];
+    return normalizeCustomerLibrary(JSON.parse(localStorage.getItem(CUSTOMERS)));
   } catch {
     return [];
   }
 }
 
 function setCustomerLibrary(items) {
-  safeStore(CUSTOMERS, JSON.stringify(items));
+  return safeStore(CUSTOMERS, JSON.stringify(normalizeCustomerLibrary(items)));
 }
 
 function customerKey(customer) {
@@ -1635,17 +1860,32 @@ function useCustomer(customer) {
   toast('Đã nạp khách hàng');
 }
 
+function normalizeProductCatalog(items) {
+  const source = Array.isArray(items) ? items : [];
+  return source.flatMap((item, index) => {
+    if (!isPlainObject(item)) return [];
+    return [{
+      id: String(item.id || ('product-' + (index + 1))),
+      name: String(item.name || ''),
+      pack: String(item.pack || ''),
+      unit: String(item.unit || ''),
+      price: normalizeNonNegativeNumber(item.price),
+      currency: normalizeCatalogCurrency(item.currency || 'VND'),
+      note: String(item.note || '')
+    }];
+  });
+}
+
 function getProductCatalog() {
   try {
-    const value = JSON.parse(localStorage.getItem(CATALOG));
-    return Array.isArray(value) ? value : [];
+    return normalizeProductCatalog(JSON.parse(localStorage.getItem(CATALOG)));
   } catch {
     return [];
   }
 }
 
 function setProductCatalog(items) {
-  safeStore(CATALOG, JSON.stringify(items));
+  return safeStore(CATALOG, JSON.stringify(normalizeProductCatalog(items)));
 }
 
 function productKey(product) {
@@ -1670,7 +1910,7 @@ function saveCurrentProductsToCatalog() {
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
-      price: Math.max(0, Number(product.price || 0)),
+      price: normalizeNonNegativeNumber(product.price),
       currency: normalizeCatalogCurrency(state.currency),
       note: product.note || ''
     };
@@ -1694,10 +1934,10 @@ function addCatalogProduct(product) {
   const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
   const targetCurrency = normalizeCatalogCurrency(state.currency);
   const currencyMatches = sourceCurrency === targetCurrency;
-  const catalogPrice = currencyMatches ? Math.max(0, Number(product.price || 0)) : 0;
+  const catalogPrice = currencyMatches ? normalizeNonNegativeNumber(product.price) : 0;
   const existing = state.products.find(item => productKey(item) === key);
   if (existing) {
-    existing.qty = Math.max(0, Number(existing.qty || 0)) + 1;
+    existing.qty = normalizeNonNegativeNumber(existing.qty) + 1;
     if (currencyMatches) existing.price = catalogPrice;
   } else {
     state.products.push({
@@ -1805,9 +2045,23 @@ function renderMasterData() {
   }
 }
 
+function normalizePresetStore(value) {
+  if (!isPlainObject(value)) return {};
+  const normalized = {};
+  Object.entries(value).forEach(([name, preset]) => {
+    const safeName = String(name || '').trim();
+    if (!safeName || !isPlainObject(preset)) return;
+    const source = Object.assign({}, preset, {
+      products: Array.isArray(preset.products) ? preset.products : []
+    });
+    normalized[safeName] = createPresetState(merge(source));
+  });
+  return normalized;
+}
+
 function getPresets() {
   try {
-    return JSON.parse(localStorage.getItem(PRESETS)) || {};
+    return normalizePresetStore(JSON.parse(localStorage.getItem(PRESETS)));
   } catch {
     return {};
   }
@@ -1818,7 +2072,7 @@ function createPresetState(source) {
   preset.historyRecordId = '';
   preset.logo = '';
   preset.quoteNo = '';
-  preset.quoteDate = new Date().toISOString().slice(0, 10);
+  preset.quoteDate = localDateISO();
   preset.quoteStatus = 'draft';
   preset.customerName = 'QUÝ KHÁCH HÀNG';
   preset.customerCompany = '';
@@ -1826,6 +2080,7 @@ function createPresetState(source) {
   preset.customerPhone = '';
   preset.customerEmail = '';
   preset.customerContact = '';
+  preset.leftName = '';
   preset.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
   preset.discountPct = 0;
   preset.otherFee = 0;
