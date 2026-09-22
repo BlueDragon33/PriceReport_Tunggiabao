@@ -1513,3 +1513,12 @@ input[type=range]::-moz-range-thumb{
 @media print{
   .paper.layout-edit-mode .layout-block{outline:none!important;box-shadow:none!important;cursor:default!important}
 }
+
+/* Keep logo resizing visual-only: the 31 mm header slot never grows with the bitmap. */
+#previewLogo{height:31mm;min-height:31mm;position:relative}
+#previewLogo img{
+  position:absolute;left:50%;top:50%;width:58mm!important;height:auto;
+  transform:translate(-50%,-50%) scale(var(--logo-scale,1));
+  transform-origin:center center;pointer-events:none
+}
+.footer .layout-block{display:inline-block}
