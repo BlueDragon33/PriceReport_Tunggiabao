@@ -1076,3 +1076,243 @@ input[type=range]::-moz-range-thumb{
 
 .paper[data-title-align="center"] .qtitle{text-align:center!important}
 .paper[data-title-align="center"] .qtitle:after{margin-left:auto!important;margin-right:auto!important}
+
+
+/* =========================
+   V2 REFERENCE STANDARD
+   Image-2 inspired corporate quotation geometry.
+   All templates share one stable header/title grid; themes only change accents.
+   ========================= */
+
+/* Stable header: logo size can change inside its cell but must never push company text sideways. */
+.paper .doc-head{
+  grid-template-columns:38% minmax(0,62%)!important;
+  gap:5mm!important;
+  align-items:center!important;
+  min-height:34mm!important;
+  padding-top:0!important;
+  margin-bottom:1.5mm!important;
+  border-bottom:0!important
+}
+.paper .doc-head.no-logo{grid-template-columns:1fr!important}
+.paper .logo-zone{
+  min-height:30mm!important;
+  padding:1mm 3mm!important;
+  align-content:center!important;
+  justify-content:center!important
+}
+.paper .logo-zone img{
+  max-width:100%!important;
+  max-height:30mm!important;
+  object-fit:contain!important
+}
+.paper .company{
+  width:100%!important;
+  max-width:96mm!important;
+  margin:0 auto!important;
+  padding:0!important;
+  justify-self:center!important;
+  align-self:center!important;
+  font-size:9.6px!important;
+  line-height:1.28!important
+}
+.paper .company-name{
+  width:100%!important;
+  margin:0 0 1.8mm!important;
+  text-align:center!important;
+  font-size:13.2px!important;
+  line-height:1.18!important;
+  letter-spacing:0!important
+}
+.paper .company>div:not(.company-name){margin:.45mm 0!important}
+.paper .doc-head.no-logo .company{
+  max-width:112mm!important;
+  margin:0 auto!important;
+  text-align:left
+}
+
+/* Quote title always follows page center, never the right-side metadata card. */
+.paper .quote-top{
+  position:relative!important;
+  display:block!important;
+  min-height:22mm!important;
+  margin-top:var(--preview-header-gap)!important;
+  padding:0!important;
+  border:0!important
+}
+.paper .qtitle-wrap{
+  min-height:18mm!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding-left:calc(var(--preview-meta-width) + 6mm)!important;
+  padding-right:calc(var(--preview-meta-width) + 6mm)!important
+}
+.paper .quote-top>.qmeta{
+  position:absolute!important;
+  top:0!important;
+  right:0!important;
+  width:var(--preview-meta-width)!important;
+  max-width:var(--preview-meta-width)!important
+}
+.paper.meta-hidden .quote-top{min-height:18mm!important}
+.paper.meta-hidden .qtitle-wrap{padding-left:0!important;padding-right:0!important}
+.paper.meta-hidden .quote-top>.qmeta{display:none!important}
+.paper[data-title-align="center"] .qtitle{text-align:center!important}
+.paper[data-title-align="center"] .qtitle:after{margin-left:auto!important;margin-right:auto!important}
+
+/* Reference/default template: mirrors the clean white PDF supplied by the user. */
+.theme-modern{
+  background:#fff!important;
+  border:0!important;
+  box-shadow:none
+}
+.theme-modern .decor-top,
+.theme-modern .decor-bottom{display:none!important}
+.theme-modern .company{
+  font-family:"Times New Roman",Times,serif!important
+}
+.theme-modern .company>div:not(.company-name){font-style:italic}
+.theme-modern .company-name{
+  color:#111!important;
+  font-family:"Times New Roman",Times,serif!important;
+  font-weight:700!important
+}
+.theme-modern .qtitle{
+  color:#111!important;
+  font-family:"Times New Roman",Times,serif!important;
+  font-weight:700!important;
+  letter-spacing:0!important
+}
+.theme-modern .qtitle:after{display:none!important}
+.theme-modern .recipient{
+  font-family:"Times New Roman",Times,serif!important;
+  font-style:italic!important;
+  font-size:13.5px!important
+}
+.theme-modern .intro{
+  font-family:"Times New Roman",Times,serif!important;
+  font-style:italic!important;
+  font-size:10.5px!important
+}
+.theme-modern .sectionbar{
+  background:transparent!important;
+  color:#111!important;
+  border:0!important;
+  border-radius:0!important;
+  padding:0 0 2mm!important;
+  font-family:"Times New Roman",Times,serif!important;
+  font-size:11.5px!important;
+  text-transform:none!important
+}
+.theme-modern .qtable th{
+  background:#f4f4f4!important;
+  color:#111!important
+}
+.theme-modern .summary .grand{
+  background:#ededed!important;
+  color:#111!important
+}
+.theme-modern .payment-print h4,
+.theme-modern .terms h4{color:#111!important}
+.theme-modern .payment-grid{background:#fafafa!important;border-color:#d8d8d8!important}
+.theme-modern .footer{
+  color:#444!important;
+  border-top:1px solid #d7d7d7!important;
+  min-height:8mm!important;
+  padding-top:2mm!important
+}
+
+/* Other templates are controlled variants of the same geometry, not different page structures. */
+.theme-corporate,
+.theme-minimal,
+.theme-classic,
+.theme-emerald,
+.theme-warm,
+.theme-premium,
+.theme-mono{
+  background:#fff!important;
+  color:#111!important;
+  border-left:0!important;
+  border-right:0!important;
+  box-shadow:none!important
+}
+.theme-corporate .decor-top,.theme-corporate .decor-bottom,
+.theme-minimal .decor-top,.theme-minimal .decor-bottom,
+.theme-classic .decor-top,.theme-classic .decor-bottom,
+.theme-emerald .decor-top,.theme-emerald .decor-bottom,
+.theme-warm .decor-top,.theme-warm .decor-bottom,
+.theme-premium .decor-top,.theme-premium .decor-bottom,
+.theme-mono .decor-top,.theme-mono .decor-bottom{display:none!important}
+
+.theme-corporate{border-top:1.8mm solid var(--doc)!important}
+.theme-corporate .company-name,
+.theme-corporate .qtitle{color:#1b3557!important}
+.theme-corporate .sectionbar{border-radius:0!important}
+.theme-corporate .footer{border-top:1px solid #d7e0e8!important;color:#44536a!important}
+
+.theme-minimal{border-top:.5mm solid #aeb7c0!important}
+.theme-minimal .qtitle{color:#242c34!important;font-weight:600!important;letter-spacing:.7px!important}
+.theme-minimal .qtitle:after{display:none!important}
+.theme-minimal .sectionbar{
+  background:transparent!important;color:#222!important;
+  border-top:1px solid #cfd5da!important;border-bottom:1px solid #cfd5da!important;
+  border-radius:0!important;padding-left:0!important
+}
+.theme-minimal .footer{border-top:1px solid #d8dde2!important;color:#4a535d!important}
+
+.theme-classic{
+  border:.45mm solid #cfc8bf!important;
+  box-shadow:inset 0 0 0 1.4mm #fff,inset 0 0 0 1.65mm #e7e0d8!important
+}
+.theme-classic .company-name,
+.theme-classic .qtitle{color:#2c2520!important}
+.theme-classic .qtitle:after{display:none!important}
+.theme-classic .sectionbar{
+  background:#f7f3ee!important;color:#2c2520!important;
+  border:1px solid #ded4c8!important;border-radius:0!important
+}
+.theme-classic .qtable th{background:#f7f3ee!important}
+.theme-classic .summary .grand{background:#eee7df!important;color:#2c2520!important}
+
+.theme-emerald{border-top:1.2mm solid #16845f!important}
+.theme-emerald .company-name,.theme-emerald .qtitle{color:#155b45!important}
+.theme-emerald .qtitle:after{background:#16845f!important}
+.theme-emerald .footer{border-top:1px solid #cfe4db!important;color:#2e5b4b!important}
+
+.theme-warm{border-top:1.2mm solid #d97919!important}
+.theme-warm .company-name,.theme-warm .qtitle{color:#8c4d13!important}
+.theme-warm .qtitle:after{background:#d97919!important}
+.theme-warm .qmeta{background:#fff7ed!important;border-color:#ecd8bf!important}
+.theme-warm .footer{border-top:1px solid #ead7c3!important;color:#76563a!important}
+
+.theme-premium{border-top:1.2mm solid #26364f!important}
+.theme-premium .doc-head{color:#111!important}
+.theme-premium .company-name,
+.theme-premium .qtitle{color:#26364f!important}
+.theme-premium .logo-treatment-blend{background:transparent!important}
+.theme-premium .sectionbar{
+  background:#26364f!important;color:#fff!important;
+  border-left:1.1mm solid #b99557!important;border-radius:0!important
+}
+.theme-premium .qtable th{background:#f1f3f6!important;color:#26364f!important}
+.theme-premium .summary .grand{background:#26364f!important;color:#fff!important}
+.theme-premium .footer{border-top:1px solid #d9dee5!important;color:#45546a!important}
+
+.theme-mono{border-top:1.2mm solid #30343a!important}
+.theme-mono .company-name,.theme-mono .qtitle{color:#222!important}
+.theme-mono .qtitle:after{background:#30343a!important}
+.theme-mono .sectionbar{background:#30343a!important;color:#fff!important;border-radius:0!important}
+.theme-mono .qtable th{background:#f0f1f2!important;color:#222!important}
+.theme-mono .summary .grand{background:#30343a!important;color:#fff!important}
+.theme-mono .footer{border-top:1px solid #cfd3d7!important;color:#30343a!important}
+
+/* Template thumbnails now preview the same disciplined structure. */
+.thumb.modern{--thumb-a:#555;--thumb-b:#bbb;background:#fff!important}
+.thumb.corporate{--thumb-a:#1b5faa;--thumb-b:#9bbce0;background:linear-gradient(#1b5faa 0 4%,#fff 4%)!important}
+.thumb.minimal{--thumb-a:#8b939c;--thumb-b:#c7ccd1;background:#fff!important}
+.thumb.classic{--thumb-a:#735d49;--thumb-b:#c5b5a1;background:linear-gradient(90deg,#f5f1ec 0 3%,#fff 3% 97%,#f5f1ec 97%)!important}
+.thumb.emerald{--thumb-a:#16845f;--thumb-b:#a7d0bf;background:linear-gradient(#16845f 0 3%,#fff 3%)!important}
+.thumb.warm{--thumb-a:#d97919;--thumb-b:#efc18c;background:linear-gradient(#d97919 0 3%,#fff 3%)!important}
+.thumb.premium{--thumb-a:#26364f;--thumb-b:#b99557;background:linear-gradient(#26364f 0 3%,#fff 3%)!important}
+.thumb.mono{--thumb-a:#30343a;--thumb-b:#a9adb2;background:linear-gradient(#30343a 0 3%,#fff 3%)!important}
