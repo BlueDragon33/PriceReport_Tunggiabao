@@ -92,6 +92,7 @@
               </div>
             </div>
             <div class="row"><label>Kính gửi</label><input id="recipientLine" data-bind="recipientLine"></div>
+            <label class="check"><input id="autoRecipient" data-bind="autoRecipient" type="checkbox"> Tự đồng bộ “Kính gửi” theo khách hàng / công ty</label>
             <div class="row"><label>Lời mở đầu</label><textarea id="intro" data-bind="intro"></textarea></div>
             <div class="row"><label>Tiêu đề nhóm sản phẩm</label><input id="sectionTitle" data-bind="sectionTitle"></div>
           </div>
@@ -102,7 +103,7 @@
             <h3>Quản lý báo giá</h3>
             <div class="history-stats">
               <div class="history-kpi"><span>Đã lưu</span><strong id="historyCount">0</strong></div>
-              <div class="history-kpi"><span>Tổng giá trị</span><strong id="historyRevenue">0 ₫</strong></div>
+              <div class="history-kpi"><span>Giá trị đã lưu</span><strong id="historyRevenue">0 VND</strong></div>
             </div>
             <div class="btns" style="margin-top:10px">
               <button class="btn primary" id="saveQuoteToHistory">Lưu báo giá hiện tại</button>
@@ -274,7 +275,7 @@
             </div>
             <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử, mẫu đã lưu, danh bạ khách hàng và danh mục sản phẩm.</div>
           </div>
-          <div class="card"><h3>Đặt lại</h3><button class="btn danger block" id="reset">Khôi phục mẫu ban đầu</button></div>
+          <div class="card"><h3>Đặt lại báo giá</h3><button class="btn danger block" id="reset">Khôi phục báo giá hiện tại về mẫu ban đầu</button><div class="help">Không xóa lịch sử báo giá, danh bạ, danh mục sản phẩm hoặc các mẫu đã lưu.</div></div>
         </div>
 
         <div class="pane" id="pane-presets">
@@ -291,7 +292,7 @@
         <div class="card">
           <h3>Mẫu báo giá</h3>
           <div class="template-grid">
-            <button class="tpl" data-theme="modern" data-description="Mẫu chuẩn khuyến nghị: bố cục cân đối giống báo giá PDF truyền thống, logo trái – công ty phải – tiêu đề giữa trang."><div class="thumb modern"></div><span>Chuẩn công ty</span></button>
+            <button class="tpl recommended-template" data-theme="modern" data-description="Mẫu chuẩn khuyến nghị: bố cục cân đối giống báo giá PDF truyền thống, logo trái – công ty phải – tiêu đề giữa trang."><span class="template-badge">Khuyên dùng</span><div class="thumb modern"></div><span>Chuẩn công ty</span></button>
             <button class="tpl" data-theme="corporate" data-description="Cùng bố cục chuẩn, thêm điểm nhấn viền xanh gọn cho khách doanh nghiệp."><div class="thumb corporate"></div><span>Doanh nghiệp</span></button>
             <button class="tpl" data-theme="minimal" data-description="Nhiều khoảng trắng, bỏ bớt trang trí nhưng giữ nguyên hệ căn lề chuẩn."><div class="thumb minimal"></div><span>Tối giản</span></button>
             <button class="tpl" data-theme="classic" data-description="Phong cách trang trọng, serif nhẹ, phù hợp văn bản chính thức."><div class="thumb classic"></div><span>Trang trọng</span></button>
