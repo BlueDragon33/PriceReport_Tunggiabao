@@ -2,7 +2,7 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V2.7 QA / UX / report hardened
+## Trạng thái hiện tại — V2.8 review correctness / report density hardened
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
@@ -15,6 +15,8 @@ WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo 
 - Hỗ trợ dạng **bảng giá**: bật/tắt độc lập Quy cách, Số lượng, Đơn giá, Thành tiền, Ghi chú; nhóm hàng được in thành dòng phân cách trong bảng.
 - **Nhập dữ liệu thông minh** từ Excel: tự nhận diện tên đơn vị, địa chỉ, tiêu đề/phụ đề, Kính gửi, lời mở đầu, nhóm hàng, sản phẩm, ngày tháng và người ký; luôn có màn hình kiểm tra trước khi áp dụng.
 - **OCR chữ viết tay**: tải ảnh JPG/PNG, tiền xử lý ảnh, nhận dạng tiếng Việt + tiếng Anh, map nội dung sang các field liên quan và cho phép chỉnh văn bản OCR thô rồi phân tích lại. Nếu OCR tự động lỗi, review vẫn mở để nhập/chỉnh văn bản thủ công.
+- Review Smart Import giờ coi **chỉnh/xóa thủ công là quyết định cuối cùng**: xóa trắng một field thực sự xóa khi Apply; OCR phân tích lại thay đúng các field do OCR tạo ra nhưng không ghi đè field đã đến từ Excel.
+- Excel/Auto-arrange tự bỏ các cột tùy chọn hoàn toàn trống (như Ghi chú hoặc Quy cách) để bảng giá 72 dòng rộng rãi, rõ số và chuyên nghiệp hơn.
 - Smart Import có trạng thái bận, giới hạn kích thước file, tự chọn sheet Excel phù hợp nhất trong workbook nhiều sheet, nút **Bắt đầu lại**, và không trộn draft cũ sau khi Hủy.
 - Danh sách lớn từ 24 sản phẩm tự thu gọn trong editor để thao tác thực tế nhanh hơn; dữ liệu và bản in không thay đổi.
 - Tự tính tạm tính, giảm giá, VAT, phí khác, tổng cộng và đọc số tiền VND bằng chữ.
@@ -27,7 +29,7 @@ WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo 
 - Full backup/restore schema v4; dữ liệu import được normalize/clamp, từ chối schema tương lai và rollback về snapshot cũ nếu LocalStorage ghi lỗi giữa chừng.
 - Ngày báo giá dùng lịch địa phương của trình duyệt, tránh lệch ngày do UTC; preflight chặn ngày không hợp lệ ở trạng thái phát hành.
 - Print nhiều trang cho phép nội dung A4 tràn sang trang kế tiếp, lặp header bảng và hạn chế cắt các block tổng tiền/điều khoản/chữ ký.
-- PWA/offline với Service Worker cache v17; chunk động và tài nguyên OCR sau lần tải đầu cũng được runtime-cache để tăng khả năng dùng lại khi mất mạng.
+- PWA/offline với Service Worker cache v18; chunk động và tài nguyên OCR sau lần tải đầu cũng được runtime-cache để tăng khả năng dùng lại khi mất mạng.
 - Dữ liệu nằm trên trình duyệt hiện tại.
 - Responsive desktop/mobile.
 
@@ -59,7 +61,7 @@ npm run dev
 
 Mọi thay đổi phát triển trên feature branch, mở Pull Request và chỉ merge khi CI PASS. Merge vào `main` kích hoạt GitHub Pages.
 
-## Audit V2.7
+## Audit V2.8
 
 V2.7 đã sửa các lỗi QA/UX quan trọng: false-success khi LocalStorage ghi lỗi; subtitle nằm ngang; nhịp “Thoáng” không lưu đúng; draft import cũ bị giữ lại; OCR fail không mở được nhập thủ công; Excel chỉ đọc sheet đầu; dòng STT có giá không hợp lệ bị nhận nhầm; header nhóm có nguy cơ đứng cuối trang; báo giá/preset mới mang theo kỳ cũ. Direct dependencies được pin theo phiên bản CI đã kiểm thử và Pages/CI chặn runtime dependency mức high/critical.
 
@@ -70,3 +72,15 @@ Full install hiện vẫn báo 2 cảnh báo mức moderate trong dependency tre
 Bản hiện tại là local-first, chưa có backend đăng nhập/đồng bộ nhiều thiết bị. Lưu PDF dựa trên print dialog của trình duyệt. Hệ thống không tự quy đổi tỷ giá giữa các loại tiền tệ; khi lấy sản phẩm từ catalog khác tiền tệ, đơn giá được đặt về 0 để người dùng nhập lại an toàn.
 
 OCR chữ viết tay dùng Tesseract.js nên độ chính xác phụ thuộc ảnh, nét chữ và ánh sáng; kết quả **không được áp dụng tự động** mà luôn đi qua màn hình review. Lần OCR đầu có thể cần mạng để tải tài nguyên ngôn ngữ; các request thành công được cache cho lần dùng sau.
+
+
+### Bổ sung V2.8
+
+V2.8 là vòng audit độc lập sau V2.7. Các lỗi còn sót được sửa:
+- field OCR bị xóa trong review nhưng draft cũ vẫn giữ;
+- “Phân tích lại” OCR có thể giữ nhận diện cũ sai;
+- OCR reparse có nguy cơ ghi đè metadata đáng tin cậy từ Excel;
+- cột Ghi chú vẫn xuất hiện dù workbook Tùng Gia Bảo có 72/72 dòng ghi chú trống;
+- Auto-arrange chưa tự tối ưu các cột tùy chọn hoàn toàn rỗng.
+
+CI V2.8 xác nhận runtime audit 0 vulnerabilities, core/importer logic PASS, 24/24 DOM tests PASS, smoke PASS và production build PASS.
