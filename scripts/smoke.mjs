@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v27-source")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v28-app")) fail('Service-worker cache version was not upgraded for V4 application shell');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -244,3 +244,13 @@ const deployControlWorkflow = fs.readFileSync('.github/workflows/deploy-control-
 if (!pagesWorkflow.includes('control_origin:')) fail('Pages workflow must accept explicit KT control-origin handoff');
 if (!pagesWorkflow.includes("inputs.control_origin || vars.PRICE_REPORT_CONTROL_ORIGIN")) fail('Pages workflow must prefer the forwarded KT control origin');
 if (!deployControlWorkflow.includes('-f control_origin="$PRICE_REPORT_CONTROL_ORIGIN"')) fail('KT deploy workflow must forward its verified environment-scoped origin to Pages');
+
+if (!html.includes('id="pane-dashboard"')) fail('V4 dashboard workspace is missing');
+if (!html.includes('data-tab="dashboard"')) fail('V4 application home navigation is missing');
+if (!html.includes('id="dashboardSearch"')) fail('V4 dashboard search is missing');
+if (!html.includes('id="dashRecentQuotes"')) fail('V4 recent quotation workspace is missing');
+if (!js.includes("['dashboard', 'history', 'master'].includes(tab)")) fail('Application workspace routing is missing');
+if (!js.includes('function renderDashboard()')) fail('Dashboard data renderer is missing');
+if (!js.includes("openTab('dashboard')")) fail('Application must start on dashboard');
+if (!css.includes('.shell.app-workspace')) fail('Application workspace shell styles are missing');
+if (!css.includes('.dashboard-main-grid')) fail('Dashboard responsive grid is missing');
