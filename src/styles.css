@@ -1316,3 +1316,121 @@ input[type=range]::-moz-range-thumb{
 .thumb.warm{--thumb-a:#d97919;--thumb-b:#efc18c;background:linear-gradient(#d97919 0 3%,#fff 3%)!important}
 .thumb.premium{--thumb-a:#26364f;--thumb-b:#b99557;background:linear-gradient(#26364f 0 3%,#fff 3%)!important}
 .thumb.mono{--thumb-a:#30343a;--thumb-b:#a9adb2;background:linear-gradient(#30343a 0 3%,#fff 3%)!important}
+
+
+/* =========================
+   V2.1 BALANCED HEADER PATCH
+   Reference: supplied PDF screenshot #2.
+   ========================= */
+.paper .doc-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,41.5%) minmax(0,58.5%)!important;
+  column-gap:6mm!important;
+  row-gap:0!important;
+  align-items:center!important;
+  min-height:35mm!important;
+  margin:0 0 2mm!important;
+  padding:0!important
+}
+.paper .logo-zone{
+  width:100%!important;
+  min-width:0!important;
+  min-height:31mm!important;
+  padding:1mm 2mm!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  justify-self:center!important
+}
+.paper .logo-zone img{
+  display:block!important;
+  max-width:100%!important;
+  max-height:31mm!important;
+  object-fit:contain!important;
+  margin:0 auto!important
+}
+.paper .company-col{
+  min-width:0!important;
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  justify-self:center!important
+}
+.paper .company-block{
+  width:min(96mm,100%)!important;
+  max-width:96mm!important;
+  margin:0 auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important
+}
+.paper .company-name{
+  width:100%!important;
+  margin:0 0 1.7mm!important;
+  padding:0!important;
+  text-align:center!important;
+  font-size:13.2px!important;
+  line-height:1.18!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+  white-space:normal!important
+}
+.paper .company-lines{
+  width:max-content!important;
+  max-width:100%!important;
+  margin:0 auto!important;
+  padding:0!important;
+  text-align:left!important;
+  font-size:9.6px!important;
+  line-height:1.28!important
+}
+.paper .company-lines>div{
+  margin:.45mm 0!important;
+  padding:0!important;
+  text-align:left!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere
+}
+.theme-modern .doc-head,
+.theme-corporate .doc-head,
+.theme-minimal .doc-head,
+.theme-classic .doc-head,
+.theme-emerald .doc-head,
+.theme-warm .doc-head,
+.theme-premium .doc-head,
+.theme-mono .doc-head{
+  grid-template-columns:minmax(0,41.5%) minmax(0,58.5%)!important;
+  column-gap:6mm!important
+}
+.theme-modern .company-name,
+.theme-corporate .company-name,
+.theme-minimal .company-name,
+.theme-classic .company-name,
+.theme-emerald .company-name,
+.theme-warm .company-name,
+.theme-premium .company-name,
+.theme-mono .company-name{
+  text-align:center!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  transform:none!important
+}
+.paper .doc-head.no-logo{
+  display:block!important;
+  min-height:28mm!important
+}
+.paper .doc-head.no-logo .logo-zone{display:none!important}
+.paper .doc-head.no-logo .company-col{
+  width:100%!important;
+  min-height:26mm!important;
+  display:flex!important;
+  justify-content:center!important
+}
+.paper .doc-head.no-logo .company-block{
+  width:min(112mm,100%)!important;
+  max-width:112mm!important;
+  margin:0 auto!important
+}
+.paper .qtitle-wrap{width:100%!important;box-sizing:border-box!important}
+.paper.meta-hidden .qtitle-wrap{padding-left:0!important;padding-right:0!important}
