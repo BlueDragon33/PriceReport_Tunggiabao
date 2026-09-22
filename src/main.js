@@ -62,6 +62,7 @@ const defaults = {
   companyEmail: 'contact@thegioitrung.vn',
   slogan: 'Vì sức khỏe cộng đồng',
   quoteTitle: 'BẢNG BÁO GIÁ',
+  quoteSubtitle: '',
   quoteNo: 'BG-2026-001',
   quoteDate: localDateISO(),
   quoteStatus: 'draft',
@@ -160,6 +161,12 @@ Object.assign(defaults, TUNGGIABAO_PROFILE, {
 });
 
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
+
+function defaultSignatureDateLine(date = new Date()) {
+  const valid = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  return 'Nha Trang, ngày ..... tháng ' + String(valid.getMonth() + 1).padStart(2, '0') + ' năm ' + valid.getFullYear();
+}
+
 function merge(data) {
   const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
@@ -257,7 +264,8 @@ function merge(data) {
   if (!['draft','sent','accepted','rejected','expired'].includes(merged.quoteStatus)) merged.quoteStatus = 'draft';
   if (!['center','left','right'].includes(merged.previewTitleAlign)) merged.previewTitleAlign = 'center';
   if (!['compact','standard','comfortable'].includes(merged.previewTableDensity)) merged.previewTableDensity = 'standard';
-  if (!['compact','standard','relaxed'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
+  if (merged.previewSpacing === 'relaxed') merged.previewSpacing = 'airy';
+  if (!['compact','standard','airy'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
 
   return merged;
 }
@@ -548,6 +556,14 @@ function numberToWords(value) {
 }
 
 let collapsedProducts = new Set();
+
+function resetCollapsedProductsForState() {
+  collapsedProducts = state.products.length >= 24
+    ? new Set(state.products.map((_, index) => index))
+    : new Set();
+}
+
+resetCollapsedProductsForState();
 
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
@@ -1034,6 +1050,43 @@ function download(name, text, type) {
 
 let smartImportDraft = null;
 let smartImportImageUrl = '';
+let smartImportBusy = false;
+let smartImportLastFocus = null;
+
+
+function resetSmartImportDraft() {
+  smartImportDraft = null;
+  const review = document.getElementById('smartImportReview');
+  const apply = document.getElementById('applySmartImport');
+  const raw = document.getElementById('ocrRawText');
+  const rawBox = document.getElementById('ocrRawBox');
+  const previewWrap = document.getElementById('handwritingPreviewWrap');
+  const preview = document.getElementById('handwritingPreview');
+  const excelInput = document.getElementById('excelSmartImportInput');
+  const handwritingInput = document.getElementById('handwritingSmartImportInput');
+  if (review) review.hidden = true;
+  if (apply) apply.disabled = true;
+  if (raw) raw.value = '';
+  if (rawBox) rawBox.hidden = true;
+  if (previewWrap) previewWrap.hidden = true;
+  if (preview) preview.removeAttribute('src');
+  if (excelInput) excelInput.value = '';
+  if (handwritingInput) handwritingInput.value = '';
+  if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
+  smartImportImageUrl = '';
+  document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
+  setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
+}
+
+function setSmartImportBusy(busy) {
+  smartImportBusy = Boolean(busy);
+  ['excelSmartImportInput','handwritingSmartImportInput','applySmartImport','resetSmartImport','cancelSmartImport','closeSmartImport'].forEach((id) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    if (id === 'applySmartImport') element.disabled = smartImportBusy || !smartImportDraft;
+    else element.disabled = smartImportBusy;
+  });
+}
 
 function setSmartImportProgress(message, tone = '') {
   const box = document.getElementById('smartImportProgress');
@@ -1127,16 +1180,25 @@ function renderSmartImportReview() {
 function openSmartImport() {
   const modal = document.getElementById('smartImportModal');
   if (!modal) return;
+  smartImportLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   modal.hidden = false;
   document.body.classList.add('smart-import-open');
-  setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
+  if (!smartImportDraft) resetSmartImportDraft();
+  requestAnimationFrame(() => document.getElementById('closeSmartImport')?.focus());
 }
 
-function closeSmartImport() {
+function closeSmartImport({ discard = false, force = false } = {}) {
   const modal = document.getElementById('smartImportModal');
-  if (!modal) return;
+  if (!modal) return false;
+  if (smartImportBusy && !force) {
+    setSmartImportProgress('Đang xử lý dữ liệu; vui lòng chờ hoàn tất trước khi đóng.', 'working');
+    return false;
+  }
   modal.hidden = true;
   document.body.classList.remove('smart-import-open');
+  if (discard) resetSmartImportDraft();
+  smartImportLastFocus?.focus?.();
+  return true;
 }
 
 async function parseExcelFile(file) {
@@ -1144,13 +1206,24 @@ async function parseExcelFile(file) {
   const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer);
-  const firstSheet = workbook.SheetNames?.[0];
-  if (!firstSheet) throw new Error('Workbook không có sheet.');
-  const worksheet = workbook.Sheets[firstSheet];
-  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
-  const parsed = parseSpreadsheetRows(rows);
-  parsed.sheetName = firstSheet;
-  return parsed;
+  const sheetNames = workbook.SheetNames || [];
+  if (!sheetNames.length) throw new Error('Workbook không có sheet.');
+  const candidates = sheetNames.map((sheetName) => {
+    const worksheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
+    const parsed = parseSpreadsheetRows(rows);
+    const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
+    const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
+    return { sheetName, parsed, score };
+  }).sort((a, b) => b.score - a.score);
+  const best = candidates[0];
+  best.parsed.sheetName = best.sheetName;
+  best.parsed.sheetCount = sheetNames.length;
+  if (sheetNames.length > 1) {
+    best.parsed.warnings = [...(best.parsed.warnings || []),
+      'Workbook có ' + sheetNames.length + ' sheet; hệ thống chọn sheet “' + best.sheetName + '” có cấu trúc phù hợp nhất.'];
+  }
+  return best.parsed;
 }
 
 async function imageToOcrCanvasUrl(file) {
@@ -1221,29 +1294,39 @@ function applySmartImportDraft() {
   }
 
   state = merge(next);
-  save();
+  const persisted = save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
-  closeSmartImport();
+  closeSmartImport({ discard: true });
   openTab('general');
-  toast('Đã áp dụng dữ liệu nhập vào báo giá');
+  toast(persisted
+    ? 'Đã áp dụng dữ liệu nhập vào báo giá'
+    : 'Đã áp dụng tạm thời; trình duyệt chưa lưu được dữ liệu');
 }
 
 function setupSmartImport() {
   document.getElementById('openSmartImport')?.addEventListener('click', openSmartImport);
-  document.getElementById('closeSmartImport')?.addEventListener('click', closeSmartImport);
-  document.getElementById('cancelSmartImport')?.addEventListener('click', closeSmartImport);
+  document.getElementById('closeSmartImport')?.addEventListener('click', () => closeSmartImport());
+  document.getElementById('cancelSmartImport')?.addEventListener('click', () => closeSmartImport({ discard: true }));
+  document.getElementById('resetSmartImport')?.addEventListener('click', resetSmartImportDraft);
   document.getElementById('applySmartImport')?.addEventListener('click', applySmartImportDraft);
 
   document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
-    if (event.target?.id === 'smartImportModal') closeSmartImport();
+    if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
   });
 
   document.getElementById('excelSmartImportInput')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || smartImportBusy) return;
+    if (file.size > 12 * 1024 * 1024) {
+      setSmartImportProgress('File Excel vượt 12 MB; hãy rút gọn workbook trước khi nhập.', 'error');
+      event.target.value = '';
+      return;
+    }
     try {
+      setSmartImportBusy(true);
       syncDraftFromImportReview();
       const parsed = await parseExcelFile(file);
       smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
@@ -1253,13 +1336,19 @@ function setupSmartImport() {
       console.error('Excel smart import failed:', error);
       setSmartImportProgress('Không thể đọc file Excel. Hãy kiểm tra định dạng hoặc thử file khác.', 'error');
     } finally {
+      setSmartImportBusy(false);
       event.target.value = '';
     }
   });
 
   document.getElementById('handwritingSmartImportInput')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || smartImportBusy) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setSmartImportProgress('Ảnh vượt 10 MB; hãy giảm kích thước ảnh trước khi OCR.', 'error');
+      event.target.value = '';
+      return;
+    }
 
     const previewWrap = document.getElementById('handwritingPreviewWrap');
     const preview = document.getElementById('handwritingPreview');
@@ -1269,6 +1358,7 @@ function setupSmartImport() {
     previewWrap.hidden = false;
 
     try {
+      setSmartImportBusy(true);
       syncDraftFromImportReview();
       const parsed = await recognizeHandwritingFile(file);
       smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
@@ -1278,10 +1368,22 @@ function setupSmartImport() {
       setSmartImportProgress('OCR hoàn tất. Hãy kiểm tra các trường trước khi áp dụng.', 'success');
     } catch (error) {
       console.error('Handwriting OCR failed:', error);
-      setSmartImportProgress('OCR không hoàn tất. Có thể thử ảnh rõ hơn hoặc nhập/chỉnh văn bản OCR thủ công.', 'error');
+      smartImportDraft = mergeImportDraft(smartImportDraft, {
+        source: 'handwriting',
+        fields: {},
+        products: [],
+        groups: [],
+        layoutHints: {},
+        confidence: {},
+        warnings: ['OCR tự động không hoàn tất; có thể nhập văn bản nhận diện thủ công rồi phân tích lại.'],
+        unmatched: []
+      });
       document.getElementById('ocrRawBox').hidden = false;
       renderSmartImportReview();
+      document.getElementById('ocrRawBox').hidden = false;
+      setSmartImportProgress('OCR không hoàn tất. Hãy nhập/chỉnh văn bản OCR thô rồi bấm “Phân tích lại”.', 'error');
     } finally {
+      setSmartImportBusy(false);
       event.target.value = '';
     }
   });
@@ -1754,6 +1856,7 @@ document.getElementById('reset').addEventListener('click', () => {
   saveLogoAsset('');
   save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   toast('Đã khôi phục mẫu');
@@ -1953,10 +2056,12 @@ function saveCurrentQuote() {
   if (existingIndex >= 0) items.splice(existingIndex, 1);
   items.unshift(record);
   if (!setHistory(items)) return false;
-  save();
+  const currentSaved = save();
   syncInputs();
   renderHistory();
-  toast(existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá');
+  toast(currentSaved
+    ? (existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá')
+    : 'Đã lưu vào lịch sử; trạng thái hiện tại chưa thể autosave');
   return true;
 }
 
@@ -1967,12 +2072,13 @@ function loadQuoteRecord(record) {
   state.logo = recordLogo || activeLogo;
   if (recordLogo) saveLogoAsset(recordLogo);
   state.historyRecordId = record.id || '';
-  save();
+  const persisted = save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã mở ' + quoteLabel(record.data));
+  toast(persisted ? ('Đã mở ' + quoteLabel(record.data)) : ('Đã mở ' + quoteLabel(record.data) + '; chưa autosave được'));
 }
 
 function duplicateQuoteRecord(record) {
@@ -1986,12 +2092,13 @@ function duplicateQuoteRecord(record) {
   state.quoteDate = localDateISO();
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
-  save();
+  const persisted = save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã nhân bản thành ' + state.quoteNo);
+  toast(persisted ? ('Đã nhân bản thành ' + state.quoteNo) : ('Đã nhân bản tạm thời ' + state.quoteNo + '; chưa autosave được'));
 }
 
 function generateUniqueQuoteNo() {
@@ -2021,7 +2128,6 @@ function createNewQuote() {
     companyEmail: state.companyEmail,
     slogan: state.slogan,
     footerText: state.footerText,
-    quoteSubtitle: state.quoteSubtitle,
     currency: state.currency,
     theme: state.theme,
     accent: state.accent,
@@ -2075,7 +2181,6 @@ function createNewQuote() {
     rightTitle: state.rightTitle,
     leftNote: state.leftNote,
     rightNote: state.rightNote,
-    dateLine: state.dateLine,
     rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
@@ -2083,14 +2188,17 @@ function createNewQuote() {
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
+  state.quoteSubtitle = '';
+  state.dateLine = defaultSignatureDateLine(d);
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
-  save();
+  const persisted = save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã tạo báo giá mới');
+  toast(persisted ? 'Đã tạo báo giá mới' : 'Đã tạo báo giá mới tạm thời; chưa autosave được');
 }
 
 function renderHistory() {
@@ -2175,7 +2283,7 @@ function renderHistory() {
     del.textContent = 'Xóa';
     del.addEventListener('click', () => {
       if (!confirm('Xóa ' + quoteLabel(data) + '?')) return;
-      setHistory(getHistory().filter(item => item.id !== record.id));
+      if (!setHistory(getHistory().filter(item => item.id !== record.id))) return;
       renderHistory();
       toast('Đã xóa báo giá');
     });
@@ -2240,7 +2348,7 @@ function saveCurrentCustomerToLibrary() {
   if (index >= 0) customer.id = items[index].id;
   if (index >= 0) items[index] = customer;
   else items.unshift(customer);
-  setCustomerLibrary(items);
+  if (!setCustomerLibrary(items)) return;
   renderMasterData();
   toast(index >= 0 ? 'Đã cập nhật khách hàng' : 'Đã lưu khách hàng');
 }
@@ -2253,11 +2361,11 @@ function useCustomer(customer) {
   state.customerEmail = customer.email || '';
   state.customerContact = customer.contact || '';
   state.recipientLine = 'Kính gửi: ' + (state.customerCompany || state.customerName || 'QUÝ KHÁCH HÀNG');
-  save();
+  const persisted = save();
   syncInputs();
   render();
   openTab('customer');
-  toast('Đã nạp khách hàng');
+  toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
 }
 
 function normalizeProductCatalog(items) {
@@ -2326,7 +2434,7 @@ function saveCurrentProductsToCatalog() {
     }
     changed += 1;
   });
-  setProductCatalog(items);
+  if (!setProductCatalog(items)) return;
   renderMasterData();
   toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
 }
@@ -2352,11 +2460,12 @@ function addCatalogProduct(product) {
       note: product.note || ''
     });
   }
-  save();
+  const persisted = save();
   renderEditorProducts();
   render();
   openTab('products');
-  toast(currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ');
+  const successMessage = currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ';
+  toast(persisted ? successMessage : successMessage + ' — chưa autosave được');
 }
 
 function renderMasterData() {
@@ -2397,7 +2506,7 @@ function renderMasterData() {
       del.textContent = 'Xóa';
       del.addEventListener('click', () => {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
-        setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id));
+        if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
         renderMasterData();
       });
       actions.append(use, del);
@@ -2438,7 +2547,7 @@ function renderMasterData() {
       del.textContent = 'Xóa';
       del.addEventListener('click', () => {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
-        setProductCatalog(getProductCatalog().filter(item => item.id !== product.id));
+        if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
         renderMasterData();
       });
       actions.append(add, del);
@@ -2476,6 +2585,8 @@ function createPresetState(source) {
   preset.logo = '';
   preset.quoteNo = '';
   preset.quoteDate = localDateISO();
+  preset.quoteSubtitle = '';
+  preset.dateLine = defaultSignatureDateLine();
   preset.quoteStatus = 'draft';
   preset.customerName = 'QUÝ KHÁCH HÀNG';
   preset.customerCompany = '';
@@ -2499,7 +2610,7 @@ document.getElementById('savePreset').addEventListener('click', () => {
   }
   const presets = getPresets();
   presets[name] = createPresetState(state);
-  safeStore(PRESETS, JSON.stringify(presets));
+  if (!safeStore(PRESETS, JSON.stringify(presets))) return;
   document.getElementById('presetName').value = '';
   renderPresets();
   toast('Đã lưu mẫu');
@@ -2539,17 +2650,20 @@ function renderPresets() {
       const activeLogo = state.logo;
       state = merge(createPresetState(presets[name]));
       state.logo = activeLogo;
-      save();
+      const persisted = save();
       syncInputs();
+      resetCollapsedProductsForState();
       renderEditorProducts();
       render();
-      toast('Đã nạp mẫu');
+      toast(persisted ? 'Đã nạp mẫu' : 'Đã nạp mẫu tạm thời; chưa autosave được');
     });
 
     del.addEventListener('click', () => {
-      delete presets[name];
-      safeStore(PRESETS, JSON.stringify(presets));
+      const nextPresets = Object.assign({}, presets);
+      delete nextPresets[name];
+      if (!safeStore(PRESETS, JSON.stringify(nextPresets))) return;
       renderPresets();
+      toast('Đã xóa mẫu');
     });
 
     actions.append(use, del);
@@ -2636,12 +2750,13 @@ function autoArrangePreview() {
   state.previewLineHeight = dense ? 1.18 : medium ? 1.23 : 1.26;
   state.previewTitleSize = String(state.quoteTitle || '').trim().length > 28 ? 22 : 25;
 
-  save();
+  const persisted = save();
   syncInputs();
   render();
   setLayoutEditMode(true);
   selectLayoutBlock('');
-  toast(dense ? 'Đã tự sắp xếp theo bố cục gọn nhiều nội dung' : 'Đã tự sắp xếp theo bố cục A4 cân đối');
+  const message = dense ? 'Đã tự sắp xếp theo bố cục gọn nhiều nội dung' : 'Đã tự sắp xếp theo bố cục A4 cân đối';
+  toast(persisted ? message : message + ' — chưa autosave được');
 }
 
 function nudgeSelectedLayout(dx, dy) {
@@ -2674,9 +2789,9 @@ function setupLayoutEditor() {
   document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
     state.layoutOffsets = {};
     applyLayoutOffsets();
-    save();
+    const persisted = save();
     selectLayoutBlock('');
-    toast('Đã đưa các khối về vị trí chuẩn');
+    toast(persisted ? 'Đã đưa các khối về vị trí chuẩn' : 'Đã đặt lại vị trí tạm thời; chưa autosave được');
   });
 
   const resizeLogo = (delta) => {
@@ -2847,10 +2962,10 @@ document.getElementById('resetPreviewLayout').addEventListener('click', () => {
   state.previewLineHeight = 1.26;
   state.showQuoteMeta = false;
   state.layoutOffsets = {};
-  save();
+  const persisted = save();
   syncInputs();
   render();
-  toast('Đã khôi phục bố cục chuẩn hiện đại');
+  toast(persisted ? 'Đã khôi phục bố cục chuẩn hiện đại' : 'Đã khôi phục bố cục tạm thời; chưa autosave được');
 });
 
 function compactLegacyBrandAssets() {
@@ -2889,7 +3004,7 @@ window.addEventListener('resize', () => {
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   if (!document.getElementById('smartImportModal')?.hidden) {
-    closeSmartImport();
+    if (!smartImportBusy) closeSmartImport();
     return;
   }
   if (layoutEditEnabled) {

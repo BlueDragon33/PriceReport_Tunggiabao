@@ -1,7 +1,7 @@
 {
   "name": "pricereport-tunggiabao",
   "private": true,
-  "version": "2.6.0",
+  "version": "2.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -11,12 +11,12 @@
     "test:dom": "vitest run tests/app.test.js"
   },
   "devDependencies": {
-    "vite": "^7.1.7",
-    "jsdom": "^26.1.0",
-    "vitest": "^3.2.4"
+    "vite": "7.3.6",
+    "jsdom": "26.1.0",
+    "vitest": "3.2.7"
   },
   "dependencies": {
-    "tesseract.js": "^7.0.0",
+    "tesseract.js": "7.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   }
 }

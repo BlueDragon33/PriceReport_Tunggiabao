@@ -2,7 +2,7 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V2.6 smart import Excel + chữ viết tay
+## Trạng thái hiện tại — V2.7 QA / UX / report hardened
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
@@ -14,7 +14,9 @@ WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo 
 - Product editor dạng card, focus mode, thu gọn/mở rộng, nhân bản, sắp xếp, nhóm hàng và ghi chú co giãn.
 - Hỗ trợ dạng **bảng giá**: bật/tắt độc lập Quy cách, Số lượng, Đơn giá, Thành tiền, Ghi chú; nhóm hàng được in thành dòng phân cách trong bảng.
 - **Nhập dữ liệu thông minh** từ Excel: tự nhận diện tên đơn vị, địa chỉ, tiêu đề/phụ đề, Kính gửi, lời mở đầu, nhóm hàng, sản phẩm, ngày tháng và người ký; luôn có màn hình kiểm tra trước khi áp dụng.
-- **OCR chữ viết tay**: tải ảnh JPG/PNG, tiền xử lý ảnh, nhận dạng tiếng Việt + tiếng Anh, map nội dung sang các field liên quan và cho phép chỉnh văn bản OCR thô rồi phân tích lại.
+- **OCR chữ viết tay**: tải ảnh JPG/PNG, tiền xử lý ảnh, nhận dạng tiếng Việt + tiếng Anh, map nội dung sang các field liên quan và cho phép chỉnh văn bản OCR thô rồi phân tích lại. Nếu OCR tự động lỗi, review vẫn mở để nhập/chỉnh văn bản thủ công.
+- Smart Import có trạng thái bận, giới hạn kích thước file, tự chọn sheet Excel phù hợp nhất trong workbook nhiều sheet, nút **Bắt đầu lại**, và không trộn draft cũ sau khi Hủy.
+- Danh sách lớn từ 24 sản phẩm tự thu gọn trong editor để thao tác thực tế nhanh hơn; dữ liệu và bản in không thay đổi.
 - Tự tính tạm tính, giảm giá, VAT, phí khác, tổng cộng và đọc số tiền VND bằng chữ.
 - Preflight trước in/PDF: phát hiện thiếu dữ liệu, mâu thuẫn VAT/điều khoản, thông tin thanh toán chưa đủ, logo thiếu và cấu hình tổng tiền không nhất quán.
 - Lịch sử báo giá có trạng thái, mã quote chống trùng, duplicate chống đè lịch sử và thống kê theo từng loại tiền tệ.
@@ -25,15 +27,16 @@ WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo 
 - Full backup/restore schema v4; dữ liệu import được normalize/clamp, từ chối schema tương lai và rollback về snapshot cũ nếu LocalStorage ghi lỗi giữa chừng.
 - Ngày báo giá dùng lịch địa phương của trình duyệt, tránh lệch ngày do UTC; preflight chặn ngày không hợp lệ ở trạng thái phát hành.
 - Print nhiều trang cho phép nội dung A4 tràn sang trang kế tiếp, lặp header bảng và hạn chế cắt các block tổng tiền/điều khoản/chữ ký.
-- PWA/offline với Service Worker cache v16; chunk động và tài nguyên OCR sau lần tải đầu cũng được runtime-cache để tăng khả năng dùng lại khi mất mạng.
+- PWA/offline với Service Worker cache v17; chunk động và tài nguyên OCR sau lần tải đầu cũng được runtime-cache để tăng khả năng dùng lại khi mất mạng.
 - Dữ liệu nằm trên trình duyệt hiện tại.
 - Responsive desktop/mobile.
 
 ## Kiểm thử
 
-CI chạy ba lớp kiểm thử trước khi merge:
+CI chạy kiểm thử và security gate trước khi merge:
 
 ```bash
+npm audit --omit=dev --audit-level=high
 npm test
 npm run build
 ```
@@ -41,8 +44,8 @@ npm run build
 `npm test` gồm:
 - syntax check cho `src/main.js`;
 - business-logic tests cho tổng tiền, currency, duplicate quote number, phone normalization, ngày địa phương, ngày ISO, numeric bounds và color normalization;
-- importer-logic tests cho mapping Excel, nhóm hàng, field metadata, OCR text và merge dữ liệu Excel + chữ viết tay;
-- DOM integration tests cho boot app, product editing, template switching, history, reset, print preflight, dữ liệu local sai kiểu, accessibility trạng thái tab, rollback restore khi giả lập hết dung lượng, kéo trường trên preview, resize/reset logo, kéo liên tiếp trong cùng phiên sắp xếp, tự động sắp xếp và review OCR thủ công;
+- importer-logic tests cho mapping Excel, nhóm hàng, field metadata, OCR text, merge dữ liệu Excel + chữ viết tay, loại dòng giá không hợp lệ và chống lặp nguồn;
+- DOM integration tests cho boot app, product editing, cả 8 template, bảng giá 72 dòng/3 nhóm, history, reset, print preflight, dữ liệu local sai kiểu, accessibility, rollback khi giả lập hết dung lượng, kéo trường trên preview, resize/reset logo, sắp xếp, Smart Import, persistence failure và kỳ báo giá mới;
 - static smoke tests cho các contract UI/logic quan trọng.
 
 ## Chạy local
@@ -55,6 +58,12 @@ npm run dev
 ## Triển khai
 
 Mọi thay đổi phát triển trên feature branch, mở Pull Request và chỉ merge khi CI PASS. Merge vào `main` kích hoạt GitHub Pages.
+
+## Audit V2.7
+
+V2.7 đã sửa các lỗi QA/UX quan trọng: false-success khi LocalStorage ghi lỗi; subtitle nằm ngang; nhịp “Thoáng” không lưu đúng; draft import cũ bị giữ lại; OCR fail không mở được nhập thủ công; Excel chỉ đọc sheet đầu; dòng STT có giá không hợp lệ bị nhận nhầm; header nhóm có nguy cơ đứng cuối trang; báo giá/preset mới mang theo kỳ cũ. Direct dependencies được pin theo phiên bản CI đã kiểm thử và Pages/CI chặn runtime dependency mức high/critical.
+
+Full install hiện vẫn báo 2 cảnh báo mức moderate trong dependency tree phục vụ phát triển, trong khi runtime audit `--omit=dev` trả về 0 vulnerabilities. Không dùng `npm audit fix --force` vì có thể ép major/breaking upgrade ngoài phạm vi an toàn của bản phát hành này.
 
 ## Giới hạn chủ động
 

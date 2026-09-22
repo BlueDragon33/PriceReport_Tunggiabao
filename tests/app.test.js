@@ -274,3 +274,91 @@ test('smart import dialog can parse corrected handwriting text for review withou
   document.getElementById('cancelSmartImport').click();
   expect(document.getElementById('smartImportModal').hidden).toBe(true);
 });
+
+
+test('collection writes do not show false success when localStorage rejects a customer save', () => {
+  const nativeSetItem = Storage.prototype.setItem;
+  const key = 'tunggiabao-price-report-customers-v1';
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (storageKey === key) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    return nativeSetItem.call(this, storageKey, value);
+  });
+
+  const name = document.getElementById('customerName');
+  name.value = 'Khách thử quota';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('saveCurrentCustomer').click();
+  spy.mockRestore();
+
+  expect(localStorage.getItem(key) || '').not.toContain('Khách thử quota');
+  expect(document.getElementById('toast').textContent).toContain('Không thể lưu dữ liệu');
+});
+
+test('smart import cancel discards stale draft and a new session starts empty', () => {
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - Phiên cũ\nĐT. 0912345678';
+  document.getElementById('reparseOcrText').click();
+  expect(document.querySelector('[data-import-field="companyName"]').value).toContain('Phiên cũ');
+
+  document.getElementById('cancelSmartImport').click();
+  document.getElementById('openSmartImport').click();
+  expect(document.querySelector('[data-import-field="companyName"]').value).toBe('');
+  expect(document.getElementById('applySmartImport').disabled).toBe(true);
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('title and subtitle preserve professional vertical hierarchy', () => {
+  const wrap = document.querySelector('.qtitle-wrap');
+  expect(wrap).toBeTruthy();
+  expect(document.getElementById('pQuoteTitle').textContent).not.toBe('');
+  expect(document.getElementById('pQuoteSubtitle')).toBeTruthy();
+});
+
+
+test('large Tùng Gia Bảo product set starts collapsed for practical editing', () => {
+  const cards = [...document.querySelectorAll('.product-card')];
+  expect(cards.length).toBeGreaterThanOrEqual(72);
+  expect(cards.filter(card => card.classList.contains('collapsed')).length).toBeGreaterThanOrEqual(72);
+});
+
+test('all eight report templates preserve the full grouped price-list content and business data', () => {
+  const themes = ['modern','corporate','minimal','classic','emerald','warm','premium','mono'];
+  const expectedProducts = document.querySelectorAll('.product-card').length;
+  const companyBefore = document.getElementById('pCompanyName').textContent;
+  const firstProductBefore = document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent;
+  for (const theme of themes) {
+    document.querySelector('.tpl[data-theme="' + theme + '"]').click();
+    expect(document.getElementById('paper').classList.contains('theme-' + theme)).toBe(true);
+    expect(document.querySelectorAll('#qBody tr:not(.qgroup-row)').length).toBe(expectedProducts);
+    expect(document.querySelectorAll('#qBody .qgroup-row').length).toBe(3);
+    expect(document.getElementById('pCompanyName').textContent).toBe(companyBefore);
+    expect(document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent).toBe(firstProductBefore);
+  }
+  document.querySelector('.tpl[data-theme="modern"]').click();
+});
+
+test('airy spacing survives binding normalization instead of silently becoming standard', () => {
+  const select = document.getElementById('previewSpacing');
+  select.value = 'airy';
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('paper').dataset.spacing).toBe('airy');
+  expect(JSON.parse(localStorage.getItem('tunggiabao-price-report-v1')).previewSpacing).toBe('airy');
+});
+
+
+test('new quote and reusable preset do not carry a stale reporting period', () => {
+  const subtitle = document.getElementById('quoteSubtitle');
+  subtitle.value = 'Giá tháng 01/2020';
+  subtitle.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('newQuote').click();
+  expect(document.getElementById('quoteSubtitle').value).toBe('');
+  expect(document.getElementById('dateLine').value).toMatch(/^Nha Trang, ngày/);
+});
+
+test('smart import progress is announced to assistive technology', () => {
+  const progress = document.getElementById('smartImportProgress');
+  expect(progress.getAttribute('role')).toBe('status');
+  expect(progress.getAttribute('aria-live')).toBe('polite');
+});

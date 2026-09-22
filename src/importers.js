@@ -25,12 +25,16 @@ const looksLikeGroup = (row) => {
     text.includes('trung') && values[0] === values[0].toUpperCase();
 };
 
-const numberValue = (value) => {
-  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, value);
-  const text = clean(value).replace(/[.,](?=\d{3}(?:\D|$))/g, '').replace(',', '.');
+const parseNumber = (value) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return { valid: true, value: Math.max(0, value) };
+  const raw = clean(value);
+  if (!raw) return { valid: false, value: 0 };
+  const text = raw.replace(/[.,](?=\d{3}(?:\D|$))/g, '').replace(',', '.');
   const parsed = Number(text);
-  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+  return Number.isFinite(parsed) ? { valid: true, value: Math.max(0, parsed) } : { valid: false, value: 0 };
 };
+
+const numberValue = (value) => parseNumber(value).value;
 
 export function parseSpreadsheetRows(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
@@ -64,8 +68,9 @@ export function parseSpreadsheetRows(rows) {
 
     const first = cells[0];
     const second = cells[1];
+    const parsedPrice = parseNumber(cells[3]);
     const isProduct = (typeof first === 'number' || /^\d+$/.test(clean(first))) &&
-      clean(second) && numberValue(cells[3]) >= 0;
+      clean(second) && parsedPrice.valid;
     if (isProduct) {
       products.push({
         group: currentGroup,
@@ -73,7 +78,7 @@ export function parseSpreadsheetRows(rows) {
         pack: '',
         unit: clean(cells[2]),
         qty: 1,
-        price: numberValue(cells[3]),
+        price: parsedPrice.value,
         note: clean(cells[4])
       });
       return;
@@ -237,8 +242,15 @@ export function parseHandwritingText(rawText) {
 }
 
 export function mergeImportDraft(base, next) {
+  const sourceParts = [...new Set(
+    [base?.source, next?.source]
+      .filter(Boolean)
+      .flatMap(value => String(value).split('+'))
+      .map(value => value.trim())
+      .filter(Boolean)
+  )];
   const result = {
-    source: [base?.source, next?.source].filter(Boolean).join('+') || 'manual',
+    source: sourceParts.join('+') || 'manual',
     fields: { ...(base?.fields || {}) },
     products: Array.isArray(base?.products) ? base.products.map(item => ({ ...item })) : [],
     groups: Array.isArray(base?.groups) ? [...base.groups] : [],

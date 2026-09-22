@@ -618,7 +618,7 @@
           </label>
         </div>
 
-        <div class="import-progress" id="smartImportProgress">Chưa chọn nguồn dữ liệu.</div>
+        <div class="import-progress" id="smartImportProgress" role="status" aria-live="polite">Chưa chọn nguồn dữ liệu.</div>
 
         <div class="import-image-preview" id="handwritingPreviewWrap" hidden>
           <img id="handwritingPreview" alt="Ảnh chữ viết tay đang nhận diện">
@@ -668,6 +668,8 @@
       </div>
 
       <footer class="smart-import-actions">
+        <button class="btn" id="resetSmartImport" type="button">Bắt đầu lại</button>
+        <div class="smart-import-action-spacer"></div>
         <button class="btn" id="cancelSmartImport" type="button">Hủy</button>
         <button class="btn primary" id="applySmartImport" type="button" disabled>Áp dụng vào báo giá</button>
       </footer>
