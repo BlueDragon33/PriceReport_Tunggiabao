@@ -258,7 +258,8 @@ function merge(data) {
   if (!['draft','sent','accepted','rejected','expired'].includes(merged.quoteStatus)) merged.quoteStatus = 'draft';
   if (!['center','left','right'].includes(merged.previewTitleAlign)) merged.previewTitleAlign = 'center';
   if (!['compact','standard','comfortable'].includes(merged.previewTableDensity)) merged.previewTableDensity = 'standard';
-  if (!['compact','standard','relaxed'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
+  if (merged.previewSpacing === 'relaxed') merged.previewSpacing = 'airy';
+  if (!['compact','standard','airy'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
 
   return merged;
 }
@@ -549,6 +550,14 @@ function numberToWords(value) {
 }
 
 let collapsedProducts = new Set();
+
+function resetCollapsedProductsForState() {
+  collapsedProducts = state.products.length >= 24
+    ? new Set(state.products.map((_, index) => index))
+    : new Set();
+}
+
+resetCollapsedProductsForState();
 
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
@@ -1268,6 +1277,7 @@ function applySmartImportDraft() {
   state = merge(next);
   const persisted = save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   closeSmartImport({ discard: true });
@@ -1816,6 +1826,7 @@ document.getElementById('reset').addEventListener('click', () => {
   saveLogoAsset('');
   save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   toast('Đã khôi phục mẫu');
@@ -2033,6 +2044,7 @@ function loadQuoteRecord(record) {
   state.historyRecordId = record.id || '';
   save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
@@ -2052,6 +2064,7 @@ function duplicateQuoteRecord(record) {
   state.historyRecordId = '';
   save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
@@ -2151,6 +2164,7 @@ function createNewQuote() {
   state.historyRecordId = '';
   save();
   syncInputs();
+  resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
@@ -2605,6 +2619,7 @@ function renderPresets() {
       state.logo = activeLogo;
       save();
       syncInputs();
+      resetCollapsedProductsForState();
       renderEditorProducts();
       render();
       toast('Đã nạp mẫu');
