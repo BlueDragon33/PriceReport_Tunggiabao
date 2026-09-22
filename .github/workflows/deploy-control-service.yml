@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: price-report-kt-control-production
@@ -86,3 +87,12 @@ jobs:
           if(value.controlSecretConfigured!==true) throw new Error('control secret not configured');
           console.log('KT Control production read-back PASS');
           NODE
+
+
+      - name: Trigger PriceReport Pages rollout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run pages.yml --ref main
+          echo "Triggered Pages rollout; pages.yml will inject PRICE_REPORT_CONTROL_ORIGIN and enable the Device Gate."
