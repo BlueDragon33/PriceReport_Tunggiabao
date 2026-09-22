@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "enabled": false,
+  "baseUrl": "",
+  "requestTimeoutMs": 5000,
+  "pendingPollMs": 15000,
+  "heartbeatMs": 60000,
+  "note": "Set enabled=true and baseUrl to the deployed KT Control Service only after D1 + secret + origin read-back pass."
+}

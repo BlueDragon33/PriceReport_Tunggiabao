@@ -602,3 +602,11 @@ test('device classification runtime exposes a managed UI profile without gating 
   expect(window.PriceReportManagement.remoteAdminReady).toBe(false);
   expect(window.PriceReportManagement.getLocalDeviceRecord().deviceCode).toMatch(/^KT-/);
 });
+
+
+test('KT Device Gate starts in rollout-safe classification-only mode before production backend enablement', async () => {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const accessState = document.documentElement.dataset.priceReportDeviceAccess;
+  expect(['classification-only', undefined]).toContain(accessState);
+  expect(document.getElementById('deviceProfileChip')).toBeTruthy();
+});

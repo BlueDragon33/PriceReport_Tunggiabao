@@ -1,0 +1,98 @@
+name: Deploy PriceReport KT Control Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Gõ DEPLOY_KT_CONTROL để triển khai KT Control Service production"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: price-report-kt-control-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: price-report-control-production
+    defaults:
+      run:
+        working-directory: control-service
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PRICE_REPORT_CONTROL_D1_DATABASE_ID: ${{ secrets.PRICE_REPORT_CONTROL_D1_DATABASE_ID }}
+      PRICE_REPORT_CONTROL_SERVICE_SECRET: ${{ secrets.PRICE_REPORT_CONTROL_SERVICE_SECRET }}
+      PRICE_REPORT_CONTROL_ORIGIN: ${{ vars.PRICE_REPORT_CONTROL_ORIGIN }}
+      PRICE_REPORT_APP_ORIGIN: ${{ vars.PRICE_REPORT_APP_ORIGIN }}
+      APPLICATION_MANAGEMENT_ORIGIN: ${{ vars.APPLICATION_MANAGEMENT_ORIGIN }}
+
+    steps:
+      - name: Require explicit deployment confirmation
+        run: |
+          set -euo pipefail
+          test "${{ inputs.confirm }}" = "DEPLOY_KT_CONTROL"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: control-service/package-lock.json
+
+      - name: Validate production configuration
+        run: |
+          set -euo pipefail
+          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID PRICE_REPORT_CONTROL_D1_DATABASE_ID PRICE_REPORT_CONTROL_SERVICE_SECRET PRICE_REPORT_CONTROL_ORIGIN PRICE_REPORT_APP_ORIGIN APPLICATION_MANAGEMENT_ORIGIN; do
+            if [[ -z "${!key:-}" ]]; then echo "::error::$key is required"; exit 1; fi
+          done
+          if [[ ${#PRICE_REPORT_CONTROL_SERVICE_SECRET} -lt 32 ]]; then echo "::error::PRICE_REPORT_CONTROL_SERVICE_SECRET must be >=32 chars"; exit 1; fi
+          case "$PRICE_REPORT_CONTROL_ORIGIN" in https://*) ;; *) echo "::error::PRICE_REPORT_CONTROL_ORIGIN must be HTTPS"; exit 1;; esac
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Full control-service gate
+        run: npm run gate
+
+      - name: Materialize production config
+        run: node scripts/prepare-production.mjs
+
+      - name: Apply KT D1 migrations
+        run: npx wrangler d1 migrations apply price-report-control-db --remote --config wrangler.production.jsonc
+
+      - name: Deploy KT Control Service
+        run: npx wrangler deploy --config wrangler.production.jsonc
+
+      - name: Install or rotate KT control secret
+        run: printf '%s' "$PRICE_REPORT_CONTROL_SERVICE_SECRET" | npx wrangler secret put PRICE_REPORT_CONTROL_SERVICE_SECRET --config wrangler.production.jsonc
+
+      - name: Read back public health
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 "$PRICE_REPORT_CONTROL_ORIGIN/health" > /tmp/kt-health.json
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const value=JSON.parse(fs.readFileSync('/tmp/kt-health.json','utf8'));
+          if(value.application!=='price-report-tunggiabao') throw new Error('application mismatch');
+          if(value.protocol!=='price-report-control-v1') throw new Error('protocol mismatch');
+          if(value.databaseReady!==true) throw new Error('D1 not ready');
+          if(value.appOriginConfigured!==true) throw new Error('app origin not configured');
+          if(value.controlSecretConfigured!==true) throw new Error('control secret not configured');
+          console.log('KT Control production read-back PASS');
+          NODE
+
+
+      - name: Trigger PriceReport Pages rollout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run pages.yml --ref main
+          echo "Triggered Pages rollout; pages.yml will inject PRICE_REPORT_CONTROL_ORIGIN and enable the Device Gate."

@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v25")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v26")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -215,3 +215,11 @@ const managementContract = JSON.parse(fs.readFileSync('public/management-contrac
 if (managementContract.application?.category !== 'Kế toán') fail('PriceReport must be classified as Kế toán');
 if (managementContract.device?.namespace !== 'KT-') fail('Accounting device namespace must be KT-');
 if (managementContract.policy?.remoteAdminReady !== false) fail('Static client must not claim remote admin readiness');
+
+if (!js.includes('startPriceReportDeviceAccess')) fail('KT Device Gate runtime is not started');
+if (!fs.existsSync('src/device-access-gate.js')) fail('KT Device Gate module is missing');
+if (!fs.existsSync('public/device-control.json')) fail('KT device-control rollout config is missing');
+const ktControlConfig = JSON.parse(fs.readFileSync('public/device-control.json','utf8'));
+if (ktControlConfig.enabled !== false) fail('KT Device Gate must remain rollout-off until live control read-back passes');
+if (!fs.existsSync('control-service/src/index.ts') || !fs.existsSync('control-service/src/device-store.ts')) fail('KT Control Service source is missing');
+if (!fs.existsSync('control-service/migrations/0001_device_control.sql')) fail('KT Control D1 migration is missing');

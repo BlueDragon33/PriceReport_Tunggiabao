@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "price-report-control-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "price-report-control-local-db",
+      "database_id": "00000000-0000-0000-0000-000000000004",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "PRICE_REPORT_APP_ORIGIN": "http://127.0.0.1:5173",
+    "APPLICATION_MANAGEMENT_ORIGIN": "http://127.0.0.1:8788"
+  }
+}
