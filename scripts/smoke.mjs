@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v24")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v25")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -206,3 +206,12 @@ if (!js.includes("['--fs-company-name', '15.2px']")) fail('Fixed company-name ty
 if (!js.includes("paper.style.setProperty('--preview-title-size', '27px')")) fail('Fixed title typography is missing');
 if (!css.includes('.paper .qtitle{font-size:27px!important}')) fail('Fixed outside-table title CSS is missing');
 if (!html.includes('Chỉ thay đổi chữ trong bảng hàng hóa')) fail('Table-only font sizing help is missing');
+
+if (!html.includes('id="deviceProfileChip"')) fail('Device profile chip is missing');
+if (!js.includes("startDeviceProfileRuntime")) fail('Device classification runtime is not started');
+if (!fs.existsSync('src/device-profile.js')) fail('Device profile module is missing');
+if (!fs.existsSync('public/management-contract.json')) fail('Application Management contract is missing');
+const managementContract = JSON.parse(fs.readFileSync('public/management-contract.json','utf8'));
+if (managementContract.application?.category !== 'Kế toán') fail('PriceReport must be classified as Kế toán');
+if (managementContract.device?.namespace !== 'KT-') fail('Accounting device namespace must be KT-');
+if (managementContract.policy?.remoteAdminReady !== false) fail('Static client must not claim remote admin readiness');

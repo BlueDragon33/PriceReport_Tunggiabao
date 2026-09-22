@@ -1,0 +1,53 @@
+{
+  "contractVersion": 1,
+  "application": {
+    "id": "price-report-tunggiabao",
+    "name": "PriceReport Tùng Gia Bảo",
+    "shortName": "Báo giá Tùng Gia Bảo",
+    "category": "Kế toán",
+    "repository": "BlueDragon33/PriceReport_Tunggiabao",
+    "publicUrl": "https://bluedragon33.github.io/PriceReport_Tunggiabao/"
+  },
+  "boundary": {
+    "independentRuntime": true,
+    "localFirst": true,
+    "pwaOffline": true,
+    "embeddedInApplicationManagement": false,
+    "sharedDatabaseWithOtherClients": false,
+    "quotationDataInControlPlane": false,
+    "customerDataInControlPlane": false
+  },
+  "device": {
+    "namespace": "KT-",
+    "classes": [
+      "desktop",
+      "tablet",
+      "phone"
+    ],
+    "classification": "client-runtime",
+    "localRecordKey": "tunggiabao-device-profile-v1",
+    "remoteRegistry": false,
+    "accessAndEditSeparated": false,
+    "uiProfiles": {
+      "desktop": "workspace-wide",
+      "tablet": "touch-split",
+      "phone": "mobile-single"
+    }
+  },
+  "readiness": {
+    "runtime": "available",
+    "deviceClassification": "available",
+    "adaptiveUi": "available",
+    "localDeviceRecord": "available",
+    "deviceRegistry": "missing",
+    "deviceGateway": "missing",
+    "adminApi": "missing",
+    "remoteAuditApi": "missing"
+  },
+  "policy": {
+    "applicationManagementMayInventOperationsWithoutBackend": false,
+    "applicationManagementMayReadQuotationData": false,
+    "applicationManagementMayReadCustomerData": false,
+    "remoteAdminReady": false
+  }
+}
