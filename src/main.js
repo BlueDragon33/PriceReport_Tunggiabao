@@ -5,6 +5,7 @@ import {
   nextDuplicateQuoteNo,
   normalizeBoundedNumber,
   normalizeCatalogCurrency,
+  normalizeHexColor,
   normalizeNonNegativeNumber,
   normalizePhone,
   isValidISODate,
@@ -130,8 +131,8 @@ function merge(data) {
   if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
   else merged.currency = String(merged.currency).toUpperCase();
-  merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
-  merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
+  merged.discountPct = normalizeBoundedNumber(merged.discountPct, 0, 100, defaults.discountPct);
+  merged.vatPct = normalizeBoundedNumber(merged.vatPct, 0, 100, defaults.vatPct);
   merged.otherFee = normalizeNonNegativeNumber(merged.otherFee);
   merged.marginX = normalizeBoundedNumber(merged.marginX, 6, 30, defaults.marginX);
   merged.marginTop = normalizeBoundedNumber(merged.marginTop, 6, 30, defaults.marginTop);
@@ -198,6 +199,12 @@ function merge(data) {
     else merged[key] = Boolean(value);
   });
 
+  merged.accent = normalizeHexColor(merged.accent, defaults.accent);
+  merged.logoBackdropColor = normalizeHexColor(merged.logoBackdropColor, merged.accent);
+  if (!['Times New Roman','Georgia','Arial'].includes(merged.docFont)) merged.docFont = defaults.docFont;
+  if (!['blend','soft','clean','custom','none'].includes(merged.logoTreatment)) merged.logoTreatment = defaults.logoTreatment;
+  if (!['normal','multiply','darken'].includes(merged.logoBlendMode)) merged.logoBlendMode = defaults.logoBlendMode;
+  if (!['none','soft'].includes(merged.logoBackdropBorder)) merged.logoBackdropBorder = defaults.logoBackdropBorder;
   if (!['draft','sent','accepted','rejected','expired'].includes(merged.quoteStatus)) merged.quoteStatus = 'draft';
   if (!['center','left','right'].includes(merged.previewTitleAlign)) merged.previewTitleAlign = 'center';
   if (!['compact','standard','comfortable'].includes(merged.previewTableDensity)) merged.previewTableDensity = 'standard';
@@ -691,8 +698,8 @@ function renderPreviewProducts() {
 function renderTotals() {
   const subtotal = state.products.reduce((sum, p) =>
     sum + normalizeNonNegativeNumber(p.qty) * normalizeNonNegativeNumber(p.price), 0);
-  const discountPct = Math.min(100, Math.max(0, Number(state.discountPct || 0)));
-  const vatPct = Math.min(100, Math.max(0, Number(state.vatPct || 0)));
+  const discountPct = normalizeBoundedNumber(state.discountPct, 0, 100, 0);
+  const vatPct = normalizeBoundedNumber(state.vatPct, 0, 100, 0);
   const discount = subtotal * discountPct / 100;
   const taxable = Math.max(0, subtotal - discount);
   const vat = taxable * vatPct / 100;
