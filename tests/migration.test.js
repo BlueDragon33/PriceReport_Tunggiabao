@@ -64,3 +64,20 @@ test('boot does not overwrite an unrelated customized business profile', async (
   expect(document.getElementById('companyWard').value).toBe('');
   expect(document.querySelectorAll('.product-card').length).toBe(1);
 });
+
+
+test('legacy global document font size migrates to equivalent table-only font size', async () => {
+  await bootWithState({
+    companyName: 'CÔNG TY KHÁC',
+    companyAddress: 'Nha Trang',
+    phone: '0912345678',
+    website: 'example.vn',
+    docFontSize: 15,
+    products: [{ name:'Hàng riêng', unit:'kg', qty:1, price:50000 }]
+  }, 'legacy-font-size');
+
+  // V3.2 rendered table size as 9 * (15 / 12.2) = ~11.1px.
+  expect(Number(document.getElementById('tableFontSize').value)).toBeCloseTo(11.1, 1);
+  expect(document.getElementById('paper').style.getPropertyValue('--fs-company-name')).toBe('15.2px');
+  expect(document.getElementById('paper').style.getPropertyValue('--preview-title-size')).toBe('27px');
+});
