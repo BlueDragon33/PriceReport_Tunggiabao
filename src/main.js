@@ -105,6 +105,20 @@ function merge(data) {
   });
   if (merged.theme === 'blue') merged.theme = 'corporate';
 
+  const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
+  if (!hasPreviewLayout) {
+    merged.previewTitleAlign = 'center';
+    merged.previewTitleSize = 25;
+    merged.previewSpacing = 'standard';
+    merged.previewTableDensity = 'standard';
+    merged.previewHeaderGap = 4;
+    merged.previewMetaWidth = 44;
+    merged.previewLineHeight = 1.26;
+    if (merged.docFont === 'Times New Roman' && ['modern','corporate','minimal','emerald','premium','mono'].includes(merged.theme)) {
+      merged.docFont = 'Arial';
+    }
+  }
+
   const hasAdvancedLogo = data && Object.prototype.hasOwnProperty.call(data, 'logoBlendMode');
   if (!hasAdvancedLogo) {
     merged.logoTreatment = 'blend';
@@ -472,8 +486,14 @@ function renderPreviewProducts() {
     body.appendChild(row);
   });
 
-  $$('.qtable th,.qtable td').forEach((el) => {
-    el.style.padding = state.compactTable ? '1.2mm 1mm' : '2mm 1.4mm';
+  const density = state.compactTable ? 'compact' : (state.previewTableDensity || 'standard');
+  const tablePadding = {
+    compact: '1.15mm .9mm',
+    standard: '1.7mm 1.25mm',
+    comfortable: '2.25mm 1.45mm'
+  };
+  $('.qtable th,.qtable td').forEach((el) => {
+    el.style.padding = tablePadding[density] || tablePadding.standard;
   });
 }
 
@@ -883,6 +903,17 @@ const THEME_ACCENTS = {
   mono: '#30343a'
 };
 
+const THEME_FONTS = {
+  modern: 'Arial',
+  corporate: 'Arial',
+  minimal: 'Arial',
+  classic: 'Georgia',
+  emerald: 'Arial',
+  warm: 'Georgia',
+  premium: 'Arial',
+  mono: 'Arial'
+};
+
 $$('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
@@ -896,8 +927,10 @@ $$('.tpl').forEach((el) => {
   el.addEventListener('click', () => {
     state.theme = el.dataset.theme;
     if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
+    if (THEME_FONTS[state.theme]) state.docFont = THEME_FONTS[state.theme];
     if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
     save();
+    syncInputs();
     render();
   });
 });
