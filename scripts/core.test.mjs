@@ -5,6 +5,7 @@ import {
   nextDuplicateQuoteNo,
   normalizeBoundedNumber,
   normalizeCatalogCurrency,
+  normalizeHexColor,
   normalizeNonNegativeNumber,
   normalizePhone,
   isValidISODate,
@@ -51,6 +52,10 @@ assert.equal(normalizeBoundedNumber(99, 20, 32, 25), 32);
 assert.equal(isValidISODate('2026-02-28'), true);
 assert.equal(isValidISODate('2026-02-30'), false);
 assert.equal(isValidISODate('28/02/2026'), false);
+assert.equal(normalizeHexColor('#ABC'), '#aabbcc');
+assert.equal(normalizeHexColor('#12abEF'), '#12abef');
+assert.equal(normalizeHexColor('not-a-color', '#112233'), '#112233');
+assert.equal(calcQuoteTotal({products:[{qty:1,price:100}],discountPct:'Infinity'}), 100);
 assert.deepEqual(historyTotalsByCurrency([{currency:'EUR',total:2,data:{}}]), {VND:2});
 
 console.log('CORE LOGIC PASS');
