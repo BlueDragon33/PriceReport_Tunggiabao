@@ -28,7 +28,7 @@ const requiredIds = [
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
   'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
-  'previewLineHeight','resetPreviewLayout','showQuoteMeta','layoutEditToggle','layoutSelection','resetBlockPositions',
+  'previewLineHeight','resetPreviewLayout','showQuoteMeta','layoutEditToggle','autoArrangeLayoutToolbar','autoArrangeLayoutPanel','layoutSelection','resetBlockPositions',
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols'
 ];
 for (const id of requiredIds) {
@@ -59,7 +59,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v14")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v15")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -123,3 +123,8 @@ if (!css.includes('.paper.layout-edit-mode .layout-block')) fail('Layout edit mo
 if (!js.includes("logoOffsetX")) fail('Independent horizontal logo offset is missing');
 
 if (!css.includes('#previewLogo img{') || !css.includes('position:absolute') || !css.includes('--logo-scale')) fail('Logo resize must remain visual-only inside a fixed header slot');
+
+if (!js.includes('function autoArrangePreview')) fail('Automatic preview arrangement is missing');
+if (!js.includes('syncLayoutEditModeUI')) fail('Persistent layout-mode UI sync is missing');
+if (!js.includes("paper.classList.toggle('layout-edit-mode', layoutEditEnabled)")) fail('Render must preserve layout-edit mode');
+if (!js.includes('setPointerCapture')) fail('Pointer capture for repeat dragging is missing');
