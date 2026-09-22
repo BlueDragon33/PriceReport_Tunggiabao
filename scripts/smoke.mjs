@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
+const sw = fs.readFileSync('public/sw.js', 'utf8');
 
 function fail(message) {
   console.error('SMOKE FAIL:', message);
@@ -45,6 +46,10 @@ if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missi
 if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
 if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is missing');
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
+if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
+if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
+if (!sw.includes("pricereport-shell-v5")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
