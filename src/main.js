@@ -884,7 +884,7 @@ function enhanceCollapsibleCards() {
 }
 
 function wireFormLabels() {
-  $('.row').forEach((row) => {
+  $$('.row').forEach((row) => {
     const label = row.querySelector('label');
     const control = row.querySelector('input,select,textarea');
     if (label && control && control.id && !label.htmlFor) label.htmlFor = control.id;
@@ -892,7 +892,7 @@ function wireFormLabels() {
 }
 
 function enhancePreviewAccessibility() {
-  $('.clickable').forEach((el) => {
+  $$('.clickable').forEach((el) => {
     if (!el.hasAttribute('tabindex')) el.tabIndex = 0;
     el.setAttribute('role', 'button');
     if (!el.getAttribute('aria-label') && el.dataset.target) {
@@ -1732,7 +1732,7 @@ function renderPresets() {
   });
 }
 
-$$('.clickable').forEach((el) => {
+$$$('.clickable').forEach((el) => {
   el.addEventListener('click', () => {
     const target = document.getElementById(el.dataset.target);
     if (!target) return;
