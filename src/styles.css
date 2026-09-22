@@ -1527,3 +1527,12 @@ input[type=range]::-moz-range-thumb{
   .layout-selection{display:none!important}
   .toolbar-btn.arrange{padding:0 9px}
 }
+
+/* V2.5 persistent layout mode + auto arrange */
+.toolbar-btn.auto-arrange{background:#eef2ff;border-color:#c7d2fe;color:#5638b8}
+.toolbar-btn.auto-arrange:hover{background:#e5e7ff;border-color:#a5b4fc}
+.paper.layout-edit-mode{user-select:none}
+.paper.layout-edit-mode .layout-block{will-change:transform}
+@media(max-width:1280px){
+  .toolbar-btn.auto-arrange{padding:0 8px}
+}
