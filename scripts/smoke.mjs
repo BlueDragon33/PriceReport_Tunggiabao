@@ -29,7 +29,7 @@ const requiredIds = [
   'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
   'previewLineHeight','resetPreviewLayout','showQuoteMeta',
-  'historyAcceptedCount','documentHealth','preflightCheck'
+  'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -73,6 +73,7 @@ if (js.includes("const logoColumn =")) fail('Logo size must not push the company
 if (!css.includes("grid-template-columns:minmax(0,41.5%) minmax(0,58.5%)")) fail('Balanced logo/company header grid is missing');
 if (!html.includes('class="company-col"') || !html.includes('class="company-block"') || !html.includes('class="company-lines"')) fail('Centered company header structure is missing');
 if (!css.includes(".paper .company-lines")) fail('Company detail alignment block is missing');
+if (!css.includes(".theme-modern .company-lines")) fail('Reference company detail typography is missing');
 if (!css.includes("width:min(96mm,100%)")) fail('Company block controlled width is missing');
 if (!css.includes(".theme-modern .qtitle:after{display:none")) fail('Reference template should match the supplied PDF title treatment');
 if (html.includes("<table class=\"product-table\"")) fail('Legacy cramped product table is still present');
