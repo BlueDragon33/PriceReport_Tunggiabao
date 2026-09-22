@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v8';
+const CACHE = 'pricereport-shell-v8-1';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
