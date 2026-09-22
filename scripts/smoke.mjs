@@ -61,8 +61,8 @@ if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missin
 if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is missing');
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
-if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v21")) fail('Service-worker cache version was not upgraded');
+if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
+if (!sw.includes("pricereport-shell-v22")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -184,3 +184,7 @@ if (!js.includes("state.logoDisplayMode = 'original'")) fail('Logo upload/reset 
 if (!js.includes('removeLightBackgroundDataUrl')) fail('Optional background removal implementation is missing');
 if (!css.includes('.logo-image-mode-original img')) fail('Original mode pixel-preserving CSS is missing');
 if (!css.includes('mix-blend-mode:normal!important')) fail('Original mode must disable blend effects');
+
+if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('Logo upload limit must be exactly 3 MB');
+if (!js.includes('file.size > MAX_LOGO_FILE_BYTES')) fail('Logo upload validation must use the 3 MB constant');
+if (!html.includes('Kích thước tối đa 3 MB')) fail('Logo UI must state the 3 MB limit');
