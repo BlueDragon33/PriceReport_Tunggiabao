@@ -32,7 +32,7 @@ const requiredIds = [
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols',
   'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
   'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
-  'showPack','showQty','quoteSubtitle','pQuoteSubtitle'
+  'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v16")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v17")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -141,3 +141,9 @@ if (!html.includes('data-import-field="companyName"')) fail('Smart import review
 if (!html.includes('class="qgroup-row"') && !js.includes("groupRow.className = 'qgroup-row'")) fail('Grouped price-list rendering is missing');
 if (!css.includes('.smart-import-dialog')) fail('Smart import dialog styling is missing');
 if (!css.includes('.qgroup-row td')) fail('Grouped product row styling is missing');
+
+if (!css.includes('flex-direction:column!important') || !css.includes('.paper .qsubtitle')) fail('Title/subtitle vertical hierarchy is missing');
+if (!css.includes('.qgroup-row+tr')) fail('Grouped rows must avoid orphaning from the first product row');
+if (!js.includes('setSmartImportBusy')) fail('Smart import concurrency guard is missing');
+if (!js.includes('resetSmartImportDraft')) fail('Smart import fresh-session reset is missing');
+if (!js.includes('sheetNames.map')) fail('Excel importer must evaluate multiple workbook sheets');
