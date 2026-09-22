@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v18")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v19")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -157,3 +157,8 @@ if (!js.includes('mergeSmartImportSource')) fail('Smart Import must preserve man
 if (!js.includes('replaceSourceFields: true')) fail('Corrected OCR text must replace stale handwriting-origin fields');
 if (!js.includes("namedProducts.every(product => !String(product.note || '').trim())")) fail('Auto-arrange must optimize an entirely empty Note column');
 if (!js.includes("showNote: false")) fail('Tùng Gia Bảo baseline should not waste width on an empty Note column');
+
+if (!js.includes('looksLikeLegacyBienUyenBaoProfile')) fail('Robust legacy Biển Uyên Bảo profile detection is missing');
+if (!js.includes('applyTungGiaBaoBaseline')) fail('Tùng Gia Bảo baseline replacement helper is missing');
+if (!html.includes('id="applyTungGiaBaoProfile"')) fail('Manual Tùng Gia Bảo apply action is missing');
+if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigration))')) fail('Legacy profile migration must persist immediately');

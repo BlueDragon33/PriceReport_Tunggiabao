@@ -409,3 +409,37 @@ test('automatic arrangement hides empty optional Pack and Note columns only', ()
   expect(document.getElementById('showPrice').checked).toBe(true);
   document.getElementById('layoutEditToggle').click();
 });
+
+
+test('legacy Biển Uyên Bảo variants are recognized and replaced with the Tùng Gia Bảo baseline', async () => {
+  const { looksLikeLegacyBienUyenBaoProfile, applyTungGiaBaoBaseline } = await import('../src/tunggiabao-defaults.js');
+  const legacyVariant = {
+    companyName: 'Công ty TNHH TMDV Biển Uyên Bảo',
+    phone: '0900 000 000',
+    website: 'www.thegioitrung.vn',
+    taxCode: '5801476262',
+    products: [{ name: 'Mẫu cũ', qty: 1, price: 1 }]
+  };
+  expect(looksLikeLegacyBienUyenBaoProfile(legacyVariant)).toBe(true);
+  const migrated = applyTungGiaBaoBaseline(legacyVariant);
+  expect(migrated.companyName).toBe('HKD - Tùng Gia Bảo');
+  expect(migrated.phone).toBe('0962944688');
+  expect(migrated.companyAddress).toContain('BT02-25');
+  expect(migrated.products.length).toBe(72);
+  expect(migrated.showNote).toBe(false);
+});
+
+test('manual Tùng Gia Bảo apply button replaces visible business data and products', () => {
+  window.confirm.mockReturnValueOnce(true);
+  const company = document.getElementById('companyName');
+  company.value = 'DỮ LIỆU KHÁC';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('applyTungGiaBaoProfile').click();
+
+  expect(document.getElementById('companyName').value).toBe('HKD - Tùng Gia Bảo');
+  expect(document.getElementById('phone').value).toBe('0962944688');
+  expect(document.getElementById('companyAddress').value).toContain('BT02-25');
+  expect(document.querySelectorAll('.product-card').length).toBe(72);
+  expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
+});

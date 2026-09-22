@@ -12,7 +12,12 @@ import {
   localDateISO
 } from './core.js';
 import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
-import { TUNGGIABAO_PRODUCTS, TUNGGIABAO_PROFILE } from './tunggiabao-defaults.js';
+import {
+  TUNGGIABAO_PRODUCTS,
+  TUNGGIABAO_PROFILE,
+  applyTungGiaBaoBaseline,
+  looksLikeLegacyBienUyenBaoProfile
+} from './tunggiabao-defaults.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -273,23 +278,16 @@ let state;
 let rawStored = null;
 try {
   rawStored = JSON.parse(localStorage.getItem(STORAGE));
-  const isLegacyReferenceProfile = rawStored &&
-    rawStored.companyName === 'CÔNG TY TNHH TMDV BIỂN UYÊN BẢO' &&
-    String(rawStored.phone || '') === '0888.458.222';
-  if (isLegacyReferenceProfile) {
-    rawStored = Object.assign({}, rawStored, TUNGGIABAO_PROFILE, {
-      showPack: false,
-      showQty: false,
-      showAmount: false,
-      showNote: true,
-      showTotals: false,
-      showWords: false,
-      showPaymentBlock: false,
-      showTerms: false,
-      showWebEmail: false,
-      showSlogan: false,
-      products: TUNGGIABAO_PRODUCTS.map((product) => ({ ...product }))
-    });
+  const shouldMigrateLegacyProfile = looksLikeLegacyBienUyenBaoProfile(rawStored);
+  if (shouldMigrateLegacyProfile) {
+    rawStored = applyTungGiaBaoBaseline(rawStored);
+    try {
+      const persistedMigration = clone(rawStored);
+      delete persistedMigration.logo;
+      localStorage.setItem(STORAGE, JSON.stringify(persistedMigration));
+    } catch (error) {
+      console.warn('Tùng Gia Bảo profile migration is active in memory but could not be persisted yet.', error);
+    }
   }
   state = merge(rawStored);
 } catch {
@@ -425,6 +423,24 @@ function openTab(tab) {
 $$('.nav button[data-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.tab));
 });
+
+function applyTungGiaBaoToCurrentQuote({ confirmReplace = true } = {}) {
+  if (confirmReplace && !window.confirm('Thay thông tin doanh nghiệp và danh sách sản phẩm hiện tại bằng dữ liệu Tùng Gia Bảo? Thiết kế, logo và dữ liệu khách hàng vẫn được giữ.')) {
+    return false;
+  }
+  const currentLogo = state.logo;
+  state = merge(applyTungGiaBaoBaseline(state));
+  state.logo = currentLogo;
+  const persisted = save();
+  syncInputs();
+  resetCollapsedProductsForState?.();
+  renderEditorProducts();
+  render();
+  toast(persisted
+    ? 'Đã thay toàn bộ nội dung mẫu sang Tùng Gia Bảo'
+    : 'Đã thay nội dung tạm thời; trình duyệt chưa lưu được dữ liệu');
+  return persisted;
+}
 
 function bindInputs() {
   $$('[data-bind]').forEach((el) => {
@@ -1519,6 +1535,10 @@ setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
 render();
+
+document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
+  applyTungGiaBaoToCurrentQuote();
+});
 
 document.getElementById('addProduct').addEventListener('click', () => {
   state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
