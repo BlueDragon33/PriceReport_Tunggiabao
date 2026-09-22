@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "price-report-control-service",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "price-report-control-db",
+      "database_id": "__PRICE_REPORT_CONTROL_D1_DATABASE_ID__",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "PRICE_REPORT_APP_ORIGIN": "__PRICE_REPORT_APP_ORIGIN__",
+    "APPLICATION_MANAGEMENT_ORIGIN": "__APPLICATION_MANAGEMENT_ORIGIN__"
+  }
+}
