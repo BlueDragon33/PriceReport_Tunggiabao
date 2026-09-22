@@ -62,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v19")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v20")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -162,3 +162,16 @@ if (!js.includes('looksLikeLegacyBienUyenBaoProfile')) fail('Robust legacy Biể
 if (!js.includes('applyTungGiaBaoBaseline')) fail('Tùng Gia Bảo baseline replacement helper is missing');
 if (!html.includes('id="applyTungGiaBaoProfile"')) fail('Manual Tùng Gia Bảo apply action is missing');
 if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigration))')) fail('Legacy profile migration must persist immediately');
+
+if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
+if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
+if (!html.includes('Xuất/<br>Nhập/In')) fail('Export navigation does not expose Import');
+if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
+if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
+if (!js.includes('function fitReportView')) fail('Finite responsive report-view sizing is missing');
+if (!js.includes("wrap.style.height = Math.ceil(paperHeight * scale) + 'px'")) fail('Report view does not clamp wrapper height to scaled document content');
+if (!js.includes('--fs-table') || !css.includes('var(--fs-table,9px)')) fail('Document font-size scaling is not applied to report typography');
+if (!js.includes('exportCurrentQuoteExcel')) fail('Excel export implementation is missing');
+if (!js.includes('saveCurrentToPc({ notify: false })')) fail('Explicit quote save does not trigger PC autosave');
+if (!js.includes('getRememberedPcDirectory')) fail('Remembered PC folder retrieval is missing');
+if (!css.includes('.shell.report-view .preview')) fail('Responsive report-view CSS is missing');
