@@ -1,0 +1,9 @@
+{
+  "name": "PriceReport Tùng Gia Bảo",
+  "short_name": "PriceReport",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eef3f7",
+  "theme_color": "#0b8f83",
+  "description": "WebApp tạo và quản lý bảng báo giá A4."
+}
