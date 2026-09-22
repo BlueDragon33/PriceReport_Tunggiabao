@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v15';
+const CACHE = 'pricereport-shell-v16';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
@@ -68,7 +68,8 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(cached => {
       const network = fetch(event.request)
         .then(response => {
-          if (response.ok && new URL(event.request.url).origin === self.location.origin) {
+          const cacheable = response.ok || response.type === 'opaque';
+          if (cacheable) {
             const copy = response.clone();
             caches.open(CACHE).then(cache => cache.put(event.request, copy));
           }

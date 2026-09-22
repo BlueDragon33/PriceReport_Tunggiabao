@@ -75,6 +75,7 @@
           <div class="card">
             <h3>Thông tin báo giá</h3>
             <div class="row"><label>Tiêu đề</label><input id="quoteTitle" data-bind="quoteTitle"></div>
+            <div class="row"><label>Phụ đề / kỳ báo giá</label><input id="quoteSubtitle" data-bind="quoteSubtitle" placeholder="Ví dụ: Giá lương thực, thực phẩm tháng 09/2026"></div>
             <div class="grid2">
               <div class="row"><label>Số báo giá</label><input id="quoteNo" data-bind="quoteNo"></div>
               <div class="row"><label>Hiệu lực</label><input id="validity" data-bind="validity"></div>
@@ -188,6 +189,8 @@
           <div class="card">
             <h3>Cột hiển thị</h3>
             <label class="check"><input id="showStt" data-bind="showStt" type="checkbox"> Hiện STT</label>
+            <label class="check"><input id="showPack" data-bind="showPack" type="checkbox"> Hiện quy cách</label>
+            <label class="check"><input id="showQty" data-bind="showQty" type="checkbox"> Hiện số lượng</label>
             <label class="check"><input id="showPrice" data-bind="showPrice" type="checkbox"> Hiện đơn giá</label>
             <label class="check"><input id="showAmount" data-bind="showAmount" type="checkbox"> Hiện thành tiền</label>
             <label class="check"><input id="showNote" data-bind="showNote" type="checkbox"> Hiện ghi chú</label>
@@ -410,6 +413,7 @@
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
           <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
+          <button class="toolbar-btn import-data" id="openSmartImport" type="button">⇧&nbsp; Nhập dữ liệu</button>
           <button class="toolbar-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false">✥&nbsp; Sắp xếp</button>
           <button class="toolbar-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden>↺&nbsp; Tự động</button>
           <span class="layout-selection" id="layoutSelection" hidden>Chọn khối để kéo</span>
@@ -504,21 +508,24 @@
               <div class="company-block">
                 <div class="company-name clickable" data-target="companyName" id="pCompanyName" data-layout-block="companyName" data-layout-label="Tên công ty"></div>
                 <div class="company-lines">
-                  <div class="clickable" data-target="companyAddress" data-layout-block="companyAddress" data-layout-label="Địa chỉ trụ sở"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
-                  <div class="clickable" data-target="branchKhanhHoa" data-layout-block="branchKhanhHoa" data-layout-label="CN Khánh Hòa"><b>CN Khánh Hòa:</b> <span id="pBranchKhanhHoa"></span></div>
-                  <div class="clickable" data-target="branchDongNai" data-layout-block="branchDongNai" data-layout-label="CN Đồng Nai"><b>CN Đồng Nai:</b> <span id="pBranchDongNai"></span></div>
-                  <div class="clickable" data-target="farmAddress" data-layout-block="farmAddress" data-layout-label="Trại / cơ sở"><b>Trại:</b> <span id="pFarmAddress"></span></div>
-                  <div class="clickable" data-target="taxCode" data-layout-block="taxCode" data-layout-label="Mã số thuế"><b>MST:</b> <span id="pTaxCode"></span></div>
-                  <div class="clickable" data-target="phone" data-layout-block="phone" data-layout-label="Số điện thoại"><b>SĐT:</b> <span id="pPhone"></span></div>
-                  <div class="clickable webemail" data-target="website" data-layout-block="website" data-layout-label="Website"><b>Website:</b> <span id="pWebsite"></span></div>
-                  <div class="clickable webemail" data-target="companyEmail" data-layout-block="companyEmail" data-layout-label="Email"><b>Email:</b> <span id="pCompanyEmail"></span></div>
+                  <div class="clickable" data-target="companyAddress" data-company-key="companyAddress" data-layout-block="companyAddress" data-layout-label="Địa chỉ trụ sở"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
+                  <div class="clickable" data-target="branchKhanhHoa" data-company-key="branchKhanhHoa" data-layout-block="branchKhanhHoa" data-layout-label="CN Khánh Hòa"><b>CN Khánh Hòa:</b> <span id="pBranchKhanhHoa"></span></div>
+                  <div class="clickable" data-target="branchDongNai" data-company-key="branchDongNai" data-layout-block="branchDongNai" data-layout-label="CN Đồng Nai"><b>CN Đồng Nai:</b> <span id="pBranchDongNai"></span></div>
+                  <div class="clickable" data-target="farmAddress" data-company-key="farmAddress" data-layout-block="farmAddress" data-layout-label="Trại / cơ sở"><b>Trại:</b> <span id="pFarmAddress"></span></div>
+                  <div class="clickable" data-target="taxCode" data-company-key="taxCode" data-layout-block="taxCode" data-layout-label="Mã số thuế"><b>MST:</b> <span id="pTaxCode"></span></div>
+                  <div class="clickable" data-target="phone" data-company-key="phone" data-layout-block="phone" data-layout-label="Số điện thoại"><b>SĐT:</b> <span id="pPhone"></span></div>
+                  <div class="clickable webemail" data-target="website" data-company-key="website" data-layout-block="website" data-layout-label="Website"><b>Website:</b> <span id="pWebsite"></span></div>
+                  <div class="clickable webemail" data-target="companyEmail" data-company-key="companyEmail" data-layout-block="companyEmail" data-layout-label="Email"><b>Email:</b> <span id="pCompanyEmail"></span></div>
                 </div>
               </div>
             </div>
           </header>
 
           <div class="quote-top" data-layout-block="quote" data-layout-label="Tiêu đề báo giá">
-            <div class="qtitle-wrap"><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle" data-layout-block="quoteTitle" data-layout-label="Tiêu đề"></div></div>
+            <div class="qtitle-wrap">
+              <div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle" data-layout-block="quoteTitle" data-layout-label="Tiêu đề"></div>
+              <div class="qsubtitle clickable" data-target="quoteSubtitle" id="pQuoteSubtitle" data-layout-block="quoteSubtitle" data-layout-label="Phụ đề"></div>
+            </div>
             <div class="qmeta" data-layout-block="quoteMeta" data-layout-label="Số / ngày / hiệu lực">
               <div><b>Số báo giá:</b> <span id="pQuoteNo"></span></div>
               <div><b>Ngày báo giá:</b> <span id="pQuoteDate"></span></div>
@@ -582,6 +589,89 @@
         </article>
       </div>
     </main>
+  </div>
+
+  <div class="smart-import-backdrop" id="smartImportModal" hidden>
+    <section class="smart-import-dialog" role="dialog" aria-modal="true" aria-labelledby="smartImportTitle">
+      <header class="smart-import-head">
+        <div>
+          <strong id="smartImportTitle">NHẬP DỮ LIỆU THÔNG MINH</strong>
+          <span>Đọc Excel hoặc ảnh chữ viết tay, kiểm tra trước rồi mới áp dụng vào báo giá.</span>
+        </div>
+        <button class="mini-action" id="closeSmartImport" type="button" aria-label="Đóng">×</button>
+      </header>
+
+      <div class="smart-import-body">
+        <div class="import-source-grid">
+          <label class="import-source-card">
+            <span class="import-source-icon">XL</span>
+            <strong>Đọc file Excel</strong>
+            <small>.xlsx / .xls / .csv — tự tìm thông tin đơn vị, tiêu đề, nhóm hàng và bảng giá.</small>
+            <input id="excelSmartImportInput" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+          </label>
+
+          <label class="import-source-card">
+            <span class="import-source-icon">OCR</span>
+            <strong>Đọc chữ viết tay</strong>
+            <small>Ảnh JPG/PNG — OCR tiếng Việt + tiếng Anh. Luôn kiểm tra kết quả trước khi áp dụng.</small>
+            <input id="handwritingSmartImportInput" type="file" accept="image/*">
+          </label>
+        </div>
+
+        <div class="import-progress" id="smartImportProgress">Chưa chọn nguồn dữ liệu.</div>
+
+        <div class="import-image-preview" id="handwritingPreviewWrap" hidden>
+          <img id="handwritingPreview" alt="Ảnh chữ viết tay đang nhận diện">
+        </div>
+
+        <section class="import-review" id="smartImportReview" hidden>
+          <div class="import-review-head">
+            <div>
+              <strong>KIỂM TRA DỮ LIỆU NHẬN DIỆN</strong>
+              <span id="smartImportSummary">0 trường • 0 sản phẩm</span>
+            </div>
+            <span class="import-source-badge" id="smartImportSource">—</span>
+          </div>
+
+          <div class="import-field-grid">
+            <label><span>Tên đơn vị</span><input data-import-field="companyName"></label>
+            <label><span>Số điện thoại</span><input data-import-field="phone"></label>
+            <label class="wide"><span>Địa chỉ</span><input data-import-field="companyAddress"></label>
+            <label><span>Tiêu đề</span><input data-import-field="quoteTitle"></label>
+            <label><span>Phụ đề / kỳ báo giá</span><input data-import-field="quoteSubtitle"></label>
+            <label class="wide"><span>Kính gửi</span><input data-import-field="recipientLine"></label>
+            <label class="wide"><span>Lời mở đầu</span><textarea data-import-field="intro"></textarea></label>
+            <label><span>Website</span><input data-import-field="website"></label>
+            <label><span>Email</span><input data-import-field="companyEmail"></label>
+            <label class="wide"><span>Dòng ngày tháng</span><input data-import-field="dateLine"></label>
+            <label class="wide"><span>Đại diện / người ký</span><input data-import-field="rightName"></label>
+          </div>
+
+          <div class="import-products-summary">
+            <strong id="smartImportProductCount">0 sản phẩm</strong>
+            <span id="smartImportGroupCount">0 nhóm</span>
+          </div>
+
+          <div class="import-warning-list" id="smartImportWarnings"></div>
+
+          <details class="ocr-raw-box" id="ocrRawBox" hidden>
+            <summary>Văn bản OCR thô / chỉnh lại nội dung</summary>
+            <textarea id="ocrRawText" rows="7"></textarea>
+            <button class="btn" id="reparseOcrText" type="button">Phân tích lại văn bản OCR</button>
+          </details>
+
+          <label class="check import-option">
+            <input id="replaceImportedProducts" type="checkbox" checked>
+            Thay danh sách sản phẩm hiện tại khi nguồn có bảng hàng hóa
+          </label>
+        </section>
+      </div>
+
+      <footer class="smart-import-actions">
+        <button class="btn" id="cancelSmartImport" type="button">Hủy</button>
+        <button class="btn primary" id="applySmartImport" type="button" disabled>Áp dụng vào báo giá</button>
+      </footer>
+    </section>
   </div>
   <div class="toast" id="toast"></div>
 </div>

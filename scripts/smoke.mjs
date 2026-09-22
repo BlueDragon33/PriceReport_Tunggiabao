@@ -29,7 +29,10 @@ const requiredIds = [
   'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
   'previewLineHeight','resetPreviewLayout','showQuoteMeta','layoutEditToggle','autoArrangeLayoutToolbar','autoArrangeLayoutPanel','layoutSelection','resetBlockPositions',
-  'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols'
+  'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols',
+  'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
+  'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
+  'showPack','showQty','quoteSubtitle','pQuoteSubtitle'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -59,7 +62,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v15")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v16")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -128,3 +131,13 @@ if (!js.includes('function autoArrangePreview')) fail('Automatic preview arrange
 if (!js.includes('syncLayoutEditModeUI')) fail('Persistent layout-mode UI sync is missing');
 if (!js.includes("paper.classList.toggle('layout-edit-mode', layoutEditEnabled)")) fail('Render must preserve layout-edit mode');
 if (!js.includes('setPointerCapture')) fail('Pointer capture for repeat dragging is missing');
+
+if (!js.includes("import('xlsx')")) fail('Excel parser must be lazy-loaded in the browser');
+if (!js.includes("import('tesseract.js')")) fail('Handwriting OCR engine must be lazy-loaded');
+if (!js.includes('parseSpreadsheetRows')) fail('Spreadsheet semantic mapper is missing');
+if (!js.includes('parseHandwritingText')) fail('Handwriting semantic mapper is missing');
+if (!js.includes('TUNGGIABAO_PRODUCTS')) fail('Tùng Gia Bảo baseline dataset is missing');
+if (!html.includes('data-import-field="companyName"')) fail('Smart import review field mapping UI is missing');
+if (!html.includes('class="qgroup-row"') && !js.includes("groupRow.className = 'qgroup-row'")) fail('Grouped price-list rendering is missing');
+if (!css.includes('.smart-import-dialog')) fail('Smart import dialog styling is missing');
+if (!css.includes('.qgroup-row td')) fail('Grouped product row styling is missing');

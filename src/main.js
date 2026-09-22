@@ -11,6 +11,8 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
+import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { TUNGGIABAO_PRODUCTS, TUNGGIABAO_PROFILE } from './tunggiabao-defaults.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -22,7 +24,7 @@ const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
-  'taxCode','phone','website','companyEmail','quote','quoteTitle','quoteMeta','recipient','customer',
+  'taxCode','phone','website','companyEmail','quote','quoteTitle','quoteSubtitle','quoteMeta','recipient','customer',
   'intro','section','table','summary','words','payment','paymentMethod','bankName','bankAccount','bankOwner',
   'terms','termsTitle','termsText','closing','signatures','footer','slogan','footerText'
 ];
@@ -142,11 +144,27 @@ const defaults = {
   ]
 };
 
+Object.assign(defaults, TUNGGIABAO_PROFILE, {
+  showPack: false,
+  showQty: false,
+  showPrice: true,
+  showAmount: false,
+  showNote: true,
+  showTotals: false,
+  showWords: false,
+  showPaymentBlock: false,
+  showTerms: false,
+  showWebEmail: false,
+  showSlogan: false,
+  products: TUNGGIABAO_PRODUCTS.map((product) => ({ ...product }))
+});
+
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 function merge(data) {
   const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
     products: rawProducts.map((product) => ({
+      group: String(product?.group || ''),
       name: String(product?.name || ''),
       pack: String(product?.pack || ''),
       unit: String(product?.unit || ''),
@@ -155,7 +173,7 @@ function merge(data) {
       note: String(product?.note || '')
     }))
   });
-  if (!merged.products.length) merged.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  if (!merged.products.length) merged.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   if (merged.theme === 'blue') merged.theme = 'corporate';
   if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
@@ -206,7 +224,7 @@ function merge(data) {
 
   const stringKeys = [
     'logo','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
-    'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteNo','quoteDate',
+    'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteSubtitle','quoteNo','quoteDate',
     'historyRecordId','validity','recipientLine','intro','sectionTitle','customerName',
     'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
     'paymentMethod','bankName','bankAccount','bankOwner','termsTitle','termsText','closingText',
@@ -220,7 +238,7 @@ function merge(data) {
   });
 
   const booleanKeys = [
-    'showCustomer','showStt','showPrice','showAmount','showNote','showTotals','showWords',
+    'showCustomer','showStt','showPack','showQty','showPrice','showAmount','showNote','showTotals','showWords',
     'showPaymentBlock','showLogo','showSlogan','showWebEmail','showTerms','showSignature',
     'showQuoteMeta','compactTable'
   ];
@@ -247,6 +265,24 @@ let state;
 let rawStored = null;
 try {
   rawStored = JSON.parse(localStorage.getItem(STORAGE));
+  const isLegacyReferenceProfile = rawStored &&
+    rawStored.companyName === 'CÔNG TY TNHH TMDV BIỂN UYÊN BẢO' &&
+    String(rawStored.phone || '') === '0888.458.222';
+  if (isLegacyReferenceProfile) {
+    rawStored = Object.assign({}, rawStored, TUNGGIABAO_PROFILE, {
+      showPack: false,
+      showQty: false,
+      showAmount: false,
+      showNote: true,
+      showTotals: false,
+      showWords: false,
+      showPaymentBlock: false,
+      showTerms: false,
+      showWebEmail: false,
+      showSlogan: false,
+      products: TUNGGIABAO_PRODUCTS.map((product) => ({ ...product }))
+    });
+  }
   state = merge(rawStored);
 } catch {
   state = clone(defaults);
@@ -616,7 +652,7 @@ function renderEditorProducts() {
     remove.addEventListener('click', () => {
       if (state.products.length > 1 && !confirm('Xóa sản phẩm này?')) return;
       state.products.splice(index, 1);
-      if (!state.products.length) state.products.push({ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+      if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
       save(); renderEditorProducts(); render();
     });
@@ -644,6 +680,7 @@ function renderEditorProducts() {
     };
 
     body.append(
+      productField('Nhóm hàng', 'group', product.group, 'text', input => updateProduct('group', input), 'wide'),
       productField('Tên sản phẩm', 'name', product.name, 'text', input => updateProduct('name', input), 'wide'),
       productField('Quy cách', 'pack', product.pack, 'text', input => updateProduct('pack', input)),
       productField('Đơn vị tính', 'unit', product.unit, 'text', input => updateProduct('unit', input)),
@@ -665,7 +702,10 @@ function renderEditorProducts() {
 function renderPreviewProducts() {
   const cols = [];
   if (state.showStt) cols.push(['STT', 'stt']);
-  cols.push(['Tên sản phẩm', 'name'], ['Quy cách', 'pack'], ['ĐVT', 'unit'], ['Số lượng', 'qty']);
+  cols.push(['Tên sản phẩm', 'name']);
+  if (state.showPack) cols.push(['Quy cách', 'pack']);
+  cols.push(['ĐVT', 'unit']);
+  if (state.showQty) cols.push(['Số lượng', 'qty']);
   if (state.showPrice) cols.push(['Đơn giá (' + state.currency + ')', 'price']);
   if (state.showAmount) cols.push(['Thành tiền (' + state.currency + ')', 'amount']);
   if (state.showNote) cols.push(['Ghi chú', 'note']);
@@ -698,12 +738,28 @@ function renderPreviewProducts() {
   });
   head.appendChild(hrow);
 
+  let activeGroup = null;
+  let groupIndex = 0;
   state.products.forEach((product, index) => {
+    const productGroup = String(product.group || '').trim();
+    if (productGroup && productGroup !== activeGroup) {
+      activeGroup = productGroup;
+      groupIndex = 0;
+      const groupRow = document.createElement('tr');
+      groupRow.className = 'qgroup-row';
+      const groupCell = document.createElement('td');
+      groupCell.colSpan = Math.max(1, cols.length);
+      groupCell.textContent = productGroup;
+      groupRow.appendChild(groupCell);
+      body.appendChild(groupRow);
+    }
+    groupIndex += 1;
+
     const row = document.createElement('tr');
     cols.forEach(([, key]) => {
       const td = document.createElement('td');
       let value = '';
-      if (key === 'stt') value = index + 1;
+      if (key === 'stt') value = productGroup ? groupIndex : index + 1;
       else if (key === 'price') value = numericMoney(product.price);
       else if (key === 'amount') value = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
       else value = product[key] == null ? '' : product[key];
@@ -901,7 +957,7 @@ function render() {
   [
     ['pCompanyName','companyName'],['pCompanyAddress','companyAddress'],['pBranchKhanhHoa','branchKhanhHoa'],
     ['pBranchDongNai','branchDongNai'],['pFarmAddress','farmAddress'],['pTaxCode','taxCode'],['pPhone','phone'],
-    ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteNo','quoteNo'],
+    ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteSubtitle','quoteSubtitle'],['pQuoteNo','quoteNo'],
     ['pValidity','validity'],['pRecipient','recipientLine'],['pIntro','intro'],['pSection','sectionTitle'],
     ['pTermsTitle','termsTitle'],['pClosing','closingText'],['pDate','dateLine'],['pDateLeft','dateLine'],
     ['pLeftTitle','leftTitle'],['pRightTitle','rightTitle'],['pLeftNote','leftNote'],['pRightNote','rightNote'],
@@ -914,8 +970,11 @@ function render() {
   renderLogo();
   applyLayoutOffsets();
 
-  $$('.webemail').forEach((el) => {
-    el.style.display = state.showWebEmail ? 'block' : 'none';
+  $$('[data-company-key]').forEach((el) => {
+    const key = el.dataset.companyKey;
+    const hasValue = Boolean(String(state[key] || '').trim());
+    const webGate = !el.classList.contains('webemail') || state.showWebEmail;
+    el.style.display = hasValue && webGate ? 'block' : 'none';
   });
 
   const customer = [state.customerName,state.customerCompany,state.customerAddress,state.customerPhone,state.customerEmail]
@@ -970,6 +1029,270 @@ function download(name, text, type) {
   link.download = name;
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+
+let smartImportDraft = null;
+let smartImportImageUrl = '';
+
+function setSmartImportProgress(message, tone = '') {
+  const box = document.getElementById('smartImportProgress');
+  if (!box) return;
+  box.textContent = message;
+  box.dataset.tone = tone;
+}
+
+function collectImportReviewFields() {
+  const fields = {};
+  document.querySelectorAll('[data-import-field]').forEach((input) => {
+    const value = String(input.value || '').trim();
+    if (value) fields[input.dataset.importField] = value;
+  });
+  return fields;
+}
+
+function syncDraftFromImportReview() {
+  if (!smartImportDraft) return;
+  smartImportDraft.fields = Object.assign({}, smartImportDraft.fields || {}, collectImportReviewFields());
+}
+
+function supplementImportFields(draft) {
+  const fields = Object.assign({}, draft?.fields || {});
+  const company = String(fields.companyName || '').trim();
+  const phone = String(fields.phone || '').replace(/\D/g, '');
+
+  if (!fields.recipientLine) fields.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
+  if (!fields.sectionTitle && Array.isArray(draft?.groups) && draft.groups.length) {
+    fields.sectionTitle = draft.groups.length > 1 ? 'DANH MỤC HÀNG HÓA' : draft.groups[0];
+  }
+  if (!fields.rightName && company) {
+    fields.rightName = company.toUpperCase().replace(/^HKD\s*-\s*/i, 'HKD ');
+  }
+  if (!fields.rightTitle && /^HKD\b/i.test(company)) fields.rightTitle = 'ĐẠI DIỆN HKD';
+  if (!fields.footerText && phone) fields.footerText = phone;
+
+  const subtitle = String(fields.quoteSubtitle || '');
+  if (!fields.dateLine) {
+    const monthYear = subtitle.match(/(?:tháng\s*)?(0?[1-9]|1[0-2])\s*[\/\-]\s*(20\d{2})/i);
+    if (monthYear) {
+      fields.dateLine = 'Nha Trang, ngày ..... tháng ' + String(monthYear[1]).padStart(2, '0') + ' năm ' + monthYear[2];
+    }
+  }
+  return fields;
+}
+
+function renderSmartImportReview() {
+  const review = document.getElementById('smartImportReview');
+  const apply = document.getElementById('applySmartImport');
+  if (!review || !apply) return;
+  if (!smartImportDraft) {
+    review.hidden = true;
+    apply.disabled = true;
+    return;
+  }
+
+  smartImportDraft.fields = supplementImportFields(smartImportDraft);
+  document.querySelectorAll('[data-import-field]').forEach((input) => {
+    input.value = smartImportDraft.fields?.[input.dataset.importField] || '';
+  });
+
+  const products = Array.isArray(smartImportDraft.products) ? smartImportDraft.products : [];
+  const groups = [...new Set(products.map(item => String(item.group || '').trim()).filter(Boolean))];
+  const sourceLabel = String(smartImportDraft.source || 'manual')
+    .replace('excel', 'Excel')
+    .replace('handwriting', 'OCR chữ viết tay')
+    .replace('+', ' + ');
+
+  document.getElementById('smartImportSource').textContent = sourceLabel;
+  document.getElementById('smartImportProductCount').textContent = products.length + ' sản phẩm';
+  document.getElementById('smartImportGroupCount').textContent = groups.length + ' nhóm';
+  document.getElementById('smartImportSummary').textContent =
+    Object.values(smartImportDraft.fields || {}).filter(value => String(value || '').trim()).length +
+    ' trường • ' + products.length + ' sản phẩm';
+
+  const warnings = document.getElementById('smartImportWarnings');
+  warnings.innerHTML = '';
+  const messages = [...new Set([...(smartImportDraft.warnings || []), ...(smartImportDraft.unmatched || []).slice(0, 4)])];
+  messages.forEach((message) => {
+    const item = document.createElement('div');
+    item.textContent = message;
+    warnings.appendChild(item);
+  });
+  warnings.hidden = !messages.length;
+
+  review.hidden = false;
+  apply.disabled = false;
+}
+
+function openSmartImport() {
+  const modal = document.getElementById('smartImportModal');
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.classList.add('smart-import-open');
+  setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
+}
+
+function closeSmartImport() {
+  const modal = document.getElementById('smartImportModal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove('smart-import-open');
+}
+
+async function parseExcelFile(file) {
+  setSmartImportProgress('Đang đọc workbook và nhận diện cấu trúc...', 'working');
+  const XLSX = await import('xlsx');
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer);
+  const firstSheet = workbook.SheetNames?.[0];
+  if (!firstSheet) throw new Error('Workbook không có sheet.');
+  const worksheet = workbook.Sheets[firstSheet];
+  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
+  const parsed = parseSpreadsheetRows(rows);
+  parsed.sheetName = firstSheet;
+  return parsed;
+}
+
+async function imageToOcrCanvasUrl(file) {
+  if (!window.createImageBitmap) return URL.createObjectURL(file);
+  const bitmap = await createImageBitmap(file);
+  const targetWidth = Math.min(2400, Math.max(bitmap.width, 1800));
+  const scale = targetWidth / bitmap.width;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.filter = 'grayscale(1) contrast(1.45)';
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  return canvas.toDataURL('image/png');
+}
+
+async function recognizeHandwritingFile(file) {
+  setSmartImportProgress('Đang chuẩn hóa ảnh. OCR lần đầu có thể cần tải bộ ngôn ngữ Việt/Anh...', 'working');
+  const imageUrl = await imageToOcrCanvasUrl(file);
+  const { createWorker, PSM } = await import('tesseract.js');
+  const worker = await createWorker(['vie', 'eng'], 1, {
+    logger: (message) => {
+      const pct = Number.isFinite(message?.progress) ? Math.round(message.progress * 100) : null;
+      const label = String(message?.status || 'Đang nhận diện');
+      setSmartImportProgress(label + (pct == null ? '' : ' ' + pct + '%'), 'working');
+    }
+  });
+  try {
+    if (PSM?.SPARSE_TEXT) {
+      await worker.setParameters({
+        tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+        preserve_interword_spaces: '1'
+      });
+    }
+    const result = await worker.recognize(imageUrl);
+    const text = String(result?.data?.text || '');
+    const parsed = parseHandwritingText(text);
+    parsed.rawText = text;
+    return parsed;
+  } finally {
+    await worker.terminate();
+    if (imageUrl.startsWith('blob:')) URL.revokeObjectURL(imageUrl);
+  }
+}
+
+function applySmartImportDraft() {
+  if (!smartImportDraft) return;
+  syncDraftFromImportReview();
+  smartImportDraft.fields = supplementImportFields(smartImportDraft);
+
+  const next = Object.assign({}, state, smartImportDraft.fields || {}, smartImportDraft.layoutHints || {});
+  const shouldReplaceProducts = document.getElementById('replaceImportedProducts')?.checked !== false;
+  if (shouldReplaceProducts && Array.isArray(smartImportDraft.products) && smartImportDraft.products.length) {
+    next.products = smartImportDraft.products.map((product) => ({
+      group: String(product.group || ''),
+      name: String(product.name || ''),
+      pack: String(product.pack || ''),
+      unit: String(product.unit || ''),
+      qty: normalizeNonNegativeNumber(product.qty || 1),
+      price: normalizeNonNegativeNumber(product.price),
+      note: String(product.note || '')
+    }));
+    next.previewSpacing = next.products.length >= 26 ? 'compact' : next.previewSpacing;
+    next.previewTableDensity = next.products.length >= 26 ? 'compact' : next.previewTableDensity;
+    next.previewHeaderGap = next.products.length >= 26 ? 2.5 : next.previewHeaderGap;
+    next.previewLineHeight = next.products.length >= 26 ? 1.18 : next.previewLineHeight;
+  }
+
+  state = merge(next);
+  save();
+  syncInputs();
+  renderEditorProducts();
+  render();
+  closeSmartImport();
+  openTab('general');
+  toast('Đã áp dụng dữ liệu nhập vào báo giá');
+}
+
+function setupSmartImport() {
+  document.getElementById('openSmartImport')?.addEventListener('click', openSmartImport);
+  document.getElementById('closeSmartImport')?.addEventListener('click', closeSmartImport);
+  document.getElementById('cancelSmartImport')?.addEventListener('click', closeSmartImport);
+  document.getElementById('applySmartImport')?.addEventListener('click', applySmartImportDraft);
+
+  document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
+    if (event.target?.id === 'smartImportModal') closeSmartImport();
+  });
+
+  document.getElementById('excelSmartImportInput')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      syncDraftFromImportReview();
+      const parsed = await parseExcelFile(file);
+      smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
+      renderSmartImportReview();
+      setSmartImportProgress('Đã đọc sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
+    } catch (error) {
+      console.error('Excel smart import failed:', error);
+      setSmartImportProgress('Không thể đọc file Excel. Hãy kiểm tra định dạng hoặc thử file khác.', 'error');
+    } finally {
+      event.target.value = '';
+    }
+  });
+
+  document.getElementById('handwritingSmartImportInput')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const previewWrap = document.getElementById('handwritingPreviewWrap');
+    const preview = document.getElementById('handwritingPreview');
+    if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
+    smartImportImageUrl = URL.createObjectURL(file);
+    preview.src = smartImportImageUrl;
+    previewWrap.hidden = false;
+
+    try {
+      syncDraftFromImportReview();
+      const parsed = await recognizeHandwritingFile(file);
+      smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
+      document.getElementById('ocrRawText').value = parsed.rawText || '';
+      document.getElementById('ocrRawBox').hidden = false;
+      renderSmartImportReview();
+      setSmartImportProgress('OCR hoàn tất. Hãy kiểm tra các trường trước khi áp dụng.', 'success');
+    } catch (error) {
+      console.error('Handwriting OCR failed:', error);
+      setSmartImportProgress('OCR không hoàn tất. Có thể thử ảnh rõ hơn hoặc nhập/chỉnh văn bản OCR thủ công.', 'error');
+      document.getElementById('ocrRawBox').hidden = false;
+      renderSmartImportReview();
+    } finally {
+      event.target.value = '';
+    }
+  });
+
+  document.getElementById('reparseOcrText')?.addEventListener('click', () => {
+    const text = document.getElementById('ocrRawText')?.value || '';
+    syncDraftFromImportReview();
+    smartImportDraft = mergeImportDraft(smartImportDraft, parseHandwritingText(text));
+    renderSmartImportReview();
+    setSmartImportProgress('Đã phân tích lại văn bản OCR đã chỉnh.', 'success');
+  });
 }
 
 function getUiState() {
@@ -1070,7 +1393,7 @@ renderEditorProducts();
 render();
 
 document.getElementById('addProduct').addEventListener('click', () => {
-  state.products.push({ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
   save();
   renderEditorProducts();
   render();
@@ -1463,7 +1786,7 @@ function validateQuote(data = state) {
     const qty = Number(product?.qty || 0);
     const price = Number(product?.price || 0);
     if (!name && (qty > 0 || price > 0)) warnings.push('Dòng sản phẩm ' + (index + 1) + ' chưa có tên.');
-    if (name && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
+    if (name && (data.showQty || data.showAmount || data.showTotals) && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
     if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
   });
 
@@ -1698,6 +2021,7 @@ function createNewQuote() {
     companyEmail: state.companyEmail,
     slogan: state.slogan,
     footerText: state.footerText,
+    quoteSubtitle: state.quoteSubtitle,
     currency: state.currency,
     theme: state.theme,
     accent: state.accent,
@@ -1730,6 +2054,8 @@ function createNewQuote() {
     showQuoteMeta: state.showQuoteMeta,
     compactTable: state.compactTable,
     showStt: state.showStt,
+    showPack: state.showPack,
+    showQty: state.showQty,
     showPrice: state.showPrice,
     showAmount: state.showAmount,
     showNote: state.showNote,
@@ -1753,7 +2079,7 @@ function createNewQuote() {
     rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
-  state.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  state.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
@@ -1940,6 +2266,7 @@ function normalizeProductCatalog(items) {
     if (!isPlainObject(item)) return [];
     return [{
       id: String(item.id || ('product-' + (index + 1))),
+      group: String(item.group || ''),
       name: String(item.name || ''),
       pack: String(item.pack || ''),
       unit: String(item.unit || ''),
@@ -1963,7 +2290,7 @@ function setProductCatalog(items) {
 }
 
 function productKey(product) {
-  return [product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
+  return [product.group, product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
 }
 
 function catalogKey(product) {
@@ -1981,6 +2308,7 @@ function saveCurrentProductsToCatalog() {
   products.forEach(product => {
     const item = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      group: product.group || '',
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
@@ -2015,6 +2343,7 @@ function addCatalogProduct(product) {
     if (currencyMatches) existing.price = catalogPrice;
   } else {
     state.products.push({
+      group: product.group || '',
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
@@ -2078,7 +2407,7 @@ function renderMasterData() {
   }
 
   const products = getProductCatalog().filter(item => {
-    const haystack = [item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
+    const haystack = [item.group, item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
     return !productQuery || haystack.includes(productQuery);
   });
   productList.innerHTML = '';
@@ -2094,7 +2423,7 @@ function renderMasterData() {
       title.textContent = product.name || 'Sản phẩm';
       const meta = document.createElement('span');
       const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
-      meta.textContent = [product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
+      meta.textContent = [product.group, product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
         .filter(Boolean).join(' • ');
       info.append(title, meta);
 
@@ -2158,7 +2487,7 @@ function createPresetState(source) {
   preset.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
   preset.discountPct = 0;
   preset.otherFee = 0;
-  preset.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  preset.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   return preset;
 }
 
@@ -2456,6 +2785,7 @@ $$('.clickable').forEach((el) => {
 
 let zoom = 82;
 setupLayoutEditor();
+setupSmartImport();
 function setZoom(value) {
   zoom = Math.max(50, Math.min(120, value));
   document.getElementById('paperWrap').style.transform = 'scale(' + (zoom / 100) + ')';
@@ -2558,6 +2888,10 @@ window.addEventListener('resize', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  if (!document.getElementById('smartImportModal')?.hidden) {
+    closeSmartImport();
+    return;
+  }
   if (layoutEditEnabled) {
     if (layoutDrag) {
       layoutDrag.element?.classList.remove('layout-dragging');
