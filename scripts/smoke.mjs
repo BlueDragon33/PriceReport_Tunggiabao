@@ -16,7 +16,8 @@ const requiredIds = [
   'paper','paperWrap','productEditor','qHead','qBody','summary',
   'companyName','customerName','addProduct','exportJson','importJson',
   'exportAllData','importAllData','quoteStatus','quoteStatusFilter',
-  'designPanel','paymentPrint','pSlogan','pageEstimate'
+  'designPanel','paymentPrint','pSlogan','pageEstimate',
+  'customerLibraryList','productCatalogList','saveCurrentCustomer','saveCurrentProducts'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -38,10 +39,12 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
 
 if (!js.includes("serviceWorker.register('./sw.js')")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
-if (!js.includes('schemaVersion: 2')) fail('Full backup schema is missing');
+if (!js.includes('schemaVersion: 3')) fail('Full backup schema v3 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
 if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
+if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is missing');
+if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
