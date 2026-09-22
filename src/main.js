@@ -1119,6 +1119,13 @@ function validateQuote(data = state) {
   if (!String(data.companyName || '').trim()) errors.push('Thiếu tên công ty.');
   if (!String(data.quoteTitle || '').trim()) errors.push('Thiếu tiêu đề báo giá.');
   if (!String(data.recipientLine || '').trim()) warnings.push('Chưa có dòng Kính gửi.');
+  const finalStatus = data.quoteStatus && data.quoteStatus !== 'draft';
+  if (finalStatus && !String(data.quoteNo || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có số báo giá.');
+  if (finalStatus && !String(data.quoteDate || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có ngày báo giá.');
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (data.companyEmail && !emailPattern.test(String(data.companyEmail))) warnings.push('Email công ty có vẻ chưa đúng định dạng.');
+  if (data.customerEmail && !emailPattern.test(String(data.customerEmail))) warnings.push('Email khách hàng có vẻ chưa đúng định dạng.');
 
   const products = Array.isArray(data.products) ? data.products : [];
   const namedProducts = products.filter(product => String(product?.name || '').trim());
@@ -1304,6 +1311,7 @@ function createNewQuote() {
     companyEmail: state.companyEmail,
     slogan: state.slogan,
     footerText: state.footerText,
+    currency: state.currency,
     theme: state.theme,
     accent: state.accent,
     showLogo: state.showLogo,
@@ -1354,6 +1362,7 @@ function createNewQuote() {
     rightNote: state.rightNote
   };
   state = Object.assign(clone(defaults), keep);
+  state.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = d.toISOString().slice(0, 10);
@@ -1697,6 +1706,25 @@ function getPresets() {
   }
 }
 
+function createPresetState(source) {
+  const preset = clone(source);
+  preset.historyRecordId = '';
+  preset.quoteNo = '';
+  preset.quoteDate = new Date().toISOString().slice(0, 10);
+  preset.quoteStatus = 'draft';
+  preset.customerName = 'QUÝ KHÁCH HÀNG';
+  preset.customerCompany = '';
+  preset.customerAddress = '';
+  preset.customerPhone = '';
+  preset.customerEmail = '';
+  preset.customerContact = '';
+  preset.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
+  preset.discountPct = 0;
+  preset.otherFee = 0;
+  preset.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  return preset;
+}
+
 document.getElementById('savePreset').addEventListener('click', () => {
   const name = document.getElementById('presetName').value.trim();
   if (!name) {
@@ -1704,9 +1732,7 @@ document.getElementById('savePreset').addEventListener('click', () => {
     return;
   }
   const presets = getPresets();
-  const presetState = clone(state);
-  presetState.historyRecordId = '';
-  presets[name] = presetState;
+  presets[name] = createPresetState(state);
   safeStore(PRESETS, JSON.stringify(presets));
   document.getElementById('presetName').value = '';
   renderPresets();
@@ -1744,8 +1770,7 @@ function renderPresets() {
     del.textContent = 'Xóa';
 
     use.addEventListener('click', () => {
-      state = merge(presets[name]);
-      state.historyRecordId = '';
+      state = merge(createPresetState(presets[name]));
       save();
       syncInputs();
       renderEditorProducts();
