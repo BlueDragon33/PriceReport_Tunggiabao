@@ -82,6 +82,13 @@ const defaults = {
   logoBackdropRadius: 14,
   logoBackdropBorder: 'none',
   docFontSize: 12.2,
+  previewTitleAlign: 'center',
+  previewTitleSize: 25,
+  previewSpacing: 'standard',
+  previewTableDensity: 'standard',
+  previewHeaderGap: 4,
+  previewMetaWidth: 44,
+  previewLineHeight: 1.26,
   products: [
     { name: 'Trứng gà tươi', pack: 'Hộp 10 quả', unit: 'Hộp', qty: 100, price: 28000, note: '' },
     { name: 'Trứng gà Omega-3', pack: 'Hộp 10 quả', unit: 'Hộp', qty: 50, price: 32000, note: '' },
@@ -180,7 +187,7 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY','logoBackdropOpacity','logoBackdropRadius'].includes(key)) {
+      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
         let value = Number(el.value || 0);
         if (key === 'discountPct' || key === 'vatPct' || key === 'logoBackdropOpacity') value = Math.min(100, Math.max(0, value));
         else if (key === 'logoWidth') value = Math.min(90, Math.max(28, value));
@@ -190,6 +197,10 @@ function bindInputs() {
         else if (['otherFee'].includes(key)) value = Math.max(0, value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
         else if (key === 'docFontSize') value = Math.min(18, Math.max(9, value));
+        else if (key === 'previewTitleSize') value = Math.min(32, Math.max(20, value));
+        else if (key === 'previewHeaderGap') value = Math.min(12, Math.max(2, value));
+        else if (key === 'previewMetaWidth') value = Math.min(56, Math.max(38, value));
+        else if (key === 'previewLineHeight') value = Math.min(1.5, Math.max(1.15, value));
         state[key] = value;
         if (Number(el.value) !== value) el.value = String(value);
       } else {
@@ -555,6 +566,8 @@ function renderLogo() {
   if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 58)) + ' mm';
   const opacityValue = document.getElementById('logoBackdropOpacityValue');
   if (opacityValue) opacityValue.textContent = opacity + '%';
+  const titleSizeValue = document.getElementById('previewTitleSizeValue');
+  if (titleSizeValue) titleSizeValue.textContent = Math.round(Number(state.previewTitleSize || 25)) + ' px';
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
@@ -588,6 +601,13 @@ function render() {
   paper.style.paddingBottom = state.marginBottom + 'mm';
   paper.style.fontSize = state.docFontSize + 'px';
   paper.style.fontFamily = '"' + state.docFont + '", serif';
+  paper.style.lineHeight = Number(state.previewLineHeight || 1.26);
+  paper.style.setProperty('--preview-title-size', Number(state.previewTitleSize || 25) + 'px');
+  paper.style.setProperty('--preview-header-gap', Number(state.previewHeaderGap || 4) + 'mm');
+  paper.style.setProperty('--preview-meta-width', Number(state.previewMetaWidth || 44) + 'mm');
+  paper.dataset.titleAlign = state.previewTitleAlign || 'center';
+  paper.dataset.spacing = state.previewSpacing || 'standard';
+  paper.dataset.tableDensity = state.previewTableDensity || 'standard';
 
   [
     ['pCompanyName','companyName'],['pCompanyAddress','companyAddress'],['pBranchKhanhHoa','branchKhanhHoa'],
@@ -631,8 +651,9 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $('[data-title-align]').forEach((el) => el.classList.toggle('active', el.dataset.titleAlign === (state.previewTitleAlign || 'center')));
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
@@ -1539,6 +1560,43 @@ document.getElementById('wideView').addEventListener('click', () => {
 document.getElementById('toolbarMenu').addEventListener('click', () => {
   openTab('export');
   toast('Đã mở công cụ Xuất / In');
+});
+
+function setPreviewCustomizer(open) {
+  const panel = document.getElementById('previewCustomizer');
+  if (!panel) return;
+  panel.classList.toggle('open', open);
+  panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+  document.getElementById('customizePreview')?.classList.toggle('active-customize', open);
+}
+
+document.getElementById('customizePreview').addEventListener('click', () => {
+  const panel = document.getElementById('previewCustomizer');
+  setPreviewCustomizer(!panel.classList.contains('open'));
+});
+
+document.getElementById('closePreviewCustomizer').addEventListener('click', () => setPreviewCustomizer(false));
+
+$('[data-title-align]').forEach((button) => {
+  button.addEventListener('click', () => {
+    state.previewTitleAlign = button.dataset.titleAlign;
+    save();
+    render();
+  });
+});
+
+document.getElementById('resetPreviewLayout').addEventListener('click', () => {
+  state.previewTitleAlign = 'center';
+  state.previewTitleSize = 25;
+  state.previewSpacing = 'standard';
+  state.previewTableDensity = 'standard';
+  state.previewHeaderGap = 4;
+  state.previewMetaWidth = 44;
+  state.previewLineHeight = 1.26;
+  save();
+  syncInputs();
+  render();
+  toast('Đã khôi phục bố cục chuẩn hiện đại');
 });
 
 setTimeout(() => document.getElementById('fit').click(), 60);
