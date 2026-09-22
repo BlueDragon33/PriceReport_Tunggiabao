@@ -448,7 +448,8 @@ const setText = (id, value) => {
 };
 
 const tabMeta = {
-  general: ['THÔNG TIN CÔNG TY', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
+  dashboard: ['TRANG CHỦ', 'Tổng quan báo giá, khách hàng, sản phẩm và trạng thái ứng dụng.'],
+  general: ['TẠO BÁO GIÁ', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
   history: ['QUẢN LÝ BÁO GIÁ', 'Lưu, tìm kiếm, mở lại và nhân bản các báo giá.'],
   master: ['DANH MỤC', 'Tái sử dụng khách hàng và sản phẩm thường dùng.'],
   customer: ['KHÁCH HÀNG', 'Thông tin người nhận và đơn vị mua hàng.'],
@@ -462,6 +463,9 @@ const tabMeta = {
 };
 
 function openTab(tab) {
+  const shell = document.querySelector('.shell');
+  const appWorkspace = ['dashboard', 'history', 'master'].includes(tab);
+
   $$('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
     el.classList.toggle('active', active);
@@ -470,14 +474,18 @@ function openTab(tab) {
   });
 
   if (tab === 'view') {
+    shell?.classList.remove('app-workspace');
     setReportViewMode(true);
     return;
   }
 
+  shell?.classList.toggle('app-workspace', appWorkspace);
   setReportViewMode(false);
   $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
+
+  if (tab === 'dashboard') renderDashboard();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
     setMajorPanelState('design', false);
@@ -493,9 +501,128 @@ function openTab(tab) {
   }
 }
 
-$$('.nav button[data-tab]').forEach((btn) => {
+$('.nav button[data-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.tab));
 });
+
+function dashboardStatusClass(status) {
+  return ['draft','sent','accepted','rejected','expired'].includes(status) ? status : 'draft';
+}
+
+function dashboardRevenueLabel(history) {
+  const totals = historyTotalsByCurrency(history);
+  const entries = Object.entries(totals).filter(([, value]) => Number(value || 0) !== 0);
+  if (!entries.length) return '0 VND';
+  const preferred = entries.find(([currency]) => currency === 'VND') || entries[0];
+  const suffix = entries.length > 1 ? ' +' + (entries.length - 1) : '';
+  return moneyForCurrency(preferred[1], preferred[0]) + suffix;
+}
+
+function updateDashboardSystemState() {
+  const stateEl = document.getElementById('dashSystemState');
+  const detailEl = document.getElementById('dashSystemDetail');
+  if (!stateEl || !detailEl) return;
+  const runtime = window.PriceReportManagement;
+  const accessState = document.documentElement?.dataset?.priceReportDeviceAccess || '';
+  if (runtime?.remoteAdminReady) {
+    stateEl.textContent = 'Đã kết nối quản trị';
+    detailEl.textContent = 'Thiết bị và Application Management đang dùng contract production đã xác minh.';
+    return;
+  }
+  if (accessState && accessState !== 'classification-only') {
+    stateEl.textContent = 'Thiết bị đang được quản lý';
+    detailEl.textContent = 'Device Gate đang hoạt động ở trạng thái: ' + accessState + '.';
+    return;
+  }
+  stateEl.textContent = 'Ứng dụng sẵn sàng';
+  detailEl.textContent = 'Dữ liệu báo giá chạy local-first; quản trị từ xa đang ở chế độ an toàn.';
+}
+
+function renderDashboard() {
+  const history = getHistory();
+  const customers = getCustomerLibrary();
+  const products = getProductCatalog();
+  const statusOf = (record) => record?.data?.quoteStatus || record?.status || 'draft';
+  const pending = history.filter((record) => ['draft','sent'].includes(statusOf(record))).length;
+  const accepted = history.filter((record) => statusOf(record) === 'accepted').length;
+
+  setText('dashQuoteCount', history.length);
+  setText('dashCustomerCount', customers.length);
+  setText('dashProductCount', products.length);
+  setText('dashPendingCount', pending);
+  setText('dashAcceptedCount', accepted);
+  setText('dashRevenue', dashboardRevenueLabel(history));
+
+  const now = new Date();
+  const monthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const monthCount = history.filter((record) => {
+    const date = String(record?.data?.quoteDate || record?.savedAt || '');
+    return date.slice(0, 7) === monthKey;
+  }).length;
+  setText('dashMonthCount', monthCount + ' báo giá');
+  const progress = Math.min(100, monthCount * 10);
+  const progressBar = document.getElementById('dashProgressBar');
+  if (progressBar) progressBar.style.width = progress + '%';
+  setText('dashProgressText', monthCount
+    ? 'Đã tạo ' + monthCount + ' báo giá trong tháng hiện tại.'
+    : 'Bắt đầu bằng báo giá đầu tiên của tháng.');
+
+  const list = document.getElementById('dashRecentQuotes');
+  if (list) {
+    list.innerHTML = '';
+    const recent = history.slice(0, 6);
+    if (!recent.length) {
+      const empty = document.createElement('div');
+      empty.className = 'dashboard-empty';
+      empty.textContent = 'Chưa có báo giá đã lưu. Tạo báo giá mới để bắt đầu.';
+      list.appendChild(empty);
+    } else {
+      recent.forEach((record) => {
+        const data = record.data || {};
+        const status = statusOf(record);
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'recent-quote-row';
+        row.addEventListener('click', () => openTab('history'));
+
+        const quote = document.createElement('strong');
+        quote.textContent = data.quoteNo || 'Chưa có mã';
+        const customer = document.createElement('span');
+        customer.textContent = data.customerCompany || data.customerName || 'Chưa có khách hàng';
+        const date = document.createElement('span');
+        date.textContent = data.quoteDate || String(record.savedAt || '').slice(0, 10) || '—';
+        const total = document.createElement('span');
+        total.className = 'recent-total';
+        total.textContent = moneyForCurrency(record.total ?? calcTotal(data), record.currency || data.currency || 'VND');
+        const badge = document.createElement('span');
+        badge.className = 'dashboard-status status-' + dashboardStatusClass(status);
+        badge.textContent = statusLabel(status);
+        row.append(quote, customer, date, total, badge);
+        list.appendChild(row);
+      });
+    }
+  }
+  updateDashboardSystemState();
+}
+
+$('[data-open-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => openTab(btn.dataset.openTab));
+});
+
+document.getElementById('dashboardSearch')?.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const value = event.currentTarget.value.trim();
+  openTab('history');
+  const search = document.getElementById('quoteSearch');
+  if (search) {
+    search.value = value;
+    renderHistory();
+    search.focus();
+  }
+});
+
+window.addEventListener('pricereport:management-readiness', updateDashboardSystemState);
+
 
 function applyTungGiaBaoToCurrentQuote({ confirmReplace = true } = {}) {
   if (confirmReplace && !window.confirm('Thay thông tin doanh nghiệp và danh sách sản phẩm hiện tại bằng dữ liệu Tùng Gia Bảo? Thiết kế, logo và dữ liệu khách hàng vẫn được giữ.')) {
@@ -3414,7 +3541,9 @@ function setReportViewMode(enabled) {
     requestAnimationFrame(fitReportView);
   } else {
     resetReportViewScale();
-    requestAnimationFrame(() => document.getElementById('fit')?.click());
+    if (!shell.classList.contains('app-workspace')) {
+      requestAnimationFrame(() => document.getElementById('fit')?.click());
+    }
   }
 }
 
@@ -3517,8 +3646,14 @@ function compactLegacyBrandAssets() {
 }
 
 compactLegacyBrandAssets();
+openTab('dashboard');
+renderDashboard();
 
-setTimeout(() => document.getElementById('fit').click(), 60);
+setTimeout(() => {
+  if (!document.querySelector('.shell')?.classList.contains('app-workspace')) {
+    document.getElementById('fit')?.click();
+  }
+}, 60);
 window.addEventListener('resize', () => {
   if (document.querySelector('.shell')?.classList.contains('report-view')) {
     requestAnimationFrame(fitReportView);
