@@ -95,7 +95,7 @@ const firstOcr = mergeImportDraft(null, parseHandwritingText('HKD - Sai tên\nĐ
 const reparsedOcr = mergeImportDraft(
   firstOcr,
   parseHandwritingText('HKD - Tùng Gia Bảo\nĐT. 0962944688'),
-  { replaceSourceFields: true, preferNext: true }
+  { replaceSourceFields: true }
 );
 assert.equal(reparsedOcr.fields.companyName, 'HKD - Tùng Gia Bảo');
 assert.equal(reparsedOcr.fields.phone, '0962944688');
