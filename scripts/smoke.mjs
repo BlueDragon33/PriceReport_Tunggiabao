@@ -16,7 +16,7 @@ const requiredIds = [
   'paper','paperWrap','productEditor','qHead','qBody','summary',
   'companyName','customerName','addProduct','exportJson','importJson',
   'exportAllData','importAllData','quoteStatus','quoteStatusFilter',
-  'designPanel','paymentPrint','pSlogan'
+  'designPanel','paymentPrint','pSlogan','pageEstimate'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -41,6 +41,7 @@ if (!js.includes('window.print()')) fail('Print/PDF action is missing');
 if (!js.includes('schemaVersion: 2')) fail('Full backup schema is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
+if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
