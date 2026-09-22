@@ -1034,6 +1034,38 @@ function download(name, text, type) {
 
 let smartImportDraft = null;
 let smartImportImageUrl = '';
+let smartImportBusy = false;
+
+
+function resetSmartImportDraft() {
+  smartImportDraft = null;
+  const review = document.getElementById('smartImportReview');
+  const apply = document.getElementById('applySmartImport');
+  const raw = document.getElementById('ocrRawText');
+  const rawBox = document.getElementById('ocrRawBox');
+  const previewWrap = document.getElementById('handwritingPreviewWrap');
+  const preview = document.getElementById('handwritingPreview');
+  if (review) review.hidden = true;
+  if (apply) apply.disabled = true;
+  if (raw) raw.value = '';
+  if (rawBox) rawBox.hidden = true;
+  if (previewWrap) previewWrap.hidden = true;
+  if (preview) preview.removeAttribute('src');
+  if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
+  smartImportImageUrl = '';
+  document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
+  setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
+}
+
+function setSmartImportBusy(busy) {
+  smartImportBusy = Boolean(busy);
+  ['excelSmartImportInput','handwritingSmartImportInput','applySmartImport','resetSmartImport'].forEach((id) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    if (id === 'applySmartImport') element.disabled = smartImportBusy || !smartImportDraft;
+    else element.disabled = smartImportBusy;
+  });
+}
 
 function setSmartImportProgress(message, tone = '') {
   const box = document.getElementById('smartImportProgress');
@@ -1129,14 +1161,15 @@ function openSmartImport() {
   if (!modal) return;
   modal.hidden = false;
   document.body.classList.add('smart-import-open');
-  setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
+  if (!smartImportDraft) resetSmartImportDraft();
 }
 
-function closeSmartImport() {
+function closeSmartImport({ discard = false } = {}) {
   const modal = document.getElementById('smartImportModal');
   if (!modal) return;
   modal.hidden = true;
   document.body.classList.remove('smart-import-open');
+  if (discard) resetSmartImportDraft();
 }
 
 async function parseExcelFile(file) {
@@ -1144,13 +1177,24 @@ async function parseExcelFile(file) {
   const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer);
-  const firstSheet = workbook.SheetNames?.[0];
-  if (!firstSheet) throw new Error('Workbook không có sheet.');
-  const worksheet = workbook.Sheets[firstSheet];
-  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
-  const parsed = parseSpreadsheetRows(rows);
-  parsed.sheetName = firstSheet;
-  return parsed;
+  const sheetNames = workbook.SheetNames || [];
+  if (!sheetNames.length) throw new Error('Workbook không có sheet.');
+  const candidates = sheetNames.map((sheetName) => {
+    const worksheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
+    const parsed = parseSpreadsheetRows(rows);
+    const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
+    const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
+    return { sheetName, parsed, score };
+  }).sort((a, b) => b.score - a.score);
+  const best = candidates[0];
+  best.parsed.sheetName = best.sheetName;
+  best.parsed.sheetCount = sheetNames.length;
+  if (sheetNames.length > 1) {
+    best.parsed.warnings = [...(best.parsed.warnings || []),
+      'Workbook có ' + sheetNames.length + ' sheet; hệ thống chọn sheet “' + best.sheetName + '” có cấu trúc phù hợp nhất.'];
+  }
+  return best.parsed;
 }
 
 async function imageToOcrCanvasUrl(file) {
@@ -1221,29 +1265,38 @@ function applySmartImportDraft() {
   }
 
   state = merge(next);
-  save();
+  const persisted = save();
   syncInputs();
   renderEditorProducts();
   render();
-  closeSmartImport();
+  closeSmartImport({ discard: true });
   openTab('general');
-  toast('Đã áp dụng dữ liệu nhập vào báo giá');
+  toast(persisted
+    ? 'Đã áp dụng dữ liệu nhập vào báo giá'
+    : 'Đã áp dụng tạm thời; trình duyệt chưa lưu được dữ liệu');
 }
 
 function setupSmartImport() {
   document.getElementById('openSmartImport')?.addEventListener('click', openSmartImport);
-  document.getElementById('closeSmartImport')?.addEventListener('click', closeSmartImport);
-  document.getElementById('cancelSmartImport')?.addEventListener('click', closeSmartImport);
+  document.getElementById('closeSmartImport')?.addEventListener('click', () => closeSmartImport());
+  document.getElementById('cancelSmartImport')?.addEventListener('click', () => closeSmartImport({ discard: true }));
+  document.getElementById('resetSmartImport')?.addEventListener('click', resetSmartImportDraft);
   document.getElementById('applySmartImport')?.addEventListener('click', applySmartImportDraft);
 
   document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
-    if (event.target?.id === 'smartImportModal') closeSmartImport();
+    if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
   });
 
   document.getElementById('excelSmartImportInput')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || smartImportBusy) return;
+    if (file.size > 12 * 1024 * 1024) {
+      setSmartImportProgress('File Excel vượt 12 MB; hãy rút gọn workbook trước khi nhập.', 'error');
+      event.target.value = '';
+      return;
+    }
     try {
+      setSmartImportBusy(true);
       syncDraftFromImportReview();
       const parsed = await parseExcelFile(file);
       smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
@@ -1253,13 +1306,19 @@ function setupSmartImport() {
       console.error('Excel smart import failed:', error);
       setSmartImportProgress('Không thể đọc file Excel. Hãy kiểm tra định dạng hoặc thử file khác.', 'error');
     } finally {
+      setSmartImportBusy(false);
       event.target.value = '';
     }
   });
 
   document.getElementById('handwritingSmartImportInput')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || smartImportBusy) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setSmartImportProgress('Ảnh vượt 10 MB; hãy giảm kích thước ảnh trước khi OCR.', 'error');
+      event.target.value = '';
+      return;
+    }
 
     const previewWrap = document.getElementById('handwritingPreviewWrap');
     const preview = document.getElementById('handwritingPreview');
@@ -1269,6 +1328,7 @@ function setupSmartImport() {
     previewWrap.hidden = false;
 
     try {
+      setSmartImportBusy(true);
       syncDraftFromImportReview();
       const parsed = await recognizeHandwritingFile(file);
       smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
@@ -1282,6 +1342,7 @@ function setupSmartImport() {
       document.getElementById('ocrRawBox').hidden = false;
       renderSmartImportReview();
     } finally {
+      setSmartImportBusy(false);
       event.target.value = '';
     }
   });
@@ -1953,10 +2014,12 @@ function saveCurrentQuote() {
   if (existingIndex >= 0) items.splice(existingIndex, 1);
   items.unshift(record);
   if (!setHistory(items)) return false;
-  save();
+  const currentSaved = save();
   syncInputs();
   renderHistory();
-  toast(existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá');
+  toast(currentSaved
+    ? (existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá')
+    : 'Đã lưu vào lịch sử; trạng thái hiện tại chưa thể autosave');
   return true;
 }
 
@@ -2021,7 +2084,6 @@ function createNewQuote() {
     companyEmail: state.companyEmail,
     slogan: state.slogan,
     footerText: state.footerText,
-    quoteSubtitle: state.quoteSubtitle,
     currency: state.currency,
     theme: state.theme,
     accent: state.accent,
@@ -2075,7 +2137,6 @@ function createNewQuote() {
     rightTitle: state.rightTitle,
     leftNote: state.leftNote,
     rightNote: state.rightNote,
-    dateLine: state.dateLine,
     rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
@@ -2083,6 +2144,8 @@ function createNewQuote() {
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
+  state.quoteSubtitle = '';
+  state.dateLine = 'Nha Trang, ngày ..... tháng ' + String(d.getMonth() + 1).padStart(2, '0') + ' năm ' + d.getFullYear();
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
   save();
@@ -2175,7 +2238,7 @@ function renderHistory() {
     del.textContent = 'Xóa';
     del.addEventListener('click', () => {
       if (!confirm('Xóa ' + quoteLabel(data) + '?')) return;
-      setHistory(getHistory().filter(item => item.id !== record.id));
+      if (!setHistory(getHistory().filter(item => item.id !== record.id))) return;
       renderHistory();
       toast('Đã xóa báo giá');
     });
@@ -2240,7 +2303,7 @@ function saveCurrentCustomerToLibrary() {
   if (index >= 0) customer.id = items[index].id;
   if (index >= 0) items[index] = customer;
   else items.unshift(customer);
-  setCustomerLibrary(items);
+  if (!setCustomerLibrary(items)) return;
   renderMasterData();
   toast(index >= 0 ? 'Đã cập nhật khách hàng' : 'Đã lưu khách hàng');
 }
@@ -2326,7 +2389,7 @@ function saveCurrentProductsToCatalog() {
     }
     changed += 1;
   });
-  setProductCatalog(items);
+  if (!setProductCatalog(items)) return;
   renderMasterData();
   toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
 }
@@ -2397,7 +2460,7 @@ function renderMasterData() {
       del.textContent = 'Xóa';
       del.addEventListener('click', () => {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
-        setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id));
+        if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
         renderMasterData();
       });
       actions.append(use, del);
@@ -2438,7 +2501,7 @@ function renderMasterData() {
       del.textContent = 'Xóa';
       del.addEventListener('click', () => {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
-        setProductCatalog(getProductCatalog().filter(item => item.id !== product.id));
+        if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
         renderMasterData();
       });
       actions.append(add, del);
@@ -2499,7 +2562,7 @@ document.getElementById('savePreset').addEventListener('click', () => {
   }
   const presets = getPresets();
   presets[name] = createPresetState(state);
-  safeStore(PRESETS, JSON.stringify(presets));
+  if (!safeStore(PRESETS, JSON.stringify(presets))) return;
   document.getElementById('presetName').value = '';
   renderPresets();
   toast('Đã lưu mẫu');
@@ -2547,9 +2610,11 @@ function renderPresets() {
     });
 
     del.addEventListener('click', () => {
-      delete presets[name];
-      safeStore(PRESETS, JSON.stringify(presets));
+      const nextPresets = Object.assign({}, presets);
+      delete nextPresets[name];
+      if (!safeStore(PRESETS, JSON.stringify(nextPresets))) return;
       renderPresets();
+      toast('Đã xóa mẫu');
     });
 
     actions.append(use, del);
@@ -2889,7 +2954,7 @@ window.addEventListener('resize', () => {
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   if (!document.getElementById('smartImportModal')?.hidden) {
-    closeSmartImport();
+    if (!smartImportBusy) closeSmartImport();
     return;
   }
   if (layoutEditEnabled) {
