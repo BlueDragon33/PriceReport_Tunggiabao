@@ -50,7 +50,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v5")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v6")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
