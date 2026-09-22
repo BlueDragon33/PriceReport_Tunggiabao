@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
+const css = fs.readFileSync('src/styles.css', 'utf8');
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 
 function fail(message) {
@@ -24,7 +25,10 @@ const requiredIds = [
   'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
   'logoWidthDesign','logoPadding','logoOffsetY','logoTreatment','resetLogoPosition',
   'logoBlendMode','logoBackdropColor','logoBackdropOpacity','logoBackdropRadius',
-  'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription'
+  'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
+  'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
+  'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
+  'previewLineHeight','resetPreviewLayout'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -54,7 +58,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v8-1")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v9")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
@@ -76,6 +80,13 @@ if (!js.includes("state.showLogo = false")) fail('Logo removal must hide the log
 if (js.includes("preview.innerHTML = '<div class=\"logo-text\">THẾ GIỚI TRỨNG®</div>'")) fail('Removed logos must not fall back to the old brand mark');
 if (!html.includes("NỀN PHÍA SAU LOGO")) fail('Logo backdrop editor UI is missing');
 if (!html.includes("Brand Flow") || !html.includes("Corporate Grid") || !html.includes("Executive")) fail('Refined template set is missing');
+if (!js.includes("previewTitleAlign")) fail('Preview title alignment state is missing');
+if (!js.includes("setPreviewCustomizer")) fail('Preview customizer behavior is missing');
+if (!js.includes("THEME_FONTS")) fail('Template typography mapping is missing');
+if (!css.includes(".paper[data-title-align=\"center\"] .qtitle")) fail('Centered title override is missing');
+if (!css.includes("--rhythm-md")) fail('Consistent document spacing system is missing');
+if (!css.includes(".preview-customizer")) fail('Preview customizer styles are missing');
+if (!html.includes("Tùy chỉnh xem trước") && !html.includes("TÙY CHỈNH XEM TRƯỚC")) fail('Preview customizer UI is missing');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');

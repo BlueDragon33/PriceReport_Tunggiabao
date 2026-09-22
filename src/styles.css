@@ -818,3 +818,261 @@ input[type=range]::-moz-range-thumb{
 @media(max-width:980px){
   .card-collapse-handle{right:2px}
 }
+
+
+/* =========================
+   V1.9 MODERN PREVIEW SYSTEM
+   ========================= */
+
+/* Preview customization drawer */
+.preview-customizer{
+  position:fixed;right:18px;top:64px;z-index:85;width:300px;max-height:calc(100vh - 84px);
+  overflow:auto;background:#fff;border:1px solid #d8e1eb;border-radius:12px;
+  box-shadow:0 18px 48px rgba(26,47,72,.18);
+  transform:translateX(calc(100% + 30px));opacity:0;pointer-events:none;
+  transition:transform .2s ease,opacity .2s ease
+}
+.preview-customizer.open{transform:none;opacity:1;pointer-events:auto}
+.preview-customizer-head{
+  position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+  padding:13px 14px;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid #e6ebf1
+}
+.preview-customizer-head strong{display:block;color:#152b55;font-size:12px;letter-spacing:.35px}
+.preview-customizer-head span{display:block;margin-top:3px;color:#7c8a9d;font-size:9.5px;line-height:1.35}
+.preview-customizer-body{padding:14px}
+.custom-group{margin-bottom:13px}
+.custom-group>label{display:block;margin-bottom:6px;font-size:10.5px;font-weight:700;color:#344b69}
+.segmented{
+  display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #d6e0ea;border-radius:8px;overflow:hidden;background:#f7f9fb
+}
+.segmented button{
+  height:32px;border:0;border-right:1px solid #dfe6ee;background:transparent;color:#5b6c82;
+  font-size:10.5px;font-weight:700
+}
+.segmented button:last-child{border-right:0}
+.segmented button.active{background:#0d7ff2;color:#fff}
+.toolbar-btn.customize{background:#fff;border-color:#c8d8e8;color:#2f547c}
+.toolbar-btn.customize:hover,.toolbar-btn.customize.active-customize{background:#eaf4ff;border-color:#8ebcec;color:#0b70d4}
+
+/* A modern visual rhythm shared by every document template */
+.paper{
+  --preview-title-size:25px;
+  --preview-header-gap:4mm;
+  --preview-meta-width:44mm;
+  --rhythm-xs:1.7mm;
+  --rhythm-sm:2.8mm;
+  --rhythm-md:4.2mm;
+  --rhythm-lg:5.8mm
+}
+.paper[data-spacing="compact"]{
+  --rhythm-xs:1.2mm;
+  --rhythm-sm:2mm;
+  --rhythm-md:3mm;
+  --rhythm-lg:4mm
+}
+.paper[data-spacing="airy"]{
+  --rhythm-xs:2mm;
+  --rhythm-sm:3.6mm;
+  --rhythm-md:5.3mm;
+  --rhythm-lg:7mm
+}
+
+/* Title is centered on the full A4 page, independent from the meta card width */
+.paper .quote-top{
+  position:relative!important;
+  display:block!important;
+  min-height:24mm;
+  margin-top:var(--preview-header-gap)!important;
+  padding:0!important;
+  border:0!important
+}
+.paper .qtitle-wrap{
+  min-height:19mm;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-left:calc(var(--preview-meta-width) + 4mm);
+  padding-right:calc(var(--preview-meta-width) + 4mm)
+}
+.paper .qtitle{
+  width:100%;
+  margin:0!important;
+  padding:0!important;
+  font-size:var(--preview-title-size)!important;
+  line-height:1.08!important;
+  text-align:center!important;
+  font-weight:700;
+  letter-spacing:.15px!important
+}
+.paper .qtitle:after{
+  width:44mm!important;
+  height:1.2px!important;
+  margin:1.8mm auto 0!important
+}
+.paper .qmeta{
+  border:1px solid color-mix(in srgb,var(--doc) 16%,#d9e1e8);
+  box-shadow:none
+}
+.paper .quote-top>.qmeta{
+  position:absolute;
+  right:0;
+  top:0;
+  width:var(--preview-meta-width);
+  max-width:var(--preview-meta-width)
+}
+
+.paper[data-title-align="left"] .qtitle-wrap{
+  justify-content:flex-start;
+  padding-left:0;
+  padding-right:calc(var(--preview-meta-width) + 6mm)
+}
+.paper[data-title-align="left"] .qtitle{text-align:left!important}
+.paper[data-title-align="left"] .qtitle:after{margin-left:0!important;margin-right:auto!important}
+
+.paper[data-title-align="right"] .qtitle-wrap{
+  justify-content:flex-end;
+  padding-left:0;
+  padding-right:calc(var(--preview-meta-width) + 6mm)
+}
+.paper[data-title-align="right"] .qtitle{text-align:right!important}
+.paper[data-title-align="right"] .qtitle:after{margin-left:auto!important;margin-right:0!important}
+
+/* Fixed vertical spacing instead of theme-by-theme drifting */
+.paper .recipient{
+  margin:var(--rhythm-sm) 0 var(--rhythm-md)!important;
+  line-height:1.25
+}
+.paper .intro{margin:0 0 var(--rhythm-sm)!important;line-height:1.4}
+.paper .sectionbar{margin:0!important}
+.paper .summary{margin-top:0}
+.paper .words{margin-top:var(--rhythm-xs)!important}
+.paper .payment-print{margin-top:var(--rhythm-md)!important}
+.paper .terms{margin-top:var(--rhythm-md)!important}
+.paper .closing{margin-top:var(--rhythm-sm)!important}
+.paper .signatures{margin-top:var(--rhythm-md)!important}
+.paper .doc-head{margin-bottom:0}
+
+/* Corporate-grade title hierarchy: theme changes style, never geometry */
+.theme-modern .qtitle,
+.theme-corporate .qtitle,
+.theme-minimal .qtitle,
+.theme-classic .qtitle,
+.theme-emerald .qtitle,
+.theme-warm .qtitle,
+.theme-premium .qtitle,
+.theme-mono .qtitle{
+  text-align:inherit!important;
+  margin-top:0!important
+}
+.theme-corporate .qtitle:after,
+.theme-minimal .qtitle:after,
+.theme-mono .qtitle:after{
+  margin-left:auto!important;
+  margin-right:auto!important
+}
+.paper[data-title-align="left"].theme-corporate .qtitle:after,
+.paper[data-title-align="left"].theme-minimal .qtitle:after,
+.paper[data-title-align="left"].theme-mono .qtitle:after{
+  margin-left:0!important;margin-right:auto!important
+}
+.paper[data-title-align="right"].theme-corporate .qtitle:after,
+.paper[data-title-align="right"].theme-minimal .qtitle:after,
+.paper[data-title-align="right"].theme-mono .qtitle:after{
+  margin-left:auto!important;margin-right:0!important
+}
+
+/* Remove decorative choices that displaced content; retain brand character without sacrificing alignment */
+.theme-corporate .quote-top,
+.theme-minimal .quote-top,
+.theme-mono .quote-top{padding-left:0!important}
+.theme-corporate .quote-top:before{
+  content:"";position:absolute;left:0;top:4mm;width:1.1mm;height:12mm;border-radius:1mm;background:var(--doc)
+}
+.theme-minimal .qtitle{color:#27313c!important}
+.theme-mono .qtitle{color:#30343a!important}
+.theme-premium .quote-top{margin-top:var(--preview-header-gap)!important}
+
+/* More restrained contemporary header spacing */
+.theme-modern .doc-head,
+.theme-corporate .doc-head,
+.theme-minimal .doc-head,
+.theme-emerald .doc-head,
+.theme-premium .doc-head,
+.theme-mono .doc-head{
+  min-height:32mm
+}
+.theme-modern .company,
+.theme-corporate .company,
+.theme-minimal .company,
+.theme-emerald .company,
+.theme-premium .company,
+.theme-mono .company{
+  line-height:1.28
+}
+.theme-modern .company-name,
+.theme-corporate .company-name,
+.theme-minimal .company-name,
+.theme-emerald .company-name,
+.theme-premium .company-name,
+.theme-mono .company-name{
+  letter-spacing:.2px;
+  margin-bottom:1.8mm
+}
+
+/* Table density presets */
+.paper[data-table-density="compact"] .qtable{font-size:8.7px}
+.paper[data-table-density="standard"] .qtable{font-size:9px}
+.paper[data-table-density="comfortable"] .qtable{font-size:9.3px}
+.paper[data-table-density="comfortable"] .qtable th,
+.paper[data-table-density="comfortable"] .qtable td{line-height:1.35}
+.paper[data-table-density="compact"] .qtable th,
+.paper[data-table-density="compact"] .qtable td{line-height:1.18}
+
+/* Modern company templates: clean borders, subtle fills, predictable typography */
+.theme-modern .qmeta,
+.theme-corporate .qmeta,
+.theme-minimal .qmeta,
+.theme-emerald .qmeta,
+.theme-premium .qmeta,
+.theme-mono .qmeta{
+  border-radius:1.8mm;
+  padding:2.2mm 2.6mm
+}
+.theme-modern .sectionbar,
+.theme-corporate .sectionbar,
+.theme-emerald .sectionbar,
+.theme-premium .sectionbar{
+  border-radius:1.2mm 1.2mm 0 0;
+  letter-spacing:.15px
+}
+.theme-modern .qtable,
+.theme-corporate .qtable,
+.theme-minimal .qtable,
+.theme-emerald .qtable,
+.theme-premium .qtable,
+.theme-mono .qtable{
+  border-color:#c8d1da
+}
+.theme-modern .summary,
+.theme-corporate .summary,
+.theme-minimal .summary,
+.theme-emerald .summary,
+.theme-premium .summary,
+.theme-mono .summary{
+  margin-top:0
+}
+
+/* Keep preview customizer out of print/PDF */
+@media print{
+  .preview-customizer{display:none!important}
+}
+
+@media(max-width:980px){
+  .preview-customizer{
+    right:10px;left:10px;top:72px;width:auto;max-height:calc(100vh - 92px)
+  }
+}
+
+.paper[data-title-align="center"] .qtitle{text-align:center!important}
+.paper[data-title-align="center"] .qtitle:after{margin-left:auto!important;margin-right:auto!important}

@@ -403,11 +403,74 @@
             <button class="zoom-btn" id="zoomIn" aria-label="Phóng to">+</button>
           </div>
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
+          <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
           <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
           <button class="toolbar-btn print print-action">▣&nbsp; In</button>
           <button class="toolbar-btn menu" id="toolbarMenu" aria-label="Tùy chọn">⋮</button>
         </div>
       </div>
+
+      <aside class="preview-customizer" id="previewCustomizer" aria-hidden="true">
+        <div class="preview-customizer-head">
+          <div>
+            <strong>TÙY CHỈNH XEM TRƯỚC</strong>
+            <span>Chuẩn hóa bố cục trước khi in/PDF.</span>
+          </div>
+          <button class="mini-action" id="closePreviewCustomizer" type="button" aria-label="Đóng">×</button>
+        </div>
+
+        <div class="preview-customizer-body">
+          <div class="custom-group">
+            <label>Căn tiêu đề</label>
+            <div class="segmented" id="titleAlignGroup">
+              <button type="button" data-title-align="left">Trái</button>
+              <button type="button" data-title-align="center">Giữa</button>
+              <button type="button" data-title-align="right">Phải</button>
+            </div>
+          </div>
+
+          <div class="custom-group">
+            <label>Cỡ tiêu đề <span class="range-value" id="previewTitleSizeValue">25 px</span></label>
+            <input id="previewTitleSize" data-bind="previewTitleSize" type="range" min="20" max="32" step="1">
+          </div>
+
+          <div class="custom-group">
+            <label>Nhịp khoảng cách</label>
+            <select id="previewSpacing" data-bind="previewSpacing">
+              <option value="compact">Gọn</option>
+              <option value="standard">Chuẩn hiện đại</option>
+              <option value="airy">Thoáng</option>
+            </select>
+          </div>
+
+          <div class="custom-group">
+            <label>Mật độ bảng</label>
+            <select id="previewTableDensity" data-bind="previewTableDensity">
+              <option value="compact">Gọn</option>
+              <option value="standard">Chuẩn</option>
+              <option value="comfortable">Thoải mái</option>
+            </select>
+          </div>
+
+          <div class="grid2">
+            <div class="custom-group">
+              <label>Khoảng đầu (mm)</label>
+              <input id="previewHeaderGap" data-bind="previewHeaderGap" type="number" min="2" max="12" step="0.5">
+            </div>
+            <div class="custom-group">
+              <label>Rộng hộp meta (mm)</label>
+              <input id="previewMetaWidth" data-bind="previewMetaWidth" type="number" min="38" max="56" step="1">
+            </div>
+          </div>
+
+          <div class="custom-group">
+            <label>Chiều cao dòng</label>
+            <input id="previewLineHeight" data-bind="previewLineHeight" type="range" min="1.15" max="1.5" step="0.01">
+          </div>
+
+          <button class="btn primary block" id="resetPreviewLayout" type="button">Khôi phục chuẩn hiện đại</button>
+        </div>
+      </aside>
 
       <div class="paper-wrap" id="paperWrap">
         <article class="paper theme-modern" id="paper">
@@ -428,7 +491,7 @@
           </header>
 
           <div class="quote-top">
-            <div><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle"></div></div>
+            <div class="qtitle-wrap"><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle"></div></div>
             <div class="qmeta">
               <div><b>Số báo giá:</b> <span id="pQuoteNo"></span></div>
               <div><b>Ngày báo giá:</b> <span id="pQuoteDate"></span></div>
