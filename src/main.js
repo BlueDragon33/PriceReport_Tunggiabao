@@ -152,8 +152,9 @@ const defaults = {
   logoBackdropRadius: 14,
   logoBackdropBorder: 'none',
   docFontSize: 12.2,
+  tableFontSize: 9,
   previewTitleAlign: 'center',
-  previewTitleSize: 25,
+  previewTitleSize: 27,
   previewSpacing: 'standard',
   previewTableDensity: 'standard',
   previewHeaderGap: 4,
@@ -240,7 +241,14 @@ function merge(data) {
   merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
   merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
   merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
-  merged.previewTitleSize = normalizeBoundedNumber(merged.previewTitleSize, 20, 32, defaults.previewTitleSize);
+  const hasTableFontSize = data && Object.prototype.hasOwnProperty.call(data, 'tableFontSize');
+  if (!hasTableFontSize) {
+    const legacyScale = normalizeBoundedNumber(Number(data?.docFontSize || defaults.docFontSize) / 12.2, 0.6, 1.6, 1);
+    merged.tableFontSize = Math.round((9 * legacyScale) * 10) / 10;
+  }
+  merged.tableFontSize = normalizeBoundedNumber(merged.tableFontSize, 7.5, 14, defaults.tableFontSize);
+  // All typography outside the product table is fixed from V3.3 onward.
+  merged.previewTitleSize = 27;
   merged.previewHeaderGap = normalizeBoundedNumber(merged.previewHeaderGap, 2, 12, defaults.previewHeaderGap);
   merged.previewMetaWidth = normalizeBoundedNumber(merged.previewMetaWidth, 38, 56, defaults.previewMetaWidth);
   merged.previewLineHeight = normalizeBoundedNumber(merged.previewLineHeight, 1.15, 1.5, defaults.previewLineHeight);
@@ -249,7 +257,7 @@ function merge(data) {
   const hasPreviewLayout = data && Object.prototype.hasOwnProperty.call(data, 'previewSpacing');
   if (!hasPreviewLayout) {
     merged.previewTitleAlign = 'center';
-    merged.previewTitleSize = 25;
+    merged.previewTitleSize = 27;
     merged.previewSpacing = 'standard';
     merged.previewTableDensity = 'standard';
     merged.previewHeaderGap = 4;
@@ -500,7 +508,7 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetX','logoOffsetY','logoRemoveBgThreshold','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
+      } else if (el.type === 'number' || el.type === 'range' || ['tableFontSize','logoWidth','logoPadding','logoOffsetX','logoOffsetY','logoRemoveBgThreshold','logoBackdropOpacity','logoBackdropRadius','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
         let value = Number(el.value || 0);
         if (key === 'discountPct' || key === 'vatPct' || key === 'logoBackdropOpacity') value = Math.min(100, Math.max(0, value));
         else if (key === 'logoWidth') value = Math.min(90, Math.max(18, value));
@@ -511,8 +519,7 @@ function bindInputs() {
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
         else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
-        else if (key === 'docFontSize') value = Math.min(18, Math.max(9, value));
-        else if (key === 'previewTitleSize') value = Math.min(32, Math.max(20, value));
+        else if (key === 'tableFontSize') value = Math.min(14, Math.max(7.5, value));
         else if (key === 'previewHeaderGap') value = Math.min(12, Math.max(2, value));
         else if (key === 'previewMetaWidth') value = Math.min(56, Math.max(38, value));
         else if (key === 'previewLineHeight') value = Math.min(1.5, Math.max(1.15, value));
@@ -1055,10 +1062,8 @@ function renderLogo() {
   if (opacityValue) opacityValue.textContent = opacity + '%';
   const thresholdValue = document.getElementById('logoRemoveBgThresholdValue');
   if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
-  const titleSizeValue = document.getElementById('previewTitleSizeValue');
-  if (titleSizeValue) titleSizeValue.textContent = Math.round(Number(state.previewTitleSize || 25)) + ' px';
-  const docFontSizeValue = document.getElementById('docFontSizeValue');
-  if (docFontSizeValue) docFontSizeValue.textContent = Number(state.docFontSize || 12.2).toFixed(1) + ' px';
+  const tableFontSizeValue = document.getElementById('tableFontSizeValue');
+  if (tableFontSizeValue) tableFontSizeValue.textContent = Number(state.tableFontSize || 9).toFixed(1) + ' px';
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
@@ -1113,30 +1118,31 @@ function render() {
   paper.style.paddingRight = state.marginX + 'mm';
   paper.style.paddingTop = state.marginTop + 'mm';
   paper.style.paddingBottom = state.marginBottom + 'mm';
-  const docFontScale = Number(state.docFontSize || 12.2) / 12.2;
-  paper.style.fontSize = state.docFontSize + 'px';
-  paper.style.setProperty('--doc-font-scale', String(docFontScale));
+  paper.style.fontSize = '12.2px';
+  paper.style.setProperty('--doc-font-scale', '1');
+  // V3.3: typography outside the product table is intentionally fixed.
+  // The fixed set is approximately +2px larger than the old V3.2 baseline.
   [
-    ['--fs-company', 9.6],
-    ['--fs-company-name', 13.2],
-    ['--fs-subtitle', 11.2],
-    ['--fs-meta', 9.6],
-    ['--fs-recipient', 13.5],
-    ['--fs-intro', 10.5],
-    ['--fs-section', 11.5],
-    ['--fs-table', 9],
-    ['--fs-summary', 9.4],
-    ['--fs-summary-grand', 10.2],
-    ['--fs-words', 9.8],
-    ['--fs-small-heading', 10.5],
-    ['--fs-payment', 9.4],
-    ['--fs-terms', 9.5],
-    ['--fs-signature', 9.5],
-    ['--fs-footer', 8.4]
-  ].forEach(([name, base]) => paper.style.setProperty(name, (base * docFontScale).toFixed(2) + 'px'));
+    ['--fs-company', '11.6px'],
+    ['--fs-company-name', '15.2px'],
+    ['--fs-subtitle', '13.2px'],
+    ['--fs-meta', '11.6px'],
+    ['--fs-recipient', '15.5px'],
+    ['--fs-intro', '12.5px'],
+    ['--fs-section', '13.5px'],
+    ['--fs-summary', '11.4px'],
+    ['--fs-summary-grand', '12.2px'],
+    ['--fs-words', '11.8px'],
+    ['--fs-small-heading', '12.5px'],
+    ['--fs-payment', '11.4px'],
+    ['--fs-terms', '11.5px'],
+    ['--fs-signature', '11.5px'],
+    ['--fs-footer', '10.4px']
+  ].forEach(([name, value]) => paper.style.setProperty(name, value));
+  paper.style.setProperty('--fs-table', Number(state.tableFontSize || 9).toFixed(1) + 'px');
   paper.style.fontFamily = '"' + state.docFont + '", serif';
   paper.style.lineHeight = Number(state.previewLineHeight || 1.26);
-  paper.style.setProperty('--preview-title-size', Number(state.previewTitleSize || 25) + 'px');
+  paper.style.setProperty('--preview-title-size', '27px');
   paper.style.setProperty('--preview-header-gap', Number(state.previewHeaderGap || 4) + 'mm');
   paper.style.setProperty('--preview-meta-width', Number(state.previewMetaWidth || 44) + 'mm');
   paper.dataset.titleAlign = state.previewTitleAlign || 'center';
@@ -2587,8 +2593,9 @@ function createNewQuote() {
     logoBackdropRadius: state.logoBackdropRadius,
     logoBackdropBorder: state.logoBackdropBorder,
     docFontSize: state.docFontSize,
+    tableFontSize: state.tableFontSize,
     previewTitleAlign: state.previewTitleAlign,
-    previewTitleSize: state.previewTitleSize,
+    previewTitleSize: 27,
     previewSpacing: state.previewSpacing,
     previewTableDensity: state.previewTableDensity,
     previewHeaderGap: state.previewHeaderGap,
@@ -3185,7 +3192,7 @@ function autoArrangePreview() {
   state.previewSpacing = dense ? 'compact' : 'standard';
   state.previewTableDensity = dense ? 'compact' : medium ? 'standard' : 'comfortable';
   state.previewLineHeight = dense ? 1.18 : medium ? 1.23 : 1.26;
-  state.previewTitleSize = String(state.quoteTitle || '').trim().length > 28 ? 22 : 25;
+  state.previewTitleSize = 27;
   if (state.showPack && namedProducts.every(product => !String(product.pack || '').trim())) state.showPack = false;
   if (state.showNote && namedProducts.every(product => !String(product.note || '').trim())) state.showNote = false;
 
