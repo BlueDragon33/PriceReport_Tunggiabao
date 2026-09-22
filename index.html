@@ -291,14 +291,14 @@
         <div class="card">
           <h3>Mẫu báo giá</h3>
           <div class="template-grid">
-            <button class="tpl" data-theme="modern" data-description="Mềm, sạch, dùng nhận diện teal làm điểm nhấn."><div class="thumb modern"></div><span>Brand Flow</span></button>
-            <button class="tpl" data-theme="corporate" data-description="Gọn, chắc, phù hợp báo giá doanh nghiệp và khách sỉ."><div class="thumb corporate"></div><span>Corporate Grid</span></button>
-            <button class="tpl" data-theme="minimal" data-description="Nhiều khoảng trắng, ưu tiên nội dung và số liệu."><div class="thumb minimal"></div><span>Essential</span></button>
-            <button class="tpl" data-theme="classic" data-description="Serif tinh tế, phù hợp tài liệu trang trọng."><div class="thumb classic"></div><span>Heritage</span></button>
-            <button class="tpl" data-theme="emerald" data-description="Organic nhưng tiết chế, hợp thương hiệu thực phẩm."><div class="thumb emerald"></div><span>Organic</span></button>
-            <button class="tpl" data-theme="warm" data-description="Ấm áp, thân thiện, phù hợp báo giá bán lẻ."><div class="thumb warm"></div><span>Warm Retail</span></button>
-            <button class="tpl" data-theme="premium" data-description="Header tối cao cấp, dùng cho báo giá chọn lọc."><div class="thumb premium"></div><span>Executive</span></button>
-            <button class="tpl" data-theme="mono" data-description="Đen trắng sắc nét, in nhanh và tiết kiệm mực màu."><div class="thumb mono"></div><span>Mono Pro</span></button>
+            <button class="tpl" data-theme="modern" data-description="Mẫu chuẩn khuyến nghị: bố cục cân đối giống báo giá PDF truyền thống, logo trái – công ty phải – tiêu đề giữa trang."><div class="thumb modern"></div><span>Chuẩn công ty</span></button>
+            <button class="tpl" data-theme="corporate" data-description="Cùng bố cục chuẩn, thêm điểm nhấn viền xanh gọn cho khách doanh nghiệp."><div class="thumb corporate"></div><span>Doanh nghiệp</span></button>
+            <button class="tpl" data-theme="minimal" data-description="Nhiều khoảng trắng, bỏ bớt trang trí nhưng giữ nguyên hệ căn lề chuẩn."><div class="thumb minimal"></div><span>Tối giản</span></button>
+            <button class="tpl" data-theme="classic" data-description="Phong cách trang trọng, serif nhẹ, phù hợp văn bản chính thức."><div class="thumb classic"></div><span>Trang trọng</span></button>
+            <button class="tpl" data-theme="emerald" data-description="Biến thể thương hiệu xanh nhưng không phá bố cục chuẩn của trang."><div class="thumb emerald"></div><span>Xanh thương hiệu</span></button>
+            <button class="tpl" data-theme="warm" data-description="Biến thể màu ấm nhẹ, phù hợp báo giá bán lẻ nhưng vẫn giữ nền trắng."><div class="thumb warm"></div><span>Ấm nhẹ</span></button>
+            <button class="tpl" data-theme="premium" data-description="Cao cấp sáng: nhấn viền và tiêu đề, không dùng nền tối làm lệch bố cục."><div class="thumb premium"></div><span>Cao cấp sáng</span></button>
+            <button class="tpl" data-theme="mono" data-description="Đen trắng rõ ràng, tiết kiệm mực và giữ nguyên chuẩn căn lề."><div class="thumb mono"></div><span>Đen trắng</span></button>
           </div>
           <div class="template-description" id="templateDescription">Chọn một mẫu để xem phong cách và mục đích sử dụng.</div>
         </div>
@@ -312,11 +312,11 @@
 
           <div class="row">
             <label>Kích thước logo <span class="range-value" id="logoWidthValue">60 mm</span></label>
-            <input id="logoWidthRange" data-bind="logoWidth" type="range" min="28" max="90" step="1">
+            <input id="logoWidthRange" data-bind="logoWidth" type="range" min="28" max="70" step="1">
           </div>
 
           <div class="grid2">
-            <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="28" max="90"></div>
+            <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="28" max="70"></div>
             <div class="row"><label>Khoảng thở (mm)</label><input id="logoPadding" data-bind="logoPadding" type="number" min="0" max="12" step="1"></div>
           </div>
 
@@ -420,6 +420,10 @@
         </div>
 
         <div class="preview-customizer-body">
+          <div class="custom-group">
+            <label class="check custom-check"><input id="showQuoteMeta" data-bind="showQuoteMeta" type="checkbox"> Hiện hộp số báo giá / ngày / hiệu lực</label>
+          </div>
+
           <div class="custom-group">
             <label>Căn tiêu đề</label>
             <div class="segmented" id="titleAlignGroup">
