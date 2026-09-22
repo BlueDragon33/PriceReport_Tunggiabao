@@ -1522,3 +1522,8 @@ input[type=range]::-moz-range-thumb{
   transform-origin:center center;pointer-events:none
 }
 .footer .layout-block{display:inline-block}
+
+@media(max-width:1280px){
+  .layout-selection{display:none!important}
+  .toolbar-btn.arrange{padding:0 9px}
+}
