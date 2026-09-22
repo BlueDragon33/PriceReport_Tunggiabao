@@ -59,8 +59,14 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v12")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v13")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
+if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
+if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
+if (!js.includes('normalizeCustomerLibrary')) fail('Customer import/local-data normalization is missing');
+if (!js.includes('normalizeProductCatalog')) fail('Catalog import/local-data normalization is missing');
+if (!js.includes('normalizePresetStore')) fail('Preset import normalization is missing');
+if (!js.includes('localDateISO()')) fail('Local calendar date helper is not used for quotation dates');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
 if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
