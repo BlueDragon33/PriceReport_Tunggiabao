@@ -27,6 +27,11 @@ import {
   supportsPcFolderAccess,
   writeTextToPcDirectory
 } from './pc-storage.js';
+import {
+  normalizeLogoDisplayMode,
+  normalizeRemoveBgThreshold,
+  removeLightBackgroundDataUrl
+} from './logo-processing.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -135,10 +140,12 @@ const defaults = {
   logoPadding: 2,
   logoOffsetX: 0,
   logoOffsetY: 0,
-  logoTreatment: 'blend',
-  logoBlendMode: 'multiply',
+  logoDisplayMode: 'original',
+  logoRemoveBgThreshold: 244,
+  logoTreatment: 'none',
+  logoBlendMode: 'normal',
   logoBackdropColor: '#0b8f83',
-  logoBackdropOpacity: 6,
+  logoBackdropOpacity: 0,
   logoBackdropRadius: 14,
   logoBackdropBorder: 'none',
   docFontSize: 12.2,
@@ -209,6 +216,7 @@ function merge(data) {
   merged.logoPadding = normalizeBoundedNumber(merged.logoPadding, 0, 12, defaults.logoPadding);
   merged.logoOffsetX = normalizeBoundedNumber(merged.logoOffsetX, -40, 40, defaults.logoOffsetX);
   merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -30, 30, defaults.logoOffsetY);
+  merged.logoRemoveBgThreshold = normalizeRemoveBgThreshold(merged.logoRemoveBgThreshold, defaults.logoRemoveBgThreshold);
   merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
   merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
   merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
@@ -232,13 +240,15 @@ function merge(data) {
     else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono'].includes(merged.theme)) merged.docFont = 'Arial';
   }
 
-  const hasAdvancedLogo = data && Object.prototype.hasOwnProperty.call(data, 'logoBlendMode');
-  if (!hasAdvancedLogo) {
-    merged.logoTreatment = 'blend';
-    merged.logoBlendMode = 'multiply';
-    merged.logoBackdropColor = merged.accent || '#0b8f83';
-    merged.logoBackdropOpacity = 6;
-    merged.logoBackdropRadius = 14;
+  const hasLogoDisplayMode = data && Object.prototype.hasOwnProperty.call(data, 'logoDisplayMode');
+  if (!hasLogoDisplayMode) {
+    // Existing projects migrate to original-first behavior so a previously
+    // stored blend/multiply setting can no longer alter the uploaded pixels.
+    merged.logoDisplayMode = 'original';
+    merged.logoRemoveBgThreshold = 244;
+    merged.logoTreatment = 'none';
+    merged.logoBlendMode = 'normal';
+    merged.logoBackdropOpacity = 0;
     merged.logoBackdropBorder = 'none';
     merged.logoPadding = Math.min(4, Math.max(0, Number(merged.logoPadding || 2)));
   }
@@ -250,7 +260,7 @@ function merge(data) {
     'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
     'paymentMethod','bankName','bankAccount','bankOwner','termsTitle','termsText','closingText',
     'dateLine','leftTitle','rightTitle','leftNote','rightNote','leftName','rightName','footerText',
-    'accent','docFont','logoTreatment','logoBlendMode','logoBackdropColor','logoBackdropBorder',
+    'accent','docFont','logoDisplayMode','logoTreatment','logoBlendMode','logoBackdropColor','logoBackdropBorder',
     'previewTitleAlign','previewSpacing','previewTableDensity'
   ];
   stringKeys.forEach((key) => {
@@ -272,6 +282,7 @@ function merge(data) {
   merged.accent = normalizeHexColor(merged.accent, defaults.accent);
   merged.logoBackdropColor = normalizeHexColor(merged.logoBackdropColor, merged.accent);
   if (!['Times New Roman','Georgia','Arial'].includes(merged.docFont)) merged.docFont = defaults.docFont;
+  merged.logoDisplayMode = normalizeLogoDisplayMode(merged.logoDisplayMode);
   if (!['blend','soft','clean','custom','none'].includes(merged.logoTreatment)) merged.logoTreatment = defaults.logoTreatment;
   if (!['normal','multiply','darken'].includes(merged.logoBlendMode)) merged.logoBlendMode = defaults.logoBlendMode;
   if (!['none','soft'].includes(merged.logoBackdropBorder)) merged.logoBackdropBorder = defaults.logoBackdropBorder;
@@ -468,13 +479,14 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetX','logoOffsetY','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
+      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetX','logoOffsetY','logoRemoveBgThreshold','logoBackdropOpacity','logoBackdropRadius','previewTitleSize','previewHeaderGap','previewMetaWidth','previewLineHeight'].includes(key)) {
         let value = Number(el.value || 0);
         if (key === 'discountPct' || key === 'vatPct' || key === 'logoBackdropOpacity') value = Math.min(100, Math.max(0, value));
         else if (key === 'logoWidth') value = Math.min(90, Math.max(18, value));
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetX') value = Math.min(40, Math.max(-40, value));
         else if (key === 'logoOffsetY') value = Math.min(30, Math.max(-30, value));
+        else if (key === 'logoRemoveBgThreshold') value = normalizeRemoveBgThreshold(value, 244);
         else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
         else if (['otherFee'].includes(key)) value = normalizeNonNegativeNumber(value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
@@ -871,31 +883,76 @@ function hexToRgba(hex, opacity) {
   return 'rgba(' + r + ',' + g + ',' + b + ',' + Math.min(1, Math.max(0, Number(opacity || 0) / 100)) + ')';
 }
 
+let logoRenderToken = 0;
+let logoProcessedCache = { source: '', threshold: 0, dataUrl: '' };
+
+function syncLogoModeControls(mode) {
+  const removeControls = document.getElementById('logoRemoveBgControls');
+  const styledControls = document.getElementById('logoStyledControls');
+  if (removeControls) removeControls.hidden = mode !== 'remove-bg';
+  if (styledControls) styledControls.hidden = mode !== 'styled';
+  const badge = document.getElementById('logoModeStatus');
+  if (badge) {
+    badge.textContent = mode === 'original'
+      ? 'Ảnh gốc • không xử lý nền'
+      : mode === 'remove-bg'
+        ? 'Tách nền sáng • ảnh gốc vẫn được giữ'
+        : 'Hiệu ứng nâng cao • ảnh gốc vẫn được giữ';
+    badge.dataset.mode = mode;
+  }
+}
+
+async function processedLogoSource(source, threshold) {
+  if (!source) return '';
+  if (
+    logoProcessedCache.source === source &&
+    logoProcessedCache.threshold === threshold &&
+    logoProcessedCache.dataUrl
+  ) return logoProcessedCache.dataUrl;
+
+  const processed = await removeLightBackgroundDataUrl(source, threshold);
+  logoProcessedCache = { source, threshold, dataUrl: processed };
+  return processed;
+}
+
 function renderLogo() {
+  const renderToken = ++logoRenderToken;
   const preview = document.getElementById('previewLogo');
   const editor = document.getElementById('logoEdit');
   const designPreview = document.getElementById('logoDesignPreview');
   const targets = [preview, editor, designPreview].filter(Boolean);
 
+  const displayMode = normalizeLogoDisplayMode(state.logoDisplayMode);
+  const styledMode = displayMode === 'styled';
+  const removeBgMode = displayMode === 'remove-bg';
   const validTreatments = ['blend','soft','clean','custom','none'];
-  const treatment = validTreatments.includes(state.logoTreatment) ? state.logoTreatment : 'blend';
+  const treatment = styledMode && validTreatments.includes(state.logoTreatment)
+    ? state.logoTreatment
+    : 'none';
   const backgroundColor = state.logoBackdropColor || state.accent || '#0b8f83';
-  const opacity = Math.min(100, Math.max(0, Number(state.logoBackdropOpacity || 0)));
-  const radius = Math.min(24, Math.max(0, Number(state.logoBackdropRadius || 0)));
-  const borderEnabled = state.logoBackdropBorder === 'soft';
+  const opacity = styledMode ? Math.min(100, Math.max(0, Number(state.logoBackdropOpacity || 0))) : 0;
+  const radius = styledMode ? Math.min(24, Math.max(0, Number(state.logoBackdropRadius || 0))) : 0;
+  const borderEnabled = styledMode && state.logoBackdropBorder === 'soft';
+
+  syncLogoModeControls(displayMode);
 
   targets.forEach(target => {
     target.innerHTML = '';
-    target.classList.remove('logo-treatment-blend','logo-treatment-soft','logo-treatment-clean','logo-treatment-custom','logo-treatment-none');
-    target.classList.add('logo-treatment-' + treatment);
+    target.classList.remove(
+      'logo-treatment-blend','logo-treatment-soft','logo-treatment-clean',
+      'logo-treatment-custom','logo-treatment-none',
+      'logo-image-mode-original','logo-image-mode-remove-bg','logo-image-mode-styled'
+    );
+    target.classList.add('logo-treatment-' + treatment, 'logo-image-mode-' + displayMode);
+    target.dataset.logoMode = displayMode;
     target.style.borderRadius = radius + 'mm';
     target.style.borderColor = borderEnabled ? hexToRgba(backgroundColor, Math.max(16, opacity + 10)) : 'transparent';
     target.style.borderWidth = borderEnabled ? '1px' : '0';
     target.style.borderStyle = 'solid';
 
-    if (treatment === 'custom') target.style.background = hexToRgba(backgroundColor, opacity);
-    else if (treatment === 'soft') target.style.background = hexToRgba(state.accent || backgroundColor, Math.max(4, Math.min(14, opacity || 8)));
-    else if (treatment === 'clean') target.style.background = '#ffffff';
+    if (styledMode && treatment === 'custom') target.style.background = hexToRgba(backgroundColor, opacity);
+    else if (styledMode && treatment === 'soft') target.style.background = hexToRgba(state.accent || backgroundColor, Math.max(4, Math.min(14, opacity || 8)));
+    else if (styledMode && treatment === 'clean') target.style.background = '#ffffff';
     else target.style.background = 'transparent';
   });
 
@@ -905,11 +962,17 @@ function renderLogo() {
   preview.style.setProperty('--logo-scale', String(Math.min(90, Math.max(18, Number(state.logoWidth || 58))) / 58));
   preview.style.setProperty('--logo-wash', hexToRgba(state.accent || backgroundColor, Math.max(3, Math.min(12, opacity || 6))));
 
+  const images = [];
   const buildImage = (target, isPaper = false) => {
     const img = document.createElement('img');
     img.src = state.logo;
     img.alt = 'Logo doanh nghiệp';
-    img.style.mixBlendMode = ['multiply','darken'].includes(state.logoBlendMode) ? state.logoBlendMode : 'normal';
+    img.dataset.logoOriginal = 'true';
+    img.style.mixBlendMode = styledMode && ['multiply','darken'].includes(state.logoBlendMode)
+      ? state.logoBlendMode
+      : 'normal';
+    img.style.filter = 'none';
+    img.style.opacity = '1';
     if (isPaper) {
       img.style.width = '58mm';
       img.style.maxWidth = 'none';
@@ -917,12 +980,26 @@ function renderLogo() {
       img.draggable = false;
     }
     target.appendChild(img);
+    images.push(img);
   };
 
   if (state.showLogo && state.logo) {
     buildImage(preview, true);
     buildImage(editor);
     if (designPreview) buildImage(designPreview);
+
+    if (removeBgMode) {
+      const originalSource = state.logo;
+      const threshold = normalizeRemoveBgThreshold(state.logoRemoveBgThreshold, 244);
+      processedLogoSource(originalSource, threshold)
+        .then((processed) => {
+          if (renderToken !== logoRenderToken || state.logo !== originalSource || normalizeLogoDisplayMode(state.logoDisplayMode) !== 'remove-bg') return;
+          images.forEach((img) => { img.src = processed || originalSource; });
+        })
+        .catch((error) => {
+          console.warn('Optional logo background removal failed; original logo retained.', error);
+        });
+    }
   } else {
     preview.innerHTML = '';
     editor.innerHTML = '<div class="logo-placeholder muted-logo">Chưa có logo</div>';
@@ -933,6 +1010,8 @@ function renderLogo() {
   if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 56)) + ' mm';
   const opacityValue = document.getElementById('logoBackdropOpacityValue');
   if (opacityValue) opacityValue.textContent = opacity + '%';
+  const thresholdValue = document.getElementById('logoRemoveBgThresholdValue');
+  if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgThreshold(state.logoRemoveBgThreshold, 244);
   const titleSizeValue = document.getElementById('previewTitleSizeValue');
   if (titleSizeValue) titleSizeValue.textContent = Math.round(Number(state.previewTitleSize || 25)) + ' px';
   const docFontSizeValue = document.getElementById('docFontSizeValue');
@@ -941,14 +1020,10 @@ function renderLogo() {
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
     docHead.classList.toggle('no-logo', !state.showLogo);
-    if (state.showLogo) {
-      docHead.style.removeProperty('grid-template-columns');
-    } else {
-      docHead.style.gridTemplateColumns = '1fr';
-    }
+    if (state.showLogo) docHead.style.removeProperty('grid-template-columns');
+    else docHead.style.gridTemplateColumns = '1fr';
   }
 }
-
 
 function layoutOffset(key) {
   const item = state.layoutOffsets && state.layoutOffsets[key];
@@ -1795,11 +1870,13 @@ document.getElementById('resetLogoPosition').addEventListener('click', () => {
   state.logoOffsetY = 0;
   state.layoutOffsets = Object.assign({}, state.layoutOffsets || {});
   delete state.layoutOffsets.logo;
-  state.logoTreatment = 'blend';
-  state.logoBlendMode = 'multiply';
+  state.logoDisplayMode = 'original';
+  state.logoRemoveBgThreshold = 244;
+  state.logoTreatment = 'none';
+  state.logoBlendMode = 'normal';
   state.logoBackdropColor = state.accent || '#0b8f83';
-  state.logoBackdropOpacity = 6;
-  state.logoBackdropRadius = 14;
+  state.logoBackdropOpacity = 0;
+  state.logoBackdropRadius = 0;
   state.logoBackdropBorder = 'none';
   save();
   syncInputs();
@@ -1850,6 +1927,14 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
     if (token !== logoReadToken) return;
     state.logo = String(reader.result || '');
     state.showLogo = Boolean(state.logo);
+    state.logoDisplayMode = 'original';
+    state.logoRemoveBgThreshold = 244;
+    state.logoTreatment = 'none';
+    state.logoBlendMode = 'normal';
+    state.logoBackdropOpacity = 0;
+    state.logoBackdropRadius = 0;
+    state.logoBackdropBorder = 'none';
+    logoProcessedCache = { source: '', threshold: 0, dataUrl: '' };
     if (!saveLogoAsset(state.logo)) {
       state.logo = '';
       state.showLogo = false;
@@ -1871,6 +1956,19 @@ document.getElementById('logoInput').addEventListener('change', (event) => {
   };
   reader.readAsDataURL(file);
   event.target.value = '';
+});
+
+document.getElementById('restoreLogoOriginal')?.addEventListener('click', () => {
+  state.logoDisplayMode = 'original';
+  state.logoTreatment = 'none';
+  state.logoBlendMode = 'normal';
+  state.logoBackdropOpacity = 0;
+  state.logoBackdropRadius = 0;
+  state.logoBackdropBorder = 'none';
+  save();
+  syncInputs();
+  render();
+  toast('Đã khôi phục hiển thị logo gốc');
 });
 
 document.getElementById('clearLogo').addEventListener('click', () => {
@@ -2426,6 +2524,8 @@ function createNewQuote() {
     logoOffsetX: state.logoOffsetX,
     logoOffsetY: state.logoOffsetY,
     layoutOffsets: clone(state.layoutOffsets || {}),
+    logoDisplayMode: state.logoDisplayMode,
+    logoRemoveBgThreshold: state.logoRemoveBgThreshold,
     logoTreatment: state.logoTreatment,
     logoBlendMode: state.logoBlendMode,
     logoBackdropColor: state.logoBackdropColor,
