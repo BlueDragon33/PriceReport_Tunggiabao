@@ -62,6 +62,7 @@ const defaults = {
   companyEmail: 'contact@thegioitrung.vn',
   slogan: 'Vì sức khỏe cộng đồng',
   quoteTitle: 'BẢNG BÁO GIÁ',
+  quoteSubtitle: '',
   quoteNo: 'BG-2026-001',
   quoteDate: localDateISO(),
   quoteStatus: 'draft',
