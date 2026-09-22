@@ -147,3 +147,7 @@ if (!css.includes('.qgroup-row+tr')) fail('Grouped rows must avoid orphaning fro
 if (!js.includes('setSmartImportBusy')) fail('Smart import concurrency guard is missing');
 if (!js.includes('resetSmartImportDraft')) fail('Smart import fresh-session reset is missing');
 if (!js.includes('sheetNames.map')) fail('Excel importer must evaluate multiple workbook sheets');
+
+if (!js.includes("merged.previewSpacing === 'relaxed'") || !js.includes("['compact','standard','airy']")) fail('Preview spacing persistence migration is missing');
+if (!js.includes('resetCollapsedProductsForState')) fail('Large product-set editor auto-collapse is missing');
+if (!css.includes('.paper[data-spacing="airy"]')) fail('Airy spacing CSS profile is missing');
