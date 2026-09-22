@@ -72,6 +72,9 @@ const defaults = {
   marginTop: 13,
   marginBottom: 12,
   logoWidth: 60,
+  logoPadding: 4,
+  logoOffsetY: 0,
+  logoTreatment: 'soft',
   docFontSize: 12.2,
   products: [
     { name: 'Trứng gà tươi', pack: 'Hộp 10 quả', unit: 'Hộp', qty: 100, price: 28000, note: '' },
@@ -84,9 +87,11 @@ const defaults = {
 
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 function merge(data) {
-  return Object.assign(clone(defaults), data || {}, {
+  const merged = Object.assign(clone(defaults), data || {}, {
     products: Array.isArray(data && data.products) ? data.products : clone(defaults.products)
   });
+  if (merged.theme === 'blue') merged.theme = 'corporate';
+  return merged;
 }
 let state;
 try {
@@ -136,6 +141,11 @@ function openTab(tab) {
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
   if (tab === 'master') renderMasterData();
+  if (tab !== 'products') {
+    document.querySelector('.shell')?.classList.remove('product-focus');
+    const focusBtn = document.getElementById('productFocusToggle');
+    if (focusBtn) focusBtn.textContent = '⛶ Mở rộng vùng nhập';
+  }
 }
 
 $$('.nav button[data-tab]').forEach((btn) => {
@@ -151,10 +161,15 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number' || key === 'docFontSize') {
+      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY'].includes(key)) {
         let value = Number(el.value || 0);
-        if (key === 'discountPct') value = Math.min(100, Math.max(0, value));
-        else if (['vatPct','otherFee','marginX','marginTop','marginBottom','logoWidth','docFontSize'].includes(key)) value = Math.max(0, value);
+        if (key === 'discountPct' || key === 'vatPct') value = Math.min(100, Math.max(0, value));
+        else if (key === 'logoWidth') value = Math.min(90, Math.max(28, value));
+        else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
+        else if (key === 'logoOffsetY') value = Math.min(10, Math.max(-10, value));
+        else if (['otherFee'].includes(key)) value = Math.max(0, value);
+        else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
+        else if (key === 'docFontSize') value = Math.min(18, Math.max(9, value));
         state[key] = value;
         if (Number(el.value) !== value) el.value = String(value);
       } else {
@@ -169,6 +184,7 @@ function bindInputs() {
 
       save();
       render();
+      if (key === 'currency') renderEditorProducts();
     };
     el.addEventListener('input', onChange);
     el.addEventListener('change', onChange);
@@ -241,51 +257,150 @@ function numberToWords(value) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+let collapsedProducts = new Set();
+
+function productField(label, key, value, type, onInput, className = '') {
+  const wrap = document.createElement('label');
+  wrap.className = 'product-field ' + className;
+  const title = document.createElement('span');
+  title.textContent = label;
+  const input = key === 'note' ? document.createElement('textarea') : document.createElement('input');
+  if (key !== 'note') input.type = type || 'text';
+  input.value = value == null ? '' : value;
+  if (type === 'number') {
+    input.min = '0';
+    input.step = key === 'price' ? '1000' : '1';
+  }
+  input.addEventListener('input', () => onInput(input));
+  wrap.append(title, input);
+  return wrap;
+}
+
 function renderEditorProducts() {
-  const body = document.getElementById('productEditor');
-  body.innerHTML = '';
+  const list = document.getElementById('productEditor');
+  list.innerHTML = '';
+
   state.products.forEach((product, index) => {
-    const row = document.createElement('tr');
-    const numberCell = document.createElement('td');
-    numberCell.textContent = String(index + 1);
-    row.appendChild(numberCell);
+    const card = document.createElement('article');
+    card.className = 'product-card' + (collapsedProducts.has(index) ? ' collapsed' : '');
 
-    [['name','text'],['pack','text'],['unit','text'],['qty','number'],['price','number'],['note','text']].forEach(([key, type]) => {
-      const cell = document.createElement('td');
-      const input = document.createElement('input');
-      input.type = type;
-      input.value = product[key] == null ? '' : product[key];
-      input.addEventListener('input', () => {
-        if (type === 'number') {
-          const value = Math.max(0, Number(input.value || 0));
-          product[key] = value;
-          if (Number(input.value) !== value) input.value = String(value);
-        } else {
-          product[key] = input.value;
-        }
-        save();
-        renderPreviewProducts();
-        renderTotals();
-        requestAnimationFrame(updatePageEstimate);
-      });
-      cell.appendChild(input);
-      row.appendChild(cell);
-    });
+    const head = document.createElement('div');
+    head.className = 'product-card-head';
 
-    const actionCell = document.createElement('td');
-    const remove = document.createElement('button');
-    remove.className = 'btn danger';
-    remove.textContent = 'Xóa';
-    remove.addEventListener('click', () => {
-      state.products.splice(index, 1);
-      save();
+    const identity = document.createElement('div');
+    identity.className = 'product-card-identity';
+    const badge = document.createElement('span');
+    badge.className = 'product-index';
+    badge.textContent = String(index + 1);
+    const titleWrap = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = product.name || 'Sản phẩm chưa đặt tên';
+    const amount = document.createElement('span');
+    amount.className = 'product-live-total';
+    amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
+    titleWrap.append(title, amount);
+    identity.append(badge, titleWrap);
+
+    const actions = document.createElement('div');
+    actions.className = 'product-card-actions';
+
+    const collapse = document.createElement('button');
+    collapse.className = 'mini-action';
+    collapse.type = 'button';
+    collapse.title = collapsedProducts.has(index) ? 'Mở rộng' : 'Thu gọn';
+    collapse.textContent = collapsedProducts.has(index) ? '＋' : '−';
+    collapse.addEventListener('click', () => {
+      if (collapsedProducts.has(index)) collapsedProducts.delete(index);
+      else collapsedProducts.add(index);
       renderEditorProducts();
-      render();
     });
-    actionCell.appendChild(remove);
-    row.appendChild(actionCell);
-    body.appendChild(row);
+
+    const up = document.createElement('button');
+    up.className = 'mini-action';
+    up.type = 'button';
+    up.title = 'Đưa lên';
+    up.textContent = '↑';
+    up.disabled = index === 0;
+    up.addEventListener('click', () => {
+      if (index === 0) return;
+      [state.products[index - 1], state.products[index]] = [state.products[index], state.products[index - 1]];
+      save(); renderEditorProducts(); render();
+    });
+
+    const down = document.createElement('button');
+    down.className = 'mini-action';
+    down.type = 'button';
+    down.title = 'Đưa xuống';
+    down.textContent = '↓';
+    down.disabled = index === state.products.length - 1;
+    down.addEventListener('click', () => {
+      if (index >= state.products.length - 1) return;
+      [state.products[index + 1], state.products[index]] = [state.products[index], state.products[index + 1]];
+      save(); renderEditorProducts(); render();
+    });
+
+    const duplicate = document.createElement('button');
+    duplicate.className = 'mini-action';
+    duplicate.type = 'button';
+    duplicate.title = 'Nhân bản';
+    duplicate.textContent = '⧉';
+    duplicate.addEventListener('click', () => {
+      state.products.splice(index + 1, 0, clone(product));
+      save(); renderEditorProducts(); render();
+    });
+
+    const remove = document.createElement('button');
+    remove.className = 'mini-action danger-icon';
+    remove.type = 'button';
+    remove.title = 'Xóa';
+    remove.textContent = '×';
+    remove.addEventListener('click', () => {
+      if (state.products.length > 1 && !confirm('Xóa sản phẩm này?')) return;
+      state.products.splice(index, 1);
+      if (!state.products.length) state.products.push({ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+      collapsedProducts = new Set();
+      save(); renderEditorProducts(); render();
+    });
+
+    actions.append(collapse, up, down, duplicate, remove);
+    head.append(identity, actions);
+
+    const body = document.createElement('div');
+    body.className = 'product-card-body';
+
+    const updateProduct = (key, input, numeric = false) => {
+      if (numeric) {
+        const value = Math.max(0, Number(input.value || 0));
+        product[key] = value;
+        if (Number(input.value) !== value) input.value = String(value);
+      } else {
+        product[key] = input.value;
+      }
+      if (key === 'name') title.textContent = product.name || 'Sản phẩm chưa đặt tên';
+      amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
+      save();
+      renderPreviewProducts();
+      renderTotals();
+      requestAnimationFrame(updatePageEstimate);
+    };
+
+    body.append(
+      productField('Tên sản phẩm', 'name', product.name, 'text', input => updateProduct('name', input), 'wide'),
+      productField('Quy cách', 'pack', product.pack, 'text', input => updateProduct('pack', input)),
+      productField('Đơn vị tính', 'unit', product.unit, 'text', input => updateProduct('unit', input)),
+      productField('Số lượng', 'qty', product.qty, 'number', input => updateProduct('qty', input, true)),
+      productField('Đơn giá', 'price', product.price, 'number', input => updateProduct('price', input, true)),
+      productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'wide')
+    );
+
+    card.append(head, body);
+    list.appendChild(card);
   });
+
+  const collapseButton = document.getElementById('collapseAllProducts');
+  if (collapseButton) {
+    collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
+  }
 }
 
 function renderPreviewProducts() {
@@ -348,36 +463,66 @@ function renderTotals() {
   document.getElementById('discRow').style.display = discount ? 'table-row' : 'none';
   document.getElementById('vatRow').style.display = vat ? 'table-row' : 'none';
   document.getElementById('feeRow').style.display = fee ? 'table-row' : 'none';
-  document.getElementById('summary').style.display = state.showTotals && state.showAmount ? 'table' : 'none';
+  document.getElementById('summary').style.display = state.showTotals ? 'table' : 'none';
 
   const words = document.getElementById('words');
-  words.style.display = state.showTotals && state.showAmount && state.showWords && state.currency === 'VND' ? 'block' : 'none';
+  words.style.display = state.showTotals && state.showWords && state.currency === 'VND' ? 'block' : 'none';
   words.textContent = 'Bằng chữ: ' + numberToWords(total) + ' đồng.';
 }
 
 function renderLogo() {
   const preview = document.getElementById('previewLogo');
   const editor = document.getElementById('logoEdit');
-  preview.innerHTML = '';
-  editor.innerHTML = '';
+  const designPreview = document.getElementById('logoDesignPreview');
+  const targets = [preview, editor, designPreview].filter(Boolean);
+
+  targets.forEach(target => {
+    target.innerHTML = '';
+    target.classList.remove('logo-treatment-soft','logo-treatment-clean','logo-treatment-none');
+  });
+
+  const treatment = ['soft','clean','none'].includes(state.logoTreatment) ? state.logoTreatment : 'soft';
+  preview.classList.add('logo-treatment-' + treatment);
+  preview.style.padding = Math.max(0, Number(state.logoPadding || 0)) + 'mm';
+  preview.style.transform = 'translateY(' + Number(state.logoOffsetY || 0) + 'mm)';
+
+  if (designPreview) designPreview.classList.add('logo-treatment-' + treatment);
+
+  const buildImage = (target, isPaper = false) => {
+    const img = document.createElement('img');
+    img.src = state.logo;
+    img.alt = 'Logo doanh nghiệp';
+    if (isPaper) img.style.width = Math.min(90, Math.max(28, Number(state.logoWidth || 60))) + 'mm';
+    target.appendChild(img);
+  };
 
   if (state.showLogo && state.logo) {
-    const a = document.createElement('img');
-    const b = document.createElement('img');
-    a.src = state.logo;
-    b.src = state.logo;
-    a.style.width = state.logoWidth + 'mm';
-    preview.appendChild(a);
-    editor.appendChild(b);
+    buildImage(preview, true);
+    buildImage(editor);
+    if (designPreview) buildImage(designPreview);
   } else if (state.showLogo) {
     preview.innerHTML = '<div class="logo-text">THẾ GIỚI TRỨNG®</div>';
     editor.innerHTML = '<div class="logo-placeholder">THẾ GIỚI TRỨNG®</div>';
+    if (designPreview) designPreview.innerHTML = '<div class="logo-placeholder">THẾ GIỚI TRỨNG®</div>';
   } else {
     preview.innerHTML = '';
-    editor.innerHTML = '<div class="logo-placeholder">Logo đang ẩn trên bản in</div>';
+    editor.innerHTML = '<div class="logo-placeholder muted-logo">Logo đang ẩn trên bản in</div>';
+    if (designPreview) designPreview.innerHTML = '<div class="logo-placeholder muted-logo">Logo đang ẩn</div>';
   }
+
+  const widthValue = document.getElementById('logoWidthValue');
+  if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 60)) + ' mm';
+
   const docHead = document.querySelector('.doc-head');
-  if (docHead) docHead.classList.toggle('no-logo', !state.showLogo);
+  if (docHead) {
+    docHead.classList.toggle('no-logo', !state.showLogo);
+    if (state.showLogo) {
+      const logoColumn = Math.min(55, Math.max(36, 36 + (Number(state.logoWidth || 60) - 28) * 0.36));
+      docHead.style.gridTemplateColumns = logoColumn.toFixed(1) + '% 1fr';
+    } else {
+      docHead.style.gridTemplateColumns = '1fr';
+    }
+  }
 }
 
 function updatePageEstimate() {
@@ -475,6 +620,30 @@ document.getElementById('addProduct').addEventListener('click', () => {
   render();
 });
 
+document.getElementById('productFocusToggle').addEventListener('click', () => {
+  const shell = document.querySelector('.shell');
+  const enabled = shell.classList.toggle('product-focus');
+  document.getElementById('productFocusToggle').textContent = enabled ? '↙ Thu gọn vùng nhập' : '⛶ Mở rộng vùng nhập';
+  requestAnimationFrame(() => document.getElementById('fit').click());
+});
+
+document.getElementById('collapseAllProducts').addEventListener('click', () => {
+  if (collapsedProducts.size === state.products.length) collapsedProducts.clear();
+  else collapsedProducts = new Set(state.products.map((_, index) => index));
+  renderEditorProducts();
+});
+
+document.getElementById('resetLogoPosition').addEventListener('click', () => {
+  state.logoWidth = 60;
+  state.logoPadding = 4;
+  state.logoOffsetY = 0;
+  state.logoTreatment = 'soft';
+  save();
+  syncInputs();
+  render();
+  toast('Đã căn lại logo');
+});
+
 document.getElementById('logoInput').addEventListener('change', (event) => {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
@@ -500,9 +669,21 @@ document.getElementById('clearLogo').addEventListener('click', () => {
   render();
 });
 
+const THEME_ACCENTS = {
+  modern: '#0b8f83',
+  corporate: '#1b5faa',
+  minimal: '#56616f',
+  classic: '#735d49',
+  emerald: '#16845f',
+  warm: '#d97919',
+  premium: '#202c43',
+  mono: '#30343a'
+};
+
 $$('.tpl').forEach((el) => {
   el.addEventListener('click', () => {
     state.theme = el.dataset.theme;
+    if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
     save();
     render();
   });

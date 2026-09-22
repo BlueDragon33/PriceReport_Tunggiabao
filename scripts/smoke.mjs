@@ -20,7 +20,9 @@ const requiredIds = [
   'designPanel','paymentPrint','pSlogan','pageEstimate',
   'customerLibraryList','productCatalogList','saveCurrentCustomer','saveCurrentProducts',
   'quickCustomerName','designShowStt','designShowPrice','designShowAmount','designShowTotals',
-  'wideView','zoomOut','zoomIn','toolbarMenu'
+  'wideView','zoomOut','zoomIn','toolbarMenu',
+  'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
+  'logoWidthDesign','logoPadding','logoOffsetY','logoTreatment','resetLogoPosition'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -50,12 +52,18 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v6")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v7")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
 if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
 if (!html.includes("THÔNG TIN KHÁCH HÀNG")) fail('General-tab quick customer section is missing');
+if ((html.match(/data-theme=/g) || []).length < 8) fail('Template library must provide at least 8 usable themes');
+if (!js.includes("THEME_ACCENTS")) fail('Template accent presets are missing');
+if (!js.includes("product-focus")) fail('Comfortable product focus mode is missing');
+if (!js.includes("logoTreatment")) fail('Logo treatment controls are missing');
+if (!js.includes("logoColumn")) fail('Logo size does not affect header layout');
+if (html.includes("<table class=\"product-table\"")) fail('Legacy cramped product table is still present');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
