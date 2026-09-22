@@ -144,6 +144,37 @@ function merge(data) {
     else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono'].includes(merged.theme)) merged.docFont = 'Arial';
   }
 
+  merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
+  merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
+  merged.otherFee = Math.max(0, Number(merged.otherFee || 0));
+  merged.marginX = Math.min(30, Math.max(6, Number(merged.marginX || defaults.marginX)));
+  merged.marginTop = Math.min(30, Math.max(6, Number(merged.marginTop || defaults.marginTop)));
+  merged.marginBottom = Math.min(30, Math.max(6, Number(merged.marginBottom || defaults.marginBottom)));
+  merged.logoWidth = Math.min(70, Math.max(28, Number(merged.logoWidth || defaults.logoWidth)));
+  merged.logoPadding = Math.min(12, Math.max(0, Number(merged.logoPadding || defaults.logoPadding)));
+  merged.logoOffsetY = Math.min(10, Math.max(-10, Number(merged.logoOffsetY || 0)));
+  merged.previewTitleSize = Math.min(32, Math.max(20, Number(merged.previewTitleSize || defaults.previewTitleSize)));
+  merged.previewHeaderGap = Math.min(12, Math.max(2, Number(merged.previewHeaderGap || defaults.previewHeaderGap)));
+  merged.previewMetaWidth = Math.min(56, Math.max(38, Number(merged.previewMetaWidth || defaults.previewMetaWidth)));
+  merged.previewLineHeight = Math.min(1.5, Math.max(1.15, Number(merged.previewLineHeight || defaults.previewLineHeight)));
+  if (!['VND','USD','RUB'].includes(merged.currency)) merged.currency = 'VND';
+  if (!['draft','sent','accepted','rejected','expired'].includes(merged.quoteStatus)) merged.quoteStatus = 'draft';
+  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
+  if (!['left','center','right'].includes(merged.previewTitleAlign)) merged.previewTitleAlign = 'center';
+  if (!['compact','standard','airy'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
+  if (!['compact','standard','comfortable'].includes(merged.previewTableDensity)) merged.previewTableDensity = 'standard';
+  merged.products = (Array.isArray(merged.products) ? merged.products : []).map((product) => {
+    const item = product && typeof product === 'object' ? product : {};
+    return {
+      name: String(item.name || ''),
+      pack: String(item.pack || ''),
+      unit: String(item.unit || ''),
+      qty: Math.max(0, Number(item.qty || 0)),
+      price: Math.max(0, Number(item.price || 0)),
+      note: String(item.note || '')
+    };
+  });
+
   const hasAdvancedLogo = data && Object.prototype.hasOwnProperty.call(data, 'logoBlendMode');
   if (!hasAdvancedLogo) {
     merged.logoTreatment = 'blend';
@@ -852,9 +883,35 @@ function enhanceCollapsibleCards() {
   });
 }
 
+function wireFormLabels() {
+  $('.row').forEach((row) => {
+    const label = row.querySelector('label');
+    const control = row.querySelector('input,select,textarea');
+    if (label && control && control.id && !label.htmlFor) label.htmlFor = control.id;
+  });
+}
+
+function enhancePreviewAccessibility() {
+  $('.clickable').forEach((el) => {
+    if (!el.hasAttribute('tabindex')) el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    if (!el.getAttribute('aria-label') && el.dataset.target) {
+      el.setAttribute('aria-label', 'Chỉnh sửa ' + el.dataset.target);
+    }
+    el.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        el.click();
+      }
+    });
+  });
+}
+
+wireFormLabels();
 bindInputs();
 setupMajorPanelToggles();
 enhanceCollapsibleCards();
+enhancePreviewAccessibility();
 renderEditorProducts();
 render();
 
@@ -1438,7 +1495,8 @@ function setProductCatalog(items) {
 }
 
 function productKey(product) {
-  return [product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
+  return [product.name, product.pack, product.unit, product.currency || 'VND']
+    .map(value => String(value || '').trim().toLowerCase()).join('|');
 }
 
 function saveCurrentProductsToCatalog() {
@@ -1456,7 +1514,8 @@ function saveCurrentProductsToCatalog() {
       pack: product.pack || '',
       unit: product.unit || '',
       price: Math.max(0, Number(product.price || 0)),
-      note: product.note || ''
+      note: product.note || '',
+      currency: state.currency || 'VND'
     };
     const key = productKey(item);
     const index = items.findIndex(existing => productKey(existing) === key);
@@ -1474,6 +1533,11 @@ function saveCurrentProductsToCatalog() {
 }
 
 function addCatalogProduct(product) {
+  const productCurrency = product.currency || 'VND';
+  if (productCurrency !== state.currency) {
+    alert('Sản phẩm này được lưu theo ' + productCurrency + '. Hãy đổi tiền tệ của báo giá sang ' + productCurrency + ' trước khi thêm.');
+    return;
+  }
   const key = productKey(product);
   const existing = state.products.find(item => productKey(item) === key);
   if (existing) {
@@ -1559,7 +1623,7 @@ function renderMasterData() {
       const title = document.createElement('strong');
       title.textContent = product.name || 'Sản phẩm';
       const meta = document.createElement('span');
-      meta.textContent = [product.pack, product.unit, new Intl.NumberFormat('vi-VN').format(Number(product.price || 0)) + ' ₫']
+      meta.textContent = [product.pack, product.unit, formatMoney(Number(product.price || 0), product.currency || 'VND')]
         .filter(Boolean).join(' • ');
       info.append(title, meta);
 
@@ -1599,11 +1663,13 @@ document.getElementById('savePreset').addEventListener('click', () => {
     return;
   }
   const presets = getPresets();
+  const existed = Object.prototype.hasOwnProperty.call(presets, name);
+  if (existed && !confirm('Mẫu “' + name + '” đã tồn tại. Ghi đè mẫu cũ?')) return;
   presets[name] = clone(state);
   safeStore(PRESETS, JSON.stringify(presets));
   document.getElementById('presetName').value = '';
   renderPresets();
-  toast('Đã lưu mẫu');
+  toast(existed ? 'Đã cập nhật mẫu' : 'Đã lưu mẫu');
 });
 
 function renderPresets() {
@@ -1638,11 +1704,14 @@ function renderPresets() {
 
     use.addEventListener('click', () => {
       state = merge(presets[name]);
+      state.quoteNo = generateUniqueQuoteNo();
+      state.quoteDate = localISODate();
+      state.quoteStatus = 'draft';
       save();
       syncInputs();
       renderEditorProducts();
       render();
-      toast('Đã nạp mẫu');
+      toast('Đã nạp mẫu và tạo số báo giá mới');
     });
 
     del.addEventListener('click', () => {
