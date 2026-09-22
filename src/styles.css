@@ -1799,3 +1799,26 @@ input[type=range]::-moz-range-thumb{
 @media(max-width:620px){
   .paper .company-region-line{padding-left:10.2mm!important}
 }
+
+
+/* V3.3 fixed typography outside the product table */
+.paper .qtitle{font-size:27px!important}
+.paper .company{font-size:11.6px!important}
+.paper .company-name{font-size:15.2px!important}
+.paper .company-lines{font-size:11.6px!important}
+.paper .qsubtitle{font-size:13.2px!important}
+.paper .qmeta{font-size:11.6px!important}
+.paper .recipient{font-size:15.5px!important}
+.paper .intro{font-size:12.5px!important}
+.paper .sectionbar{font-size:13.5px!important}
+.paper .summary{font-size:11.4px!important}
+.paper .summary .grand{font-size:12.2px!important}
+.paper .words{font-size:11.8px!important}
+.paper .payment-print h4,.paper .terms h4{font-size:12.5px!important}
+.paper .payment-grid{font-size:11.4px!important}
+.paper .terms ol{font-size:11.5px!important}
+.paper .signatures{font-size:11.5px!important}
+.paper .footer{font-size:10.4px!important}
+/* Only this product table follows the user-adjustable font control. */
+.paper .qtable{font-size:var(--fs-table,9px)!important}
+.fixed-type-note{padding:8px 9px;border:1px solid #dce5ee;border-radius:8px;background:#f7f9fb}
