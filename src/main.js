@@ -1,4 +1,5 @@
 import './styles.css';
+import './quality.css';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
