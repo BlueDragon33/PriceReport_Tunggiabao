@@ -36,6 +36,14 @@ export function isValidISODate(value) {
     date.getUTCDate() === day;
 }
 
+export function normalizeHexColor(value, fallback = '#0b8f83') {
+  const text = String(value || '').trim();
+  if (/^#[0-9a-f]{6}$/i.test(text)) return text.toLowerCase();
+  const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(text);
+  if (short) return ('#' + short.slice(1).map(char => char + char).join('')).toLowerCase();
+  return fallback;
+}
+
 export function normalizePhone(value) {
   return String(value || '').replace(/\D+/g, '');
 }
