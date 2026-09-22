@@ -36,12 +36,15 @@ test('boot migrates a modified Biển Uyên Bảo sample and persists Tùng Gia 
 
   expect(document.getElementById('companyName').value).toBe('HKD - Tùng Gia Bảo');
   expect(document.getElementById('phone').value).toBe('0962944688');
-  expect(document.getElementById('companyAddress').value).toContain('BT02-25');
+  expect(document.getElementById('companyAddressDetail').value).toContain('BT02-25');
+  expect(document.getElementById('companyProvince').value).toBe('Khánh Hòa');
   expect(document.querySelectorAll('.product-card').length).toBe(72);
 
   const persisted = JSON.parse(localStorage.getItem(stateKey));
   expect(persisted.companyName).toBe('HKD - Tùng Gia Bảo');
   expect(persisted.phone).toBe('0962944688');
+  expect(persisted.companyAddressDetail).toContain('BT02-25');
+  expect(persisted.companyProvince).toBe('Khánh Hòa');
   expect(persisted.products.length).toBe(72);
 });
 
@@ -56,5 +59,8 @@ test('boot does not overwrite an unrelated customized business profile', async (
 
   expect(document.getElementById('companyName').value).toBe('CÔNG TY KHÁC');
   expect(document.getElementById('phone').value).toBe('0912345678');
+  expect(document.getElementById('companyAddressDetail').value).toBe('Nha Trang');
+  expect(document.getElementById('companyProvince').value).toBe('');
+  expect(document.getElementById('companyWard').value).toBe('');
   expect(document.querySelectorAll('.product-card').length).toBe(1);
 });
