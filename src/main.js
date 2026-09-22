@@ -970,7 +970,7 @@ function render() {
   renderLogo();
   applyLayoutOffsets();
 
-  $('[data-company-key]').forEach((el) => {
+  $$('[data-company-key]').forEach((el) => {
     const key = el.dataset.companyKey;
     const hasValue = Boolean(String(state[key] || '').trim());
     const webGate = !el.classList.contains('webemail') || state.showWebEmail;
