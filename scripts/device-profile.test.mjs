@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { classifyDeviceProfile, DEVICE_PROFILES, resolveRemoteAdminReady } from '../src/device-profile.js';
+import { classifyDeviceProfile, DEVICE_PROFILES, resolveRemoteAdminReady, deviceGateOwnsDeviceChip } from '../src/device-profile.js';
 
 assert.equal(classifyDeviceProfile({ width: 1440, touchPoints: 0, userAgent: 'Windows NT' }).id, 'desktop');
 assert.equal(classifyDeviceProfile({ width: 820, touchPoints: 5, userAgent: 'iPad' }).id, 'tablet');
@@ -26,5 +26,13 @@ assert.equal(resolveRemoteAdminReady({
   ...readyContract,
   readiness: { ...readyContract.readiness, deviceGateway: 'implemented-requires-d1-and-app-origin' }
 }), false);
+
+assert.equal(deviceGateOwnsDeviceChip('authorized'), true);
+assert.equal(deviceGateOwnsDeviceChip('pending'), true);
+assert.equal(deviceGateOwnsDeviceChip('blocked'), true);
+assert.equal(deviceGateOwnsDeviceChip('offline'), true);
+assert.equal(deviceGateOwnsDeviceChip('checking'), true);
+assert.equal(deviceGateOwnsDeviceChip('classification-only'), false);
+assert.equal(deviceGateOwnsDeviceChip(''), false);
 
 console.log('DEVICE PROFILE LOGIC PASS');
