@@ -87,9 +87,11 @@ const defaults = {
 
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 function merge(data) {
-  return Object.assign(clone(defaults), data || {}, {
+  const merged = Object.assign(clone(defaults), data || {}, {
     products: Array.isArray(data && data.products) ? data.products : clone(defaults.products)
   });
+  if (merged.theme === 'blue') merged.theme = 'corporate';
+  return merged;
 }
 let state;
 try {
@@ -182,6 +184,7 @@ function bindInputs() {
 
       save();
       render();
+      if (key === 'currency') renderEditorProducts();
     };
     el.addEventListener('input', onChange);
     el.addEventListener('change', onChange);
@@ -511,7 +514,15 @@ function renderLogo() {
   if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 60)) + ' mm';
 
   const docHead = document.querySelector('.doc-head');
-  if (docHead) docHead.classList.toggle('no-logo', !state.showLogo);
+  if (docHead) {
+    docHead.classList.toggle('no-logo', !state.showLogo);
+    if (state.showLogo) {
+      const logoColumn = Math.min(55, Math.max(36, 36 + (Number(state.logoWidth || 60) - 28) * 0.36));
+      docHead.style.gridTemplateColumns = logoColumn.toFixed(1) + '% 1fr';
+    } else {
+      docHead.style.gridTemplateColumns = '1fr';
+    }
+  }
 }
 
 function updatePageEstimate() {
