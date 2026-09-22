@@ -161,6 +161,12 @@ Object.assign(defaults, TUNGGIABAO_PROFILE, {
 });
 
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
+
+function defaultSignatureDateLine(date = new Date()) {
+  const valid = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  return 'Nha Trang, ngày ..... tháng ' + String(valid.getMonth() + 1).padStart(2, '0') + ' năm ' + valid.getFullYear();
+}
+
 function merge(data) {
   const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
@@ -1045,6 +1051,7 @@ function download(name, text, type) {
 let smartImportDraft = null;
 let smartImportImageUrl = '';
 let smartImportBusy = false;
+let smartImportLastFocus = null;
 
 
 function resetSmartImportDraft() {
@@ -1055,12 +1062,16 @@ function resetSmartImportDraft() {
   const rawBox = document.getElementById('ocrRawBox');
   const previewWrap = document.getElementById('handwritingPreviewWrap');
   const preview = document.getElementById('handwritingPreview');
+  const excelInput = document.getElementById('excelSmartImportInput');
+  const handwritingInput = document.getElementById('handwritingSmartImportInput');
   if (review) review.hidden = true;
   if (apply) apply.disabled = true;
   if (raw) raw.value = '';
   if (rawBox) rawBox.hidden = true;
   if (previewWrap) previewWrap.hidden = true;
   if (preview) preview.removeAttribute('src');
+  if (excelInput) excelInput.value = '';
+  if (handwritingInput) handwritingInput.value = '';
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
   document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
@@ -1069,7 +1080,7 @@ function resetSmartImportDraft() {
 
 function setSmartImportBusy(busy) {
   smartImportBusy = Boolean(busy);
-  ['excelSmartImportInput','handwritingSmartImportInput','applySmartImport','resetSmartImport'].forEach((id) => {
+  ['excelSmartImportInput','handwritingSmartImportInput','applySmartImport','resetSmartImport','cancelSmartImport','closeSmartImport'].forEach((id) => {
     const element = document.getElementById(id);
     if (!element) return;
     if (id === 'applySmartImport') element.disabled = smartImportBusy || !smartImportDraft;
@@ -1169,17 +1180,25 @@ function renderSmartImportReview() {
 function openSmartImport() {
   const modal = document.getElementById('smartImportModal');
   if (!modal) return;
+  smartImportLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   modal.hidden = false;
   document.body.classList.add('smart-import-open');
   if (!smartImportDraft) resetSmartImportDraft();
+  requestAnimationFrame(() => document.getElementById('closeSmartImport')?.focus());
 }
 
-function closeSmartImport({ discard = false } = {}) {
+function closeSmartImport({ discard = false, force = false } = {}) {
   const modal = document.getElementById('smartImportModal');
-  if (!modal) return;
+  if (!modal) return false;
+  if (smartImportBusy && !force) {
+    setSmartImportProgress('Đang xử lý dữ liệu; vui lòng chờ hoàn tất trước khi đóng.', 'working');
+    return false;
+  }
   modal.hidden = true;
   document.body.classList.remove('smart-import-open');
   if (discard) resetSmartImportDraft();
+  smartImportLastFocus?.focus?.();
+  return true;
 }
 
 async function parseExcelFile(file) {
@@ -1349,9 +1368,20 @@ function setupSmartImport() {
       setSmartImportProgress('OCR hoàn tất. Hãy kiểm tra các trường trước khi áp dụng.', 'success');
     } catch (error) {
       console.error('Handwriting OCR failed:', error);
-      setSmartImportProgress('OCR không hoàn tất. Có thể thử ảnh rõ hơn hoặc nhập/chỉnh văn bản OCR thủ công.', 'error');
+      smartImportDraft = mergeImportDraft(smartImportDraft, {
+        source: 'handwriting',
+        fields: {},
+        products: [],
+        groups: [],
+        layoutHints: {},
+        confidence: {},
+        warnings: ['OCR tự động không hoàn tất; có thể nhập văn bản nhận diện thủ công rồi phân tích lại.'],
+        unmatched: []
+      });
       document.getElementById('ocrRawBox').hidden = false;
       renderSmartImportReview();
+      document.getElementById('ocrRawBox').hidden = false;
+      setSmartImportProgress('OCR không hoàn tất. Hãy nhập/chỉnh văn bản OCR thô rồi bấm “Phân tích lại”.', 'error');
     } finally {
       setSmartImportBusy(false);
       event.target.value = '';
@@ -2042,13 +2072,13 @@ function loadQuoteRecord(record) {
   state.logo = recordLogo || activeLogo;
   if (recordLogo) saveLogoAsset(recordLogo);
   state.historyRecordId = record.id || '';
-  save();
+  const persisted = save();
   syncInputs();
   resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã mở ' + quoteLabel(record.data));
+  toast(persisted ? ('Đã mở ' + quoteLabel(record.data)) : ('Đã mở ' + quoteLabel(record.data) + '; chưa autosave được'));
 }
 
 function duplicateQuoteRecord(record) {
@@ -2062,13 +2092,13 @@ function duplicateQuoteRecord(record) {
   state.quoteDate = localDateISO();
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
-  save();
+  const persisted = save();
   syncInputs();
   resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã nhân bản thành ' + state.quoteNo);
+  toast(persisted ? ('Đã nhân bản thành ' + state.quoteNo) : ('Đã nhân bản tạm thời ' + state.quoteNo + '; chưa autosave được'));
 }
 
 function generateUniqueQuoteNo() {
@@ -2159,16 +2189,16 @@ function createNewQuote() {
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
   state.quoteSubtitle = '';
-  state.dateLine = 'Nha Trang, ngày ..... tháng ' + String(d.getMonth() + 1).padStart(2, '0') + ' năm ' + d.getFullYear();
+  state.dateLine = defaultSignatureDateLine(d);
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
-  save();
+  const persisted = save();
   syncInputs();
   resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   openTab('general');
-  toast('Đã tạo báo giá mới');
+  toast(persisted ? 'Đã tạo báo giá mới' : 'Đã tạo báo giá mới tạm thời; chưa autosave được');
 }
 
 function renderHistory() {
@@ -2331,11 +2361,11 @@ function useCustomer(customer) {
   state.customerEmail = customer.email || '';
   state.customerContact = customer.contact || '';
   state.recipientLine = 'Kính gửi: ' + (state.customerCompany || state.customerName || 'QUÝ KHÁCH HÀNG');
-  save();
+  const persisted = save();
   syncInputs();
   render();
   openTab('customer');
-  toast('Đã nạp khách hàng');
+  toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
 }
 
 function normalizeProductCatalog(items) {
@@ -2430,11 +2460,12 @@ function addCatalogProduct(product) {
       note: product.note || ''
     });
   }
-  save();
+  const persisted = save();
   renderEditorProducts();
   render();
   openTab('products');
-  toast(currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ');
+  const successMessage = currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ';
+  toast(persisted ? successMessage : successMessage + ' — chưa autosave được');
 }
 
 function renderMasterData() {
@@ -2554,6 +2585,8 @@ function createPresetState(source) {
   preset.logo = '';
   preset.quoteNo = '';
   preset.quoteDate = localDateISO();
+  preset.quoteSubtitle = '';
+  preset.dateLine = defaultSignatureDateLine();
   preset.quoteStatus = 'draft';
   preset.customerName = 'QUÝ KHÁCH HÀNG';
   preset.customerCompany = '';
@@ -2617,12 +2650,12 @@ function renderPresets() {
       const activeLogo = state.logo;
       state = merge(createPresetState(presets[name]));
       state.logo = activeLogo;
-      save();
+      const persisted = save();
       syncInputs();
       resetCollapsedProductsForState();
       renderEditorProducts();
       render();
-      toast('Đã nạp mẫu');
+      toast(persisted ? 'Đã nạp mẫu' : 'Đã nạp mẫu tạm thời; chưa autosave được');
     });
 
     del.addEventListener('click', () => {
@@ -2717,12 +2750,13 @@ function autoArrangePreview() {
   state.previewLineHeight = dense ? 1.18 : medium ? 1.23 : 1.26;
   state.previewTitleSize = String(state.quoteTitle || '').trim().length > 28 ? 22 : 25;
 
-  save();
+  const persisted = save();
   syncInputs();
   render();
   setLayoutEditMode(true);
   selectLayoutBlock('');
-  toast(dense ? 'Đã tự sắp xếp theo bố cục gọn nhiều nội dung' : 'Đã tự sắp xếp theo bố cục A4 cân đối');
+  const message = dense ? 'Đã tự sắp xếp theo bố cục gọn nhiều nội dung' : 'Đã tự sắp xếp theo bố cục A4 cân đối';
+  toast(persisted ? message : message + ' — chưa autosave được');
 }
 
 function nudgeSelectedLayout(dx, dy) {
@@ -2755,9 +2789,9 @@ function setupLayoutEditor() {
   document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
     state.layoutOffsets = {};
     applyLayoutOffsets();
-    save();
+    const persisted = save();
     selectLayoutBlock('');
-    toast('Đã đưa các khối về vị trí chuẩn');
+    toast(persisted ? 'Đã đưa các khối về vị trí chuẩn' : 'Đã đặt lại vị trí tạm thời; chưa autosave được');
   });
 
   const resizeLogo = (delta) => {
@@ -2928,10 +2962,10 @@ document.getElementById('resetPreviewLayout').addEventListener('click', () => {
   state.previewLineHeight = 1.26;
   state.showQuoteMeta = false;
   state.layoutOffsets = {};
-  save();
+  const persisted = save();
   syncInputs();
   render();
-  toast('Đã khôi phục bố cục chuẩn hiện đại');
+  toast(persisted ? 'Đã khôi phục bố cục chuẩn hiện đại' : 'Đã khôi phục bố cục tạm thời; chưa autosave được');
 });
 
 function compactLegacyBrandAssets() {
