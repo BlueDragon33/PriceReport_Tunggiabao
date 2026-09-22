@@ -1617,3 +1617,38 @@ input[type=range]::-moz-range-thumb{
   .import-source-grid,.import-field-grid{grid-template-columns:1fr}
   .import-field-grid label.wide{grid-column:auto}
 }
+
+
+/* V2.7 report-design / print audit */
+.paper .qtitle-wrap{
+  flex-direction:column!important;
+  gap:.9mm!important
+}
+.paper .qsubtitle{
+  display:block;
+  width:100%;
+  margin:0!important;
+  text-align:center;
+  line-height:1.25;
+  font-size:11.2px;
+  font-weight:600;
+  color:color-mix(in srgb,var(--doc) 72%,#444)
+}
+.paper[data-title-align="left"] .qsubtitle{text-align:left}
+.paper[data-title-align="right"] .qsubtitle{text-align:right}
+.paper .qsubtitle:empty{display:none}
+.theme-modern .qsubtitle{
+  font-family:"Times New Roman",Times,serif!important;
+  font-style:italic;
+  color:#444!important
+}
+.qgroup-row{break-inside:avoid;page-break-inside:avoid;break-after:avoid;page-break-after:avoid}
+.qgroup-row+tr{break-before:avoid;page-break-before:avoid}
+.qgroup-row td{font-variant-numeric:tabular-nums}
+.qtable th.col-price,.qtable th.col-amount{text-align:right}
+.smart-import-action-spacer{flex:1}
+.smart-import-actions{align-items:center}
+@media print{
+  .qgroup-row{break-inside:avoid!important;page-break-inside:avoid!important;break-after:avoid!important;page-break-after:avoid!important}
+  .qgroup-row+tr{break-before:avoid!important;page-break-before:avoid!important}
+}
