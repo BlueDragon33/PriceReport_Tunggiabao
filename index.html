@@ -19,7 +19,8 @@
       <button data-tab="payment"><span class="nav-glyph">▣</span><span>Thanh toán</span></button>
       <button data-tab="terms"><span class="nav-glyph">▤</span><span>Điều khoản</span></button>
       <button data-tab="design"><span class="nav-glyph">◉</span><span>Thiết kế</span></button>
-      <button data-tab="export"><span class="nav-glyph">▰</span><span>Xuất/In</span></button>
+      <button data-tab="view"><span class="nav-glyph">▣</span><span>Xem<br>báo cáo</span></button>
+      <button data-tab="export"><span class="nav-glyph">▰</span><span>Xuất/<br>Nhập/In</span></button>
       <button data-tab="presets"><span class="nav-glyph">▱</span><span>Lưu mẫu</span></button>
       <button class="nav-secondary" data-tab="history"><span class="nav-glyph">◫</span><span>Báo giá</span></button>
       <button class="nav-secondary" data-tab="master"><span class="nav-glyph">▦</span><span>Danh mục</span></button>
@@ -48,9 +49,6 @@
             </div>
             <div class="row"><label>Tên công ty</label><input id="companyName" data-bind="companyName"></div>
             <div class="row"><label>Địa chỉ trụ sở</label><input id="companyAddress" data-bind="companyAddress"></div>
-            <div class="row"><label>Chi nhánh Khánh Hòa</label><input id="branchKhanhHoa" data-bind="branchKhanhHoa"></div>
-            <div class="row"><label>Chi nhánh Đồng Nai</label><input id="branchDongNai" data-bind="branchDongNai"></div>
-            <div class="row"><label>Trại / cơ sở</label><input id="farmAddress" data-bind="farmAddress"></div>
             <div class="grid2">
               <div class="row"><label>MST</label><input id="taxCode" data-bind="taxCode"></div>
               <div class="row"><label>SĐT</label><input id="phone" data-bind="phone"></div>
@@ -260,17 +258,42 @@
               <div class="row"><label>Lề dưới (mm)</label><input id="marginBottom" data-bind="marginBottom" type="number"></div>
               <div class="row"><label>Rộng logo (mm)</label><input id="logoWidth" data-bind="logoWidth" type="number" min="18" max="90"></div>
             </div>
-            <div class="row"><label>Cỡ chữ nội dung (px)</label><input id="docFontSize" data-bind="docFontSize" type="number" step="0.2"></div>
+            <div class="row">
+            <label>Cỡ chữ nội dung <span class="range-value" id="docFontSizeValue">12.2 px</span></label>
+            <input id="docFontSize" data-bind="docFontSize" type="range" min="9" max="18" step="0.2">
+          </div>
           </div>
         </div>
 
         <div class="pane" id="pane-export">
-          <div class="card"><h3>Xuất tài liệu</h3><div class="btns"><button class="btn green print-action">In / Lưu PDF</button><button class="btn primary" id="preflightExport">Kiểm tra báo giá</button></div><div class="help">Nên chạy kiểm tra trước khi gửi khách hàng để phát hiện dữ liệu thiếu hoặc mâu thuẫn.</div></div>
           <div class="card">
-            <h3>Sao lưu dữ liệu</h3>
+            <h3>Xuất / Nhập / In</h3>
+            <div class="btns export-primary-actions">
+              <button class="btn green print-action">In / Lưu PDF</button>
+              <button class="btn primary" id="exportExcel">Xuất Excel</button>
+              <button class="btn" id="importExcelQuick">Nhập Excel</button>
+              <button class="btn" id="importHandwritingQuick">Nhập ảnh chữ viết tay</button>
+              <button class="btn" id="preflightExport">Kiểm tra báo giá</button>
+            </div>
+            <div class="help">Excel được xuất theo cấu trúc có thể nhập lại. Excel/OCR đều đi qua màn hình kiểm tra trước khi áp dụng.</div>
+          </div>
+
+          <div class="card pc-workspace-card">
+            <h3>Lưu trên máy PC</h3>
+            <div class="pc-folder-status" id="pcFolderStatus">Chưa liên kết thư mục PC.</div>
             <div class="btns">
-              <button class="btn" id="exportJson">Xuất báo giá hiện tại</button>
-              <label class="btn file-btn" for="importJson">Nhập báo giá</label>
+              <button class="btn primary" id="choosePcFolder" type="button">Chọn thư mục lưu</button>
+              <button class="btn" id="savePcNow" type="button">Lưu lên PC ngay</button>
+              <button class="btn" id="restorePcLatest" type="button">Đọc bản gần nhất</button>
+            </div>
+            <div class="help">Chrome/Edge trên PC có thể nhớ thư mục đã chọn bằng quyền thư mục của trình duyệt. Vì bảo mật, web không được đọc/hiện toàn bộ đường dẫn Windows; hệ thống nhớ folder handle và tự dùng lại khi quyền còn hiệu lực.</div>
+          </div>
+
+          <div class="card">
+            <h3>JSON / Sao lưu toàn bộ</h3>
+            <div class="btns">
+              <button class="btn" id="exportJson">Xuất báo giá JSON</button>
+              <label class="btn file-btn" for="importJson">Nhập báo giá JSON</label>
               <input class="hidden-input" id="importJson" type="file" accept=".json,application/json">
             </div>
             <div class="backup-divider"></div>
@@ -394,7 +417,7 @@
           <h3>Định dạng</h3>
           <div class="row"><label>Khổ giấy</label><select id="paperSize" disabled><option>A4 (210 × 297 mm)</option></select></div>
           <div class="row"><label>Font chữ</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
-          <div class="row"><label>Cỡ chữ</label><select id="designFontSize" data-bind="docFontSize"><option value="11">Nhỏ</option><option value="12.2">Mặc định</option><option value="13">Vừa</option><option value="14">Lớn</option></select></div>
+          <div class="row"><label>Cỡ chữ nội dung</label><input id="designFontSize" data-bind="docFontSize" type="range" min="9" max="18" step="0.2"></div>
           <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
         </div>
         <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
@@ -404,6 +427,7 @@
     <main class="preview">
       <div class="preview-tools">
         <div class="preview-left-tools">
+          <button class="toolbar-btn view-exit" id="exitReportView" type="button" hidden>←&nbsp; Chỉnh sửa</button>
           <button class="toolbar-btn active-preview" id="fit">◉&nbsp; Xem trước</button>
           <button class="toolbar-btn" id="wideView">⛶&nbsp; Màn hình rộng</button>
         </div>
@@ -512,9 +536,6 @@
                 <div class="company-name clickable" data-target="companyName" id="pCompanyName" data-layout-block="companyName" data-layout-label="Tên công ty"></div>
                 <div class="company-lines">
                   <div class="clickable" data-target="companyAddress" data-company-key="companyAddress" data-layout-block="companyAddress" data-layout-label="Địa chỉ trụ sở"><b>Trụ sở:</b> <span id="pCompanyAddress"></span></div>
-                  <div class="clickable" data-target="branchKhanhHoa" data-company-key="branchKhanhHoa" data-layout-block="branchKhanhHoa" data-layout-label="CN Khánh Hòa"><b>CN Khánh Hòa:</b> <span id="pBranchKhanhHoa"></span></div>
-                  <div class="clickable" data-target="branchDongNai" data-company-key="branchDongNai" data-layout-block="branchDongNai" data-layout-label="CN Đồng Nai"><b>CN Đồng Nai:</b> <span id="pBranchDongNai"></span></div>
-                  <div class="clickable" data-target="farmAddress" data-company-key="farmAddress" data-layout-block="farmAddress" data-layout-label="Trại / cơ sở"><b>Trại:</b> <span id="pFarmAddress"></span></div>
                   <div class="clickable" data-target="taxCode" data-company-key="taxCode" data-layout-block="taxCode" data-layout-label="Mã số thuế"><b>MST:</b> <span id="pTaxCode"></span></div>
                   <div class="clickable" data-target="phone" data-company-key="phone" data-layout-block="phone" data-layout-label="Số điện thoại"><b>SĐT:</b> <span id="pPhone"></span></div>
                   <div class="clickable webemail" data-target="website" data-company-key="website" data-layout-block="website" data-layout-label="Website"><b>Website:</b> <span id="pWebsite"></span></div>

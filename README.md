@@ -2,7 +2,7 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V2.8 review correctness / report density hardened
+## Trạng thái hiện tại — V3.0 mobile report view / Excel I-O / PC workspace
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
@@ -84,3 +84,35 @@ V2.8 là vòng audit độc lập sau V2.7. Các lỗi còn sót được sửa:
 - Auto-arrange chưa tự tối ưu các cột tùy chọn hoàn toàn rỗng.
 
 CI V2.8 xác nhận runtime audit 0 vulnerabilities, core/importer logic PASS, 24/24 DOM tests PASS, smoke PASS và production build PASS.
+
+
+## V3.0 — Mobile, Excel và lưu PC
+
+V3.0 hoàn thiện lại luồng sử dụng theo 6 yêu cầu vận hành thực tế:
+
+- Bỏ hoàn toàn khỏi giao diện ba trường không còn dùng: **Chi nhánh Khánh Hòa**, **Chi nhánh Đồng Nai**, **Trại / cơ sở**.
+- Cỡ chữ nội dung giờ scale thật trên toàn bộ báo cáo (thông tin công ty, kính gửi, lời mở đầu, bảng, điều khoản, chữ ký, footer...), thay vì chỉ đổi font ở phần tử cha rồi bị CSS template ghi đè.
+- Tab được đổi thành **Xuất / Nhập / In** và gom chung:
+  - In / Lưu PDF;
+  - Xuất Excel;
+  - Nhập Excel;
+  - Nhập ảnh chữ viết tay;
+  - JSON / backup toàn bộ.
+- Có tab **Xem báo cáo** riêng cho điện thoại/iPad. Chế độ này ẩn vùng chỉnh sửa, tự fit A4 theo bề ngang màn hình và dùng đúng chiều cao đã scale, vì vậy cuộn dừng ở cuối nội dung thay vì kéo dư.
+- Hỗ trợ **Lưu trên máy PC** bằng File System Access API trên Chrome/Edge desktop:
+  - người dùng chọn một thư mục;
+  - directory handle được lưu trong IndexedDB;
+  - các lần bấm lưu báo giá tiếp theo sẽ ghi thêm file hiện tại + backup vào thư mục đó nếu quyền vẫn còn;
+  - có nút lưu ngay và đọc bản gần nhất.
+- Trình duyệt không cho web biết toàn bộ đường dẫn Windows vì giới hạn bảo mật. Ứng dụng chỉ có thể nhớ folder handle và tên thư mục đã cấp quyền.
+
+### Gate V3.0
+
+CI #234 trên code head:
+- runtime audit: **0 vulnerabilities**;
+- Core logic: **PASS**;
+- Importer logic: **PASS**;
+- PC Storage logic: **PASS**;
+- DOM integration + migration: **32/32 PASS**;
+- Smoke: **PASS** (258 IDs, 79 bindings, 22 preview targets);
+- Production build: **PASS**.

@@ -443,3 +443,49 @@ test('manual Tùng Gia Bảo apply button replaces visible business data and pro
   expect(document.querySelectorAll('.product-card').length).toBe(72);
   expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
 });
+
+
+test('obsolete branch and farm fields are removed from the company editor and preview', () => {
+  expect(document.getElementById('branchKhanhHoa')).toBeNull();
+  expect(document.getElementById('branchDongNai')).toBeNull();
+  expect(document.getElementById('farmAddress')).toBeNull();
+  expect(document.getElementById('pBranchKhanhHoa')).toBeNull();
+  expect(document.getElementById('pBranchDongNai')).toBeNull();
+  expect(document.getElementById('pFarmAddress')).toBeNull();
+});
+
+test('document font-size control updates the real report typography scale', () => {
+  const control = document.getElementById('docFontSize');
+  control.value = '15';
+  control.dispatchEvent(new Event('input', { bubbles: true }));
+
+  const paper = document.getElementById('paper');
+  expect(paper.style.getPropertyValue('--fs-table')).toBe('11.07px');
+  expect(paper.style.getPropertyValue('--fs-company-name')).toBe('16.23px');
+  expect(document.getElementById('docFontSizeValue').textContent).toBe('15.0 px');
+  expect(document.getElementById('designFontSize').value).toBe('15');
+});
+
+test('report view tab enters a dedicated responsive preview mode and exits cleanly', () => {
+  document.querySelector('[data-tab="view"]').click();
+  expect(document.querySelector('.shell').classList.contains('report-view')).toBe(true);
+  expect(document.body.classList.contains('report-view-active')).toBe(true);
+  expect(document.getElementById('exitReportView').hidden).toBe(false);
+  expect(document.querySelector('[data-tab="view"]').getAttribute('aria-current')).toBe('page');
+
+  document.getElementById('exitReportView').click();
+  expect(document.querySelector('.shell').classList.contains('report-view')).toBe(false);
+  expect(document.body.classList.contains('report-view-active')).toBe(false);
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
+});
+
+test('export pane exposes Excel import/export, OCR import and PC workspace controls', () => {
+  document.querySelector('[data-tab="export"]').click();
+  expect(document.getElementById('exportExcel')).toBeTruthy();
+  expect(document.getElementById('importExcelQuick')).toBeTruthy();
+  expect(document.getElementById('importHandwritingQuick')).toBeTruthy();
+  expect(document.getElementById('choosePcFolder')).toBeTruthy();
+  expect(document.getElementById('savePcNow')).toBeTruthy();
+  expect(document.getElementById('restorePcLatest')).toBeTruthy();
+  expect(document.getElementById('pcFolderStatus').textContent.length).toBeGreaterThan(0);
+});

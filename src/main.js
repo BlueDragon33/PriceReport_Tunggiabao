@@ -18,6 +18,15 @@ import {
   applyTungGiaBaoBaseline,
   looksLikeLegacyBienUyenBaoProfile
 } from './tunggiabao-defaults.js';
+import {
+  choosePcBackupDirectory,
+  directoryPermission,
+  getRememberedPcDirectory,
+  readTextFromPcDirectory,
+  sanitizePcFileName,
+  supportsPcFolderAccess,
+  writeTextToPcDirectory
+} from './pc-storage.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -391,7 +400,8 @@ const tabMeta = {
   payment: ['THANH TOÁN', 'Chiết khấu, VAT, tổng tiền và tài khoản.'],
   terms: ['ĐIỀU KHOẢN', 'Điều khoản thương mại, ngày tháng và chữ ký.'],
   design: ['THIẾT KẾ', 'Mẫu trình bày, màu sắc và định dạng A4.'],
-  export: ['XUẤT / IN', 'Xuất PDF và sao lưu dữ liệu.'],
+  view: ['XEM BÁO CÁO', 'Chế độ đọc toàn màn hình cho điện thoại và máy tính bảng.'],
+  export: ['XUẤT / NHẬP / IN', 'PDF, Excel, OCR và sao lưu dữ liệu.'],
   presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.']
 };
 
@@ -402,6 +412,13 @@ function openTab(tab) {
     if (active) el.setAttribute('aria-current', 'page');
     else el.removeAttribute('aria-current');
   });
+
+  if (tab === 'view') {
+    setReportViewMode(true);
+    return;
+  }
+
+  setReportViewMode(false);
   $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
@@ -918,6 +935,8 @@ function renderLogo() {
   if (opacityValue) opacityValue.textContent = opacity + '%';
   const titleSizeValue = document.getElementById('previewTitleSizeValue');
   if (titleSizeValue) titleSizeValue.textContent = Math.round(Number(state.previewTitleSize || 25)) + ' px';
+  const docFontSizeValue = document.getElementById('docFontSizeValue');
+  if (docFontSizeValue) docFontSizeValue.textContent = Number(state.docFontSize || 12.2).toFixed(1) + ' px';
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
@@ -976,7 +995,27 @@ function render() {
   paper.style.paddingRight = state.marginX + 'mm';
   paper.style.paddingTop = state.marginTop + 'mm';
   paper.style.paddingBottom = state.marginBottom + 'mm';
+  const docFontScale = Number(state.docFontSize || 12.2) / 12.2;
   paper.style.fontSize = state.docFontSize + 'px';
+  paper.style.setProperty('--doc-font-scale', String(docFontScale));
+  [
+    ['--fs-company', 9.6],
+    ['--fs-company-name', 13.2],
+    ['--fs-subtitle', 11.2],
+    ['--fs-meta', 9.6],
+    ['--fs-recipient', 13.5],
+    ['--fs-intro', 10.5],
+    ['--fs-section', 11.5],
+    ['--fs-table', 9],
+    ['--fs-summary', 9.4],
+    ['--fs-summary-grand', 10.2],
+    ['--fs-words', 9.8],
+    ['--fs-small-heading', 10.5],
+    ['--fs-payment', 9.4],
+    ['--fs-terms', 9.5],
+    ['--fs-signature', 9.5],
+    ['--fs-footer', 8.4]
+  ].forEach(([name, base]) => paper.style.setProperty(name, (base * docFontScale).toFixed(2) + 'px'));
   paper.style.fontFamily = '"' + state.docFont + '", serif';
   paper.style.lineHeight = Number(state.previewLineHeight || 1.26);
   paper.style.setProperty('--preview-title-size', Number(state.previewTitleSize || 25) + 'px');
@@ -1044,7 +1083,10 @@ function render() {
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
   syncLayoutEditModeUI();
-  requestAnimationFrame(updatePageEstimate);
+  requestAnimationFrame(() => {
+    updatePageEstimate();
+    if (document.querySelector('.shell')?.classList.contains('report-view')) fitReportView();
+  });
 }
 
 function toast(message) {
@@ -1054,13 +1096,199 @@ function toast(message) {
   setTimeout(() => el.classList.remove('show'), 1600);
 }
 
-function download(name, text, type) {
-  const blob = new Blob([text], { type });
+function downloadBlob(name, blob) {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = name;
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function download(name, text, type) {
+  downloadBlob(name, new Blob([text], { type }));
+}
+
+function fullBackupPayload() {
+  return {
+    schemaVersion: 4,
+    exportedAt: new Date().toISOString(),
+    current: clone(state),
+    history: getHistory(),
+    presets: getPresets(),
+    customers: getCustomerLibrary(),
+    catalog: getProductCatalog()
+  };
+}
+
+function excelRowsForCurrentQuote() {
+  const rows = [];
+  rows.push([state.companyName || '']);
+  if (state.companyAddress) rows.push(['Địa chỉ:', state.companyAddress]);
+  if (state.phone) rows.push(['Điện thoại:', state.phone]);
+  if (state.taxCode) rows.push(['MST:', state.taxCode]);
+  rows.push([]);
+  rows.push([state.quoteTitle || 'BẢNG BÁO GIÁ']);
+  if (state.quoteSubtitle) rows.push([state.quoteSubtitle]);
+  if (state.recipientLine) rows.push([state.recipientLine]);
+  if (state.intro) rows.push([state.intro]);
+  rows.push([]);
+  rows.push(['STT','Mặt hàng','ĐVT','Đơn giá','Ghi chú']);
+
+  let activeGroup = '';
+  let groupIndex = 0;
+  (state.products || []).forEach((product, index) => {
+    const group = String(product.group || '').trim();
+    if (group && group !== activeGroup) {
+      activeGroup = group;
+      groupIndex = 0;
+      rows.push([group]);
+    }
+    groupIndex += 1;
+    rows.push([
+      group ? groupIndex : index + 1,
+      product.name || '',
+      product.unit || '',
+      Number(product.price || 0),
+      product.note || ''
+    ]);
+  });
+
+  rows.push([]);
+  if (state.dateLine) rows.push(['', state.dateLine]);
+  if (state.rightName) rows.push(['', state.rightName]);
+  return rows;
+}
+
+async function exportCurrentQuoteExcel() {
+  try {
+    const XLSX = await import('xlsx');
+    const sheet = XLSX.utils.aoa_to_sheet(excelRowsForCurrentQuote());
+    sheet['!cols'] = [{ wch: 8 }, { wch: 42 }, { wch: 12 }, { wch: 16 }, { wch: 26 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Bảng báo giá');
+    const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+    const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.xlsx';
+    downloadBlob(name, new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    toast('Đã xuất file Excel');
+  } catch (error) {
+    console.error('Excel export failed:', error);
+    alert('Không thể xuất Excel. Hãy thử tải lại trang rồi thực hiện lại.');
+  }
+}
+
+let rememberedPcHandle = null;
+
+async function updatePcFolderStatus() {
+  const status = document.getElementById('pcFolderStatus');
+  if (!status) return;
+  if (!supportsPcFolderAccess()) {
+    status.textContent = 'Trình duyệt này không hỗ trợ lưu trực tiếp vào thư mục PC. Hãy dùng Chrome/Edge trên máy tính.';
+    status.dataset.state = 'unsupported';
+    return;
+  }
+  rememberedPcHandle = rememberedPcHandle || await getRememberedPcDirectory();
+  if (!rememberedPcHandle) {
+    status.textContent = 'Chưa liên kết thư mục PC.';
+    status.dataset.state = 'empty';
+    return;
+  }
+  const permission = await directoryPermission(rememberedPcHandle, { request: false });
+  status.textContent = 'Thư mục đã nhớ: ' + (rememberedPcHandle.name || 'Thư mục đã chọn') +
+    (permission === 'granted' ? ' • sẵn sàng tự lưu' : ' • cần cấp lại quyền khi lưu');
+  status.dataset.state = permission === 'granted' ? 'ready' : 'prompt';
+}
+
+async function choosePcFolder() {
+  try {
+    rememberedPcHandle = await choosePcBackupDirectory();
+    if (!rememberedPcHandle) {
+      await updatePcFolderStatus();
+      return false;
+    }
+    const permission = await directoryPermission(rememberedPcHandle, { request: true });
+    await updatePcFolderStatus();
+    if (permission !== 'granted') {
+      toast('Chưa được cấp quyền ghi thư mục');
+      return false;
+    }
+    toast('Đã nhớ thư mục PC: ' + rememberedPcHandle.name);
+    return true;
+  } catch (error) {
+    if (error?.name !== 'AbortError') console.error('PC folder selection failed:', error);
+    await updatePcFolderStatus();
+    return false;
+  }
+}
+
+async function saveCurrentToPc({ notify = false, requestPermission = false } = {}) {
+  if (!supportsPcFolderAccess()) {
+    if (notify) alert('Lưu trực tiếp vào thư mục PC cần Chrome/Edge trên máy tính hỗ trợ File System Access API.');
+    return false;
+  }
+  rememberedPcHandle = rememberedPcHandle || await getRememberedPcDirectory();
+  if (!rememberedPcHandle) {
+    if (notify) toast('Chưa chọn thư mục PC');
+    return false;
+  }
+  const permission = await directoryPermission(rememberedPcHandle, { request: requestPermission });
+  if (permission !== 'granted') {
+    await updatePcFolderStatus();
+    if (notify) toast('Cần cấp lại quyền thư mục PC');
+    return false;
+  }
+
+  try {
+    const currentText = JSON.stringify(state, null, 2);
+    const backupText = JSON.stringify(fullBackupPayload(), null, 2);
+    const safeQuote = sanitizePcFileName(state.quoteNo || ('Bao_gia_' + state.quoteDate), 'bao-gia');
+    await writeTextToPcDirectory(rememberedPcHandle, 'PriceReport_Tunggiabao-current.json', currentText);
+    await writeTextToPcDirectory(rememberedPcHandle, 'PriceReport_Tunggiabao-backup.json', backupText);
+    await writeTextToPcDirectory(rememberedPcHandle, safeQuote + '.json', currentText);
+    await updatePcFolderStatus();
+    if (notify) toast('Đã lưu thêm trên PC');
+    return true;
+  } catch (error) {
+    console.error('PC autosave failed:', error);
+    await updatePcFolderStatus();
+    if (notify) alert('Không thể ghi file vào thư mục PC đã chọn. Hãy chọn/cấp quyền thư mục lại.');
+    return false;
+  }
+}
+
+async function restoreCurrentFromPc() {
+  if (!supportsPcFolderAccess()) {
+    alert('Tính năng đọc thư mục PC cần Chrome/Edge trên máy tính.');
+    return false;
+  }
+  rememberedPcHandle = rememberedPcHandle || await getRememberedPcDirectory();
+  if (!rememberedPcHandle) {
+    toast('Chưa có thư mục PC đã nhớ');
+    return false;
+  }
+  const permission = await directoryPermission(rememberedPcHandle, { request: true });
+  if (permission !== 'granted') {
+    await updatePcFolderStatus();
+    return false;
+  }
+  try {
+    const text = await readTextFromPcDirectory(rememberedPcHandle, 'PriceReport_Tunggiabao-current.json');
+    const imported = JSON.parse(text);
+    if (!isPlainObject(imported)) throw new Error('invalid-pc-current');
+    if (!confirm('Đọc bản báo giá gần nhất từ thư mục PC và thay báo giá đang mở?')) return false;
+    state = merge(imported);
+    state.historyRecordId = '';
+    if (!saveLogoAsset(state.logo || '') || !save()) throw new Error('pc-restore-save-failed');
+    syncInputs();
+    resetCollapsedProductsForState();
+    renderEditorProducts();
+    render();
+    toast('Đã đọc bản báo giá gần nhất từ PC');
+    return true;
+  } catch (error) {
+    console.error('PC restore failed:', error);
+    alert('Không đọc được file PriceReport_Tunggiabao-current.json trong thư mục đã nhớ.');
+    return false;
+  }
 }
 
 
@@ -1738,6 +1966,23 @@ document.getElementById('preflightCheck')?.addEventListener('click', () => {
   alert(lines.join('\n\n'));
 });
 
+document.getElementById('exportExcel')?.addEventListener('click', exportCurrentQuoteExcel);
+document.getElementById('importExcelQuick')?.addEventListener('click', () => {
+  openSmartImport();
+  document.getElementById('excelSmartImportInput')?.click();
+});
+document.getElementById('importHandwritingQuick')?.addEventListener('click', () => {
+  openSmartImport();
+  document.getElementById('handwritingSmartImportInput')?.click();
+});
+document.getElementById('choosePcFolder')?.addEventListener('click', choosePcFolder);
+document.getElementById('savePcNow')?.addEventListener('click', async () => {
+  if (!rememberedPcHandle && !await choosePcFolder()) return;
+  await saveCurrentToPc({ notify: true, requestPermission: true });
+});
+document.getElementById('restorePcLatest')?.addEventListener('click', restoreCurrentFromPc);
+updatePcFolderStatus().catch((error) => console.warn('PC folder status unavailable:', error));
+
 document.getElementById('exportJson').addEventListener('click', () => {
   download('bao-gia-du-lieu.json', JSON.stringify(state, null, 2), 'application/json');
 });
@@ -1795,16 +2040,7 @@ document.getElementById('importJson').addEventListener('change', (event) => {
 });
 
 document.getElementById('exportAllData').addEventListener('click', () => {
-  const payload = {
-    schemaVersion: 4,
-    exportedAt: new Date().toISOString(),
-    current: clone(state),
-    history: getHistory(),
-    presets: getPresets(),
-    customers: getCustomerLibrary(),
-    catalog: getProductCatalog()
-  };
-  download('PriceReport_Tunggiabao-backup.json', JSON.stringify(payload, null, 2), 'application/json');
+  download('PriceReport_Tunggiabao-backup.json', JSON.stringify(fullBackupPayload(), null, 2), 'application/json');
 });
 
 document.getElementById('importAllData').addEventListener('change', (event) => {
@@ -2108,6 +2344,7 @@ function saveCurrentQuote() {
   toast(currentSaved
     ? (existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá')
     : 'Đã lưu vào lịch sử; trạng thái hiện tại chưa thể autosave');
+  saveCurrentToPc({ notify: false }).catch((error) => console.warn('PC autosave skipped:', error));
   return true;
 }
 
@@ -2949,7 +3186,66 @@ $$('.clickable').forEach((el) => {
 let zoom = 82;
 setupLayoutEditor();
 setupSmartImport();
+
+function resetReportViewScale() {
+  const wrap = document.getElementById('paperWrap');
+  const paper = document.getElementById('paper');
+  if (!wrap || !paper) return;
+  paper.style.removeProperty('transform');
+  paper.style.removeProperty('transform-origin');
+  wrap.style.removeProperty('height');
+  wrap.style.width = '210mm';
+  wrap.style.minHeight = '297mm';
+}
+
+function fitReportView() {
+  const shell = document.querySelector('.shell');
+  if (!shell?.classList.contains('report-view')) return;
+  const preview = document.querySelector('.preview');
+  const wrap = document.getElementById('paperWrap');
+  const paper = document.getElementById('paper');
+  if (!preview || !wrap || !paper) return;
+
+  wrap.style.transform = 'none';
+  wrap.style.marginBottom = '0';
+  paper.style.removeProperty('transform');
+  const available = Math.max(280, preview.clientWidth - 20);
+  const paperWidth = paper.offsetWidth || (210 / 25.4) * 96;
+  const scale = Math.min(1, available / paperWidth);
+  const paperHeight = Math.max(paper.scrollHeight, paper.offsetHeight);
+
+  wrap.style.width = Math.ceil(paperWidth * scale) + 'px';
+  wrap.style.height = Math.ceil(paperHeight * scale) + 'px';
+  wrap.style.minHeight = '0';
+  paper.style.transformOrigin = 'top left';
+  paper.style.transform = 'scale(' + scale + ')';
+  zoom = Math.round(scale * 100);
+  document.getElementById('zoomText').textContent = zoom + '%';
+}
+
+function setReportViewMode(enabled) {
+  const shell = document.querySelector('.shell');
+  if (!shell) return;
+  shell.classList.toggle('report-view', Boolean(enabled));
+  document.body.classList.toggle('report-view-active', Boolean(enabled));
+  const exit = document.getElementById('exitReportView');
+  if (exit) exit.hidden = !enabled;
+  if (enabled) {
+    setPreviewCustomizer(false);
+    setLayoutEditMode(false);
+    requestAnimationFrame(fitReportView);
+  } else {
+    resetReportViewScale();
+    requestAnimationFrame(() => document.getElementById('fit')?.click());
+  }
+}
+
 function setZoom(value) {
+  if (document.querySelector('.shell')?.classList.contains('report-view')) {
+    fitReportView();
+    return;
+  }
+  resetReportViewScale();
   zoom = Math.max(50, Math.min(120, value));
   document.getElementById('paperWrap').style.transform = 'scale(' + (zoom / 100) + ')';
   document.getElementById('zoomText').textContent = zoom + '%';
@@ -2958,6 +3254,7 @@ function setZoom(value) {
   updatePageEstimate();
 }
 
+document.getElementById('exitReportView')?.addEventListener('click', () => openTab('general'));
 document.getElementById('actual').addEventListener('click', () => setZoom(100));
 document.getElementById('fit').addEventListener('click', () => {
   const available = document.querySelector('.preview').clientWidth - 34;
@@ -2974,7 +3271,7 @@ document.getElementById('wideView').addEventListener('click', () => {
 });
 document.getElementById('toolbarMenu').addEventListener('click', () => {
   openTab('export');
-  toast('Đã mở công cụ Xuất / In');
+  toast('Đã mở công cụ Xuất / Nhập / In');
 });
 
 function setPreviewCustomizer(open) {
@@ -3045,7 +3342,11 @@ compactLegacyBrandAssets();
 
 setTimeout(() => document.getElementById('fit').click(), 60);
 window.addEventListener('resize', () => {
-  if (window.innerWidth > 1050) document.getElementById('fit').click();
+  if (document.querySelector('.shell')?.classList.contains('report-view')) {
+    requestAnimationFrame(fitReportView);
+  } else if (window.innerWidth > 1050) {
+    document.getElementById('fit').click();
+  }
   requestAnimationFrame(updatePageEstimate);
 });
 
