@@ -1822,3 +1822,38 @@ input[type=range]::-moz-range-thumb{
 /* Only this product table follows the user-adjustable font control. */
 .paper .qtable{font-size:var(--fs-table,9px)!important}
 .fixed-type-note{padding:8px 9px;border:1px solid #dce5ee;border-radius:8px;background:#f7f9fb}
+
+
+/* V3.4 device-classified accounting workspace */
+.device-profile-chip{
+  margin:7px 8px 8px;padding:9px 10px;border:1px solid #dfe7ee;border-radius:10px;
+  background:#f7fafc;color:#2d455a;display:grid;gap:2px
+}
+.device-profile-chip strong{font-size:10.5px}
+.device-profile-chip small{font-size:8.8px;color:#76889a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.device-profile-chip[data-device-class="desktop"]{border-color:#cfe5dc;background:#f2faf6}
+.device-profile-chip[data-device-class="tablet"]{border-color:#d8d9ef;background:#f6f5fc}
+.device-profile-chip[data-device-class="phone"]{border-color:#eadfc7;background:#fff9ee}
+
+body[data-device-class="tablet"] .btn,
+body[data-device-class="tablet"] button,
+body[data-device-class="tablet"] input,
+body[data-device-class="tablet"] select{min-height:44px}
+body[data-device-class="tablet"] .product-card{touch-action:manipulation}
+
+body[data-device-class="phone"] .btn,
+body[data-device-class="phone"] button,
+body[data-device-class="phone"] input,
+body[data-device-class="phone"] select,
+body[data-device-class="phone"] textarea{min-height:46px}
+body[data-device-class="phone"] .grid2{grid-template-columns:1fr!important}
+body[data-device-class="phone"] .panel-body{padding-bottom:90px}
+body[data-device-class="phone"] .preview-tools{gap:5px}
+body[data-device-class="phone"] .preview-right-tools{gap:5px}
+body[data-device-class="phone"] .toolbar-btn{min-height:44px}
+body[data-device-class="phone"] .device-profile-chip{display:none}
+body[data-device-class="phone"] .product-card{touch-action:manipulation}
+
+@media(max-width:980px){
+  body[data-device-class="tablet"] .device-profile-chip{margin:4px 6px;padding:7px}
+}
