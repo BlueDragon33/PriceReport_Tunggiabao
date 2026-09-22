@@ -3,6 +3,8 @@ import './styles.css';
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
 const HISTORY = 'tunggiabao-price-report-history-v1';
+const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
+const CATALOG = 'tunggiabao-price-report-catalog-v1';
 
 const defaults = {
   logo: '',
@@ -104,6 +106,7 @@ const setText = (id, value) => {
 const tabMeta = {
   general: ['THÔNG TIN CHUNG', 'Logo, doanh nghiệp và thông tin báo giá.'],
   history: ['QUẢN LÝ BÁO GIÁ', 'Lưu, tìm kiếm, mở lại và nhân bản các báo giá.'],
+  master: ['DANH MỤC', 'Tái sử dụng khách hàng và sản phẩm thường dùng.'],
   customer: ['KHÁCH HÀNG', 'Thông tin người nhận và đơn vị mua hàng.'],
   products: ['SẢN PHẨM', 'Danh mục, số lượng, đơn giá và cột hiển thị.'],
   payment: ['THANH TOÁN', 'Chiết khấu, VAT, tổng tiền và tài khoản.'],
@@ -121,6 +124,7 @@ function openTab(tab) {
   if (tab === 'design') document.getElementById('designPanel').classList.add('open');
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
+  if (tab === 'master') renderMasterData();
 }
 
 $$('.nav button[data-tab]').forEach((btn) => {
@@ -524,11 +528,13 @@ document.getElementById('importJson').addEventListener('change', (event) => {
 
 document.getElementById('exportAllData').addEventListener('click', () => {
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exportedAt: new Date().toISOString(),
     current: clone(state),
     history: getHistory(),
-    presets: getPresets()
+    presets: getPresets(),
+    customers: getCustomerLibrary(),
+    catalog: getProductCatalog()
   };
   download('PriceReport_Tunggiabao-backup.json', JSON.stringify(payload, null, 2), 'application/json');
 });
@@ -547,12 +553,15 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       state = merge(payload.current);
       setHistory(payload.history);
       localStorage.setItem(PRESETS, JSON.stringify(payload.presets || {}));
+      setCustomerLibrary(Array.isArray(payload.customers) ? payload.customers : []);
+      setProductCatalog(Array.isArray(payload.catalog) ? payload.catalog : []);
       save();
       syncInputs();
       renderEditorProducts();
       render();
       renderHistory();
       renderPresets();
+      renderMasterData();
       toast('Đã khôi phục toàn bộ dữ liệu');
     } catch {
       alert('File sao lưu không hợp lệ hoặc không đúng định dạng PriceReport.');
@@ -568,6 +577,11 @@ document.getElementById('newQuote').addEventListener('click', () => {
 });
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
 document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
+
+document.getElementById('saveCurrentCustomer').addEventListener('click', saveCurrentCustomerToLibrary);
+document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
+document.getElementById('customerLibrarySearch').addEventListener('input', renderMasterData);
+document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
 
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục toàn bộ dữ liệu về mẫu ban đầu?')) return;
@@ -786,6 +800,225 @@ function renderHistory() {
     row.append(info, actions);
     list.appendChild(row);
   });
+}
+
+function getCustomerLibrary() {
+  try {
+    const value = JSON.parse(localStorage.getItem(CUSTOMERS));
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCustomerLibrary(items) {
+  localStorage.setItem(CUSTOMERS, JSON.stringify(items));
+}
+
+function customerKey(customer) {
+  const phone = String(customer.phone || '').replace(/\s+/g, '');
+  if (phone) return 'phone:' + phone;
+  return 'name:' + [customer.name, customer.company].filter(Boolean).join('|').trim().toLowerCase();
+}
+
+function saveCurrentCustomerToLibrary() {
+  const customer = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    name: state.customerName || '',
+    company: state.customerCompany || '',
+    address: state.customerAddress || '',
+    phone: state.customerPhone || '',
+    email: state.customerEmail || '',
+    contact: state.customerContact || ''
+  };
+  if (![customer.name, customer.company, customer.phone].some(Boolean)) {
+    alert('Cần nhập ít nhất tên khách hàng, công ty hoặc SĐT trước khi lưu.');
+    return;
+  }
+  const items = getCustomerLibrary();
+  const key = customerKey(customer);
+  const index = items.findIndex(item => customerKey(item) === key);
+  if (index >= 0) customer.id = items[index].id;
+  if (index >= 0) items[index] = customer;
+  else items.unshift(customer);
+  setCustomerLibrary(items);
+  renderMasterData();
+  toast(index >= 0 ? 'Đã cập nhật khách hàng' : 'Đã lưu khách hàng');
+}
+
+function useCustomer(customer) {
+  state.customerName = customer.name || '';
+  state.customerCompany = customer.company || '';
+  state.customerAddress = customer.address || '';
+  state.customerPhone = customer.phone || '';
+  state.customerEmail = customer.email || '';
+  state.customerContact = customer.contact || '';
+  state.recipientLine = 'Kính gửi: ' + (state.customerCompany || state.customerName || 'QUÝ KHÁCH HÀNG');
+  save();
+  syncInputs();
+  render();
+  openTab('customer');
+  toast('Đã nạp khách hàng');
+}
+
+function getProductCatalog() {
+  try {
+    const value = JSON.parse(localStorage.getItem(CATALOG));
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function setProductCatalog(items) {
+  localStorage.setItem(CATALOG, JSON.stringify(items));
+}
+
+function productKey(product) {
+  return [product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
+}
+
+function saveCurrentProductsToCatalog() {
+  const products = state.products.filter(product => String(product.name || '').trim());
+  if (!products.length) {
+    alert('Báo giá hiện tại chưa có sản phẩm để lưu.');
+    return;
+  }
+  const items = getProductCatalog();
+  let changed = 0;
+  products.forEach(product => {
+    const item = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      name: product.name || '',
+      pack: product.pack || '',
+      unit: product.unit || '',
+      price: Math.max(0, Number(product.price || 0)),
+      note: product.note || ''
+    };
+    const key = productKey(item);
+    const index = items.findIndex(existing => productKey(existing) === key);
+    if (index >= 0) {
+      item.id = items[index].id;
+      items[index] = item;
+    } else {
+      items.unshift(item);
+    }
+    changed += 1;
+  });
+  setProductCatalog(items);
+  renderMasterData();
+  toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
+}
+
+function addCatalogProduct(product) {
+  const key = productKey(product);
+  const existing = state.products.find(item => productKey(item) === key);
+  if (existing) {
+    existing.qty = Math.max(0, Number(existing.qty || 0)) + 1;
+    existing.price = Math.max(0, Number(product.price || existing.price || 0));
+  } else {
+    state.products.push({
+      name: product.name || '',
+      pack: product.pack || '',
+      unit: product.unit || '',
+      qty: 1,
+      price: Math.max(0, Number(product.price || 0)),
+      note: product.note || ''
+    });
+  }
+  save();
+  renderEditorProducts();
+  render();
+  openTab('products');
+  toast('Đã thêm sản phẩm vào báo giá');
+}
+
+function renderMasterData() {
+  const customerList = document.getElementById('customerLibraryList');
+  const productList = document.getElementById('productCatalogList');
+  if (!customerList || !productList) return;
+
+  const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
+  const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
+
+  const customers = getCustomerLibrary().filter(item => {
+    const haystack = [item.name, item.company, item.phone, item.email].filter(Boolean).join(' ').toLowerCase();
+    return !customerQuery || haystack.includes(customerQuery);
+  });
+  customerList.innerHTML = '';
+  if (!customers.length) {
+    customerList.innerHTML = '<div class="history-empty">Chưa có khách hàng phù hợp.</div>';
+  } else {
+    customers.forEach(customer => {
+      const row = document.createElement('div');
+      row.className = 'master-item';
+      const info = document.createElement('div');
+      info.className = 'master-info';
+      const title = document.createElement('strong');
+      title.textContent = customer.name || customer.company || 'Khách hàng';
+      const meta = document.createElement('span');
+      meta.textContent = [customer.company, customer.phone, customer.email].filter(Boolean).join(' • ');
+      info.append(title, meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'master-actions';
+      const use = document.createElement('button');
+      use.className = 'btn primary';
+      use.textContent = 'Dùng';
+      use.addEventListener('click', () => useCustomer(customer));
+      const del = document.createElement('button');
+      del.className = 'btn danger';
+      del.textContent = 'Xóa';
+      del.addEventListener('click', () => {
+        if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
+        setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id));
+        renderMasterData();
+      });
+      actions.append(use, del);
+      row.append(info, actions);
+      customerList.appendChild(row);
+    });
+  }
+
+  const products = getProductCatalog().filter(item => {
+    const haystack = [item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
+    return !productQuery || haystack.includes(productQuery);
+  });
+  productList.innerHTML = '';
+  if (!products.length) {
+    productList.innerHTML = '<div class="history-empty">Chưa có sản phẩm phù hợp.</div>';
+  } else {
+    products.forEach(product => {
+      const row = document.createElement('div');
+      row.className = 'master-item';
+      const info = document.createElement('div');
+      info.className = 'master-info';
+      const title = document.createElement('strong');
+      title.textContent = product.name || 'Sản phẩm';
+      const meta = document.createElement('span');
+      meta.textContent = [product.pack, product.unit, new Intl.NumberFormat('vi-VN').format(Number(product.price || 0)) + ' ₫']
+        .filter(Boolean).join(' • ');
+      info.append(title, meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'master-actions';
+      const add = document.createElement('button');
+      add.className = 'btn primary';
+      add.textContent = 'Thêm';
+      add.addEventListener('click', () => addCatalogProduct(product));
+      const del = document.createElement('button');
+      del.className = 'btn danger';
+      del.textContent = 'Xóa';
+      del.addEventListener('click', () => {
+        if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
+        setProductCatalog(getProductCatalog().filter(item => item.id !== product.id));
+        renderMasterData();
+      });
+      actions.append(add, del);
+      row.append(info, actions);
+      productList.appendChild(row);
+    });
+  }
 }
 
 function getPresets() {
