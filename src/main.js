@@ -406,7 +406,7 @@ const tabMeta = {
 };
 
 function openTab(tab) {
-  $('.nav button[data-tab]').forEach((el) => {
+  $$('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
     el.classList.toggle('active', active);
     if (active) el.setAttribute('aria-current', 'page');
@@ -419,7 +419,7 @@ function openTab(tab) {
   }
 
   setReportViewMode(false);
-  $('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
+  $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
   if (tab === 'design') {
