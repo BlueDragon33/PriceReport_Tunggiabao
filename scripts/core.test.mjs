@@ -4,7 +4,9 @@ import {
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
   normalizeCatalogCurrency,
-  normalizePhone
+  normalizeNonNegativeNumber,
+  normalizePhone,
+  localDateISO
 } from '../src/core.js';
 
 function close(actual, expected, epsilon = 1e-9) {
@@ -38,5 +40,10 @@ assert.deepEqual(historyTotalsByCurrency([
 
 assert.equal(normalizeCatalogCurrency('usd'), 'USD');
 assert.equal(normalizeCatalogCurrency('eur'), 'VND');
+assert.equal(normalizeNonNegativeNumber('Infinity'), 0);
+assert.equal(normalizeNonNegativeNumber(-10), 0);
+assert.equal(normalizeNonNegativeNumber('12.5'), 12.5);
+assert.equal(localDateISO(new Date(2026, 0, 2, 1, 30)), '2026-01-02');
+assert.deepEqual(historyTotalsByCurrency([{currency:'EUR',total:2,data:{}}]), {VND:2});
 
 console.log('CORE LOGIC PASS');
