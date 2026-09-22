@@ -547,6 +547,8 @@ function renderTotals() {
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
   setText('vat', money(vat));
+  setText('discLabel', 'Giảm giá (' + Number(state.discountPct || 0) + '%)');
+  setText('vatLabel', 'VAT (' + Number(state.vatPct || 0) + '%)');
   setText('fee', money(fee));
   setText('grand', money(total));
 
@@ -1028,8 +1030,8 @@ document.getElementById('exportJson').addEventListener('click', () => {
   download('bao-gia-du-lieu.json', JSON.stringify(state, null, 2), 'application/json');
 });
 
-document.getElementById('exportSnapshot').addEventListener('click', () => {
-  download('bao-gia-snapshot.json', JSON.stringify(state, null, 2), 'application/json');
+document.getElementById('preflightExport')?.addEventListener('click', () => {
+  document.getElementById('preflightCheck')?.click();
 });
 
 document.getElementById('importJson').addEventListener('change', (event) => {
@@ -1153,6 +1155,15 @@ function validateQuote(data = state) {
   });
 
   if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
+  if (data.showLogo && !data.logo) warnings.push('Đang bật hiển thị logo nhưng chưa có file logo.');
+  if ((Number(data.discountPct || 0) > 0 || Number(data.vatPct || 0) > 0 || Number(data.otherFee || 0) > 0) && !data.showTotals) {
+    warnings.push('Có giảm giá/VAT/phí khác nhưng bảng tổng cộng đang bị ẩn.');
+  }
+  if (Number(data.vatPct || 0) > 0 && /đã bao gồm\s*VAT/i.test(String(data.termsText || ''))) {
+    warnings.push('Điều khoản ghi "đã bao gồm VAT" trong khi bảng tổng cộng đang cộng VAT riêng.');
+  }
+  if (data.showTerms && !String(data.termsText || '').trim()) warnings.push('Đang bật điều khoản nhưng nội dung điều khoản đang trống.');
+  if (data.showSignature && !String(data.rightTitle || '').trim()) warnings.push('Đang bật chữ ký nhưng chức danh đại diện công ty đang trống.');
   const transferOnly = /^\s*chuyển khoản\s*$/i.test(String(data.paymentMethod || ''));
   const partialBank = [data.bankName, data.bankAccount, data.bankOwner].some(Boolean) &&
     ![data.bankName, data.bankAccount, data.bankOwner].every(Boolean);
