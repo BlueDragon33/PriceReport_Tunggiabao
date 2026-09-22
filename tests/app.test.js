@@ -345,3 +345,20 @@ test('airy spacing survives binding normalization instead of silently becoming s
   expect(document.getElementById('paper').dataset.spacing).toBe('airy');
   expect(JSON.parse(localStorage.getItem('tunggiabao-price-report-v1')).previewSpacing).toBe('airy');
 });
+
+
+test('new quote and reusable preset do not carry a stale reporting period', () => {
+  const subtitle = document.getElementById('quoteSubtitle');
+  subtitle.value = 'Giá tháng 01/2020';
+  subtitle.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('newQuote').click();
+  expect(document.getElementById('quoteSubtitle').value).toBe('');
+  expect(document.getElementById('dateLine').value).toMatch(/^Nha Trang, ngày/);
+});
+
+test('smart import progress is announced to assistive technology', () => {
+  const progress = document.getElementById('smartImportProgress');
+  expect(progress.getAttribute('role')).toBe('status');
+  expect(progress.getAttribute('aria-live')).toBe('polite');
+});
