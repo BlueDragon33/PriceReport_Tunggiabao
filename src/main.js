@@ -11,6 +11,8 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
+import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { TUNGGIABAO_PRODUCTS, TUNGGIABAO_PROFILE } from './tunggiabao-defaults.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -142,11 +144,27 @@ const defaults = {
   ]
 };
 
+Object.assign(defaults, TUNGGIABAO_PROFILE, {
+  showPack: false,
+  showQty: false,
+  showPrice: true,
+  showAmount: false,
+  showNote: true,
+  showTotals: false,
+  showWords: false,
+  showPaymentBlock: false,
+  showTerms: false,
+  showWebEmail: false,
+  showSlogan: false,
+  products: TUNGGIABAO_PRODUCTS.map((product) => ({ ...product }))
+});
+
 const clone = (obj) => JSON.parse(JSON.stringify(obj));
 function merge(data) {
   const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
     products: rawProducts.map((product) => ({
+      group: String(product?.group || ''),
       name: String(product?.name || ''),
       pack: String(product?.pack || ''),
       unit: String(product?.unit || ''),
@@ -155,7 +173,7 @@ function merge(data) {
       note: String(product?.note || '')
     }))
   });
-  if (!merged.products.length) merged.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  if (!merged.products.length) merged.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   if (merged.theme === 'blue') merged.theme = 'corporate';
   if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
@@ -206,7 +224,7 @@ function merge(data) {
 
   const stringKeys = [
     'logo','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
-    'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteNo','quoteDate',
+    'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteSubtitle','quoteNo','quoteDate',
     'historyRecordId','validity','recipientLine','intro','sectionTitle','customerName',
     'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
     'paymentMethod','bankName','bankAccount','bankOwner','termsTitle','termsText','closingText',
@@ -220,7 +238,7 @@ function merge(data) {
   });
 
   const booleanKeys = [
-    'showCustomer','showStt','showPrice','showAmount','showNote','showTotals','showWords',
+    'showCustomer','showStt','showPack','showQty','showPrice','showAmount','showNote','showTotals','showWords',
     'showPaymentBlock','showLogo','showSlogan','showWebEmail','showTerms','showSignature',
     'showQuoteMeta','compactTable'
   ];
@@ -616,7 +634,7 @@ function renderEditorProducts() {
     remove.addEventListener('click', () => {
       if (state.products.length > 1 && !confirm('Xóa sản phẩm này?')) return;
       state.products.splice(index, 1);
-      if (!state.products.length) state.products.push({ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+      if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
       save(); renderEditorProducts(); render();
     });
@@ -644,6 +662,7 @@ function renderEditorProducts() {
     };
 
     body.append(
+      productField('Nhóm hàng', 'group', product.group, 'text', input => updateProduct('group', input), 'wide'),
       productField('Tên sản phẩm', 'name', product.name, 'text', input => updateProduct('name', input), 'wide'),
       productField('Quy cách', 'pack', product.pack, 'text', input => updateProduct('pack', input)),
       productField('Đơn vị tính', 'unit', product.unit, 'text', input => updateProduct('unit', input)),
@@ -665,7 +684,10 @@ function renderEditorProducts() {
 function renderPreviewProducts() {
   const cols = [];
   if (state.showStt) cols.push(['STT', 'stt']);
-  cols.push(['Tên sản phẩm', 'name'], ['Quy cách', 'pack'], ['ĐVT', 'unit'], ['Số lượng', 'qty']);
+  cols.push(['Tên sản phẩm', 'name']);
+  if (state.showPack) cols.push(['Quy cách', 'pack']);
+  cols.push(['ĐVT', 'unit']);
+  if (state.showQty) cols.push(['Số lượng', 'qty']);
   if (state.showPrice) cols.push(['Đơn giá (' + state.currency + ')', 'price']);
   if (state.showAmount) cols.push(['Thành tiền (' + state.currency + ')', 'amount']);
   if (state.showNote) cols.push(['Ghi chú', 'note']);
@@ -698,12 +720,28 @@ function renderPreviewProducts() {
   });
   head.appendChild(hrow);
 
+  let activeGroup = null;
+  let groupIndex = 0;
   state.products.forEach((product, index) => {
+    const productGroup = String(product.group || '').trim();
+    if (productGroup && productGroup !== activeGroup) {
+      activeGroup = productGroup;
+      groupIndex = 0;
+      const groupRow = document.createElement('tr');
+      groupRow.className = 'qgroup-row';
+      const groupCell = document.createElement('td');
+      groupCell.colSpan = Math.max(1, cols.length);
+      groupCell.textContent = productGroup;
+      groupRow.appendChild(groupCell);
+      body.appendChild(groupRow);
+    }
+    groupIndex += 1;
+
     const row = document.createElement('tr');
     cols.forEach(([, key]) => {
       const td = document.createElement('td');
       let value = '';
-      if (key === 'stt') value = index + 1;
+      if (key === 'stt') value = productGroup ? groupIndex : index + 1;
       else if (key === 'price') value = numericMoney(product.price);
       else if (key === 'amount') value = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
       else value = product[key] == null ? '' : product[key];
@@ -901,7 +939,7 @@ function render() {
   [
     ['pCompanyName','companyName'],['pCompanyAddress','companyAddress'],['pBranchKhanhHoa','branchKhanhHoa'],
     ['pBranchDongNai','branchDongNai'],['pFarmAddress','farmAddress'],['pTaxCode','taxCode'],['pPhone','phone'],
-    ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteNo','quoteNo'],
+    ['pWebsite','website'],['pCompanyEmail','companyEmail'],['pQuoteTitle','quoteTitle'],['pQuoteSubtitle','quoteSubtitle'],['pQuoteNo','quoteNo'],
     ['pValidity','validity'],['pRecipient','recipientLine'],['pIntro','intro'],['pSection','sectionTitle'],
     ['pTermsTitle','termsTitle'],['pClosing','closingText'],['pDate','dateLine'],['pDateLeft','dateLine'],
     ['pLeftTitle','leftTitle'],['pRightTitle','rightTitle'],['pLeftNote','leftNote'],['pRightNote','rightNote'],
@@ -914,8 +952,11 @@ function render() {
   renderLogo();
   applyLayoutOffsets();
 
-  $$('.webemail').forEach((el) => {
-    el.style.display = state.showWebEmail ? 'block' : 'none';
+  $('[data-company-key]').forEach((el) => {
+    const key = el.dataset.companyKey;
+    const hasValue = Boolean(String(state[key] || '').trim());
+    const webGate = !el.classList.contains('webemail') || state.showWebEmail;
+    el.style.display = hasValue && webGate ? 'block' : 'none';
   });
 
   const customer = [state.customerName,state.customerCompany,state.customerAddress,state.customerPhone,state.customerEmail]
@@ -1070,7 +1111,7 @@ renderEditorProducts();
 render();
 
 document.getElementById('addProduct').addEventListener('click', () => {
-  state.products.push({ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
   save();
   renderEditorProducts();
   render();
@@ -1463,7 +1504,7 @@ function validateQuote(data = state) {
     const qty = Number(product?.qty || 0);
     const price = Number(product?.price || 0);
     if (!name && (qty > 0 || price > 0)) warnings.push('Dòng sản phẩm ' + (index + 1) + ' chưa có tên.');
-    if (name && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
+    if (name && (data.showQty || data.showAmount || data.showTotals) && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
     if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
   });
 
@@ -1698,6 +1739,7 @@ function createNewQuote() {
     companyEmail: state.companyEmail,
     slogan: state.slogan,
     footerText: state.footerText,
+    quoteSubtitle: state.quoteSubtitle,
     currency: state.currency,
     theme: state.theme,
     accent: state.accent,
@@ -1730,6 +1772,8 @@ function createNewQuote() {
     showQuoteMeta: state.showQuoteMeta,
     compactTable: state.compactTable,
     showStt: state.showStt,
+    showPack: state.showPack,
+    showQty: state.showQty,
     showPrice: state.showPrice,
     showAmount: state.showAmount,
     showNote: state.showNote,
@@ -1753,7 +1797,7 @@ function createNewQuote() {
     rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
-  state.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  state.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
@@ -1940,6 +1984,7 @@ function normalizeProductCatalog(items) {
     if (!isPlainObject(item)) return [];
     return [{
       id: String(item.id || ('product-' + (index + 1))),
+      group: String(item.group || ''),
       name: String(item.name || ''),
       pack: String(item.pack || ''),
       unit: String(item.unit || ''),
@@ -1963,7 +2008,7 @@ function setProductCatalog(items) {
 }
 
 function productKey(product) {
-  return [product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
+  return [product.group, product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
 }
 
 function catalogKey(product) {
@@ -1981,6 +2026,7 @@ function saveCurrentProductsToCatalog() {
   products.forEach(product => {
     const item = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      group: product.group || '',
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
@@ -2015,6 +2061,7 @@ function addCatalogProduct(product) {
     if (currencyMatches) existing.price = catalogPrice;
   } else {
     state.products.push({
+      group: product.group || '',
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
@@ -2078,7 +2125,7 @@ function renderMasterData() {
   }
 
   const products = getProductCatalog().filter(item => {
-    const haystack = [item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
+    const haystack = [item.group, item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
     return !productQuery || haystack.includes(productQuery);
   });
   productList.innerHTML = '';
@@ -2094,7 +2141,7 @@ function renderMasterData() {
       title.textContent = product.name || 'Sản phẩm';
       const meta = document.createElement('span');
       const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
-      meta.textContent = [product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
+      meta.textContent = [product.group, product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
         .filter(Boolean).join(' • ');
       info.append(title, meta);
 
@@ -2158,7 +2205,7 @@ function createPresetState(source) {
   preset.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
   preset.discountPct = 0;
   preset.otherFee = 0;
-  preset.products = [{ name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  preset.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   return preset;
 }
 
