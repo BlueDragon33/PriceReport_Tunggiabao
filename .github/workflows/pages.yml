@@ -25,6 +25,37 @@ jobs:
       - run: npm install
       - run: npm audit --omit=dev --audit-level=high
       - run: npm test
+      - name: Materialize production Device Gate config
+        env:
+          PRICE_REPORT_CONTROL_ORIGIN: ${{ vars.PRICE_REPORT_CONTROL_ORIGIN }}
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const raw=(process.env.PRICE_REPORT_CONTROL_ORIGIN || '').trim().replace(/\/+$/,'');
+          let enabled=false;
+          let baseUrl='';
+          if(raw){
+            const url=new URL(raw);
+            if(url.protocol!=='https:' || url.username || url.password || url.pathname!=='/' || url.search || url.hash){
+              throw new Error('PRICE_REPORT_CONTROL_ORIGIN must be a clean HTTPS origin');
+            }
+            enabled=true;
+            baseUrl=url.origin;
+          }
+          const config={
+            schemaVersion:1,
+            enabled,
+            baseUrl,
+            requestTimeoutMs:5000,
+            pendingPollMs:15000,
+            heartbeatMs:60000,
+            note: enabled
+              ? 'Production KT Control origin injected by GitHub Pages workflow after verified deployment.'
+              : 'Device Gate remains classification-only until PRICE_REPORT_CONTROL_ORIGIN is configured.'
+          };
+          fs.writeFileSync('public/device-control.json', JSON.stringify(config,null,2)+'\n');
+          console.log(`PriceReport Device Gate: ${enabled ? 'ENABLED' : 'DISABLED'}`);
+          NODE
       - run: npm run build
       - uses: actions/configure-pages@v5
         with:
