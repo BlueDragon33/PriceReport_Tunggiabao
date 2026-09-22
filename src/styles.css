@@ -932,8 +932,8 @@ input[type=range]::-moz-range-thumb{
 
 .paper[data-title-align="right"] .qtitle-wrap{
   justify-content:flex-end;
-  padding-left:calc(var(--preview-meta-width) + 6mm);
-  padding-right:0
+  padding-left:0;
+  padding-right:calc(var(--preview-meta-width) + 6mm)
 }
 .paper[data-title-align="right"] .qtitle{text-align:right!important}
 .paper[data-title-align="right"] .qtitle:after{margin-left:auto!important;margin-right:0!important}
