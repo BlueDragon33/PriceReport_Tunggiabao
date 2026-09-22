@@ -466,7 +466,7 @@ function openTab(tab) {
   const shell = document.querySelector('.shell');
   const appWorkspace = ['dashboard', 'history', 'master'].includes(tab);
 
-  $$('.nav button[data-tab]').forEach((el) => {
+  document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
     el.classList.toggle('active', active);
     if (active) el.setAttribute('aria-current', 'page');
@@ -481,7 +481,7 @@ function openTab(tab) {
 
   shell?.classList.toggle('app-workspace', appWorkspace);
   setReportViewMode(false);
-  $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
+  document.querySelectorAll('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
 
@@ -501,7 +501,7 @@ function openTab(tab) {
   }
 }
 
-$('.nav button[data-tab]').forEach((btn) => {
+document.querySelectorAll('.nav button[data-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.tab));
 });
 
@@ -605,7 +605,7 @@ function renderDashboard() {
   updateDashboardSystemState();
 }
 
-$('[data-open-tab]').forEach((btn) => {
+document.querySelectorAll('[data-open-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.openTab));
 });
 
