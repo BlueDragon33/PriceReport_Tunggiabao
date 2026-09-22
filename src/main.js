@@ -29,8 +29,8 @@ import {
 } from './pc-storage.js';
 import {
   normalizeLogoDisplayMode,
-  normalizeRemoveBgThreshold,
-  removeLightBackgroundDataUrl
+  normalizeRemoveBgTolerance,
+  removeBackgroundDataUrl
 } from './logo-processing.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
@@ -42,7 +42,7 @@ const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
 const LAYOUT_BLOCK_KEYS = [
-  'logo','company','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+  'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
   'taxCode','phone','website','companyEmail','quote','quoteTitle','quoteSubtitle','quoteMeta','recipient','customer',
   'intro','section','table','summary','words','payment','paymentMethod','bankName','bankAccount','bankOwner',
   'terms','termsTitle','termsText','closing','signatures','footer','slogan','footerText'
@@ -72,6 +72,9 @@ const defaults = {
   logo: '',
   companyName: 'CÔNG TY TNHH TMDV BIỂN UYÊN BẢO',
   companyAddress: '12/1 đường 3/4, Phường Xuân Hương - Đà Lạt, Lâm Đồng',
+  companyAddressDetail: '12/1 đường 3/4',
+  companyProvince: 'Lâm Đồng',
+  companyWard: 'Xuân Hương - Đà Lạt',
   branchKhanhHoa: 'Số 55 Nguyễn Xiển, P Bắc Nha Trang, Khánh Hòa',
   branchDongNai: 'Tổ 8, Khu phố 3A, Phường Trảng Dài, Đồng Nai',
   farmAddress: 'Ấp Bàu Mây, Xã Tân Phú, Tỉnh Đồng Nai',
@@ -141,7 +144,7 @@ const defaults = {
   logoOffsetX: 0,
   logoOffsetY: 0,
   logoDisplayMode: 'original',
-  logoRemoveBgThreshold: 244,
+  logoRemoveBgThreshold: 46,
   logoTreatment: 'none',
   logoBlendMode: 'normal',
   logoBackdropColor: '#0b8f83',
@@ -202,6 +205,18 @@ function merge(data) {
     }))
   });
   if (!merged.products.length) merged.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+
+  const hasStructuredCompanyAddress = data && (
+    Object.prototype.hasOwnProperty.call(data, 'companyAddressDetail') ||
+    Object.prototype.hasOwnProperty.call(data, 'companyProvince') ||
+    Object.prototype.hasOwnProperty.call(data, 'companyWard')
+  );
+  if (!hasStructuredCompanyAddress) {
+    merged.companyAddressDetail = String(data?.companyAddress || merged.companyAddress || '').trim();
+    merged.companyProvince = '';
+    merged.companyWard = '';
+  }
+
   if (merged.theme === 'blue') merged.theme = 'corporate';
   if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
@@ -216,7 +231,7 @@ function merge(data) {
   merged.logoPadding = normalizeBoundedNumber(merged.logoPadding, 0, 12, defaults.logoPadding);
   merged.logoOffsetX = normalizeBoundedNumber(merged.logoOffsetX, -40, 40, defaults.logoOffsetX);
   merged.logoOffsetY = normalizeBoundedNumber(merged.logoOffsetY, -30, 30, defaults.logoOffsetY);
-  merged.logoRemoveBgThreshold = normalizeRemoveBgThreshold(merged.logoRemoveBgThreshold, defaults.logoRemoveBgThreshold);
+  merged.logoRemoveBgThreshold = normalizeRemoveBgTolerance(merged.logoRemoveBgThreshold, defaults.logoRemoveBgThreshold);
   merged.logoBackdropOpacity = normalizeBoundedNumber(merged.logoBackdropOpacity, 0, 100, defaults.logoBackdropOpacity);
   merged.logoBackdropRadius = normalizeBoundedNumber(merged.logoBackdropRadius, 0, 24, defaults.logoBackdropRadius);
   merged.docFontSize = normalizeBoundedNumber(merged.docFontSize, 9, 18, defaults.docFontSize);
@@ -245,7 +260,7 @@ function merge(data) {
     // Existing projects migrate to original-first behavior so a previously
     // stored blend/multiply setting can no longer alter the uploaded pixels.
     merged.logoDisplayMode = 'original';
-    merged.logoRemoveBgThreshold = 244;
+    merged.logoRemoveBgThreshold = 46;
     merged.logoTreatment = 'none';
     merged.logoBlendMode = 'normal';
     merged.logoBackdropOpacity = 0;
@@ -254,7 +269,7 @@ function merge(data) {
   }
 
   const stringKeys = [
-    'logo','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+    'logo','companyName','companyAddress','companyAddressDetail','companyProvince','companyWard','branchKhanhHoa','branchDongNai','farmAddress',
     'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteSubtitle','quoteNo','quoteDate',
     'historyRecordId','validity','recipientLine','intro','sectionTitle','customerName',
     'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
