@@ -329,6 +329,7 @@ export default {
         protocol: CONTROL_PROTOCOL,
         databaseReady: ready,
         appOriginConfigured: Boolean(configuredOrigin(env.PRICE_REPORT_APP_ORIGIN)),
+        applicationManagementOriginConfigured: Boolean(configuredOrigin(env.APPLICATION_MANAGEMENT_ORIGIN)),
         controlSecretConfigured: (env.PRICE_REPORT_CONTROL_SERVICE_SECRET ?? "").length >= 32,
       }, ready ? 200 : 503, "none");
     }
