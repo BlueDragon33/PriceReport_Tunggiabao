@@ -430,6 +430,7 @@ function renderEditorProducts() {
     collapse.className = 'mini-action';
     collapse.type = 'button';
     collapse.title = collapsedProducts.has(index) ? 'Mở rộng' : 'Thu gọn';
+    collapse.setAttribute('aria-label', collapse.title + ' sản phẩm ' + (index + 1));
     collapse.textContent = collapsedProducts.has(index) ? '＋' : '−';
     collapse.addEventListener('click', () => {
       if (collapsedProducts.has(index)) collapsedProducts.delete(index);
@@ -441,6 +442,7 @@ function renderEditorProducts() {
     up.className = 'mini-action';
     up.type = 'button';
     up.title = 'Đưa lên';
+    up.setAttribute('aria-label', 'Đưa sản phẩm ' + (index + 1) + ' lên');
     up.textContent = '↑';
     up.disabled = index === 0;
     up.addEventListener('click', () => {
@@ -453,6 +455,7 @@ function renderEditorProducts() {
     down.className = 'mini-action';
     down.type = 'button';
     down.title = 'Đưa xuống';
+    down.setAttribute('aria-label', 'Đưa sản phẩm ' + (index + 1) + ' xuống');
     down.textContent = '↓';
     down.disabled = index === state.products.length - 1;
     down.addEventListener('click', () => {
@@ -465,6 +468,7 @@ function renderEditorProducts() {
     duplicate.className = 'mini-action';
     duplicate.type = 'button';
     duplicate.title = 'Nhân bản';
+    duplicate.setAttribute('aria-label', 'Nhân bản sản phẩm ' + (index + 1));
     duplicate.textContent = '⧉';
     duplicate.addEventListener('click', () => {
       state.products.splice(index + 1, 0, clone(product));
@@ -475,6 +479,7 @@ function renderEditorProducts() {
     remove.className = 'mini-action danger-icon';
     remove.type = 'button';
     remove.title = 'Xóa';
+    remove.setAttribute('aria-label', 'Xóa sản phẩm ' + (index + 1));
     remove.textContent = '×';
     remove.addEventListener('click', () => {
       if (state.products.length > 1 && !confirm('Xóa sản phẩm này?')) return;
