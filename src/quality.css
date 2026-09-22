@@ -1,0 +1,97 @@
+/* Final QA layer: predictable print geometry, readable forms and restrained report styling. */
+
+.template-badge{
+  position:absolute;left:9px;top:9px;z-index:4;
+  padding:3px 6px;border-radius:999px;background:#0d7ff2;color:#fff;
+  font-size:8.5px;font-weight:800;letter-spacing:.15px;
+  box-shadow:0 2px 6px rgba(13,127,242,.2)
+}
+.recommended-template{position:relative}
+
+.history-kpi strong{
+  display:block;line-height:1.25;overflow-wrap:anywhere
+}
+
+/* Reference template typography follows the supplied PDF more closely. */
+.theme-modern .company-lines>div{font-style:italic}
+.theme-modern .company-lines b{font-style:normal}
+.theme-modern .company-lines,
+.theme-modern .company-name,
+.theme-modern .recipient,
+.theme-modern .intro,
+.theme-modern .sectionbar{
+  font-family:"Times New Roman",Times,serif
+}
+
+/* Table content remains readable with long product names/notes. */
+.qtable th,.qtable td{
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.qtable td.num{white-space:nowrap}
+.qtable td.center{white-space:nowrap}
+.qtable col{transition:width .15s ease}
+
+/* Keep the report visually quiet and corporate across all variants. */
+.paper .company-block,
+.paper .qtitle-wrap,
+.paper .recipient,
+.paper .intro,
+.paper .sectionbar,
+.paper .qtable,
+.paper .summary,
+.paper .payment-print,
+.paper .terms,
+.paper .signatures{
+  position:relative;
+  z-index:2;
+}
+.paper .company-lines b{font-weight:700}
+.paper .intro{max-width:100%}
+.paper .words{line-height:1.35}
+
+/* Signature standard: date belongs to the representative side only. */
+.signatures>div:first-child #pDateLeft{display:none!important}
+
+/* Better focus affordance for intensive data entry. */
+.product-field input:focus,.product-field textarea:focus{
+  border-color:#5aa4ef;
+  box-shadow:0 0 0 3px rgba(13,127,242,.08)
+}
+
+/* Print hardening: the old preview clipped long quotations because .paper had overflow:hidden. */
+@media print{
+  .paper{
+    overflow:visible!important;
+    height:auto!important;
+    min-height:297mm!important;
+    display:block!important;
+  }
+  .paper-wrap{
+    overflow:visible!important;
+    height:auto!important;
+  }
+  .footer{
+    margin-top:8mm!important;
+  }
+  .qtable{
+    break-inside:auto!important;
+    page-break-inside:auto!important;
+  }
+  .qtable thead{display:table-header-group!important}
+  .qtable tr{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+  .summary,.payment-print,.terms,.signatures{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+}
+
+/* Small screens: keep critical editor actions comfortably tappable. */
+@media(max-width:620px){
+  .btn,.mini-action,.toolbar-btn{min-height:36px}
+  .product-card-actions{gap:6px}
+  .history-kpi strong{font-size:15px}
+}
