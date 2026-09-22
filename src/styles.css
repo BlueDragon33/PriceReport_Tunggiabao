@@ -50,3 +50,11 @@ textarea{min-height:76px;resize:vertical;line-height:1.45}input:focus,textarea:f
 @media(max-width:1450px){.shell{grid-template-columns:90px 390px minmax(640px,1fr)}.design{position:fixed;left:90px;top:0;bottom:0;width:310px;z-index:50;transform:translateX(-112%);transition:.2s;box-shadow:20px 0 40px rgba(0,0,0,.14)}.design.open{transform:none}}
 @media(max-width:1050px){body{overflow:auto}.shell{height:auto;display:block}.nav{height:auto;position:sticky;top:0;z-index:60;flex-direction:row;overflow:auto;border-bottom:1px solid var(--line)}.brand{min-width:58px;height:48px}.nav button{min-width:78px;min-height:48px}.nav .spacer,.tip{display:none}.editor,.preview{height:auto}.design{left:0}.preview{min-height:100vh}}
 @media print{@page{size:A4 portrait;margin:0}html,body,#app{margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}.nav,.editor,.design,.preview-tools,.toast{display:none!important}.shell,.preview{display:block!important;width:auto!important;height:auto!important;overflow:visible!important;padding:0!important;margin:0!important;background:#fff!important}.paper-wrap{transform:none!important;width:210mm!important;min-height:297mm!important;margin:0!important}.paper{box-shadow:none!important;margin:0!important}.clickable:hover{outline:0!important;background:transparent!important}}
+
+.doc-head.no-logo{grid-template-columns:1fr}
+.doc-head.no-logo .company{max-width:150mm;margin:0 auto;width:100%}
+.payment-print{margin-top:4mm;page-break-inside:avoid}
+.payment-print h4{font-size:11px;color:var(--doc);text-transform:uppercase;margin:0 0 2mm}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2mm 5mm;font-size:9.8px;background:color-mix(in srgb,var(--doc) 6%, white);border:1px solid #d3dde5;border-radius:2mm;padding:2.2mm 3mm}
+.footer span{vertical-align:middle}
+@media(max-width:1050px){.payment-grid{grid-template-columns:1fr}}
