@@ -506,8 +506,19 @@ function renderPreviewProducts() {
 
   const head = document.getElementById('qHead');
   const body = document.getElementById('qBody');
+  const colgroup = document.getElementById('qCols');
   head.innerHTML = '';
   body.innerHTML = '';
+  if (colgroup) {
+    colgroup.innerHTML = '';
+    const weights = { stt: 6, name: 25, pack: 16, unit: 9, qty: 10, price: 14, amount: 15, note: 18 };
+    const totalWeight = cols.reduce((sum, [, key]) => sum + (weights[key] || 10), 0);
+    cols.forEach(([, key]) => {
+      const col = document.createElement('col');
+      col.style.width = (((weights[key] || 10) / totalWeight) * 100).toFixed(2) + '%';
+      colgroup.appendChild(col);
+    });
+  }
 
   const hrow = document.createElement('tr');
   cols.forEach(([label]) => {
