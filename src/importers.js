@@ -154,6 +154,7 @@ export function parseSpreadsheetRows(rows) {
   if (!fields.companyName) warnings.push('Chưa nhận diện được tên đơn vị.');
   if (!fields.companyAddress) warnings.push('Chưa nhận diện được địa chỉ.');
 
+  const hasNoteValues = products.some(product => clean(product.note));
   return {
     source: 'excel',
     fields,
@@ -164,7 +165,7 @@ export function parseSpreadsheetRows(rows) {
       showQty: false,
       showPrice: true,
       showAmount: false,
-      showNote: noteColumnDetected,
+      showNote: noteColumnDetected && hasNoteValues,
       showTotals: false,
       showWords: false,
       showPaymentBlock: false,
@@ -241,7 +242,7 @@ export function parseHandwritingText(rawText) {
   };
 }
 
-export function mergeImportDraft(base, next) {
+export function mergeImportDraft(base, next, options = {}) {
   const sourceParts = [...new Set(
     [base?.source, next?.source]
       .filter(Boolean)
@@ -249,9 +250,11 @@ export function mergeImportDraft(base, next) {
       .map(value => value.trim())
       .filter(Boolean)
   )];
+  const nextSource = String(next?.source || '').trim();
   const result = {
     source: sourceParts.join('+') || 'manual',
     fields: { ...(base?.fields || {}) },
+    fieldSources: { ...(base?.fieldSources || {}) },
     products: Array.isArray(base?.products) ? base.products.map(item => ({ ...item })) : [],
     groups: Array.isArray(base?.groups) ? [...base.groups] : [],
     layoutHints: { ...(base?.layoutHints || {}) },
@@ -260,11 +263,25 @@ export function mergeImportDraft(base, next) {
     confidence: { ...(base?.confidence || {}) }
   };
 
+  if (options.replaceSourceFields && nextSource) {
+    Object.entries(result.fieldSources).forEach(([key, source]) => {
+      if (source !== nextSource) return;
+      delete result.fields[key];
+      delete result.fieldSources[key];
+      delete result.confidence[key];
+    });
+  }
+
   Object.entries(next?.fields || {}).forEach(([key, value]) => {
     const cleaned = clean(value);
     if (!cleaned) return;
-    if (!clean(result.fields[key])) result.fields[key] = cleaned;
-    else if (result.fields[key] !== cleaned && key === 'phone') result.fields[key] = cleaned;
+    const empty = !clean(result.fields[key]);
+    const sameSource = Boolean(nextSource) && result.fieldSources[key] === nextSource;
+    const replace = key === 'phone' || (Boolean(options.preferNext) && sameSource);
+    if (empty || replace) {
+      result.fields[key] = cleaned;
+      result.fieldSources[key] = nextSource || 'unknown';
+    }
   });
 
   if ((!result.products.length) && Array.isArray(next?.products)) result.products = next.products.map(item => ({ ...item }));
