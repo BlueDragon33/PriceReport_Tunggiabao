@@ -97,7 +97,18 @@ try {
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
-const save = () => localStorage.setItem(STORAGE, JSON.stringify(state));
+function safeStore(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    console.error('Local storage write failed:', error);
+    const toastEl = document.getElementById('toast');
+    if (toastEl) toast('Không thể lưu dữ liệu: bộ nhớ trình duyệt có thể đã đầy.');
+    return false;
+  }
+}
+const save = () => safeStore(STORAGE, JSON.stringify(state));
 const setText = (id, value) => {
   const el = document.getElementById(id);
   if (el) el.textContent = value == null ? '' : value;
@@ -460,6 +471,11 @@ document.getElementById('addProduct').addEventListener('click', () => {
 document.getElementById('logoInput').addEventListener('change', (event) => {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
+  if (file.size > 1500000) {
+    alert('Logo quá lớn. Hãy chọn ảnh nhỏ hơn khoảng 1,5 MB để tránh đầy bộ nhớ trình duyệt.');
+    event.target.value = '';
+    return;
+  }
   const reader = new FileReader();
   reader.onload = () => {
     state.logo = reader.result;
@@ -552,7 +568,7 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
       state = merge(payload.current);
       setHistory(payload.history);
-      localStorage.setItem(PRESETS, JSON.stringify(payload.presets || {}));
+      safeStore(PRESETS, JSON.stringify(payload.presets || {}));
       setCustomerLibrary(Array.isArray(payload.customers) ? payload.customers : []);
       setProductCatalog(Array.isArray(payload.catalog) ? payload.catalog : []);
       save();
@@ -602,7 +618,7 @@ function getHistory() {
 }
 
 function setHistory(items) {
-  localStorage.setItem(HISTORY, JSON.stringify(items));
+  safeStore(HISTORY, JSON.stringify(items));
 }
 
 function calcTotal(data) {
@@ -812,7 +828,7 @@ function getCustomerLibrary() {
 }
 
 function setCustomerLibrary(items) {
-  localStorage.setItem(CUSTOMERS, JSON.stringify(items));
+  safeStore(CUSTOMERS, JSON.stringify(items));
 }
 
 function customerKey(customer) {
@@ -871,7 +887,7 @@ function getProductCatalog() {
 }
 
 function setProductCatalog(items) {
-  localStorage.setItem(CATALOG, JSON.stringify(items));
+  safeStore(CATALOG, JSON.stringify(items));
 }
 
 function productKey(product) {
@@ -1037,7 +1053,7 @@ document.getElementById('savePreset').addEventListener('click', () => {
   }
   const presets = getPresets();
   presets[name] = clone(state);
-  localStorage.setItem(PRESETS, JSON.stringify(presets));
+  safeStore(PRESETS, JSON.stringify(presets));
   document.getElementById('presetName').value = '';
   renderPresets();
   toast('Đã lưu mẫu');
@@ -1084,7 +1100,7 @@ function renderPresets() {
 
     del.addEventListener('click', () => {
       delete presets[name];
-      localStorage.setItem(PRESETS, JSON.stringify(presets));
+      safeStore(PRESETS, JSON.stringify(presets));
       renderPresets();
     });
 
