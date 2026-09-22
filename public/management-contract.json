@@ -1,5 +1,5 @@
 {
-  "contractVersion": 1,
+  "contractVersion": 2,
   "application": {
     "id": "price-report-tunggiabao",
     "name": "PriceReport Tùng Gia Bảo",
@@ -26,28 +26,59 @@
     ],
     "classification": "client-runtime",
     "localRecordKey": "tunggiabao-device-profile-v1",
-    "remoteRegistry": false,
-    "accessAndEditSeparated": false,
+    "remoteRegistry": true,
+    "accessAndEditSeparated": true,
     "uiProfiles": {
       "desktop": "workspace-wide",
       "tablet": "touch-split",
       "phone": "mobile-single"
-    }
+    },
+    "identity": "P-256 non-extractable private key in IndexedDB",
+    "session": "revocable server-side KT session"
   },
   "readiness": {
     "runtime": "available",
     "deviceClassification": "available",
     "adaptiveUi": "available",
     "localDeviceRecord": "available",
-    "deviceRegistry": "missing",
-    "deviceGateway": "missing",
-    "adminApi": "missing",
-    "remoteAuditApi": "missing"
+    "deviceRegistry": "implemented-requires-d1-deployment",
+    "deviceGateway": "implemented-requires-d1-and-app-origin",
+    "adminApi": "implemented-requires-control-secret-and-origin",
+    "remoteAuditApi": "implemented-requires-d1-deployment",
+    "p256DeviceIdentity": "implemented",
+    "revocableSessions": "implemented",
+    "deviceAccessGate": "implemented-rollout-off-until-live-readback"
   },
   "policy": {
     "applicationManagementMayInventOperationsWithoutBackend": false,
     "applicationManagementMayReadQuotationData": false,
     "applicationManagementMayReadCustomerData": false,
-    "remoteAdminReady": false
+    "remoteAdminReady": false,
+    "clientOwnsRegistry": true,
+    "privateKeyMayLeaveDevice": false
+  },
+  "controlService": {
+    "owner": "BlueDragon33/PriceReport_Tunggiabao",
+    "protocol": "price-report-control-v1",
+    "namespace": "KT-",
+    "database": "client-owned D1",
+    "adminTicket": "HMAC v1 short-lived from Application Management",
+    "commandSemantics": {
+      "idempotencyKey": "commandId",
+      "optimisticConcurrency": "expectedStatus",
+      "blockRevokesSessions": true,
+      "registryPreservedOnBlock": true
+    },
+    "endpoints": {
+      "status": "/api/control/status",
+      "devices": "/api/control/devices",
+      "deviceCommands": "/api/control/device-commands",
+      "audit": "/api/control/audit",
+      "register": "/api/device/register",
+      "challenge": "/api/device/challenge",
+      "verify": "/api/device/verify",
+      "heartbeat": "/api/device/heartbeat",
+      "deviceStatus": "/api/device/status"
+    }
   }
 }
