@@ -4,7 +4,9 @@ import {
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
   normalizeCatalogCurrency,
-  normalizePhone
+  normalizeNonNegativeNumber,
+  normalizePhone,
+  localDateISO
 } from './core.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
@@ -29,7 +31,7 @@ const defaults = {
   slogan: 'Vì sức khỏe cộng đồng',
   quoteTitle: 'BẢNG BÁO GIÁ',
   quoteNo: 'BG-2026-001',
-  quoteDate: new Date().toISOString().slice(0, 10),
+  quoteDate: localDateISO(),
   quoteStatus: 'draft',
   historyRecordId: '',
   validity: '7 ngày',
@@ -116,8 +118,8 @@ function merge(data) {
       name: String(product?.name || ''),
       pack: String(product?.pack || ''),
       unit: String(product?.unit || ''),
-      qty: Math.max(0, Number(product?.qty || 0)),
-      price: Math.max(0, Number(product?.price || 0)),
+      qty: normalizeNonNegativeNumber(product?.qty),
+      price: normalizeNonNegativeNumber(product?.price),
       note: String(product?.note || '')
     }))
   });
@@ -128,7 +130,7 @@ function merge(data) {
   else merged.currency = String(merged.currency).toUpperCase();
   merged.discountPct = Math.min(100, Math.max(0, Number(merged.discountPct || 0)));
   merged.vatPct = Math.min(100, Math.max(0, Number(merged.vatPct || 0)));
-  merged.otherFee = Math.max(0, Number(merged.otherFee || 0));
+  merged.otherFee = normalizeNonNegativeNumber(merged.otherFee);
   merged.marginX = Math.min(30, Math.max(6, Number(merged.marginX || defaults.marginX)));
   merged.marginTop = Math.min(30, Math.max(6, Number(merged.marginTop || defaults.marginTop)));
   merged.marginBottom = Math.min(30, Math.max(6, Number(merged.marginBottom || defaults.marginBottom)));
@@ -157,6 +159,37 @@ function merge(data) {
     merged.logoBackdropBorder = 'none';
     merged.logoPadding = Math.min(4, Math.max(0, Number(merged.logoPadding || 2)));
   }
+
+  const stringKeys = [
+    'logo','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+    'taxCode','phone','website','companyEmail','slogan','quoteTitle','quoteNo','quoteDate',
+    'historyRecordId','validity','recipientLine','intro','sectionTitle','customerName',
+    'customerCompany','customerAddress','customerPhone','customerEmail','customerContact',
+    'paymentMethod','bankName','bankAccount','bankOwner','termsTitle','termsText','closingText',
+    'dateLine','leftTitle','rightTitle','leftNote','rightNote','leftName','rightName','footerText',
+    'accent','docFont','logoTreatment','logoBlendMode','logoBackdropColor','logoBackdropBorder',
+    'previewTitleAlign','previewSpacing','previewTableDensity'
+  ];
+  stringKeys.forEach((key) => {
+    const fallback = defaults[key] == null ? '' : defaults[key];
+    merged[key] = typeof merged[key] === 'string' ? merged[key] : String(merged[key] ?? fallback);
+  });
+
+  const booleanKeys = [
+    'showCustomer','showStt','showPrice','showAmount','showNote','showTotals','showWords',
+    'showPaymentBlock','showLogo','showSlogan','showWebEmail','showTerms','showSignature',
+    'showQuoteMeta','compactTable'
+  ];
+  booleanKeys.forEach((key) => {
+    const value = merged[key];
+    if (typeof value === 'string') merged[key] = value.toLowerCase() === 'true';
+    else merged[key] = Boolean(value);
+  });
+
+  if (!['draft','sent','accepted','rejected','expired'].includes(merged.quoteStatus)) merged.quoteStatus = 'draft';
+  if (!['center','left','right'].includes(merged.previewTitleAlign)) merged.previewTitleAlign = 'center';
+  if (!['compact','standard','comfortable'].includes(merged.previewTableDensity)) merged.previewTableDensity = 'standard';
+  if (!['compact','standard','relaxed'].includes(merged.previewSpacing)) merged.previewSpacing = 'standard';
 
   return merged;
 }
@@ -1107,6 +1140,7 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   reader.onload = () => {
     try {
       const imported = JSON.parse(reader.result);
+      if (!isPlainObject(imported)) throw new Error('invalid quote schema');
       state = merge(imported);
       state.historyRecordId = '';
       saveLogoAsset(state.logo || '');
@@ -1143,20 +1177,25 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
   reader.onload = () => {
     try {
       const payload = JSON.parse(reader.result);
-      if (!payload || typeof payload !== 'object' || !payload.current || !Array.isArray(payload.history) || typeof payload.presets !== 'object') {
+      if (!isPlainObject(payload) || !isPlainObject(payload.current) || !Array.isArray(payload.history) || !isPlainObject(payload.presets)) {
         throw new Error('invalid backup schema');
       }
       const schemaVersion = Number(payload.schemaVersion || 1);
       if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
         throw new Error('unsupported backup schema');
       }
+      const restoredState = merge(payload.current);
+      const restoredHistory = normalizeHistoryRecords(payload.history);
+      const restoredPresets = normalizePresetStore(payload.presets);
+      const restoredCustomers = normalizeCustomerLibrary(payload.customers);
+      const restoredCatalog = normalizeProductCatalog(payload.catalog);
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
-      state = merge(payload.current);
+      state = restoredState;
       saveLogoAsset(state.logo || '');
-      setHistory(payload.history);
-      safeStore(PRESETS, JSON.stringify(payload.presets || {}));
-      setCustomerLibrary(Array.isArray(payload.customers) ? payload.customers : []);
-      setProductCatalog(Array.isArray(payload.catalog) ? payload.catalog : []);
+      setHistory(restoredHistory);
+      safeStore(PRESETS, JSON.stringify(restoredPresets));
+      setCustomerLibrary(restoredCustomers);
+      setProductCatalog(restoredCatalog);
       save();
       syncInputs();
       renderEditorProducts();
@@ -1277,17 +1316,58 @@ function runPreflight({ forPrint = false } = {}) {
   return true;
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeHistoryRecords(value) {
+  const records = Array.isArray(value) ? value : [];
+  const seenIds = new Set();
+  return records.flatMap((record, index) => {
+    if (!isPlainObject(record) || !isPlainObject(record.data)) return [];
+    const rawData = Object.assign({}, record.data, {
+      products: Array.isArray(record.data.products) ? record.data.products : []
+    });
+    const data = merge(rawData);
+    data.logo = '';
+    const currency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
+    data.currency = currency;
+    let id = String(record.id || '').trim();
+    if (!id || seenIds.has(id)) {
+      const stamp = String(record.savedAt || '').replace(/\W+/g, '').slice(0, 24) || 'legacy';
+      id = 'restored-' + stamp + '-' + (index + 1);
+      let suffix = 2;
+      while (seenIds.has(id)) {
+        id = 'restored-' + stamp + '-' + (index + 1) + '-' + suffix;
+        suffix += 1;
+      }
+    }
+    seenIds.add(id);
+    const status = ['draft','sent','accepted','rejected','expired'].includes(record.status)
+      ? record.status
+      : data.quoteStatus;
+    data.quoteStatus = status;
+    return [{
+      id,
+      savedAt: typeof record.savedAt === 'string' ? record.savedAt : '',
+      status,
+      currency,
+      total: calcQuoteTotal(data),
+      data
+    }];
+  });
+}
+
 function getHistory() {
   try {
-    const value = JSON.parse(localStorage.getItem(HISTORY));
-    return Array.isArray(value) ? value : [];
+    return normalizeHistoryRecords(JSON.parse(localStorage.getItem(HISTORY)));
   } catch {
     return [];
   }
 }
 
 function setHistory(items) {
-  return safeStore(HISTORY, JSON.stringify(items));
+  return safeStore(HISTORY, JSON.stringify(normalizeHistoryRecords(items)));
 }
 
 function calcTotal(data) {
@@ -1380,7 +1460,7 @@ function duplicateQuoteRecord(record) {
   if (recordLogo) saveLogoAsset(recordLogo);
   const used = getHistory().map(item => item?.data?.quoteNo).filter(Boolean);
   state.quoteNo = nextDuplicateQuoteNo(state.quoteNo || 'BG', used);
-  state.quoteDate = new Date().toISOString().slice(0, 10);
+  state.quoteDate = localDateISO();
   state.quoteStatus = 'draft';
   state.historyRecordId = '';
   save();
@@ -1576,17 +1656,32 @@ function renderHistory() {
   });
 }
 
+function normalizeCustomerLibrary(items) {
+  const source = Array.isArray(items) ? items : [];
+  return source.flatMap((item, index) => {
+    if (!isPlainObject(item)) return [];
+    return [{
+      id: String(item.id || ('customer-' + (index + 1))),
+      name: String(item.name || ''),
+      company: String(item.company || ''),
+      address: String(item.address || ''),
+      phone: String(item.phone || ''),
+      email: String(item.email || ''),
+      contact: String(item.contact || '')
+    }];
+  });
+}
+
 function getCustomerLibrary() {
   try {
-    const value = JSON.parse(localStorage.getItem(CUSTOMERS));
-    return Array.isArray(value) ? value : [];
+    return normalizeCustomerLibrary(JSON.parse(localStorage.getItem(CUSTOMERS)));
   } catch {
     return [];
   }
 }
 
 function setCustomerLibrary(items) {
-  safeStore(CUSTOMERS, JSON.stringify(items));
+  return safeStore(CUSTOMERS, JSON.stringify(normalizeCustomerLibrary(items)));
 }
 
 function customerKey(customer) {
@@ -1635,17 +1730,32 @@ function useCustomer(customer) {
   toast('Đã nạp khách hàng');
 }
 
+function normalizeProductCatalog(items) {
+  const source = Array.isArray(items) ? items : [];
+  return source.flatMap((item, index) => {
+    if (!isPlainObject(item)) return [];
+    return [{
+      id: String(item.id || ('product-' + (index + 1))),
+      name: String(item.name || ''),
+      pack: String(item.pack || ''),
+      unit: String(item.unit || ''),
+      price: normalizeNonNegativeNumber(item.price),
+      currency: normalizeCatalogCurrency(item.currency || 'VND'),
+      note: String(item.note || '')
+    }];
+  });
+}
+
 function getProductCatalog() {
   try {
-    const value = JSON.parse(localStorage.getItem(CATALOG));
-    return Array.isArray(value) ? value : [];
+    return normalizeProductCatalog(JSON.parse(localStorage.getItem(CATALOG)));
   } catch {
     return [];
   }
 }
 
 function setProductCatalog(items) {
-  safeStore(CATALOG, JSON.stringify(items));
+  return safeStore(CATALOG, JSON.stringify(normalizeProductCatalog(items)));
 }
 
 function productKey(product) {
@@ -1670,7 +1780,7 @@ function saveCurrentProductsToCatalog() {
       name: product.name || '',
       pack: product.pack || '',
       unit: product.unit || '',
-      price: Math.max(0, Number(product.price || 0)),
+      price: normalizeNonNegativeNumber(product.price),
       currency: normalizeCatalogCurrency(state.currency),
       note: product.note || ''
     };
@@ -1694,10 +1804,10 @@ function addCatalogProduct(product) {
   const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
   const targetCurrency = normalizeCatalogCurrency(state.currency);
   const currencyMatches = sourceCurrency === targetCurrency;
-  const catalogPrice = currencyMatches ? Math.max(0, Number(product.price || 0)) : 0;
+  const catalogPrice = currencyMatches ? normalizeNonNegativeNumber(product.price) : 0;
   const existing = state.products.find(item => productKey(item) === key);
   if (existing) {
-    existing.qty = Math.max(0, Number(existing.qty || 0)) + 1;
+    existing.qty = normalizeNonNegativeNumber(existing.qty) + 1;
     if (currencyMatches) existing.price = catalogPrice;
   } else {
     state.products.push({
@@ -1805,9 +1915,23 @@ function renderMasterData() {
   }
 }
 
+function normalizePresetStore(value) {
+  if (!isPlainObject(value)) return {};
+  const normalized = {};
+  Object.entries(value).forEach(([name, preset]) => {
+    const safeName = String(name || '').trim();
+    if (!safeName || !isPlainObject(preset)) return;
+    const source = Object.assign({}, preset, {
+      products: Array.isArray(preset.products) ? preset.products : []
+    });
+    normalized[safeName] = createPresetState(merge(source));
+  });
+  return normalized;
+}
+
 function getPresets() {
   try {
-    return JSON.parse(localStorage.getItem(PRESETS)) || {};
+    return normalizePresetStore(JSON.parse(localStorage.getItem(PRESETS)));
   } catch {
     return {};
   }
@@ -1818,7 +1942,7 @@ function createPresetState(source) {
   preset.historyRecordId = '';
   preset.logo = '';
   preset.quoteNo = '';
-  preset.quoteDate = new Date().toISOString().slice(0, 10);
+  preset.quoteDate = localDateISO();
   preset.quoteStatus = 'draft';
   preset.customerName = 'QUÝ KHÁCH HÀNG';
   preset.customerCompany = '';
