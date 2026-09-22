@@ -229,3 +229,9 @@ if (!fs.existsSync('scripts/production-config.mjs')) fail('Production rollout ma
 const pagesWorkflow = fs.readFileSync('.github/workflows/pages.yml','utf8');
 if (!pagesWorkflow.includes('node scripts/production-config.mjs')) fail('Pages deploy must materialize verified production control config');
 if (!pagesWorkflow.includes('PRICE_REPORT_CONTROL_ORIGIN')) fail('Pages deploy is missing KT control origin binding');
+
+
+const deployControlWorkflow = fs.readFileSync('.github/workflows/deploy-control-service.yml','utf8');
+if (!pagesWorkflow.includes('control_origin:')) fail('Pages workflow must accept explicit KT control-origin handoff');
+if (!pagesWorkflow.includes("inputs.control_origin || vars.PRICE_REPORT_CONTROL_ORIGIN")) fail('Pages workflow must prefer the forwarded KT control origin');
+if (!deployControlWorkflow.includes('-f control_origin="$PRICE_REPORT_CONTROL_ORIGIN"')) fail('KT deploy workflow must forward its verified environment-scoped origin to Pages');
