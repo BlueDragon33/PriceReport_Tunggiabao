@@ -4,6 +4,20 @@ export function clamp(value, min, max) {
   return Math.min(max, Math.max(min, number));
 }
 
+export function normalizeNonNegativeNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, number) : 0;
+}
+
+export function localDateISO(date = new Date()) {
+  const value = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(value.getTime())) return '';
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+}
+
 export function normalizePhone(value) {
   return String(value || '').replace(/\D+/g, '');
 }
@@ -11,8 +25,8 @@ export function normalizePhone(value) {
 export function calcQuoteTotal(data = {}) {
   const products = Array.isArray(data.products) ? data.products : [];
   const subtotal = products.reduce((sum, product) => {
-    const qty = Math.max(0, Number(product?.qty || 0));
-    const price = Math.max(0, Number(product?.price || 0));
+    const qty = normalizeNonNegativeNumber(product?.qty);
+    const price = normalizeNonNegativeNumber(product?.price);
     return sum + qty * price;
   }, 0);
   const discountPct = clamp(data.discountPct || 0, 0, 100);
@@ -20,7 +34,7 @@ export function calcQuoteTotal(data = {}) {
   const discount = subtotal * discountPct / 100;
   const taxable = Math.max(0, subtotal - discount);
   const vat = taxable * vatPct / 100;
-  const fee = Math.max(0, Number(data.otherFee || 0));
+  const fee = normalizeNonNegativeNumber(data.otherFee);
   return taxable + vat + fee;
 }
 
@@ -39,7 +53,7 @@ export function nextDuplicateQuoteNo(base, usedQuoteNumbers = []) {
 export function historyTotalsByCurrency(records = []) {
   return (Array.isArray(records) ? records : []).reduce((totals, record) => {
     const data = record?.data || {};
-    const currency = String(record?.currency || data.currency || 'VND').toUpperCase();
+    const currency = normalizeCatalogCurrency(record?.currency || data.currency || 'VND');
     const total = Number.isFinite(Number(record?.total))
       ? Math.max(0, Number(record.total))
       : calcQuoteTotal(data);
