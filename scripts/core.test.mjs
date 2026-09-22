@@ -3,9 +3,11 @@ import {
   calcQuoteTotal,
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
+  normalizeBoundedNumber,
   normalizeCatalogCurrency,
   normalizeNonNegativeNumber,
   normalizePhone,
+  isValidISODate,
   localDateISO
 } from '../src/core.js';
 
@@ -44,6 +46,11 @@ assert.equal(normalizeNonNegativeNumber('Infinity'), 0);
 assert.equal(normalizeNonNegativeNumber(-10), 0);
 assert.equal(normalizeNonNegativeNumber('12.5'), 12.5);
 assert.equal(localDateISO(new Date(2026, 0, 2, 1, 30)), '2026-01-02');
+assert.equal(normalizeBoundedNumber('Infinity', 20, 32, 25), 25);
+assert.equal(normalizeBoundedNumber(99, 20, 32, 25), 32);
+assert.equal(isValidISODate('2026-02-28'), true);
+assert.equal(isValidISODate('2026-02-30'), false);
+assert.equal(isValidISODate('28/02/2026'), false);
 assert.deepEqual(historyTotalsByCurrency([{currency:'EUR',total:2,data:{}}]), {VND:2});
 
 console.log('CORE LOGIC PASS');
