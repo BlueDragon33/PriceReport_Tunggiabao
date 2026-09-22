@@ -10,6 +10,25 @@ const nonEmptyCells = (row) => (Array.isArray(row) ? row : []).map(clean).filter
 
 const rowText = (row) => nonEmptyCells(row).join(' ').trim();
 
+const stripAdminPrefix = (value, prefix) =>
+  clean(value).replace(new RegExp('^' + prefix + '\\s+', 'i'), '').trim();
+
+function parseAdministrativeRegion(text) {
+  const raw = clean(text);
+  const wardMatch = raw.match(/(?:^|[,;\-])\s*(?:Phường|P\.)\s*([^,;\-]+)/i) ||
+    raw.match(/\bPhường\s+([^,;\-]+)/i);
+  const provinceMatch = raw.match(/(?:^|[,;\-])\s*(?:Tỉnh)\s*([^,;\-]+)/i) ||
+    raw.match(/\bTỉnh\s+([^,;\-]+)/i);
+
+  const fields = {};
+  if (wardMatch) fields.companyWard = stripAdminPrefix(wardMatch[1], 'Phường');
+  if (provinceMatch) fields.companyProvince = stripAdminPrefix(provinceMatch[1], 'Tỉnh');
+
+  // Specific source fallback from the supplied Tùng Gia Bảo material.
+  if (!fields.companyProvince && /khánh\s*hòa/i.test(raw)) fields.companyProvince = 'Khánh Hòa';
+  return fields;
+}
+
 const looksLikeProductHeader = (row) => {
   const cells = (Array.isArray(row) ? row : []).map(cell => fold(clean(cell)));
   const joined = cells.join('|');
@@ -89,9 +108,26 @@ export function parseSpreadsheetRows(rows) {
       return;
     }
 
-    if (/^dia chi\b/.test(fold(clean(cells[0])))) {
-      const address = clean(cells.slice(1).filter(Boolean).join(' ')) || text.replace(/^\s*địa\s*chỉ\s*:?/i, '').trim();
-      if (address) fields.companyAddress = address;
+    const firstFolded = fold(clean(cells[0]));
+    if (/^dia chi chi tiet\b/.test(firstFolded) || /^dia chi\b/.test(firstFolded)) {
+      const address = clean(cells.slice(1).filter(Boolean).join(' ')) ||
+        text.replace(/^\s*địa\s*chỉ(?:\s*chi\s*tiết)?\s*:?/i, '').trim();
+      if (address) {
+        fields.companyAddressDetail = address;
+        fields.companyAddress = address;
+      }
+      return;
+    }
+
+    if (/^(khu vuc|phuong|tinh)\b/.test(firstFolded)) {
+      const regionText = clean(cells.slice(1).filter(Boolean).join(' ')) || text;
+      Object.assign(fields, parseAdministrativeRegion(regionText));
+      if (/^phuong\b/.test(firstFolded) && !fields.companyWard) {
+        fields.companyWard = clean(cells.slice(1).filter(Boolean).join(' ')).replace(/^Phường\s+/i, '');
+      }
+      if (/^tinh\b/.test(firstFolded) && !fields.companyProvince) {
+        fields.companyProvince = clean(cells.slice(1).filter(Boolean).join(' ')).replace(/^Tỉnh\s+/i, '');
+      }
       return;
     }
 
@@ -152,7 +188,7 @@ export function parseSpreadsheetRows(rows) {
   if (!fields.sectionTitle) fields.sectionTitle = groups.length > 1 ? 'DANH MỤC HÀNG HÓA' : (groups[0] || 'DANH MỤC SẢN PHẨM');
   if (!products.length) warnings.push('Không tìm thấy dòng sản phẩm có cấu trúc STT / Mặt hàng / ĐVT / Đơn giá.');
   if (!fields.companyName) warnings.push('Chưa nhận diện được tên đơn vị.');
-  if (!fields.companyAddress) warnings.push('Chưa nhận diện được địa chỉ.');
+  if (!fields.companyAddressDetail && !fields.companyAddress) warnings.push('Chưa nhận diện được địa chỉ chi tiết.');
 
   const hasNoteValues = products.some(product => clean(product.note));
   return {
@@ -218,16 +254,24 @@ export function parseHandwritingText(rawText) {
       confidence.recipientLine = 0.8;
       return;
     }
-    if (/(lo\s|bt\d|duong|kdt|nha trang|khanh hoa|my gia)/.test(f)) {
-      addressParts.push(line);
+    if (/(lo\s|bt\d|duong|kdt|nha trang|khanh hoa|my gia|phuong|tinh)/.test(f)) {
+      const region = parseAdministrativeRegion(line);
+      Object.assign(fields, region);
+      let detailPart = line
+        .replace(/[,;\-]?\s*Phường\s+[^,;\-]+/ig, '')
+        .replace(/[,;\-]?\s*Tỉnh\s+[^,;\-]+/ig, '')
+        .replace(/\s*[-–]\s*Khánh\s*Hòa\s*$/i, '')
+        .trim();
+      if (detailPart) addressParts.push(detailPart);
       return;
     }
     unmatched.push(line);
   });
 
   if (addressParts.length) {
-    fields.companyAddress = addressParts.join(', ');
-    confidence.companyAddress = 0.65;
+    fields.companyAddressDetail = addressParts.join(', ');
+    fields.companyAddress = fields.companyAddressDetail;
+    confidence.companyAddressDetail = 0.65;
   }
 
   return {
