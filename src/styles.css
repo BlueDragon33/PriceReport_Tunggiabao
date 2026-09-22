@@ -1652,3 +1652,13 @@ input[type=range]::-moz-range-thumb{
   .qgroup-row{break-inside:avoid!important;page-break-inside:avoid!important;break-after:avoid!important;page-break-after:avoid!important}
   .qgroup-row+tr{break-before:avoid!important;page-break-before:avoid!important}
 }
+
+/* V2.7 spacing compatibility */
+.paper[data-spacing="relaxed"],
+.paper[data-spacing="airy"]{
+  --rhythm-xs:2mm;
+  --rhythm-sm:3.6mm;
+  --rhythm-md:5.3mm;
+  --rhythm-lg:7mm
+}
+.product-card.collapsed .product-card-head{min-height:38px}
