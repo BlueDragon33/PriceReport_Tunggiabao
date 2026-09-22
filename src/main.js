@@ -995,8 +995,27 @@ function render() {
   paper.style.paddingRight = state.marginX + 'mm';
   paper.style.paddingTop = state.marginTop + 'mm';
   paper.style.paddingBottom = state.marginBottom + 'mm';
+  const docFontScale = Number(state.docFontSize || 12.2) / 12.2;
   paper.style.fontSize = state.docFontSize + 'px';
-  paper.style.setProperty('--doc-font-scale', String(Number(state.docFontSize || 12.2) / 12.2));
+  paper.style.setProperty('--doc-font-scale', String(docFontScale));
+  [
+    ['--fs-company', 9.6],
+    ['--fs-company-name', 13.2],
+    ['--fs-subtitle', 11.2],
+    ['--fs-meta', 9.6],
+    ['--fs-recipient', 13.5],
+    ['--fs-intro', 10.5],
+    ['--fs-section', 11.5],
+    ['--fs-table', 9],
+    ['--fs-summary', 9.4],
+    ['--fs-summary-grand', 10.2],
+    ['--fs-words', 9.8],
+    ['--fs-small-heading', 10.5],
+    ['--fs-payment', 9.4],
+    ['--fs-terms', 9.5],
+    ['--fs-signature', 9.5],
+    ['--fs-footer', 8.4]
+  ].forEach(([name, base]) => paper.style.setProperty(name, (base * docFontScale).toFixed(2) + 'px'));
   paper.style.fontFamily = '"' + state.docFont + '", serif';
   paper.style.lineHeight = Number(state.previewLineHeight || 1.26);
   paper.style.setProperty('--preview-title-size', Number(state.previewTitleSize || 25) + 'px');
