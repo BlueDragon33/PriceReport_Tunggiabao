@@ -156,3 +156,39 @@ test('full-backup restore rolls back when a storage write fails', async () => {
   expect(document.getElementById('companyName').value).toBe('CÔNG TY GIỮ NGUYÊN');
   expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Dữ liệu trước đó đã được phục hồi nguyên trạng'));
 });
+
+
+test('direct preview layout mode drags a block without changing document flow data', () => {
+  const toggle = document.getElementById('layoutEditToggle');
+  const logo = document.getElementById('previewLogo');
+  toggle.click();
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(document.getElementById('paper').classList.contains('layout-edit-mode')).toBe(true);
+
+  logo.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 140, clientY: 120, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 140, clientY: 120, button: 0 }));
+
+  const stored = JSON.parse(localStorage.getItem('tunggiabao-price-report-v1'));
+  expect(stored.layoutOffsets.logo).toBeTruthy();
+  expect(Math.abs(stored.layoutOffsets.logo.x)).toBeGreaterThan(0);
+  expect(logo.style.getPropertyValue('--layout-x')).toMatch(/mm$/);
+});
+
+test('logo size buttons resize visual logo independently and reset positions', () => {
+  const width = document.getElementById('logoWidthDesign');
+  const before = Number(width.value);
+  document.getElementById('logoGrow').click();
+  expect(Number(width.value)).toBe(before + 2);
+  document.getElementById('logoShrink').click();
+  expect(Number(width.value)).toBe(before);
+
+  document.getElementById('layoutEditToggle').click();
+  const section = document.getElementById('pSection');
+  section.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 80, clientY: 80, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 110, clientY: 100, button: 0 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 110, clientY: 100, button: 0 }));
+  document.getElementById('resetBlockPositions').click();
+  const stored = JSON.parse(localStorage.getItem('tunggiabao-price-report-v1'));
+  expect(stored.layoutOffsets).toEqual({});
+});
