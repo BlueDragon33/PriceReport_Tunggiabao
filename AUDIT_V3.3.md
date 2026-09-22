@@ -96,3 +96,5 @@ Tests specifically verify:
 Merge only after the final documentation head repeats the complete CI and production-build gate.
 
 After merge, verify GitHub Pages for the exact merge commit.
+
+Final documentation head is CI-gated before merge.
