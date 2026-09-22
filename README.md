@@ -2,7 +2,7 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V3.2 true background removal / structured headquarters
+## Trạng thái hiện tại — V3.3 fixed outside-table typography / adjustable table font
 
 - Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
 - 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
@@ -185,4 +185,43 @@ CI #243:
 - Logo Processing logic: **PASS**
 - DOM integration/migration: **37/37 PASS**
 - Smoke: **PASS** — 269 IDs, 83 bindings, 23 preview targets
+- Production build: **PASS**
+
+
+## V3.3 — Chữ ngoài bảng cố định, chữ trong bảng điều chỉnh riêng
+
+V3.3 tách hoàn toàn hai nhóm typography của báo giá:
+
+- **Ngoài bảng hàng hóa:** dùng bộ cỡ chữ cố định để bố cục đầu trang và các khối văn bản không thay đổi khi người dùng chỉnh bảng.
+- **Trong bảng hàng hóa:** có `tableFontSize` riêng, điều chỉnh từ 7.5–14 px.
+
+Bộ chữ cố định ngoài bảng được tăng khoảng **+2 px** so với baseline V3.2:
+- thông tin công ty: 11.6 px;
+- tên công ty: 15.2 px;
+- phụ đề: 13.2 px;
+- meta: 11.6 px;
+- kính gửi: 15.5 px;
+- lời mở đầu: 12.5 px;
+- tiêu đề nhóm: 13.5 px;
+- tiêu đề báo giá: 27 px;
+- các khối tổng cộng/thanh toán/điều khoản/chữ ký/footer cũng được khóa theo bộ cỡ cố định mới.
+
+Đã bỏ:
+- slider cỡ chữ toàn tài liệu;
+- slider cỡ tiêu đề.
+
+Hai vị trí trong giao diện Thiết kế giờ cùng điều khiển **Cỡ chữ trong bảng**.
+
+Dữ liệu cũ có `docFontSize` được migrate sang `tableFontSize` theo đúng tỷ lệ hiển thị cũ để bảng không nhảy cỡ bất ngờ.
+
+### Gate V3.3
+
+CI #246:
+- runtime audit: **0 vulnerabilities**
+- Core logic: **PASS**
+- Importer logic: **PASS**
+- PC Storage logic: **PASS**
+- Logo Processing logic: **PASS**
+- DOM integration/migration: **39/39 PASS**
+- Smoke: **PASS** — 267 IDs, 82 bindings, 23 preview targets
 - Production build: **PASS**
