@@ -29,4 +29,12 @@ Variables:
 - `PRICE_REPORT_APP_ORIGIN=https://bluedragon33.github.io`
 - `APPLICATION_MANAGEMENT_ORIGIN`
 
-Deployment is manual and fail-closed. After health read-back passes, update `public/device-control.json` with the live origin and enable the gate, then publish GitHub Pages and configure the same control origin/secret in Application Management.
+Deployment is manual and fail-closed. The deploy workflow first applies D1 migrations, deploys the Worker, rotates the control secret, and requires a successful public health read-back. It then triggers the Pages workflow.
+
+The Pages workflow runs `scripts/production-config.mjs`. When `PRICE_REPORT_CONTROL_ORIGIN` is empty, the checked-in source remains classification-only. When the origin is configured, the script re-verifies `/health` before it:
+- enables `public/device-control.json`,
+- publishes live readiness in `public/management-contract.json`,
+- marks `policy.remoteAdminReady=true`, and
+- rotates the PWA cache namespace so existing clients do not keep a stale rollout contract.
+
+Application Management must use the same control origin and `PRICE_REPORT_CONTROL_SERVICE_SECRET`. If health verification fails, Pages deployment fails instead of publishing an enabled Device Gate against an unhealthy control service.
