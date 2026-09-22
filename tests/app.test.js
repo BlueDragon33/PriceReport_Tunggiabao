@@ -458,16 +458,29 @@ test('obsolete branch and farm fields are removed from the company editor and pr
   expect(document.getElementById('pFarmAddress')).toBeNull();
 });
 
-test('document font-size control updates the real report typography scale', () => {
-  const control = document.getElementById('docFontSize');
-  control.value = '15';
+test('table font-size control changes only the product table typography', () => {
+  const control = document.getElementById('tableFontSize');
+  const paper = document.getElementById('paper');
+
+  expect(paper.style.getPropertyValue('--fs-company-name')).toBe('15.2px');
+  expect(paper.style.getPropertyValue('--preview-title-size')).toBe('27px');
+
+  control.value = '12';
   control.dispatchEvent(new Event('input', { bubbles: true }));
 
-  const paper = document.getElementById('paper');
-  expect(paper.style.getPropertyValue('--fs-table')).toBe('11.07px');
-  expect(paper.style.getPropertyValue('--fs-company-name')).toBe('16.23px');
-  expect(document.getElementById('docFontSizeValue').textContent).toBe('15.0 px');
-  expect(document.getElementById('designFontSize').value).toBe('15');
+  expect(paper.style.getPropertyValue('--fs-table')).toBe('12.0px');
+  expect(paper.style.getPropertyValue('--fs-company-name')).toBe('15.2px');
+  expect(paper.style.getPropertyValue('--fs-recipient')).toBe('15.5px');
+  expect(paper.style.getPropertyValue('--preview-title-size')).toBe('27px');
+  expect(document.getElementById('tableFontSizeValue').textContent).toBe('12.0 px');
+  expect(document.getElementById('designTableFontSize').value).toBe('12');
+});
+
+test('outside-table font-size controls are removed so report typography stays fixed', () => {
+  expect(document.getElementById('docFontSize')).toBeNull();
+  expect(document.getElementById('designFontSize')).toBeNull();
+  expect(document.getElementById('previewTitleSize')).toBeNull();
+  expect(document.getElementById('tableFontSize')).toBeTruthy();
 });
 
 test('report view tab enters a dedicated responsive preview mode and exits cleanly', () => {
