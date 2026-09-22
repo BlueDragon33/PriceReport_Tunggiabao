@@ -54,7 +54,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('file.size > 1500000')) fail('Logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v8")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v8-1")) fail('Service-worker cache version was not upgraded');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
 if (/(?<!\$)\$\([^)]*\)\.forEach/.test(js)) fail('querySelector result used with forEach; use the $ helper instead');
@@ -70,6 +70,10 @@ if (!js.includes("enhanceCollapsibleCards")) fail('Card collapse behavior is mis
 if (!js.includes("setMajorPanelState")) fail('Major panel collapse behavior is missing');
 if (!js.includes("logoBackdropOpacity")) fail('Editable logo backdrop is missing');
 if (!js.includes("logoBlendMode")) fail('Logo blend-mode control is missing');
+if (!js.includes("clearCurrentLogo")) fail('Destructive logo clear helper is missing');
+if (!js.includes("logoReadToken")) fail('Logo replacement race guard is missing');
+if (!js.includes("state.showLogo = false")) fail('Logo removal must hide the logo completely');
+if (js.includes("preview.innerHTML = '<div class=\"logo-text\">THẾ GIỚI TRỨNG®</div>'")) fail('Removed logos must not fall back to the old brand mark');
 if (!html.includes("NỀN PHÍA SAU LOGO")) fail('Logo backdrop editor UI is missing');
 if (!html.includes("Brand Flow") || !html.includes("Corporate Grid") || !html.includes("Executive")) fail('Refined template set is missing');
 
