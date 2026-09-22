@@ -28,6 +28,7 @@ close(calcQuoteTotal({
 assert.equal(normalizePhone('0888.458 222'), '0888458222');
 assert.equal(nextDuplicateQuoteNo('BG-001', ['BG-001-COPY','BG-001-COPY-2']), 'BG-001-COPY-3');
 assert.equal(nextDuplicateQuoteNo('BG-001', []), 'BG-001-COPY');
+assert.equal(nextDuplicateQuoteNo('BG-001-COPY-2', ['BG-001-COPY']), 'BG-001-COPY-2');
 
 assert.deepEqual(historyTotalsByCurrency([
   {currency:'VND', total:1000, data:{}},
