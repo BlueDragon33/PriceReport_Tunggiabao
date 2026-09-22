@@ -150,7 +150,7 @@ Object.assign(defaults, TUNGGIABAO_PROFILE, {
   showQty: false,
   showPrice: true,
   showAmount: false,
-  showNote: true,
+  showNote: false,
   showTotals: false,
   showWords: false,
   showPaymentBlock: false,
@@ -1052,10 +1052,12 @@ let smartImportDraft = null;
 let smartImportImageUrl = '';
 let smartImportBusy = false;
 let smartImportLastFocus = null;
+let smartImportManualFields = new Set();
 
 
 function resetSmartImportDraft() {
   smartImportDraft = null;
+  smartImportManualFields = new Set();
   const review = document.getElementById('smartImportReview');
   const apply = document.getElementById('applySmartImport');
   const raw = document.getElementById('ocrRawText');
@@ -1098,15 +1100,33 @@ function setSmartImportProgress(message, tone = '') {
 function collectImportReviewFields() {
   const fields = {};
   document.querySelectorAll('[data-import-field]').forEach((input) => {
-    const value = String(input.value || '').trim();
-    if (value) fields[input.dataset.importField] = value;
+    fields[input.dataset.importField] = String(input.value || '').trim();
   });
   return fields;
 }
 
 function syncDraftFromImportReview() {
   if (!smartImportDraft) return;
-  smartImportDraft.fields = Object.assign({}, smartImportDraft.fields || {}, collectImportReviewFields());
+  const current = collectImportReviewFields();
+  smartImportDraft.fields = Object.assign({}, smartImportDraft.fields || {});
+  smartImportDraft.fieldSources = Object.assign({}, smartImportDraft.fieldSources || {});
+  smartImportManualFields.forEach((key) => {
+    smartImportDraft.fields[key] = current[key] || '';
+    smartImportDraft.fieldSources[key] = 'manual';
+  });
+}
+
+function mergeSmartImportSource(parsed, options = {}) {
+  syncDraftFromImportReview();
+  const manualValues = collectImportReviewFields();
+  const merged = mergeImportDraft(smartImportDraft, parsed, options);
+  merged.fields = Object.assign({}, merged.fields || {});
+  merged.fieldSources = Object.assign({}, merged.fieldSources || {});
+  smartImportManualFields.forEach((key) => {
+    merged.fields[key] = manualValues[key] || '';
+    merged.fieldSources[key] = 'manual';
+  });
+  return merged;
 }
 
 function supplementImportFields(draft) {
@@ -1114,11 +1134,11 @@ function supplementImportFields(draft) {
   const company = String(fields.companyName || '').trim();
   const phone = String(fields.phone || '').replace(/\D/g, '');
 
-  if (!fields.recipientLine) fields.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
+  if (!fields.recipientLine && !smartImportManualFields.has('recipientLine')) fields.recipientLine = 'Kính gửi: QUÝ KHÁCH HÀNG';
   if (!fields.sectionTitle && Array.isArray(draft?.groups) && draft.groups.length) {
     fields.sectionTitle = draft.groups.length > 1 ? 'DANH MỤC HÀNG HÓA' : draft.groups[0];
   }
-  if (!fields.rightName && company) {
+  if (!fields.rightName && company && !smartImportManualFields.has('rightName')) {
     fields.rightName = company.toUpperCase().replace(/^HKD\s*-\s*/i, 'HKD ');
   }
   if (!fields.rightTitle && /^HKD\b/i.test(company)) fields.rightTitle = 'ĐẠI DIỆN HKD';
@@ -1144,9 +1164,10 @@ function renderSmartImportReview() {
     return;
   }
 
-  smartImportDraft.fields = supplementImportFields(smartImportDraft);
+  const displayFields = supplementImportFields(smartImportDraft);
   document.querySelectorAll('[data-import-field]').forEach((input) => {
-    input.value = smartImportDraft.fields?.[input.dataset.importField] || '';
+    if (smartImportManualFields.has(input.dataset.importField)) return;
+    input.value = displayFields?.[input.dataset.importField] || '';
   });
 
   const products = Array.isArray(smartImportDraft.products) ? smartImportDraft.products : [];
@@ -1160,7 +1181,7 @@ function renderSmartImportReview() {
   document.getElementById('smartImportProductCount').textContent = products.length + ' sản phẩm';
   document.getElementById('smartImportGroupCount').textContent = groups.length + ' nhóm';
   document.getElementById('smartImportSummary').textContent =
-    Object.values(smartImportDraft.fields || {}).filter(value => String(value || '').trim()).length +
+    Object.values(displayFields || {}).filter(value => String(value || '').trim()).length +
     ' trường • ' + products.length + ' sản phẩm';
 
   const warnings = document.getElementById('smartImportWarnings');
@@ -1273,9 +1294,9 @@ async function recognizeHandwritingFile(file) {
 function applySmartImportDraft() {
   if (!smartImportDraft) return;
   syncDraftFromImportReview();
-  smartImportDraft.fields = supplementImportFields(smartImportDraft);
+  const appliedFields = supplementImportFields(smartImportDraft);
 
-  const next = Object.assign({}, state, smartImportDraft.fields || {}, smartImportDraft.layoutHints || {});
+  const next = Object.assign({}, state, appliedFields, smartImportDraft.layoutHints || {});
   const shouldReplaceProducts = document.getElementById('replaceImportedProducts')?.checked !== false;
   if (shouldReplaceProducts && Array.isArray(smartImportDraft.products) && smartImportDraft.products.length) {
     next.products = smartImportDraft.products.map((product) => ({
@@ -1307,6 +1328,11 @@ function applySmartImportDraft() {
 }
 
 function setupSmartImport() {
+  document.querySelectorAll('[data-import-field]').forEach((input) => {
+    input.addEventListener('input', () => {
+      smartImportManualFields.add(input.dataset.importField);
+    });
+  });
   document.getElementById('openSmartImport')?.addEventListener('click', openSmartImport);
   document.getElementById('closeSmartImport')?.addEventListener('click', () => closeSmartImport());
   document.getElementById('cancelSmartImport')?.addEventListener('click', () => closeSmartImport({ discard: true }));
@@ -1329,7 +1355,7 @@ function setupSmartImport() {
       setSmartImportBusy(true);
       syncDraftFromImportReview();
       const parsed = await parseExcelFile(file);
-      smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
+      smartImportDraft = mergeSmartImportSource(parsed);
       renderSmartImportReview();
       setSmartImportProgress('Đã đọc sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
     } catch (error) {
@@ -1361,14 +1387,14 @@ function setupSmartImport() {
       setSmartImportBusy(true);
       syncDraftFromImportReview();
       const parsed = await recognizeHandwritingFile(file);
-      smartImportDraft = mergeImportDraft(smartImportDraft, parsed);
+      smartImportDraft = mergeSmartImportSource(parsed);
       document.getElementById('ocrRawText').value = parsed.rawText || '';
       document.getElementById('ocrRawBox').hidden = false;
       renderSmartImportReview();
       setSmartImportProgress('OCR hoàn tất. Hãy kiểm tra các trường trước khi áp dụng.', 'success');
     } catch (error) {
       console.error('Handwriting OCR failed:', error);
-      smartImportDraft = mergeImportDraft(smartImportDraft, {
+      smartImportDraft = mergeSmartImportSource({
         source: 'handwriting',
         fields: {},
         products: [],
@@ -1390,8 +1416,8 @@ function setupSmartImport() {
 
   document.getElementById('reparseOcrText')?.addEventListener('click', () => {
     const text = document.getElementById('ocrRawText')?.value || '';
-    syncDraftFromImportReview();
-    smartImportDraft = mergeImportDraft(smartImportDraft, parseHandwritingText(text));
+    const parsed = parseHandwritingText(text);
+    smartImportDraft = mergeSmartImportSource(parsed, { replaceSourceFields: true, preferNext: true });
     renderSmartImportReview();
     setSmartImportProgress('Đã phân tích lại văn bản OCR đã chỉnh.', 'success');
   });
@@ -2749,6 +2775,8 @@ function autoArrangePreview() {
   state.previewTableDensity = dense ? 'compact' : medium ? 'standard' : 'comfortable';
   state.previewLineHeight = dense ? 1.18 : medium ? 1.23 : 1.26;
   state.previewTitleSize = String(state.quoteTitle || '').trim().length > 28 ? 22 : 25;
+  if (state.showPack && namedProducts.every(product => !String(product.pack || '').trim())) state.showPack = false;
+  if (state.showNote && namedProducts.every(product => !String(product.note || '').trim())) state.showNote = false;
 
   const persisted = save();
   syncInputs();
