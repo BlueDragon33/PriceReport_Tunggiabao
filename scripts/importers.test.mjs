@@ -57,3 +57,20 @@ assert.equal(merged.products.length, 3);
 assert.equal(merged.fields.companyName, 'HKD - Tùng Gia Bảo');
 
 console.log('IMPORTER LOGIC PASS');
+
+
+const invalidPriceRows = [
+  ['STT','Mặt hàng','ĐVT','Đơn giá','Ghi chú'],
+  [1,'Không phải sản phẩm','kg','N/A','ghi chú'],
+  [2,'Giá 0 hợp lệ','kg',0,'']
+];
+const invalidParsed = parseSpreadsheetRows(invalidPriceRows);
+assert.equal(invalidParsed.products.length, 1);
+assert.equal(invalidParsed.products[0].name, 'Giá 0 hợp lệ');
+assert.equal(invalidParsed.products[0].price, 0);
+
+const repeatSource = mergeImportDraft(
+  { source: 'excel+handwriting', fields: {}, products: [], groups: [], warnings: [], unmatched: [], layoutHints: {} },
+  { source: 'handwriting', fields: {}, products: [], groups: [], warnings: [], unmatched: [], layoutHints: {} }
+);
+assert.equal(repeatSource.source, 'excel+handwriting');
