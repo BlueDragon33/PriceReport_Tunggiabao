@@ -182,6 +182,7 @@ test('logo size buttons resize visual logo independently and reset positions', (
   const before = Number(width.value);
   document.getElementById('logoGrow').click();
   expect(Number(width.value)).toBe(before + 2);
+  expect(Number(document.getElementById('previewLogo').style.getPropertyValue('--logo-scale'))).toBeCloseTo((before + 2) / 58, 4);
   document.getElementById('logoShrink').click();
   expect(Number(width.value)).toBe(before);
 
