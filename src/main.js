@@ -218,7 +218,7 @@ $$('.nav button[data-tab]').forEach((btn) => {
 });
 
 function bindInputs() {
-  $$('[data-bind]').forEach((el) => {
+  $$$('[data-bind]').forEach((el) => {
     const key = el.dataset.bind;
     if (el.type === 'checkbox') el.checked = Boolean(state[key]);
     else el.value = state[key] == null ? '' : state[key];
@@ -248,17 +248,17 @@ function bindInputs() {
 
       if (key === 'recipientLine') {
         state.autoRecipient = false;
-        $('[data-bind="autoRecipient"]').forEach((peer) => { peer.checked = false; });
+        $$('[data-bind="autoRecipient"]').forEach((peer) => { peer.checked = false; });
       }
 
       if ((key === 'customerName' || key === 'customerCompany' || key === 'autoRecipient') && state.autoRecipient) {
         state.recipientLine = 'Kính gửi: ' + (state.customerCompany || state.customerName || 'QUÝ KHÁCH HÀNG');
-        $('[data-bind="recipientLine"]').forEach((peer) => {
+        $$('[data-bind="recipientLine"]').forEach((peer) => {
           peer.value = state.recipientLine;
         });
       }
 
-      $('[data-bind]').forEach((peer) => {
+      $$('[data-bind]').forEach((peer) => {
         if (peer === el || peer.dataset.bind !== key) return;
         if (peer.type === 'checkbox') peer.checked = Boolean(state[key]);
         else peer.value = state[key] == null ? '' : state[key];
@@ -274,7 +274,7 @@ function bindInputs() {
 }
 
 function syncInputs() {
-  $$('[data-bind]').forEach((el) => {
+  $$$('[data-bind]').forEach((el) => {
     const key = el.dataset.bind;
     if (el.type === 'checkbox') el.checked = Boolean(state[key]);
     else el.value = state[key] == null ? '' : state[key];
