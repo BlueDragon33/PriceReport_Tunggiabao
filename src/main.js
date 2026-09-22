@@ -5,6 +5,7 @@ const PRESETS = 'tunggiabao-price-report-presets-v1';
 const HISTORY = 'tunggiabao-price-report-history-v1';
 const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
 const CATALOG = 'tunggiabao-price-report-catalog-v1';
+const UI_STATE = 'tunggiabao-price-report-ui-v2';
 
 const defaults = {
   logo: '',
@@ -71,10 +72,15 @@ const defaults = {
   marginX: 13,
   marginTop: 13,
   marginBottom: 12,
-  logoWidth: 60,
-  logoPadding: 4,
+  logoWidth: 58,
+  logoPadding: 2,
   logoOffsetY: 0,
-  logoTreatment: 'soft',
+  logoTreatment: 'blend',
+  logoBlendMode: 'multiply',
+  logoBackdropColor: '#0b8f83',
+  logoBackdropOpacity: 6,
+  logoBackdropRadius: 14,
+  logoBackdropBorder: 'none',
   docFontSize: 12.2,
   products: [
     { name: 'Trứng gà tươi', pack: 'Hộp 10 quả', unit: 'Hộp', qty: 100, price: 28000, note: '' },
@@ -141,6 +147,7 @@ function openTab(tab) {
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
   if (tab === 'master') renderMasterData();
+  setTimeout(enhanceCollapsibleCards, 0);
   if (tab !== 'products') {
     document.querySelector('.shell')?.classList.remove('product-focus');
     const focusBtn = document.getElementById('productFocusToggle');
@@ -161,12 +168,13 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY'].includes(key)) {
+      } else if (el.type === 'number' || el.type === 'range' || ['docFontSize','logoWidth','logoPadding','logoOffsetY','logoBackdropOpacity','logoBackdropRadius'].includes(key)) {
         let value = Number(el.value || 0);
-        if (key === 'discountPct' || key === 'vatPct') value = Math.min(100, Math.max(0, value));
+        if (key === 'discountPct' || key === 'vatPct' || key === 'logoBackdropOpacity') value = Math.min(100, Math.max(0, value));
         else if (key === 'logoWidth') value = Math.min(90, Math.max(28, value));
         else if (key === 'logoPadding') value = Math.min(12, Math.max(0, value));
         else if (key === 'logoOffsetY') value = Math.min(10, Math.max(-10, value));
+        else if (key === 'logoBackdropRadius') value = Math.min(24, Math.max(0, value));
         else if (['otherFee'].includes(key)) value = Math.max(0, value);
         else if (['marginX','marginTop','marginBottom'].includes(key)) value = Math.min(30, Math.max(6, value));
         else if (key === 'docFontSize') value = Math.min(18, Math.max(9, value));
@@ -470,29 +478,54 @@ function renderTotals() {
   words.textContent = 'Bằng chữ: ' + numberToWords(total) + ' đồng.';
 }
 
+function hexToRgba(hex, opacity) {
+  const clean = String(hex || '#ffffff').replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(char => char + char).join('') : clean.padEnd(6, 'f').slice(0, 6);
+  const number = Number.parseInt(full, 16);
+  const r = (number >> 16) & 255;
+  const g = (number >> 8) & 255;
+  const b = number & 255;
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + Math.min(1, Math.max(0, Number(opacity || 0) / 100)) + ')';
+}
+
 function renderLogo() {
   const preview = document.getElementById('previewLogo');
   const editor = document.getElementById('logoEdit');
   const designPreview = document.getElementById('logoDesignPreview');
   const targets = [preview, editor, designPreview].filter(Boolean);
 
+  const validTreatments = ['blend','soft','clean','custom','none'];
+  const treatment = validTreatments.includes(state.logoTreatment) ? state.logoTreatment : 'blend';
+  const backgroundColor = state.logoBackdropColor || state.accent || '#0b8f83';
+  const opacity = Math.min(100, Math.max(0, Number(state.logoBackdropOpacity || 0)));
+  const radius = Math.min(24, Math.max(0, Number(state.logoBackdropRadius || 0)));
+  const borderEnabled = state.logoBackdropBorder === 'soft';
+
   targets.forEach(target => {
     target.innerHTML = '';
-    target.classList.remove('logo-treatment-soft','logo-treatment-clean','logo-treatment-none');
+    target.classList.remove('logo-treatment-blend','logo-treatment-soft','logo-treatment-clean','logo-treatment-custom','logo-treatment-none');
+    target.classList.add('logo-treatment-' + treatment);
+    target.style.borderRadius = radius + 'mm';
+    target.style.borderColor = borderEnabled ? hexToRgba(backgroundColor, Math.max(16, opacity + 10)) : 'transparent';
+    target.style.borderWidth = borderEnabled ? '1px' : '0';
+    target.style.borderStyle = 'solid';
+
+    if (treatment === 'custom') target.style.background = hexToRgba(backgroundColor, opacity);
+    else if (treatment === 'soft') target.style.background = hexToRgba(state.accent || backgroundColor, Math.max(4, Math.min(14, opacity || 8)));
+    else if (treatment === 'clean') target.style.background = '#ffffff';
+    else target.style.background = 'transparent';
   });
 
-  const treatment = ['soft','clean','none'].includes(state.logoTreatment) ? state.logoTreatment : 'soft';
-  preview.classList.add('logo-treatment-' + treatment);
   preview.style.padding = Math.max(0, Number(state.logoPadding || 0)) + 'mm';
   preview.style.transform = 'translateY(' + Number(state.logoOffsetY || 0) + 'mm)';
-
-  if (designPreview) designPreview.classList.add('logo-treatment-' + treatment);
+  preview.style.setProperty('--logo-wash', hexToRgba(state.accent || backgroundColor, Math.max(3, Math.min(12, opacity || 6))));
 
   const buildImage = (target, isPaper = false) => {
     const img = document.createElement('img');
     img.src = state.logo;
     img.alt = 'Logo doanh nghiệp';
-    if (isPaper) img.style.width = Math.min(90, Math.max(28, Number(state.logoWidth || 60))) + 'mm';
+    img.style.mixBlendMode = ['multiply','darken'].includes(state.logoBlendMode) ? state.logoBlendMode : 'normal';
+    if (isPaper) img.style.width = Math.min(90, Math.max(28, Number(state.logoWidth || 58))) + 'mm';
     target.appendChild(img);
   };
 
@@ -511,13 +544,15 @@ function renderLogo() {
   }
 
   const widthValue = document.getElementById('logoWidthValue');
-  if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 60)) + ' mm';
+  if (widthValue) widthValue.textContent = Math.round(Number(state.logoWidth || 58)) + ' mm';
+  const opacityValue = document.getElementById('logoBackdropOpacityValue');
+  if (opacityValue) opacityValue.textContent = opacity + '%';
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
     docHead.classList.toggle('no-logo', !state.showLogo);
     if (state.showLogo) {
-      const logoColumn = Math.min(55, Math.max(36, 36 + (Number(state.logoWidth || 60) - 28) * 0.36));
+      const logoColumn = Math.min(51, Math.max(36, 36 + (Number(state.logoWidth || 58) - 28) * 0.30));
       docHead.style.gridTemplateColumns = logoColumn.toFixed(1) + '% 1fr';
     } else {
       docHead.style.gridTemplateColumns = '1fr';
@@ -588,8 +623,11 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
+  const description = document.getElementById('templateDescription');
+  if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   requestAnimationFrame(updatePageEstimate);
 }
 
@@ -609,7 +647,100 @@ function download(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
+function getUiState() {
+  try {
+    const data = JSON.parse(localStorage.getItem(UI_STATE));
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveUiState(next) {
+  safeStore(UI_STATE, JSON.stringify(next));
+}
+
+function setMajorPanelState(panel, collapsed, persist = true) {
+  const shell = document.querySelector('.shell');
+  if (!shell) return;
+  const className = panel === 'editor' ? 'editor-collapsed' : 'design-collapsed';
+  shell.classList.toggle(className, collapsed);
+
+  const button = document.getElementById(panel === 'editor' ? 'toggleEditorPanel' : 'toggleDesignPanel');
+  if (button) {
+    button.textContent = collapsed ? '›' : '‹';
+    button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  }
+
+  if (persist) {
+    const ui = getUiState();
+    ui[panel + 'Collapsed'] = collapsed;
+    saveUiState(ui);
+  }
+  requestAnimationFrame(() => document.getElementById('fit')?.click());
+}
+
+function setupMajorPanelToggles() {
+  const ui = getUiState();
+  setMajorPanelState('editor', Boolean(ui.editorCollapsed), false);
+  setMajorPanelState('design', Boolean(ui.designCollapsed), false);
+
+  document.getElementById('toggleEditorPanel')?.addEventListener('click', () => {
+    setMajorPanelState('editor', !document.querySelector('.shell')?.classList.contains('editor-collapsed'));
+  });
+  document.getElementById('toggleDesignPanel')?.addEventListener('click', () => {
+    setMajorPanelState('design', !document.querySelector('.shell')?.classList.contains('design-collapsed'));
+  });
+}
+
+function cardCollapseKey(card, index) {
+  const pane = card.closest('.pane')?.id || (card.closest('.design') ? 'design' : 'panel');
+  const title = card.querySelector(':scope > h3, :scope > .section-title, :scope > .product-workspace-head h3')?.textContent?.trim() || 'card';
+  return pane + ':' + title + ':' + index;
+}
+
+function enhanceCollapsibleCards() {
+  const ui = getUiState();
+  const cardState = ui.cards || {};
+  const cards = $('.editor .card, .editor .section-block.quick-customer, .design .card');
+
+  cards.forEach((card, index) => {
+    if (card.dataset.collapseReady === '1') return;
+    const heading = card.querySelector(':scope > h3, :scope > .section-title, :scope > .product-workspace-head h3');
+    if (!heading) return;
+
+    const key = cardCollapseKey(card, index);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'card-collapse-handle';
+    button.title = 'Thu gọn / mở bảng';
+    button.setAttribute('aria-label', 'Thu gọn / mở bảng');
+
+    const apply = (collapsed) => {
+      card.classList.toggle('card-collapsed', collapsed);
+      button.textContent = collapsed ? '⌄' : '⌃';
+      button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    };
+
+    apply(Boolean(cardState[key]));
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const collapsed = !card.classList.contains('card-collapsed');
+      apply(collapsed);
+      const nextUi = getUiState();
+      nextUi.cards = nextUi.cards || {};
+      nextUi.cards[key] = collapsed;
+      saveUiState(nextUi);
+    });
+
+    card.appendChild(button);
+    card.dataset.collapseReady = '1';
+  });
+}
+
 bindInputs();
+setupMajorPanelToggles();
+enhanceCollapsibleCards();
 renderEditorProducts();
 render();
 
@@ -634,10 +765,15 @@ document.getElementById('collapseAllProducts').addEventListener('click', () => {
 });
 
 document.getElementById('resetLogoPosition').addEventListener('click', () => {
-  state.logoWidth = 60;
-  state.logoPadding = 4;
+  state.logoWidth = 58;
+  state.logoPadding = 2;
   state.logoOffsetY = 0;
-  state.logoTreatment = 'soft';
+  state.logoTreatment = 'blend';
+  state.logoBlendMode = 'multiply';
+  state.logoBackdropColor = state.accent || '#0b8f83';
+  state.logoBackdropOpacity = 6;
+  state.logoBackdropRadius = 14;
+  state.logoBackdropBorder = 'none';
   save();
   syncInputs();
   render();
@@ -680,10 +816,20 @@ const THEME_ACCENTS = {
   mono: '#30343a'
 };
 
-$$('.tpl').forEach((el) => {
+$('.tpl').forEach((el) => {
+  el.addEventListener('mouseenter', () => {
+    const description = document.getElementById('templateDescription');
+    if (description) description.textContent = el.dataset.description || '';
+  });
+  el.addEventListener('mouseleave', () => {
+    const active = document.querySelector('.tpl.active');
+    const description = document.getElementById('templateDescription');
+    if (description && active) description.textContent = active.dataset.description || '';
+  });
   el.addEventListener('click', () => {
     state.theme = el.dataset.theme;
     if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
+    if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
     save();
     render();
   });
@@ -915,6 +1061,14 @@ function createNewQuote() {
     marginTop: state.marginTop,
     marginBottom: state.marginBottom,
     logoWidth: state.logoWidth,
+    logoPadding: state.logoPadding,
+    logoOffsetY: state.logoOffsetY,
+    logoTreatment: state.logoTreatment,
+    logoBlendMode: state.logoBlendMode,
+    logoBackdropColor: state.logoBackdropColor,
+    logoBackdropOpacity: state.logoBackdropOpacity,
+    logoBackdropRadius: state.logoBackdropRadius,
+    logoBackdropBorder: state.logoBackdropBorder,
     docFontSize: state.docFontSize
   };
   state = Object.assign(clone(defaults), keep);
