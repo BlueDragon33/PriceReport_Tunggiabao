@@ -252,7 +252,7 @@
             </div>
             <div class="grid2">
               <div class="row"><label>Lề dưới (mm)</label><input id="marginBottom" data-bind="marginBottom" type="number"></div>
-              <div class="row"><label>Rộng logo (mm)</label><input id="logoWidth" data-bind="logoWidth" type="number"></div>
+              <div class="row"><label>Rộng logo (mm)</label><input id="logoWidth" data-bind="logoWidth" type="number" min="18" max="90"></div>
             </div>
             <div class="row"><label>Cỡ chữ nội dung (px)</label><input id="docFontSize" data-bind="docFontSize" type="number" step="0.2"></div>
           </div>
@@ -312,18 +312,22 @@
           </div>
 
           <div class="row">
-            <label>Kích thước logo <span class="range-value" id="logoWidthValue">60 mm</span></label>
-            <input id="logoWidthRange" data-bind="logoWidth" type="range" min="28" max="70" step="1">
+            <label>Kích thước logo <span class="range-value" id="logoWidthValue">58 mm</span></label>
+            <div class="logo-size-control">
+              <button class="mini-action logo-step" id="logoShrink" type="button" aria-label="Giảm kích thước logo">−</button>
+              <input id="logoWidthRange" data-bind="logoWidth" type="range" min="18" max="90" step="1">
+              <button class="mini-action logo-step" id="logoGrow" type="button" aria-label="Tăng kích thước logo">+</button>
+            </div>
           </div>
 
           <div class="grid2">
-            <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="28" max="70"></div>
+            <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="18" max="90"></div>
             <div class="row"><label>Khoảng thở (mm)</label><input id="logoPadding" data-bind="logoPadding" type="number" min="0" max="12" step="1"></div>
           </div>
 
-          <div class="row">
-            <label>Dịch dọc logo</label>
-            <input id="logoOffsetY" data-bind="logoOffsetY" type="range" min="-10" max="10" step="1">
+          <div class="grid2">
+            <div class="row"><label>Dịch ngang logo (mm)</label><input id="logoOffsetX" data-bind="logoOffsetX" type="number" min="-40" max="40" step="0.5"></div>
+            <div class="row"><label>Dịch dọc logo (mm)</label><input id="logoOffsetY" data-bind="logoOffsetY" type="number" min="-30" max="30" step="0.5"></div>
           </div>
 
           <div class="row">
@@ -406,6 +410,8 @@
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
           <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
+          <button class="toolbar-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false">✥&nbsp; Sắp xếp</button>
+          <span class="layout-selection" id="layoutSelection" hidden>Chọn khối để kéo</span>
           <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
           <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
           <button class="toolbar-btn print print-action">▣&nbsp; In</button>
@@ -475,6 +481,14 @@
             <input id="previewLineHeight" data-bind="previewLineHeight" type="range" min="1.15" max="1.5" step="0.01">
           </div>
 
+          <div class="custom-group direct-layout-group">
+            <label>Sắp xếp trực tiếp trên bản xem trước</label>
+            <div class="btns">
+              <button class="btn" id="resetBlockPositions" type="button">Đặt lại vị trí khối</button>
+            </div>
+            <div class="help">Bật “Sắp xếp”, kéo khối bằng chuột/chạm. Dùng phím mũi tên để chỉnh 0,5 mm; giữ Shift để chỉnh 2 mm.</div>
+          </div>
+
           <button class="btn primary block" id="resetPreviewLayout" type="button">Khôi phục chuẩn hiện đại</button>
         </div>
       </aside>
@@ -483,8 +497,8 @@
         <article class="paper theme-modern" id="paper">
           <div class="decor-top"></div><div class="decor-bottom"></div>
           <header class="doc-head">
-            <div class="logo-zone clickable" data-target="companyName" id="previewLogo"></div>
-            <div class="company-col">
+            <div class="logo-zone clickable" data-target="companyName" id="previewLogo" data-layout-block="logo" data-layout-label="Logo"></div>
+            <div class="company-col" data-layout-block="company" data-layout-label="Thông tin công ty">
               <div class="company-block">
                 <div class="company-name clickable" data-target="companyName" id="pCompanyName"></div>
                 <div class="company-lines">
@@ -501,7 +515,7 @@
             </div>
           </header>
 
-          <div class="quote-top">
+          <div class="quote-top" data-layout-block="quote" data-layout-label="Tiêu đề báo giá">
             <div class="qtitle-wrap"><div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle"></div></div>
             <div class="qmeta">
               <div><b>Số báo giá:</b> <span id="pQuoteNo"></span></div>
@@ -509,14 +523,14 @@
               <div><b>Hiệu lực:</b> <span id="pValidity"></span></div>
             </div>
           </div>
-          <div class="recipient clickable" data-target="recipientLine" id="pRecipient"></div>
-          <div class="qmeta clickable" data-target="customerName" id="pCustomer" style="display:none;margin-bottom:3mm"></div>
-          <p class="intro clickable" data-target="intro" id="pIntro"></p>
-          <div class="sectionbar clickable" data-target="sectionTitle" id="pSection"></div>
+          <div class="recipient clickable" data-target="recipientLine" id="pRecipient" data-layout-block="recipient" data-layout-label="Kính gửi"></div>
+          <div class="qmeta clickable" data-target="customerName" id="pCustomer" data-layout-block="customer" data-layout-label="Khách hàng" style="display:none;margin-bottom:3mm"></div>
+          <p class="intro clickable" data-target="intro" id="pIntro" data-layout-block="intro" data-layout-label="Lời mở đầu"></p>
+          <div class="sectionbar clickable" data-target="sectionTitle" id="pSection" data-layout-block="section" data-layout-label="Tiêu đề nhóm"></div>
 
-          <table class="qtable"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
+          <table class="qtable" data-layout-block="table" data-layout-label="Bảng sản phẩm"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
 
-          <table class="summary" id="summary">
+          <table class="summary" id="summary" data-layout-block="summary" data-layout-label="Tổng cộng">
             <tbody>
               <tr><td>Tạm tính</td><td class="val" id="sub"></td></tr>
               <tr id="discRow"><td id="discLabel">Giảm giá</td><td class="val" id="disc"></td></tr>
@@ -525,9 +539,9 @@
               <tr><td class="grand">Tổng cộng</td><td class="val grand" id="grand"></td></tr>
             </tbody>
           </table>
-          <div class="words" id="words"></div>
+          <div class="words" id="words" data-layout-block="words" data-layout-label="Số tiền bằng chữ"></div>
 
-          <section class="payment-print" id="paymentPrint">
+          <section class="payment-print" id="paymentPrint" data-layout-block="payment" data-layout-label="Thanh toán">
             <h4>THÔNG TIN THANH TOÁN</h4>
             <div class="payment-grid">
               <div class="clickable" data-target="paymentMethod"><b>Phương thức:</b> <span id="pPaymentMethod"></span></div>
@@ -537,13 +551,13 @@
             </div>
           </section>
 
-          <section class="terms" id="termsBox">
+          <section class="terms" id="termsBox" data-layout-block="terms" data-layout-label="Điều khoản">
             <h4 class="clickable" data-target="termsTitle" id="pTermsTitle"></h4>
             <ol class="clickable" data-target="termsText" id="pTerms"></ol>
             <div class="closing clickable" data-target="closingText" id="pClosing"></div>
           </section>
 
-          <section class="signatures" id="signatures">
+          <section class="signatures" id="signatures" data-layout-block="signatures" data-layout-label="Chữ ký">
             <div>
               <div class="clickable" data-target="dateLine" id="pDateLeft"></div>
               <div class="sig-title" id="pLeftTitle"></div>
@@ -558,7 +572,7 @@
             </div>
           </section>
 
-          <footer class="footer">
+          <footer class="footer" data-layout-block="footer" data-layout-label="Chân trang">
             <span class="clickable" data-target="slogan" id="pSlogan"></span>
             <span id="footerSep"> • </span>
             <span class="clickable" data-target="footerText" id="pFooter"></span>
