@@ -115,7 +115,7 @@ const setText = (id, value) => {
 };
 
 const tabMeta = {
-  general: ['THÔNG TIN CHUNG', 'Logo, doanh nghiệp và thông tin báo giá.'],
+  general: ['THÔNG TIN CÔNG TY', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
   history: ['QUẢN LÝ BÁO GIÁ', 'Lưu, tìm kiếm, mở lại và nhân bản các báo giá.'],
   master: ['DANH MỤC', 'Tái sử dụng khách hàng và sản phẩm thường dùng.'],
   customer: ['KHÁCH HÀNG', 'Thông tin người nhận và đơn vị mua hàng.'],
@@ -151,7 +151,7 @@ function bindInputs() {
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
-      } else if (el.type === 'number') {
+      } else if (el.type === 'number' || key === 'docFontSize') {
         let value = Number(el.value || 0);
         if (key === 'discountPct') value = Math.min(100, Math.max(0, value));
         else if (['vatPct','otherFee','marginX','marginTop','marginBottom','logoWidth','docFontSize'].includes(key)) value = Math.max(0, value);
@@ -160,6 +160,13 @@ function bindInputs() {
       } else {
         state[key] = el.value;
       }
+
+      $('[data-bind]').forEach((peer) => {
+        if (peer === el || peer.dataset.bind !== key) return;
+        if (peer.type === 'checkbox') peer.checked = Boolean(state[key]);
+        else peer.value = state[key] == null ? '' : state[key];
+      });
+
       save();
       render();
     };
@@ -1136,9 +1143,21 @@ function setZoom(value) {
 
 document.getElementById('actual').addEventListener('click', () => setZoom(100));
 document.getElementById('fit').addEventListener('click', () => {
-  const available = document.querySelector('.preview').clientWidth - 40;
+  const available = document.querySelector('.preview').clientWidth - 34;
   const width = document.getElementById('paper').offsetWidth;
   setZoom(Math.floor((available / width) * 100));
+});
+document.getElementById('zoomOut').addEventListener('click', () => setZoom(zoom - 10));
+document.getElementById('zoomIn').addEventListener('click', () => setZoom(zoom + 10));
+document.getElementById('wideView').addEventListener('click', () => {
+  const shell = document.querySelector('.shell');
+  const enabled = shell.classList.toggle('wide-preview');
+  document.getElementById('wideView').innerHTML = enabled ? '⛶&nbsp; Thu gọn' : '⛶&nbsp; Màn hình rộng';
+  requestAnimationFrame(() => document.getElementById('fit').click());
+});
+document.getElementById('toolbarMenu').addEventListener('click', () => {
+  openTab('export');
+  toast('Đã mở công cụ Xuất / In');
 });
 
 setTimeout(() => document.getElementById('fit').click(), 60);
