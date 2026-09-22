@@ -1449,3 +1449,18 @@ input[type=range]::-moz-range-thumb{
 @media(max-width:1280px){
   .document-health{display:none}
 }
+
+/* V2.2 report-design audit */
+.theme-modern .company-lines{
+  font-family:"Times New Roman",Times,serif!important;
+  font-style:italic!important;
+}
+.theme-modern .company-lines b{font-style:normal!important}
+.tpl[data-theme="modern"]{position:relative}
+.tpl[data-theme="modern"]:before{
+  content:"KHUYÊN DÙNG";
+  position:absolute;left:8px;top:8px;z-index:3;
+  padding:3px 6px;border-radius:999px;background:#0d7ff2;color:#fff;
+  font-size:7.5px;font-weight:900;letter-spacing:.35px;
+  box-shadow:0 2px 6px rgba(13,127,242,.2)
+}
