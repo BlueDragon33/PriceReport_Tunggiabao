@@ -1086,7 +1086,12 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
 
 document.getElementById('saveQuoteToHistory').addEventListener('click', saveCurrentQuote);
 document.getElementById('newQuote').addEventListener('click', () => {
-  if (confirm('Tạo báo giá mới? Dữ liệu hiện tại vẫn có thể lưu vào lịch sử trước khi tạo mới.')) createNewQuote();
+  if (confirm('Lưu báo giá hiện tại vào lịch sử trước khi tạo báo giá mới?')) {
+    saveCurrentQuote();
+    createNewQuote();
+    return;
+  }
+  if (confirm('Tạo báo giá mới mà không lưu báo giá hiện tại vào lịch sử?')) createNewQuote();
 });
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
 document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
@@ -1128,9 +1133,11 @@ function validateQuote(data = state) {
   });
 
   if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
-  if (data.showPaymentBlock && data.paymentMethod && !data.bankName && /chuyển khoản/i.test(data.paymentMethod)) {
-    warnings.push('Có phương thức chuyển khoản nhưng chưa nhập ngân hàng.');
-  }
+  const transferOnly = /^\s*chuyển khoản\s*$/i.test(String(data.paymentMethod || ''));
+  const partialBank = [data.bankName, data.bankAccount, data.bankOwner].some(Boolean) &&
+    ![data.bankName, data.bankAccount, data.bankOwner].every(Boolean);
+  if (data.showPaymentBlock && transferOnly && !data.bankName) warnings.push('Phương thức là chuyển khoản nhưng chưa nhập ngân hàng.');
+  if (data.showPaymentBlock && partialBank) warnings.push('Thông tin tài khoản ngân hàng đang nhập dở.');
 
   return { errors, warnings };
 }
