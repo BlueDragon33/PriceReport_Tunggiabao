@@ -3,6 +3,8 @@ import fs from 'node:fs';
 const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
 const css = fs.readFileSync('src/styles.css', 'utf8');
+const qualityCss = fs.readFileSync('src/quality.css', 'utf8');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 
 function fail(message) {
@@ -28,7 +30,7 @@ const requiredIds = [
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
   'customizePreview','previewCustomizer','closePreviewCustomizer','previewTitleSize',
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
-  'previewLineHeight','resetPreviewLayout','showQuoteMeta'
+  'previewLineHeight','resetPreviewLayout','showQuoteMeta','autoRecipient','qCols'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -44,7 +46,7 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quality.css','src/main.js','playwright.config.mjs','tests/e2e.spec.mjs']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
@@ -92,6 +94,17 @@ if (!css.includes(".paper[data-title-align=\"center\"] .qtitle")) fail('Centered
 if (!css.includes("--rhythm-md")) fail('Consistent document spacing system is missing');
 if (!css.includes(".preview-customizer")) fail('Preview customizer styles are missing');
 if (!html.includes("Tùy chỉnh xem trước") && !html.includes("TÙY CHỈNH XEM TRƯỚC")) fail('Preview customizer UI is missing');
+if (!js.includes("function localISODate")) fail('Local date helper is missing');
+if (!js.includes("function printableProducts")) fail('Blank product filtering is missing');
+if (!js.includes("function formatMoney")) fail('Currency-aware money formatting is missing');
+if (!js.includes("generateUniqueCopyQuoteNo")) fail('Unique duplicate quotation numbering is missing');
+if (!js.includes("hasVisibleLogo")) fail('No-logo geometry guard is missing');
+if (!js.includes("autoRecipient")) fail('Automatic recipient synchronization is missing');
+if (!html.includes('id="qCols"')) fail('Controlled product-table columns are missing');
+if (!js.includes("import './quality.css'")) fail('Final QA stylesheet is not imported last');
+if (!qualityCss.includes("overflow:visible!important")) fail('Multi-page print overflow hardening is missing');
+if (!qualityCss.includes(".theme-modern .company-lines>div")) fail('Reference-template company typography polish is missing');
+if (!pkg.scripts?.["test:e2e"] || !pkg.devDependencies?.["@playwright/test"]) fail('Playwright E2E gate is not configured');
 
 if (!process.exitCode) {
   console.log('SMOKE PASS:', ids.length, 'ids,', new Set(binds).size, 'bindings,', new Set(targets).size, 'preview targets');
