@@ -38,3 +38,10 @@ The Pages workflow runs `scripts/production-config.mjs`. When `PRICE_REPORT_CONT
 - rotates the PWA cache namespace so existing clients do not keep a stale rollout contract.
 
 Application Management must use the same control origin and `PRICE_REPORT_CONTROL_SERVICE_SECRET`. If health verification fails, Pages deployment fails instead of publishing an enabled Device Gate against an unhealthy control service.
+
+
+## Environment-to-Pages origin handoff
+
+`PRICE_REPORT_CONTROL_ORIGIN` may be stored as a variable on the protected `price-report-control-production` GitHub Environment. The control-service deployment therefore forwards that verified value explicitly to the Pages `workflow_dispatch` input `control_origin`. The Pages workflow prefers the forwarded input and only falls back to the repository variable for ordinary pushes/manual runs.
+
+Production health also requires `applicationManagementOriginConfigured=true` before the Device Gate can be enabled. This prevents a partially configured control service from being advertised as remotely manageable.
