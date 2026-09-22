@@ -215,6 +215,11 @@ function merge(data) {
     merged.companyAddressDetail = String(data?.companyAddress || merged.companyAddress || '').trim();
     merged.companyProvince = '';
     merged.companyWard = '';
+    const foldedCompany = String(merged.companyName || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const foldedAddress = merged.companyAddressDetail.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (foldedCompany.includes('tung gia bao') && foldedAddress.includes('nam nha trang')) {
+      merged.companyProvince = 'Khánh Hòa';
+    }
   }
 
   if (merged.theme === 'blue') merged.theme = 'corporate';
@@ -934,7 +939,7 @@ function syncLogoModeControls(mode) {
     badge.textContent = mode === 'original'
       ? 'Ảnh gốc • không xử lý nền'
       : mode === 'remove-bg'
-        ? 'Tách nền sáng • ảnh gốc vẫn được giữ'
+        ? 'Đã xóa nền • vùng nền được chuyển thành trong suốt'
         : 'Hiệu ứng nâng cao • ảnh gốc vẫn được giữ';
     badge.dataset.mode = mode;
   }
