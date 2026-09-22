@@ -69,6 +69,8 @@ if (!js.includes('normalizePresetStore')) fail('Preset import normalization is m
 if (!js.includes('captureStorageSnapshot') || !js.includes('restoreStorageSnapshot')) fail('Import/restore transaction rollback is missing');
 if (!js.includes('localDateISO()') || !js.includes('localDateISO(d)')) fail('Local calendar date helper is not used for all quotation-date flows');
 if (!js.includes('normalizeBoundedNumber')) fail('Imported layout numeric clamping is missing');
+if (!js.includes('normalizeHexColor')) fail('Imported color normalization is missing');
+if (!js.includes("['Times New Roman','Georgia','Arial']")) fail('Imported document-font whitelist is missing');
 if (!js.includes('Legacy logo migration deferred')) fail('Legacy logo migration must not discard loaded state on storage failure');
 if (!js.includes('isValidISODate')) fail('Quote-date preflight validation is missing');
 if (!js.includes("wide-preview")) fail('Wide preview mode is missing');
