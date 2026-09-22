@@ -27,6 +27,9 @@ const LAYOUT_BLOCK_KEYS = [
   'terms','termsTitle','termsText','closing','signatures','footer','slogan','footerText'
 ];
 const PX_PER_MM = 96 / 25.4;
+let layoutEditEnabled = false;
+let selectedLayoutKey = '';
+let layoutDrag = null;
 
 function normalizeLayoutOffsets(value) {
   const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
@@ -879,6 +882,7 @@ function updatePageEstimate() {
 function render() {
   const paper = document.getElementById('paper');
   paper.className = 'paper theme-' + state.theme;
+  paper.classList.toggle('layout-edit-mode', layoutEditEnabled);
   paper.style.setProperty('--doc', state.accent);
   paper.style.paddingLeft = state.marginX + 'mm';
   paper.style.paddingRight = state.marginX + 'mm';
@@ -948,6 +952,7 @@ function render() {
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
+  syncLayoutEditModeUI();
   requestAnimationFrame(updatePageEstimate);
 }
 
@@ -2226,10 +2231,6 @@ function renderPresets() {
 }
 
 
-let layoutEditEnabled = false;
-let selectedLayoutKey = '';
-let layoutDrag = null;
-
 function updateLayoutSelection() {
   const badge = document.getElementById('layoutSelection');
   if (!badge) return;
@@ -2255,8 +2256,7 @@ function selectLayoutBlock(key) {
   updateLayoutSelection();
 }
 
-function setLayoutEditMode(enabled) {
-  layoutEditEnabled = Boolean(enabled);
+function syncLayoutEditModeUI() {
   const paper = document.getElementById('paper');
   paper?.classList.toggle('layout-edit-mode', layoutEditEnabled);
   const button = document.getElementById('layoutEditToggle');
@@ -2265,12 +2265,54 @@ function setLayoutEditMode(enabled) {
     button.setAttribute('aria-pressed', layoutEditEnabled ? 'true' : 'false');
     button.innerHTML = layoutEditEnabled ? '✓&nbsp; Xong sắp xếp' : '✥&nbsp; Sắp xếp';
   }
-  if (!layoutEditEnabled) {
-    layoutDrag = null;
-    selectLayoutBlock('');
-  } else {
-    updateLayoutSelection();
+  document.getElementById('autoArrangeLayoutToolbar')?.toggleAttribute('hidden', !layoutEditEnabled);
+  document.getElementById('layoutSelection')?.toggleAttribute('hidden', !layoutEditEnabled);
+}
+
+function setLayoutEditMode(enabled) {
+  const next = Boolean(enabled);
+  if (layoutEditEnabled === next) {
+    syncLayoutEditModeUI();
+    return;
   }
+  layoutEditEnabled = next;
+  if (!layoutEditEnabled) {
+    if (layoutDrag) {
+      document.querySelector('[data-layout-block="' + layoutDrag.key + '"]')?.classList.remove('layout-dragging');
+      layoutDrag = null;
+    }
+    selectLayoutBlock('');
+  }
+  syncLayoutEditModeUI();
+  if (layoutEditEnabled) updateLayoutSelection();
+}
+
+function autoArrangePreview() {
+  const namedProducts = (Array.isArray(state.products) ? state.products : [])
+    .filter((product) => String(product?.name || '').trim());
+  const textWeight = [
+    state.companyName,state.companyAddress,state.branchKhanhHoa,state.branchDongNai,state.farmAddress,
+    state.intro,state.termsText,state.footerText
+  ].map((value) => String(value || '')).join(' ').length;
+  const dense = namedProducts.length >= 26 || textWeight >= 1150;
+  const medium = namedProducts.length >= 14 || textWeight >= 700;
+
+  state.layoutOffsets = {};
+  state.logoOffsetX = 0;
+  state.logoOffsetY = 0;
+  state.previewTitleAlign = 'center';
+  state.previewHeaderGap = dense ? 2.5 : medium ? 3 : 4;
+  state.previewSpacing = dense ? 'compact' : 'standard';
+  state.previewTableDensity = dense ? 'compact' : medium ? 'standard' : 'comfortable';
+  state.previewLineHeight = dense ? 1.18 : medium ? 1.23 : 1.26;
+  state.previewTitleSize = String(state.quoteTitle || '').trim().length > 28 ? 22 : 25;
+
+  save();
+  syncInputs();
+  render();
+  setLayoutEditMode(true);
+  selectLayoutBlock('');
+  toast(dense ? 'Đã tự sắp xếp theo bố cục gọn nhiều nội dung' : 'Đã tự sắp xếp theo bố cục A4 cân đối');
 }
 
 function nudgeSelectedLayout(dx, dy) {
@@ -2287,7 +2329,17 @@ function setupLayoutEditor() {
   if (!paper) return;
 
   document.getElementById('layoutEditToggle')?.addEventListener('click', () => {
-    setLayoutEditMode(!layoutEditEnabled);
+    if (layoutEditEnabled) {
+      setLayoutEditMode(false);
+      toast('Đã hoàn tất sắp xếp');
+    } else {
+      setLayoutEditMode(true);
+      toast('Chế độ sắp xếp đang bật — kéo nhiều lần, bấm Xong khi hoàn tất');
+    }
+  });
+
+  ['autoArrangeLayoutToolbar','autoArrangeLayoutPanel'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('click', autoArrangePreview);
   });
 
   document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
@@ -2320,16 +2372,22 @@ function setupLayoutEditor() {
     selectLayoutBlock(key);
     layoutDrag = {
       key,
+      pointerId: event.pointerId,
+      element: block,
       startX: event.clientX,
       startY: event.clientY,
       baseX: current.x,
       baseY: current.y
     };
+    try {
+      if (event.pointerId != null && block.setPointerCapture) block.setPointerCapture(event.pointerId);
+    } catch {}
     block.classList.add('layout-dragging');
   });
 
   document.addEventListener('pointermove', (event) => {
     if (!layoutDrag || !layoutEditEnabled) return;
+    if (layoutDrag.pointerId != null && event.pointerId != null && layoutDrag.pointerId !== event.pointerId) return;
     const paperRect = paper.getBoundingClientRect();
     const fallbackScale = Math.max(0.01, Number(zoom || 100) / 100);
     const scale = paper.offsetWidth && paperRect.width
@@ -2343,11 +2401,19 @@ function setupLayoutEditor() {
     updateLayoutSelection();
   });
 
-  const finishDrag = () => {
+  const finishDrag = (event) => {
     if (!layoutDrag) return;
-    document.querySelector('[data-layout-block="' + layoutDrag.key + '"]')?.classList.remove('layout-dragging');
+    if (layoutDrag.pointerId != null && event?.pointerId != null && layoutDrag.pointerId !== event.pointerId) return;
+    const active = layoutDrag;
+    active.element?.classList.remove('layout-dragging');
+    try {
+      if (active.pointerId != null && active.element?.hasPointerCapture?.(active.pointerId)) {
+        active.element.releasePointerCapture(active.pointerId);
+      }
+    } catch {}
     layoutDrag = null;
     save();
+    syncLayoutEditModeUI();
     updateLayoutSelection();
   };
   document.addEventListener('pointerup', finishDrag);
@@ -2492,7 +2558,14 @@ window.addEventListener('resize', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
-  setLayoutEditMode(false);
+  if (layoutEditEnabled) {
+    if (layoutDrag) {
+      layoutDrag.element?.classList.remove('layout-dragging');
+      layoutDrag = null;
+    }
+    selectLayoutBlock('');
+    syncLayoutEditModeUI();
+  }
   setPreviewCustomizer(false);
   document.getElementById('designPanel')?.classList.remove('open');
 });
