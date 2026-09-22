@@ -326,6 +326,15 @@ function moneyForCurrency(value, currency = 'VND') {
   }).format(Number(value || 0)) + ' ' + code;
 }
 
+function numericMoney(value, currency = state.currency) {
+  const code = normalizeCatalogCurrency(currency);
+  const digits = code === 'VND' ? 0 : 2;
+  return new Intl.NumberFormat('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  }).format(Number(value || 0));
+}
+
 const units = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
 function readThree(num, full) {
   const hundreds = Math.floor(num / 100);
@@ -526,13 +535,28 @@ function renderPreviewProducts() {
 
   const head = document.getElementById('qHead');
   const body = document.getElementById('qBody');
+  const colgroup = document.getElementById('qCols');
   head.innerHTML = '';
   body.innerHTML = '';
+  if (colgroup) colgroup.innerHTML = '';
+
+  const columnWeights = { stt: 5, name: 27, pack: 15, unit: 8, qty: 9, price: 15, amount: 17, note: 18 };
+  const totalWeight = cols.reduce((sum, [, key]) => sum + (columnWeights[key] || 10), 0);
+
+  if (colgroup) {
+    cols.forEach(([, key]) => {
+      const col = document.createElement('col');
+      col.className = 'col-' + key;
+      col.style.width = ((columnWeights[key] || 10) / totalWeight * 100).toFixed(2) + '%';
+      colgroup.appendChild(col);
+    });
+  }
 
   const hrow = document.createElement('tr');
-  cols.forEach(([label]) => {
+  cols.forEach(([label, key]) => {
     const th = document.createElement('th');
     th.textContent = label;
+    th.classList.add('col-' + key);
     hrow.appendChild(th);
   });
   head.appendChild(hrow);
@@ -543,12 +567,13 @@ function renderPreviewProducts() {
       const td = document.createElement('td');
       let value = '';
       if (key === 'stt') value = index + 1;
-      else if (key === 'price') value = money(product.price);
-      else if (key === 'amount') value = money(Number(product.qty || 0) * Number(product.price || 0));
+      else if (key === 'price') value = numericMoney(product.price);
+      else if (key === 'amount') value = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
       else value = product[key] == null ? '' : product[key];
       td.textContent = value;
-      if (['stt','unit','qty'].includes(key)) td.className = 'center';
-      if (['price','amount'].includes(key)) td.className = 'num';
+      td.classList.add('col-' + key);
+      if (['stt','unit','qty'].includes(key)) td.classList.add('center');
+      if (['price','amount'].includes(key)) td.classList.add('num');
       row.appendChild(td);
     });
     body.appendChild(row);
