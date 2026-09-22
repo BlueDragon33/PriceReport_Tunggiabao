@@ -72,7 +72,7 @@ const defaults = {
   accent: '#0b8f83',
   showLogo: true,
   showSlogan: true,
-  showWebEmail: true,
+  showWebEmail: false,
   showTerms: true,
   showSignature: true,
   showQuoteMeta: false,
@@ -957,6 +957,17 @@ const THEME_FONTS = {
   mono: 'Arial'
 };
 
+const THEME_PROFILES = {
+  modern: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  corporate: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  minimal: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'airy', previewTableDensity: 'standard' },
+  classic: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  emerald: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  warm: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  premium: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' }
+};
+
 $$('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
@@ -971,6 +982,7 @@ $$('.tpl').forEach((el) => {
     state.theme = el.dataset.theme;
     if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
     if (THEME_FONTS[state.theme]) state.docFont = THEME_FONTS[state.theme];
+    Object.assign(state, THEME_PROFILES[state.theme] || {});
     if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
     save();
     syncInputs();
