@@ -31,3 +31,7 @@ Impact:
 ## Gate
 
 This branch is stacked on the V3.8 branch. Merge only after CI passes and after V3.8 is accepted.
+
+## CI retarget note
+
+The validation PR targets `main` so the repository's existing `pull_request.branches: [main]` workflow executes the full Webapp CI without merging or publishing.
