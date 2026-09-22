@@ -1662,3 +1662,97 @@ input[type=range]::-moz-range-thumb{
   --rhythm-lg:7mm
 }
 .product-card.collapsed .product-card-head{min-height:38px}
+
+
+/* V3.0 mobile/tablet report view + reliable document font scaling */
+.paper .company{font-size:var(--fs-company,9.6px)!important}
+.paper .company-name{font-size:var(--fs-company-name,13.2px)!important}
+.paper .company-lines{font-size:var(--fs-company,9.6px)!important}
+.paper .qsubtitle{font-size:var(--fs-subtitle,11.2px)!important}
+.paper .qmeta{font-size:var(--fs-meta,9.6px)!important}
+.paper .recipient{font-size:var(--fs-recipient,13.5px)!important}
+.paper .intro{font-size:var(--fs-intro,10.5px)!important}
+.paper .sectionbar{font-size:var(--fs-section,11.5px)!important}
+.paper .qtable{font-size:var(--fs-table,9px)!important}
+.paper .summary{font-size:var(--fs-summary,9.4px)!important}
+.paper .summary .grand{font-size:var(--fs-summary-grand,10.2px)!important}
+.paper .words{font-size:var(--fs-words,9.8px)!important}
+.paper .payment-print h4,.paper .terms h4{font-size:var(--fs-small-heading,10.5px)!important}
+.paper .payment-grid{font-size:var(--fs-payment,9.4px)!important}
+.paper .terms ol{font-size:var(--fs-terms,9.5px)!important}
+.paper .signatures{font-size:var(--fs-signature,9.5px)!important}
+.paper .footer{font-size:var(--fs-footer,8.4px)!important}
+
+.pc-folder-status{
+  margin:0 0 10px;padding:9px 10px;border:1px solid #dce5ee;border-radius:8px;
+  background:#f7f9fb;color:#5f7087;font-size:10.5px;line-height:1.4
+}
+.pc-folder-status[data-state="ready"]{background:#edf9f4;border-color:#c9eadb;color:#197252}
+.pc-folder-status[data-state="prompt"]{background:#fff8e8;border-color:#f0dfb6;color:#8a651a}
+.pc-folder-status[data-state="unsupported"]{background:#f5f5f6;color:#727984}
+.export-primary-actions{align-items:center}
+
+.shell.report-view{
+  grid-template-columns:var(--nav) minmax(0,1fr)!important
+}
+.shell.report-view .editor,
+.shell.report-view .design{display:none!important}
+.shell.report-view .preview{
+  grid-column:2!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:auto!important;
+  padding:0 10px 20px!important
+}
+.shell.report-view .preview-tools{
+  margin-left:-10px;margin-right:-10px
+}
+.shell.report-view .preview-left-tools #fit,
+.shell.report-view .preview-left-tools #wideView,
+.shell.report-view .zoom-control,
+.shell.report-view #pageEstimate,
+.shell.report-view #documentHealth,
+.shell.report-view #preflightCheck,
+.shell.report-view #openSmartImport,
+.shell.report-view #layoutEditToggle,
+.shell.report-view #autoArrangeLayoutToolbar,
+.shell.report-view #layoutSelection,
+.shell.report-view #customizePreview,
+.shell.report-view #toolbarMenu{display:none!important}
+.shell.report-view .view-exit{display:inline-flex!important;align-items:center}
+.shell.report-view #paperWrap{
+  margin-left:auto!important;margin-right:auto!important;
+  transform:none!important;margin-bottom:0!important;min-height:0!important
+}
+.report-view-active .preview-customizer{display:none!important}
+
+@media(max-width:980px){
+  body.report-view-active{overflow:auto!important}
+  .shell.report-view{
+    display:block!important;height:auto!important;min-height:0!important
+  }
+  .shell.report-view .nav{
+    position:sticky;top:0
+  }
+  .shell.report-view .preview{
+    height:auto!important;min-height:0!important;overflow:visible!important;
+    padding:0 6px 16px!important
+  }
+  .shell.report-view .preview-tools{
+    position:sticky;top:58px;margin-left:-6px;margin-right:-6px;
+    min-height:46px;padding:5px 7px
+  }
+  .shell.report-view .preview-right-tools{
+    margin-left:auto
+  }
+  .shell.report-view .toolbar-btn.pdf,
+  .shell.report-view .toolbar-btn.print{
+    min-width:auto;padding:0 8px
+  }
+}
+@media(max-width:620px){
+  .shell.report-view .nav button,
+  .shell.report-view .nav button.nav-secondary{min-width:74px}
+  .shell.report-view .preview-right-tools .toolbar-btn.pdf{display:none}
+  .shell.report-view .preview-tools{gap:5px}
+}
