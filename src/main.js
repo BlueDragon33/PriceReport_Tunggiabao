@@ -21,8 +21,10 @@ const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 
 const LAYOUT_BLOCK_KEYS = [
-  'logo','company','quote','recipient','customer','intro','section',
-  'table','summary','words','payment','terms','signatures','footer'
+  'logo','company','companyName','companyAddress','branchKhanhHoa','branchDongNai','farmAddress',
+  'taxCode','phone','website','companyEmail','quote','quoteTitle','quoteMeta','recipient','customer',
+  'intro','section','table','summary','words','payment','paymentMethod','bankName','bankAccount','bankOwner',
+  'terms','termsTitle','termsText','closing','signatures','footer','slogan','footerText'
 ];
 const PX_PER_MM = 96 / 25.4;
 
