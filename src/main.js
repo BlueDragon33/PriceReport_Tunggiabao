@@ -1112,7 +1112,7 @@ function renderSmartImportReview() {
 
   const warnings = document.getElementById('smartImportWarnings');
   warnings.innerHTML = '';
-  const messages = [...new Set([...(smartImportDraft.warnings || []), ...(smartImportDraft.unmatched || []).slice(0, 4))];
+  const messages = [...new Set([...(smartImportDraft.warnings || []), ...(smartImportDraft.unmatched || []).slice(0, 4)])];
   messages.forEach((message) => {
     const item = document.createElement('div');
     item.textContent = message;
