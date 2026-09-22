@@ -122,6 +122,7 @@
             <div class="row"><label>Ngân hàng</label><input id="bankName" data-bind="bankName"></div>
             <div class="row"><label>Số tài khoản</label><input id="bankAccount" data-bind="bankAccount"></div>
             <div class="row"><label>Chủ tài khoản</label><input id="bankOwner" data-bind="bankOwner"></div>
+            <label class="check"><input id="showPaymentBlock" data-bind="showPaymentBlock" type="checkbox"> Hiện thông tin thanh toán trên bản in</label>
           </div>
         </div>
 
@@ -194,6 +195,7 @@
         <div class="card">
           <h3>Tùy chỉnh hiển thị</h3>
           <label class="check"><input id="showLogo" data-bind="showLogo" type="checkbox"> Hiển thị logo</label>
+          <label class="check"><input id="showSlogan" data-bind="showSlogan" type="checkbox"> Hiển thị slogan</label>
           <label class="check"><input id="showWebEmail" data-bind="showWebEmail" type="checkbox"> Hiển thị website/email</label>
           <label class="check"><input id="showTerms" data-bind="showTerms" type="checkbox"> Hiển thị điều khoản</label>
           <label class="check"><input id="showSignature" data-bind="showSignature" type="checkbox"> Hiển thị chữ ký</label>
@@ -268,6 +270,16 @@
           </table>
           <div class="words" id="words"></div>
 
+          <section class="payment-print" id="paymentPrint">
+            <h4>THÔNG TIN THANH TOÁN</h4>
+            <div class="payment-grid">
+              <div class="clickable" data-target="paymentMethod"><b>Phương thức:</b> <span id="pPaymentMethod"></span></div>
+              <div class="clickable" data-target="bankName"><b>Ngân hàng:</b> <span id="pBankName"></span></div>
+              <div class="clickable" data-target="bankAccount"><b>Số tài khoản:</b> <span id="pBankAccount"></span></div>
+              <div class="clickable" data-target="bankOwner"><b>Chủ tài khoản:</b> <span id="pBankOwner"></span></div>
+            </div>
+          </section>
+
           <section class="terms" id="termsBox">
             <h4 class="clickable" data-target="termsTitle" id="pTermsTitle"></h4>
             <ol class="clickable" data-target="termsText" id="pTerms"></ol>
@@ -289,7 +301,11 @@
             </div>
           </section>
 
-          <footer class="footer clickable" data-target="footerText" id="pFooter"></footer>
+          <footer class="footer">
+            <span class="clickable" data-target="slogan" id="pSlogan"></span>
+            <span id="footerSep"> • </span>
+            <span class="clickable" data-target="footerText" id="pFooter"></span>
+          </footer>
         </article>
       </div>
     </main>
