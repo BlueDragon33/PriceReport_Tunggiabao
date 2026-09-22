@@ -121,3 +121,5 @@ if (!js.includes("data-layout-block")) {
 if (!html.includes('data-layout-block="logo"') || !html.includes('data-layout-block="table"')) fail('Preview draggable block markers are missing');
 if (!css.includes('.paper.layout-edit-mode .layout-block')) fail('Layout edit mode styling is missing');
 if (!js.includes("logoOffsetX")) fail('Independent horizontal logo offset is missing');
+
+if (!css.includes('#previewLogo img{') || !css.includes('position:absolute') || !css.includes('--logo-scale')) fail('Logo resize must remain visual-only inside a fixed header slot');
