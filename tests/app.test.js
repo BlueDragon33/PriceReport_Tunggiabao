@@ -590,3 +590,15 @@ test('remove-background UI describes deletion rather than light-background styli
   expect(document.getElementById('logoRemoveBgThreshold').min).toBe('8');
   expect(document.getElementById('logoRemoveBgThreshold').max).toBe('140');
 });
+
+
+test('device classification runtime exposes a managed UI profile without gating local data', () => {
+  expect(['desktop','tablet','phone']).toContain(document.body.dataset.deviceClass);
+  expect(document.body.dataset.deviceProfile).toBeTruthy();
+  expect(document.getElementById('deviceProfileChip')).toBeTruthy();
+  expect(window.PriceReportManagement).toBeTruthy();
+  expect(window.PriceReportManagement.application).toBe('price-report-tunggiabao');
+  expect(window.PriceReportManagement.category).toBe('Kế toán');
+  expect(window.PriceReportManagement.remoteAdminReady).toBe(false);
+  expect(window.PriceReportManagement.getLocalDeviceRecord().deviceCode).toMatch(/^KT-/);
+});
