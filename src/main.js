@@ -680,7 +680,7 @@ const THEME_ACCENTS = {
   mono: '#30343a'
 };
 
-$('.tpl').forEach((el) => {
+$$('.tpl').forEach((el) => {
   el.addEventListener('click', () => {
     state.theme = el.dataset.theme;
     if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
