@@ -13,16 +13,16 @@
   <div class="shell">
     <nav class="nav">
       <div class="brand">BG</div>
-      <button class="active" data-tab="general"><div style="font-size:20px">▣</div>Thông tin</button>
-      <button data-tab="history"><div style="font-size:20px">◫</div>Báo giá</button>
-      <button data-tab="master"><div style="font-size:20px">▦</div>Danh mục</button>
-      <button data-tab="customer"><div style="font-size:20px">●</div>Khách hàng</button>
-      <button data-tab="products"><div style="font-size:20px">◆</div>Sản phẩm</button>
-      <button data-tab="payment"><div style="font-size:20px">▤</div>Thanh toán</button>
-      <button data-tab="terms"><div style="font-size:20px">≡</div>Điều khoản</button>
-      <button data-tab="design"><div style="font-size:20px">◉</div>Thiết kế</button>
-      <button data-tab="export"><div style="font-size:20px">▰</div>Xuất / In</button>
-      <button data-tab="presets"><div style="font-size:20px">▱</div>Lưu mẫu</button>
+      <button class="active" data-tab="general"><span class="nav-glyph">▤</span><span>Thông tin<br>chung</span></button>
+      <button data-tab="customer"><span class="nav-glyph">●</span><span>Khách hàng</span></button>
+      <button data-tab="products"><span class="nav-glyph">◆</span><span>Sản phẩm</span></button>
+      <button data-tab="payment"><span class="nav-glyph">▣</span><span>Thanh toán</span></button>
+      <button data-tab="terms"><span class="nav-glyph">▤</span><span>Điều khoản</span></button>
+      <button data-tab="design"><span class="nav-glyph">◉</span><span>Thiết kế</span></button>
+      <button data-tab="export"><span class="nav-glyph">▰</span><span>Xuất/In</span></button>
+      <button data-tab="presets"><span class="nav-glyph">▱</span><span>Lưu mẫu</span></button>
+      <button class="nav-secondary" data-tab="history"><span class="nav-glyph">◫</span><span>Báo giá</span></button>
+      <button class="nav-secondary" data-tab="master"><span class="nav-glyph">▦</span><span>Danh mục</span></button>
       <div class="spacer"></div>
       <div class="tip"><b>Mẹo</b><br>Nhập bên trái, xem A4 bên phải. Bấm nội dung preview để tới trường chỉnh sửa.</div>
     </nav>
@@ -57,6 +57,20 @@
             </div>
             <div class="row"><label>Slogan</label><input id="slogan" data-bind="slogan"></div>
           </div>
+          <div class="section-block quick-customer">
+            <div class="section-title">THÔNG TIN KHÁCH HÀNG</div>
+            <div class="row required"><label>Tên khách hàng</label><input id="quickCustomerName" data-bind="customerName"></div>
+            <div class="row"><label>Công ty</label><input id="quickCustomerCompany" data-bind="customerCompany" placeholder="Nhập tên công ty (nếu có)"></div>
+            <div class="row"><label>Địa chỉ</label><input id="quickCustomerAddress" data-bind="customerAddress" placeholder="Nhập địa chỉ"></div>
+            <div class="row"><label>SĐT</label><input id="quickCustomerPhone" data-bind="customerPhone" placeholder="Nhập số điện thoại"></div>
+            <div class="row"><label>Email</label><input id="quickCustomerEmail" data-bind="customerEmail" type="email" placeholder="Nhập email"></div>
+            <div class="row"><label>Người liên hệ</label><input id="quickCustomerContact" data-bind="customerContact" placeholder="Nhập người liên hệ"></div>
+            <div class="grid2 compact-grid">
+              <div class="row"><label>Ngày báo giá</label><input id="quickQuoteDate" data-bind="quoteDate" type="date"></div>
+              <div class="row"><label>Hiệu lực báo giá</label><input id="quickValidity" data-bind="validity"></div>
+            </div>
+          </div>
+
           <div class="card">
             <h3>Thông tin báo giá</h3>
             <div class="row"><label>Tiêu đề</label><input id="quoteTitle" data-bind="quoteTitle"></div>
@@ -278,11 +292,15 @@
         </div>
         <div class="card">
           <h3>Tùy chỉnh hiển thị</h3>
+          <label class="check"><input id="designShowStt" data-bind="showStt" type="checkbox"> Hiển thị cột STT</label>
+          <label class="check"><input id="designShowPrice" data-bind="showPrice" type="checkbox"> Hiển thị cột đơn giá</label>
+          <label class="check"><input id="designShowAmount" data-bind="showAmount" type="checkbox"> Hiển thị cột thành tiền</label>
+          <label class="check"><input id="designShowTotals" data-bind="showTotals" type="checkbox"> Hiển thị tổng cộng</label>
+          <label class="check"><input id="showTerms" data-bind="showTerms" type="checkbox"> Hiển thị điều khoản</label>
+          <label class="check"><input id="showSignature" data-bind="showSignature" type="checkbox"> Hiển thị chữ ký</label>
           <label class="check"><input id="showLogo" data-bind="showLogo" type="checkbox"> Hiển thị logo</label>
           <label class="check"><input id="showSlogan" data-bind="showSlogan" type="checkbox"> Hiển thị slogan</label>
           <label class="check"><input id="showWebEmail" data-bind="showWebEmail" type="checkbox"> Hiển thị website/email</label>
-          <label class="check"><input id="showTerms" data-bind="showTerms" type="checkbox"> Hiển thị điều khoản</label>
-          <label class="check"><input id="showSignature" data-bind="showSignature" type="checkbox"> Hiển thị chữ ký</label>
         </div>
         <div class="card">
           <h3>Màu chủ đạo</h3>
@@ -297,7 +315,9 @@
         </div>
         <div class="card">
           <h3>Định dạng</h3>
-          <div class="row"><label>Font tài liệu</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
+          <div class="row"><label>Khổ giấy</label><select id="paperSize" disabled><option>A4 (210 × 297 mm)</option></select></div>
+          <div class="row"><label>Font chữ</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
+          <div class="row"><label>Cỡ chữ</label><select id="designFontSize" data-bind="docFontSize"><option value="11">Nhỏ</option><option value="12.2">Mặc định</option><option value="13">Vừa</option><option value="14">Lớn</option></select></div>
           <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
         </div>
         <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
@@ -306,8 +326,21 @@
 
     <main class="preview">
       <div class="preview-tools">
-        <div><button class="btn primary" id="fit">Xem toàn trang</button><button class="btn" id="actual">100%</button><span class="zoom" id="zoomText">82%</span><span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span></div>
-        <div><button class="btn green print-action">Tải PDF</button><button class="btn primary print-action">In</button></div>
+        <div class="preview-left-tools">
+          <button class="toolbar-btn active-preview" id="fit">◉&nbsp; Xem trước</button>
+          <button class="toolbar-btn" id="wideView">⛶&nbsp; Màn hình rộng</button>
+        </div>
+        <div class="preview-right-tools">
+          <div class="zoom-control">
+            <button class="zoom-btn" id="zoomOut" aria-label="Thu nhỏ">−</button>
+            <button class="zoom-value" id="actual"><span id="zoomText">82%</span></button>
+            <button class="zoom-btn" id="zoomIn" aria-label="Phóng to">+</button>
+          </div>
+          <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
+          <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
+          <button class="toolbar-btn print print-action">▣&nbsp; In</button>
+          <button class="toolbar-btn menu" id="toolbarMenu" aria-label="Tùy chọn">⋮</button>
+        </div>
       </div>
 
       <div class="paper-wrap" id="paperWrap">
