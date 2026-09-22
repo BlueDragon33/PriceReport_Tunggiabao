@@ -14,6 +14,7 @@
     <nav class="nav">
       <div class="brand">BG</div>
       <button class="active" data-tab="general"><div style="font-size:20px">▣</div>Thông tin</button>
+      <button data-tab="history"><div style="font-size:20px">◫</div>Báo giá</button>
       <button data-tab="customer"><div style="font-size:20px">●</div>Khách hàng</button>
       <button data-tab="products"><div style="font-size:20px">◆</div>Sản phẩm</button>
       <button data-tab="payment"><div style="font-size:20px">▤</div>Thanh toán</button>
@@ -66,6 +67,25 @@
             <div class="row"><label>Kính gửi</label><input id="recipientLine" data-bind="recipientLine"></div>
             <div class="row"><label>Lời mở đầu</label><textarea id="intro" data-bind="intro"></textarea></div>
             <div class="row"><label>Tiêu đề nhóm sản phẩm</label><input id="sectionTitle" data-bind="sectionTitle"></div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-history">
+          <div class="card">
+            <h3>Quản lý báo giá</h3>
+            <div class="history-stats">
+              <div class="history-kpi"><span>Đã lưu</span><strong id="historyCount">0</strong></div>
+              <div class="history-kpi"><span>Tổng giá trị</span><strong id="historyRevenue">0 ₫</strong></div>
+            </div>
+            <div class="btns" style="margin-top:10px">
+              <button class="btn primary" id="saveQuoteToHistory">Lưu báo giá hiện tại</button>
+              <button class="btn" id="newQuote">Tạo báo giá mới</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Lịch sử báo giá</h3>
+            <div class="row"><label>Tìm theo số báo giá / khách hàng</label><input id="quoteSearch" placeholder="Nhập từ khóa..."></div>
+            <div id="quoteHistoryList" class="history-list"></div>
           </div>
         </div>
 
