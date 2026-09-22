@@ -362,3 +362,50 @@ test('smart import progress is announced to assistive technology', () => {
   expect(progress.getAttribute('role')).toBe('status');
   expect(progress.getAttribute('aria-live')).toBe('polite');
 });
+
+
+test('Smart Import review allows an OCR field to be intentionally cleared before Apply', () => {
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - Tùng Gia Bảo\nĐT. 0962944688\nBảng báo giá\nKính gửi Quý khách hàng';
+  document.getElementById('reparseOcrText').click();
+
+  const phone = document.querySelector('[data-import-field="phone"]');
+  expect(phone.value).toBe('0962944688');
+  phone.value = '';
+  phone.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('applySmartImport').click();
+  expect(document.getElementById('phone').value).toBe('');
+});
+
+test('corrected OCR raw text replaces prior handwriting recognition instead of keeping stale fields', () => {
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - Tên sai\nĐT. 0900000000';
+  document.getElementById('reparseOcrText').click();
+  expect(document.querySelector('[data-import-field="companyName"]').value).toContain('Tên sai');
+
+  raw.value = 'HKD - Tùng Gia Bảo\nĐT. 0962944688';
+  document.getElementById('reparseOcrText').click();
+  expect(document.querySelector('[data-import-field="companyName"]').value).toBe('HKD - Tùng Gia Bảo');
+  expect(document.querySelector('[data-import-field="phone"]').value).toBe('0962944688');
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('automatic arrangement hides empty optional Pack and Note columns only', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const showPack = document.getElementById('showPack');
+  const showNote = document.getElementById('showNote');
+  showPack.checked = true;
+  showPack.dispatchEvent(new Event('change', { bubbles:true }));
+  showNote.checked = true;
+  showNote.dispatchEvent(new Event('change', { bubbles:true }));
+
+  document.getElementById('layoutEditToggle').click();
+  document.getElementById('autoArrangeLayoutToolbar').click();
+  expect(document.getElementById('showPack').checked).toBe(false);
+  expect(document.getElementById('showNote').checked).toBe(false);
+  expect(document.getElementById('showPrice').checked).toBe(true);
+  document.getElementById('layoutEditToggle').click();
+});
