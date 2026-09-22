@@ -25,7 +25,7 @@ export function calcQuoteTotal(data = {}) {
 }
 
 export function nextDuplicateQuoteNo(base, usedQuoteNumbers = []) {
-  const safeBase = String(base || 'BG').trim() || 'BG';
+  const safeBase = (String(base || 'BG').trim() || 'BG').replace(/-COPY(?:-\d+)?$/i, '');
   const used = new Set(Array.from(usedQuoteNumbers || []).filter(Boolean));
   let candidate = safeBase + '-COPY';
   let sequence = 2;
