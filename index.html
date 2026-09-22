@@ -36,6 +36,7 @@
           <div class="card">
             <h3>Logo</h3>
             <div class="logo-edit" id="logoEdit"><div class="logo-placeholder">THẾ GIỚI TRỨNG®</div></div>
+            <div class="logo-upload-note">Logo mới luôn được giữ nguyên ảnh gốc. Không tự tách nền.</div>
             <div class="btns" style="margin-top:8px">
               <label class="btn file-btn" for="logoInput">Thay logo</label>
               <input class="hidden-input" id="logoInput" type="file" accept="image/*">
@@ -360,16 +361,35 @@
           </div>
 
           <div class="row">
-            <label>Hòa trộn logo</label>
-            <select id="logoBlendMode" data-bind="logoBlendMode">
-              <option value="normal">Giữ nguyên màu</option>
-              <option value="multiply">Hòa nền sáng</option>
-              <option value="darken">Giảm cảm giác nền trắng</option>
+            <label>Chế độ ảnh logo</label>
+            <select id="logoDisplayMode" data-bind="logoDisplayMode">
+              <option value="original">Giữ nguyên ảnh gốc (mặc định)</option>
+              <option value="remove-bg">Tách nền sáng</option>
+              <option value="styled">Hiệu ứng / hòa nền nâng cao</option>
             </select>
           </div>
+          <div class="logo-mode-status" id="logoModeStatus">Ảnh gốc • không xử lý nền</div>
 
-          <div class="logo-backdrop-editor">
-            <div class="logo-backdrop-title">NỀN PHÍA SAU LOGO</div>
+          <div class="logo-remove-bg-controls" id="logoRemoveBgControls" hidden>
+            <div class="row">
+              <label>Ngưỡng nền sáng <span class="range-value" id="logoRemoveBgThresholdValue">244</span></label>
+              <input id="logoRemoveBgThreshold" data-bind="logoRemoveBgThreshold" type="range" min="210" max="254" step="1">
+            </div>
+            <div class="help">Chỉ xử lý bản hiển thị. File logo gốc luôn được giữ nguyên để có thể khôi phục ngay.</div>
+          </div>
+
+          <div class="logo-styled-controls" id="logoStyledControls" hidden>
+            <div class="row">
+              <label>Hòa trộn logo</label>
+              <select id="logoBlendMode" data-bind="logoBlendMode">
+                <option value="normal">Giữ nguyên màu</option>
+                <option value="multiply">Hòa nền sáng</option>
+                <option value="darken">Giảm cảm giác nền trắng</option>
+              </select>
+            </div>
+
+            <div class="logo-backdrop-editor">
+              <div class="logo-backdrop-title">NỀN PHÍA SAU LOGO</div>
             <div class="row">
               <label>Kiểu nền</label>
               <select id="logoTreatment" data-bind="logoTreatment">
@@ -388,6 +408,11 @@
               <div class="row"><label>Bo góc (mm)</label><input id="logoBackdropRadius" data-bind="logoBackdropRadius" type="number" min="0" max="24" step="1"></div>
               <div class="row"><label>Viền nền</label><select id="logoBackdropBorder" data-bind="logoBackdropBorder"><option value="none">Không viền</option><option value="soft">Viền mảnh</option></select></div>
             </div>
+          </div>
+          </div>
+
+          <div class="btns logo-original-actions">
+            <button class="btn" id="restoreLogoOriginal" type="button">Khôi phục logo gốc</button>
           </div>
         </div>
         <div class="card">
