@@ -2,6 +2,7 @@ import './styles.css';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
+const HISTORY = 'tunggiabao-price-report-history-v1';
 
 const defaults = {
   logo: '',
@@ -101,6 +102,7 @@ const setText = (id, value) => {
 
 const tabMeta = {
   general: ['THÔNG TIN CHUNG', 'Logo, doanh nghiệp và thông tin báo giá.'],
+  history: ['QUẢN LÝ BÁO GIÁ', 'Lưu, tìm kiếm, mở lại và nhân bản các báo giá.'],
   customer: ['KHÁCH HÀNG', 'Thông tin người nhận và đơn vị mua hàng.'],
   products: ['SẢN PHẨM', 'Danh mục, số lượng, đơn giá và cột hiển thị.'],
   payment: ['THANH TOÁN', 'Chiết khấu, VAT, tổng tiền và tài khoản.'],
@@ -117,6 +119,7 @@ function openTab(tab) {
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
   if (tab === 'design') document.getElementById('designPanel').classList.add('open');
   if (tab === 'presets') renderPresets();
+  if (tab === 'history') renderHistory();
 }
 
 $$('.nav button[data-tab]').forEach((btn) => {
@@ -492,6 +495,12 @@ document.getElementById('importJson').addEventListener('change', (event) => {
   event.target.value = '';
 });
 
+document.getElementById('saveQuoteToHistory').addEventListener('click', saveCurrentQuote);
+document.getElementById('newQuote').addEventListener('click', () => {
+  if (confirm('Tạo báo giá mới? Dữ liệu hiện tại vẫn có thể lưu vào lịch sử trước khi tạo mới.')) createNewQuote();
+});
+document.getElementById('quoteSearch').addEventListener('input', renderHistory);
+
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục toàn bộ dữ liệu về mẫu ban đầu?')) return;
   state = clone(defaults);
@@ -501,6 +510,178 @@ document.getElementById('reset').addEventListener('click', () => {
   render();
   toast('Đã khôi phục mẫu');
 });
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function setHistory(items) {
+  localStorage.setItem(HISTORY, JSON.stringify(items));
+}
+
+function calcTotal(data) {
+  const products = Array.isArray(data.products) ? data.products : [];
+  const subtotal = products.reduce((sum, p) => sum + Number(p.qty || 0) * Number(p.price || 0), 0);
+  const discountPct = Math.min(100, Math.max(0, Number(data.discountPct || 0)));
+  const discount = subtotal * discountPct / 100;
+  const taxable = subtotal - discount;
+  const vat = taxable * Math.max(0, Number(data.vatPct || 0)) / 100;
+  return taxable + vat + Math.max(0, Number(data.otherFee || 0));
+}
+
+function quoteLabel(data) {
+  return data.quoteNo || 'Chưa có số báo giá';
+}
+
+function saveCurrentQuote() {
+  const items = getHistory();
+  const now = new Date().toISOString();
+  const existingIndex = state.quoteNo
+    ? items.findIndex(item => item.data && item.data.quoteNo === state.quoteNo)
+    : -1;
+  const record = {
+    id: existingIndex >= 0 ? items[existingIndex].id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    savedAt: now,
+    total: calcTotal(state),
+    data: clone(state)
+  };
+  if (existingIndex >= 0) items[existingIndex] = record;
+  else items.unshift(record);
+  setHistory(items);
+  renderHistory();
+  toast(existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá');
+}
+
+function loadQuoteRecord(record) {
+  state = merge(record.data);
+  save();
+  syncInputs();
+  renderEditorProducts();
+  render();
+  openTab('general');
+  toast('Đã mở ' + quoteLabel(record.data));
+}
+
+function duplicateQuoteRecord(record) {
+  state = merge(clone(record.data));
+  const base = state.quoteNo || 'BG';
+  state.quoteNo = base + '-COPY';
+  state.quoteDate = new Date().toISOString().slice(0, 10);
+  save();
+  syncInputs();
+  renderEditorProducts();
+  render();
+  openTab('general');
+  toast('Đã nhân bản báo giá');
+}
+
+function createNewQuote() {
+  const keep = {
+    logo: state.logo,
+    companyName: state.companyName,
+    companyAddress: state.companyAddress,
+    branchKhanhHoa: state.branchKhanhHoa,
+    branchDongNai: state.branchDongNai,
+    farmAddress: state.farmAddress,
+    taxCode: state.taxCode,
+    phone: state.phone,
+    website: state.website,
+    companyEmail: state.companyEmail,
+    slogan: state.slogan,
+    footerText: state.footerText,
+    theme: state.theme,
+    accent: state.accent,
+    showLogo: state.showLogo,
+    showSlogan: state.showSlogan,
+    showWebEmail: state.showWebEmail,
+    docFont: state.docFont,
+    marginX: state.marginX,
+    marginTop: state.marginTop,
+    marginBottom: state.marginBottom,
+    logoWidth: state.logoWidth,
+    docFontSize: state.docFontSize
+  };
+  state = Object.assign(clone(defaults), keep);
+  const count = getHistory().length + 1;
+  const d = new Date();
+  const stamp = String(d.getFullYear()) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  state.quoteNo = 'BG-' + stamp + '-' + String(count).padStart(3, '0');
+  state.quoteDate = d.toISOString().slice(0, 10);
+  save();
+  syncInputs();
+  renderEditorProducts();
+  render();
+  openTab('general');
+  toast('Đã tạo báo giá mới');
+}
+
+function renderHistory() {
+  const list = document.getElementById('quoteHistoryList');
+  if (!list) return;
+  const all = getHistory();
+  const query = (document.getElementById('quoteSearch')?.value || '').trim().toLowerCase();
+  const items = all.filter(record => {
+    const data = record.data || {};
+    return !query || [data.quoteNo, data.customerName, data.customerCompany, data.customerPhone]
+      .filter(Boolean).join(' ').toLowerCase().includes(query);
+  });
+
+  document.getElementById('historyCount').textContent = String(all.length);
+  const revenue = all.reduce((sum, record) => sum + Number(record.total || calcTotal(record.data || {})), 0);
+  document.getElementById('historyRevenue').textContent = new Intl.NumberFormat('vi-VN').format(revenue) + ' ₫';
+
+  list.innerHTML = '';
+  if (!items.length) {
+    list.innerHTML = '<div class="history-empty">Chưa có báo giá phù hợp.</div>';
+    return;
+  }
+
+  items.forEach(record => {
+    const data = record.data || {};
+    const row = document.createElement('div');
+    row.className = 'history-item';
+
+    const info = document.createElement('div');
+    info.className = 'history-info';
+    const title = document.createElement('strong');
+    title.textContent = quoteLabel(data);
+    const meta = document.createElement('span');
+    const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
+    meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
+      new Intl.NumberFormat('vi-VN').format(Number(record.total || calcTotal(data))) + ' ₫';
+    info.append(title, meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'history-actions';
+    const open = document.createElement('button');
+    open.className = 'btn primary';
+    open.textContent = 'Mở';
+    open.addEventListener('click', () => loadQuoteRecord(record));
+
+    const copy = document.createElement('button');
+    copy.className = 'btn';
+    copy.textContent = 'Nhân bản';
+    copy.addEventListener('click', () => duplicateQuoteRecord(record));
+
+    const del = document.createElement('button');
+    del.className = 'btn danger';
+    del.textContent = 'Xóa';
+    del.addEventListener('click', () => {
+      if (!confirm('Xóa ' + quoteLabel(data) + '?')) return;
+      setHistory(getHistory().filter(item => item.id !== record.id));
+      renderHistory();
+      toast('Đã xóa báo giá');
+    });
+
+    actions.append(open, copy, del);
+    row.append(info, actions);
+    list.appendChild(row);
+  });
+}
 
 function getPresets() {
   try {
