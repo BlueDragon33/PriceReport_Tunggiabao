@@ -85,3 +85,10 @@ test('malformed local collections are normalized instead of crashing management 
   if (oldCustomers == null) localStorage.removeItem(customersKey); else localStorage.setItem(customersKey, oldCustomers);
   if (oldCatalog == null) localStorage.removeItem(catalogKey); else localStorage.setItem(catalogKey, oldCatalog);
 });
+
+
+test('navigation exposes the active pane to assistive technology', () => {
+  document.querySelector('[data-tab="products"]').click();
+  expect(document.querySelector('[data-tab="products"]').getAttribute('aria-current')).toBe('page');
+  expect(document.querySelector('[data-tab="general"]').hasAttribute('aria-current')).toBe(false);
+});
