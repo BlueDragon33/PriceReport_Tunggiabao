@@ -651,8 +651,9 @@ function renderLogo() {
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
-    docHead.classList.toggle('no-logo', !state.showLogo);
-    if (state.showLogo) {
+    const hasVisibleLogo = Boolean(state.showLogo && state.logo);
+    docHead.classList.toggle('no-logo', !hasVisibleLogo);
+    if (hasVisibleLogo) {
       docHead.style.removeProperty('grid-template-columns');
     } else {
       docHead.style.gridTemplateColumns = '1fr';
