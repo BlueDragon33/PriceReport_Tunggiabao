@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v30-workflow")) fail('Service-worker cache version was not upgraded for V4.2 workflow semantics');
+if (!sw.includes("pricereport-shell-v31-history-app")) fail('Service-worker cache version was not upgraded for V4.3 quotation management');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -265,3 +265,8 @@ if (!js.includes("document.querySelectorAll('[data-create-quote]')")) fail('V4.2
 if (!js.includes('function openMasterSection(section)')) fail('V4.2 focused master-data navigation is missing');
 if (!html.includes('id="customerLibraryCard"') || !html.includes('id="productCatalogCard"')) fail('V4.2 master-data section targets are missing');
 if (!css.includes('.master-section-highlight')) fail('V4.2 master-data focus feedback is missing');
+
+if (!html.includes('id="historyPendingCount"') || !html.includes('id="historyResultCount"')) fail('V4.3 quotation management counters are missing');
+if (!html.includes('class="history-table-head"')) fail('V4.3 quotation management table header is missing');
+if (!js.includes("row.className = 'history-item history-table-row'")) fail('V4.3 quotation management row renderer is missing');
+if (!css.includes('.history-workspace-header') || !css.includes('.history-table-row')) fail('V4.3 quotation management workspace styles are missing');
