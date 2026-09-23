@@ -1870,68 +1870,8 @@ body.v5-ui .card.card-collapsed>.product-workspace-head .product-workspace-actio
 body.v5-ui .design .card.card-collapsed{padding-bottom:13px}
 body.v5-ui .design .card.card-collapsed h3{margin-bottom:0}
 
-/* Refined template miniatures */
-body.v5-ui .template-grid{gap:14px 12px}
-body.v5-ui .tpl{
-  padding:7px 7px 9px;
-  border-radius:10px;
-  background:linear-gradient(180deg,#fff,#fbfcfd);
-  box-shadow:0 2px 7px rgba(33,57,83,.035);
-}
-body.v5-ui .tpl:hover{
-  transform:translateY(-1px);
-  border-color:#9fc4e8;
-  box-shadow:0 8px 18px rgba(30,69,110,.07);
-}
-body.v5-ui .tpl.active{
-  padding:6px 6px 8px;
-  border:2px solid var(--v5-primary);
-  box-shadow:0 0 0 3px rgba(36,119,232,.07);
-}
-body.v5-ui .tpl span{font-size:10.5px;font-weight:700;color:#2d425e}
-body.v5-ui .thumb{
-  height:auto;
-  aspect-ratio:210/297;
-  border:1px solid #d9e1e9;
-  border-radius:5px;
-  background:#fff;
-  box-shadow:0 2px 8px rgba(34,49,67,.06);
-  overflow:hidden;
-}
-body.v5-ui .thumb:before{
-  left:7%;
-  right:7%;
-  top:6%;
-  height:24%;
-  background:
-    radial-gradient(circle at 10% 24%,var(--thumb-a,#0b8f83) 0 4px,transparent 4.5px),
-    radial-gradient(circle at 16% 24%,var(--thumb-b,#f4a129) 0 4px,transparent 4.5px),
-    linear-gradient(var(--thumb-dark,#31435f),var(--thumb-dark,#31435f)) 28% 10%/55% 5px no-repeat,
-    linear-gradient(#a9b5c2,#a9b5c2) 28% 24%/62% 2px no-repeat,
-    linear-gradient(#d4dbe2,#d4dbe2) 28% 37%/58% 2px no-repeat;
-}
-body.v5-ui .thumb:after{
-  left:7%;
-  right:7%;
-  top:37%;
-  bottom:8%;
-  background:
-    linear-gradient(var(--thumb-a,#0b8f83),var(--thumb-a,#0b8f83)) 0 0/100% 8px no-repeat,
-    linear-gradient(#edf1f4,#edf1f4) 0 19px/100% 1px no-repeat,
-    linear-gradient(#edf1f4,#edf1f4) 0 35px/100% 1px no-repeat,
-    linear-gradient(#edf1f4,#edf1f4) 0 51px/100% 1px no-repeat,
-    linear-gradient(#edf1f4,#edf1f4) 0 67px/100% 1px no-repeat,
-    linear-gradient(#d6dee6,#d6dee6) 72% 83%/28% 7px no-repeat,
-    linear-gradient(#edf1f4,#edf1f4) 72% 96%/28% 3px no-repeat;
-}
-body.v5-ui .thumb.modern{--thumb-a:#0b8f83;--thumb-b:#f2a222;background:linear-gradient(145deg,#ddf5f1 0 13%,#fff 13% 92%,#dff5f1 92%)}
-body.v5-ui .thumb.corporate{--thumb-a:#1b5faa;--thumb-b:#6fa7df;background:linear-gradient(90deg,#1b5faa 0 4%,#fff 4%)}
-body.v5-ui .thumb.minimal{--thumb-a:#7a8794;--thumb-b:#bdc4cb;background:#fff}
-body.v5-ui .thumb.classic{--thumb-a:#735d49;--thumb-b:#b7a48c;background:linear-gradient(90deg,#f4efe8 0 4%,#fff 4% 96%,#f4efe8 96%)}
-body.v5-ui .thumb.emerald{--thumb-a:#16845f;--thumb-b:#9bcbb7;background:linear-gradient(145deg,#e6f6ef 0 14%,#fff 14% 92%,#edf8f3 92%)}
-body.v5-ui .thumb.warm{--thumb-a:#d97919;--thumb-b:#f2be77;background:linear-gradient(180deg,#fff6e9 0 17%,#fff 17%)}
-body.v5-ui .thumb.premium{--thumb-a:#b98e4b;--thumb-b:#7e98b6;background:linear-gradient(180deg,#202c43 0 24%,#fff 24%)}
-body.v5-ui .thumb.mono{--thumb-a:#30343a;--thumb-b:#8a8f95;background:linear-gradient(180deg,#f1f3f4 0 11%,#fff 11%)}
+/* Template metadata & logo backdrop extras.
+   Template cards/miniatures are owned by the Design tool column below. */
 body.v5-ui .template-description{
   margin-top:12px;
   padding:9px 10px;
@@ -1953,22 +1893,6 @@ body.v5-ui .logo-backdrop-title{
   font-size:10px;
   font-weight:850;
   letter-spacing:.4px;
-}
-body.v5-ui .logo-design-preview{
-  min-height:112px;
-  position:relative;
-  isolation:isolate;
-  border-style:dashed;
-  background:
-    linear-gradient(45deg,#f5f7f9 25%,transparent 25%,transparent 75%,#f5f7f9 75%),
-    linear-gradient(45deg,#f5f7f9 25%,#fff 25%,#fff 75%,#f5f7f9 75%);
-  background-position:0 0,6px 6px;
-  background-size:12px 12px;
-}
-body.v5-ui .logo-design-preview img{
-  position:relative;
-  z-index:2;
-  max-height:82px;
 }
 
 /* Preview customization drawer */
