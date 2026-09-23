@@ -49,8 +49,12 @@
           <button type="button" data-open-tab="view"><span>▣</span><b>Xem báo cáo</b></button>
           <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất / Nhập</b></button>
           <button type="button" data-open-tab="presets"><span>▱</span><b>Lưu mẫu</b></button>
+          <button type="button" data-open-tab="system"><span>⚙</span><b>Thiết bị & hệ thống</b></button>
         </div>
       </div>
+
+      <div class="nav-section-label">Hệ thống</div>
+      <button class="nav-secondary" data-tab="system"><span class="nav-glyph">⚙</span><span>Thiết bị & hệ thống</span></button>
 
       <div class="spacer"></div>
       <div class="device-profile-chip" id="deviceProfileChip" aria-live="polite">
@@ -160,7 +164,8 @@
               </article>
               <article class="dashboard-panel system-card">
                 <div class="system-indicator" aria-hidden="true">✓</div>
-                <div><small>Trạng thái hệ thống</small><strong id="dashSystemState">Đang kiểm tra</strong><p id="dashSystemDetail">Đang đọc trạng thái thiết bị và kết nối quản trị.</p></div>
+                <div class="system-card-copy"><small>Trạng thái hệ thống</small><strong id="dashSystemState">Đang kiểm tra</strong><p id="dashSystemDetail">Đang đọc trạng thái thiết bị và kết nối quản trị.</p></div>
+                <button class="system-card-open" type="button" data-open-tab="system">Chi tiết →</button>
               </article>
             </aside>
           </section>
@@ -340,6 +345,87 @@
               <div id="productCatalogList" class="master-list master-table-body"></div>
             </div>
           </section>
+        </div>
+
+        <div class="pane system-workspace" id="pane-system">
+          <div class="system-workspace-header">
+            <div>
+              <span class="workspace-eyebrow">THIẾT BỊ & ỨNG DỤNG</span>
+              <h2>Thiết bị & trạng thái hệ thống</h2>
+              <p>Hiển thị trạng thái thật của thiết bị hiện tại, Device Gate và kết nối Application Management.</p>
+            </div>
+            <button class="btn primary" id="systemRefreshRuntime" type="button">↻ Kiểm tra lại</button>
+          </div>
+
+          <section class="system-status-grid" aria-label="Trạng thái hệ thống">
+            <article class="system-status-card">
+              <span class="system-status-icon">▣</span>
+              <div><small>Thiết bị hiện tại</small><strong id="systemDeviceLabel">Đang nhận diện</strong><em id="systemDeviceClass">—</em></div>
+            </article>
+            <article class="system-status-card" id="systemAccessCard">
+              <span class="system-status-icon access">✓</span>
+              <div><small>Device Gate</small><strong id="systemAccessState">Đang kiểm tra</strong><em id="systemAccessMessage">—</em></div>
+            </article>
+            <article class="system-status-card" id="systemManagementCard">
+              <span class="system-status-icon management">⌁</span>
+              <div><small>Application Management</small><strong id="systemManagementState">Đang đọc contract</strong><em id="systemManagementDetail">—</em></div>
+            </article>
+            <article class="system-status-card">
+              <span class="system-status-icon remote">⚙</span>
+              <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Chỉ bật khi backend production đã read-back đạt gate.</em></div>
+            </article>
+          </section>
+
+          <div class="system-center-grid">
+            <section class="system-center-panel">
+              <div class="system-panel-head"><div><h3>Thiết bị hiện tại</h3><p>Phân loại UI cục bộ và registry Device Gate được hiển thị tách biệt.</p></div></div>
+              <div class="system-detail-grid">
+                <div><small>Loại thiết bị</small><strong id="systemDetailDeviceClass">—</strong></div>
+                <div><small>UI profile</small><strong id="systemUiProfile">—</strong></div>
+                <div><small>Mã phân loại cục bộ</small><strong id="systemLocalDeviceCode">—</strong></div>
+                <div><small>Mã registry Device Gate</small><strong id="systemRegistryDeviceCode">Chưa cấp</strong></div>
+                <div><small>Kích thước viewport</small><strong id="systemViewport">—</strong></div>
+                <div><small>Nền tảng</small><strong id="systemPlatform">—</strong></div>
+                <div><small>Lần nhận diện gần nhất</small><strong id="systemLastSeen">—</strong></div>
+                <div><small>Thay đổi phân loại</small><strong id="systemEnvironmentChanged">Không</strong></div>
+              </div>
+              <div class="system-inline-actions">
+                <button class="btn" id="systemCopyDeviceCode" type="button">Sao chép mã thiết bị</button>
+              </div>
+            </section>
+
+            <section class="system-center-panel">
+              <div class="system-panel-head"><div><h3>Readiness của Control Plane</h3><p>Đọc trực tiếp từ management contract đã tải ở runtime.</p></div></div>
+              <div class="system-readiness-list">
+                <div><span>Device registry</span><strong id="systemRegistryReady">Đang đọc</strong></div>
+                <div><span>Device gateway</span><strong id="systemGatewayReady">Đang đọc</strong></div>
+                <div><span>Admin API</span><strong id="systemAdminApiReady">Đang đọc</strong></div>
+                <div><span>Remote audit API</span><strong id="systemAuditReady">Đang đọc</strong></div>
+              </div>
+              <div class="system-contract-note">
+                <b id="systemContractApp">PriceReport Tùng Gia Bảo</b>
+                <span id="systemContractMeta">Kế toán · namespace KT-</span>
+              </div>
+            </section>
+
+            <section class="system-center-panel system-boundary-panel">
+              <div class="system-panel-head"><div><h3>Ranh giới dữ liệu</h3><p>Những gì Application Management được phép và không được phép đọc.</p></div></div>
+              <div class="system-boundary-list">
+                <div><span>Local-first</span><strong id="systemBoundaryLocal">Đang đọc contract</strong></div>
+                <div><span>Dữ liệu báo giá lên Control Plane</span><strong id="systemBoundaryQuote">Đang đọc contract</strong></div>
+                <div><span>Dữ liệu khách hàng lên Control Plane</span><strong id="systemBoundaryCustomer">Đang đọc contract</strong></div>
+                <div><span>Private key rời thiết bị</span><strong id="systemBoundaryPrivateKey">Đang đọc contract</strong></div>
+              </div>
+            </section>
+
+            <section class="system-center-panel system-policy-panel">
+              <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Ứng dụng này không giả lập danh sách thiết bị quản trị khi backend chưa sẵn sàng.</p></div></div>
+              <div class="system-policy-note">
+                <strong>Quản trị danh sách thiết bị thực hiện tại Application Management.</strong>
+                <p>PriceReport chỉ hiển thị thiết bị hiện tại và trạng thái thật mà Device Gate/runtime đã công bố. Khi rollout production chưa bật, màn hình này giữ trạng thái classification-only thay vì tạo dữ liệu giả.</p>
+              </div>
+            </section>
+          </div>
         </div>
 
         <div class="pane" id="pane-customer">
