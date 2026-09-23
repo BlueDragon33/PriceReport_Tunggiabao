@@ -259,7 +259,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     const parsedPrice = parseNumber(rawProduct.price);
     const parsedQty = mapping.qty != null ? parseNumber(rawProduct.qty) : { valid: true, value: 1 };
 
-    if ((!name || !parsedPrice.valid) && values.length === 1) {
+    if ((!name || !parsedPrice.valid) && values.length === 1 && !parseNumber(values[0]).valid) {
       currentGroup = values[0];
       if (!groups.includes(currentGroup)) groups.push(currentGroup);
       return;
