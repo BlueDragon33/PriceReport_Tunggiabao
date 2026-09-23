@@ -81,7 +81,7 @@ body.v5-ui select:focus-visible{
 body.v5-ui .shell{
   height:100%;
   display:grid;
-  grid-template-columns:var(--nav) var(--edit) var(--design) minmax(0,1fr);
+  grid-template-columns:var(--nav) var(--edit) minmax(0,1fr) var(--design);
   background:var(--v5-bg);
 }
 body.v5-ui .shell.wide-preview{
@@ -90,6 +90,10 @@ body.v5-ui .shell.wide-preview{
 body.v5-ui .shell.wide-preview .editor,
 body.v5-ui .shell.wide-preview .design{display:none}
 body.v5-ui .shell.wide-preview .preview{grid-column:2}
+
+body.v5-ui .shell:not(.app-workspace):not(.report-view) .editor{grid-column:2}
+body.v5-ui .shell:not(.app-workspace):not(.report-view) .preview{grid-column:3}
+body.v5-ui .shell:not(.app-workspace):not(.report-view) .design{grid-column:4}
 
 body.v5-ui .nav{
   position:relative;
@@ -1820,13 +1824,13 @@ body.v5-ui .panel-edge-toggle:hover{
   color:var(--v5-primary);
 }
 body.v5-ui .shell.editor-collapsed{
-  grid-template-columns:var(--nav) 34px var(--design) minmax(0,1fr);
+  grid-template-columns:var(--nav) 34px minmax(0,1fr) var(--design);
 }
 body.v5-ui .shell.design-collapsed{
-  grid-template-columns:var(--nav) var(--edit) 34px minmax(0,1fr);
+  grid-template-columns:var(--nav) var(--edit) minmax(0,1fr) 34px;
 }
 body.v5-ui .shell.editor-collapsed.design-collapsed{
-  grid-template-columns:var(--nav) 34px 34px minmax(0,1fr);
+  grid-template-columns:var(--nav) 34px minmax(0,1fr) 34px;
 }
 body.v5-ui .shell.editor-collapsed .editor,
 body.v5-ui .shell.design-collapsed .design{
