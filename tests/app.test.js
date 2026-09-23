@@ -273,7 +273,7 @@ test('pasted numbered terms are normalized and customer block is structured for 
   showCustomer.dispatchEvent(new Event('change', { bubbles: true }));
   expect(document.getElementById('pCustomer').textContent).toContain('Khách hàng:');
 
-  document.querySelector('[data-tab="terms"]').click();
+  document.querySelector('[data-studio-block="terms"]').click();
   const terms = document.getElementById('termsText');
   terms.value = '1. Giao hàng trong ngày\n2) Thanh toán chuyển khoản\n- Giá trị báo giá';
   terms.dispatchEvent(new Event('input', { bubbles: true }));
@@ -745,12 +745,12 @@ test('outside-table font-size controls are removed so report typography stays fi
   expect(document.getElementById('tableFontSize')).toBeTruthy();
 });
 
-test('report view tab enters a dedicated responsive preview mode and exits cleanly', () => {
-  document.querySelector('[data-tab="view"]').click();
+test('report view command enters a dedicated responsive preview mode and exits cleanly', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.getElementById('studioV6Preview').click();
   expect(document.querySelector('.shell').classList.contains('report-view')).toBe(true);
   expect(document.body.classList.contains('report-view-active')).toBe(true);
   expect(document.getElementById('exitReportView').hidden).toBe(false);
-  expect(document.querySelector('[data-tab="view"]').getAttribute('aria-current')).toBe('page');
 
   document.getElementById('exitReportView').click();
   expect(document.querySelector('.shell').classList.contains('report-view')).toBe(false);
@@ -1018,7 +1018,7 @@ test('product group heading repeats correctly after an ungrouped break', () => {
 });
 
 test('professional report suppresses empty terms and empty payment rows', () => {
-  document.querySelector('[data-tab="payment"]').click();
+  document.querySelector('[data-studio-block="payment"]').click();
   const showPayment = document.getElementById('showPaymentBlock');
   showPayment.checked = true;
   showPayment.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1036,7 +1036,7 @@ test('professional report suppresses empty terms and empty payment rows', () => 
   expect(document.getElementById('pBankAccount').closest('div').style.display).toBe('none');
   expect(document.getElementById('pBankOwner').closest('div').style.display).toBe('none');
 
-  document.querySelector('[data-tab="terms"]').click();
+  document.querySelector('[data-studio-block="terms"]').click();
   const showTerms = document.getElementById('showTerms');
   showTerms.checked = true;
   showTerms.dispatchEvent(new Event('change', { bubbles: true }));
