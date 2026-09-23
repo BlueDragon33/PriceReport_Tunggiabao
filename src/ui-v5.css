@@ -3593,7 +3593,6 @@ body.v5-ui .shell:not(.app-workspace){
 body.v5-ui .shell:not(.app-workspace) .editor,
 body.v5-ui .shell:not(.app-workspace) .design,
 body.v5-ui .shell:not(.app-workspace) .preview{padding-top:var(--studio-command-height)}
-body.v5-ui .shell:not(.app-workspace) .studio-panel-head{display:none}
 body.v5-ui .shell:not(.app-workspace) .editor{
   display:flex;flex-direction:column;background:#f8fafc;border-right:1px solid #dce4ee
 }
