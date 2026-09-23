@@ -3523,3 +3523,13 @@ body.v5-ui .master-section-card.master-section-highlight{
   body.v5-ui .dashboard-hero{border-radius:14px}
   body.v5-ui .quick-app-card{min-height:82px}
 }
+
+/* ---------- Pass 17: keyboard/focus states ---------- */
+body.v5-ui .dashboard-search-result.is-active{
+  background:var(--v5-primary-soft);
+  outline:2px solid rgba(36,119,232,.18);
+  outline-offset:-2px;
+}
+body.v5-ui .mobile-more-menu:focus-within{
+  box-shadow:0 22px 54px rgba(16,40,76,.22),0 0 0 3px rgba(36,119,232,.12);
+}
