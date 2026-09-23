@@ -37,3 +37,24 @@ Required before merge:
 - smoke;
 - production build;
 - GitHub Actions green.
+
+
+## Pass 2 — Workflow step health
+
+### Finding
+Even with guided preflight, users still had to explicitly run validation to know whether an earlier step needed attention.
+
+### Corrections
+- The existing Studio stepper now reuses the same validation engine to derive per-step health.
+- Steps expose ready, warning and error states.
+- Export reflects overall document health, so blocking issues are visible before the user reaches the final stage.
+- No second business-validation engine was added.
+- State styling uses existing V5 semantic tokens and adds no responsive/media-query debt.
+
+### Regression coverage
+- General becomes error when a required company name is cleared.
+- Export reflects the blocking error.
+- Restoring the value clears the error state after Studio context refresh.
+
+### Next pass
+Improve continuous feedback so step-health and the open guidance panel refresh after edits without forcing navigation between steps.
