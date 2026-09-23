@@ -67,6 +67,28 @@ test('V4.5 quotation studio shows current quote context and navigable workflow s
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5.1 quotation studio exposes six explicit workflow steps and drafting commands', () => {
+  document.querySelector('[data-tab="general"]').click();
+  expect(document.querySelectorAll('[data-studio-step]').length).toBe(6);
+  expect(document.querySelector('[data-studio-step="terms"]')).toBeTruthy();
+  expect(document.getElementById('studioSaveQuote')).toBeTruthy();
+  expect(document.getElementById('studioCheckQuote')).toBeTruthy();
+  expect(document.getElementById('studioPreviewQuote')).toBeTruthy();
+  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 1/6');
+
+  document.getElementById('studioNextStep').click();
+  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
+  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 2/6');
+
+  document.querySelector('[data-studio-step="terms"]').click();
+  expect(document.getElementById('pane-terms').classList.contains('active')).toBe(true);
+  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 4/6');
+
+  document.getElementById('studioPrevStep').click();
+  expect(document.getElementById('pane-payment').classList.contains('active')).toBe(true);
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
   const toggle = document.getElementById('mobileMoreToggle');
   const menu = document.getElementById('mobileMoreMenu');
@@ -215,12 +237,57 @@ test('V5 Pass 18 applies one Studio surface language across all editor panes', (
   expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
 });
 
-test('product editor can add a row and keep preview in sync', () => {
+test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
   document.getElementById('addProduct').click();
   expect(document.querySelectorAll('.product-card').length).toBe(beforeCards + 1);
+  expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows);
+
+  const lastName = document.querySelector('.product-card:last-child [data-product-key="name"]');
+  expect(lastName).toBeTruthy();
+  lastName.value = 'Sản phẩm kiểm thử UX';
+  lastName.dispatchEvent(new Event('input', { bubbles: true }));
   expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows + 1);
+  expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
+});
+
+test('meaningful unnamed product is visibly flagged and blocks print preflight', () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+  const lastCard = document.querySelector('.product-card:last-child');
+  const price = lastCard.querySelector('[data-product-key="price"]');
+  price.value = '125000';
+  price.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(document.querySelector('#qBody tr:last-child')).toHaveClass('draft-missing-name');
+  expect(document.getElementById('documentHealth').textContent).toContain('lỗi cần sửa');
+  const printsBefore = window.print.mock.calls.length;
+  document.querySelector('.print-action').click();
+  expect(window.print.mock.calls.length).toBe(printsBefore);
+
+  const name = lastCard.querySelector('[data-product-key="name"]');
+  name.value = 'Hàng bổ sung';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.querySelector('#qBody tr:last-child')).not.toHaveClass('draft-missing-name');
+});
+
+test('pasted numbered terms are normalized and customer block is structured for report output', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const customerName = document.getElementById('quickCustomerName');
+  customerName.value = 'Công ty Minh Họa';
+  customerName.dispatchEvent(new Event('input', { bubbles: true }));
+  const showCustomer = document.getElementById('quickShowCustomer');
+  showCustomer.checked = true;
+  showCustomer.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('pCustomer').textContent).toContain('Khách hàng:');
+
+  document.querySelector('[data-tab="terms"]').click();
+  const terms = document.getElementById('termsText');
+  terms.value = '1. Giao hàng trong ngày\n2) Thanh toán chuyển khoản\n- Giá trị báo giá';
+  terms.dispatchEvent(new Event('input', { bubbles: true }));
+  const rendered = Array.from(document.querySelectorAll('#pTerms li')).map(el => el.textContent);
+  expect(rendered).toEqual(['Giao hàng trong ngày','Thanh toán chuyển khoản','Giá trị báo giá']);
 });
 
 test('template selection applies real document profile', () => {
