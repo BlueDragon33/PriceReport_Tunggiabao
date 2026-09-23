@@ -574,6 +574,14 @@
               </div>
             </div>
             <div class="product-paste-hint" id="productPasteHint">Mẹo: copy nhiều ô trong Excel rồi Ctrl+V trực tiếp tại bảng. Hệ thống tự nhận cột phổ biến.</div>
+            <div class="product-duplicate-notice" id="productDuplicateNotice" hidden role="status">
+              <div><strong id="productDuplicateCount">Phát hiện dữ liệu có thể trùng</strong><small>Hệ thống không tự xóa hoặc gộp dữ liệu của bạn.</small></div>
+              <div class="product-duplicate-actions">
+                <button class="btn" id="reviewDuplicateProducts" type="button">Xem lại</button>
+                <button class="btn" id="mergeDuplicateProducts" type="button">Gộp</button>
+                <button class="btn" id="keepDuplicateProducts" type="button">Giữ cả hai</button>
+              </div>
+            </div>
             <div class="product-bulk-bar" id="productBulkBar" hidden>
               <strong id="productBulkCount">0 dòng đã chọn</strong>
               <div class="product-bulk-field"><input id="bulkGroupValue" type="text" placeholder="Nhóm hàng"><button class="btn" id="bulkApplyGroup" type="button">Áp dụng nhóm</button></div>
