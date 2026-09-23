@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseHandwritingText, parseMappedSpreadsheetRows, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2270,6 +2270,12 @@ function resetSmartImportDraft() {
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
   document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
+  const mapping = document.getElementById('smartImportMapping');
+  if (mapping) mapping.hidden = true;
+  const mappingRows = document.getElementById('smartImportMappingRows');
+  if (mappingRows) mappingRows.innerHTML = '';
+  const productPreview = document.getElementById('smartImportProductPreview');
+  if (productPreview) productPreview.innerHTML = '';
   setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
 }
 
@@ -2349,6 +2355,135 @@ function supplementImportFields(draft) {
   return fields;
 }
 
+const IMPORT_MAPPING_TARGETS = [
+  ['name', 'Tên sản phẩm'],
+  ['group', 'Nhóm hàng'],
+  ['pack', 'Quy cách'],
+  ['unit', 'ĐVT'],
+  ['qty', 'Số lượng'],
+  ['price', 'Đơn giá'],
+  ['note', 'Ghi chú']
+];
+
+function rebuildSmartImportProductsFromMapping() {
+  const meta = smartImportDraft?.spreadsheetMeta;
+  if (!meta || !Array.isArray(meta.rows)) return;
+  const rebuilt = parseMappedSpreadsheetRows(meta.rows, {
+    headerIndex: meta.headerIndex,
+    mapping: meta.mapping
+  });
+  smartImportDraft.products = rebuilt.products;
+  smartImportDraft.groups = rebuilt.groups;
+  meta.invalidRows = rebuilt.invalidRows;
+}
+
+function renderSmartImportProductPreview() {
+  const host = document.getElementById('smartImportProductPreview');
+  if (!host) return;
+  host.innerHTML = '';
+  const products = Array.isArray(smartImportDraft?.products) ? smartImportDraft.products : [];
+  const rows = products.slice(0, 5);
+  rows.forEach((product, index) => {
+    const row = document.createElement('div');
+    row.className = 'import-product-preview-row';
+    const cells = [
+      String(index + 1),
+      product.name || '—',
+      product.unit || '—',
+      String(product.qty ?? 1),
+      new Intl.NumberFormat('vi-VN').format(Number(product.price || 0))
+    ];
+    cells.forEach((value) => {
+      const cell = document.createElement('span');
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+    host.appendChild(row);
+  });
+  if (products.length > rows.length) {
+    const more = document.createElement('div');
+    more.className = 'import-product-preview-more';
+    more.textContent = '… và ' + (products.length - rows.length) + ' dòng khác';
+    host.appendChild(more);
+  }
+}
+
+function renderSmartImportMapping() {
+  const section = document.getElementById('smartImportMapping');
+  const host = document.getElementById('smartImportMappingRows');
+  const status = document.getElementById('smartImportMappingStatus');
+  if (!section || !host) return;
+  const meta = smartImportDraft?.spreadsheetMeta;
+  if (!meta || !Array.isArray(meta.rows) || !Array.isArray(meta.headers)) {
+    section.hidden = true;
+    return;
+  }
+
+  section.hidden = false;
+  host.innerHTML = '';
+  const mappingEntries = Object.entries(meta.mapping || {});
+  meta.headers.forEach((header, sourceIndex) => {
+    const headerText = String(header || '').trim();
+    if (!headerText) return;
+    const current = mappingEntries.find(([, index]) => Number(index) === sourceIndex)?.[0] || '';
+    const row = document.createElement('div');
+    row.className = 'import-mapping-row';
+
+    const source = document.createElement('div');
+    source.className = 'import-mapping-source';
+    const sourceName = document.createElement('strong');
+    sourceName.textContent = headerText;
+    const confidence = document.createElement('small');
+    const confidenceValue = current ? Number(meta.confidence?.[current] || 0) : 0;
+    confidence.textContent = current
+      ? 'Độ tin cậy ' + Math.round(confidenceValue * 100) + '%'
+      : 'Chưa dùng cột này';
+    source.append(sourceName, confidence);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'import-mapping-arrow';
+    arrow.textContent = '→';
+
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'Ánh xạ cột ' + headerText);
+    const ignore = document.createElement('option');
+    ignore.value = '';
+    ignore.textContent = 'Bỏ qua';
+    select.appendChild(ignore);
+    IMPORT_MAPPING_TARGETS.forEach(([key, label]) => {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = label;
+      option.selected = current === key;
+      select.appendChild(option);
+    });
+    select.addEventListener('change', () => {
+      const nextField = select.value;
+      const nextMapping = { ...(meta.mapping || {}) };
+      Object.entries(nextMapping).forEach(([field, index]) => {
+        if (Number(index) === sourceIndex || (nextField && field === nextField)) delete nextMapping[field];
+      });
+      if (nextField) nextMapping[nextField] = sourceIndex;
+      meta.mapping = nextMapping;
+      meta.confidence = { ...(meta.confidence || {}), ...(nextField ? { [nextField]: 1 } : {}) };
+      rebuildSmartImportProductsFromMapping();
+      renderSmartImportReview();
+    });
+
+    row.append(source, arrow, select);
+    host.appendChild(row);
+  });
+
+  const invalidCount = Array.isArray(meta.invalidRows) ? meta.invalidRows.length : 0;
+  if (status) {
+    status.textContent = invalidCount
+      ? smartImportDraft.products.length + ' dòng hợp lệ • ' + invalidCount + ' dòng cần kiểm tra'
+      : smartImportDraft.products.length + ' dòng hợp lệ • mapping sẵn sàng';
+    status.dataset.tone = invalidCount ? 'warn' : 'ok';
+  }
+  renderSmartImportProductPreview();
+}
+
 function renderSmartImportReview() {
   const review = document.getElementById('smartImportReview');
   const apply = document.getElementById('applySmartImport');
@@ -2381,7 +2516,11 @@ function renderSmartImportReview() {
 
   const warnings = document.getElementById('smartImportWarnings');
   warnings.innerHTML = '';
-  const messages = [...new Set([...(smartImportDraft.warnings || []), ...(smartImportDraft.unmatched || []).slice(0, 4)])];
+  const invalidRows = smartImportDraft.spreadsheetMeta?.invalidRows || [];
+  const mappingMessages = invalidRows.length
+    ? ['Có ' + invalidRows.length + ' dòng chưa đủ Tên sản phẩm / Đơn giá; các dòng này chưa được nhập.']
+    : [];
+  const messages = [...new Set([...(smartImportDraft.warnings || []), ...mappingMessages, ...(smartImportDraft.unmatched || []).slice(0, 4)])];
   messages.forEach((message) => {
     const item = document.createElement('div');
     item.textContent = message;
@@ -2389,6 +2528,7 @@ function renderSmartImportReview() {
   });
   warnings.hidden = !messages.length;
 
+  renderSmartImportMapping();
   review.hidden = false;
   apply.disabled = false;
 }
@@ -2430,11 +2570,22 @@ async function parseExcelFile(file) {
     const parsed = parseSpreadsheetRows(rows);
     const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
     const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
-    return { sheetName, parsed, score };
+    return { sheetName, parsed, rows, score };
   }).sort((a, b) => b.score - a.score);
   const best = candidates[0];
   best.parsed.sheetName = best.sheetName;
   best.parsed.sheetCount = sheetNames.length;
+  if (best.parsed.spreadsheetMeta) {
+    best.parsed.spreadsheetMeta = {
+      ...best.parsed.spreadsheetMeta,
+      rows: best.rows.map((row) => Array.isArray(row) ? [...row] : [])
+    };
+    const rebuilt = parseMappedSpreadsheetRows(best.parsed.spreadsheetMeta.rows, {
+      headerIndex: best.parsed.spreadsheetMeta.headerIndex,
+      mapping: best.parsed.spreadsheetMeta.mapping
+    });
+    best.parsed.spreadsheetMeta.invalidRows = rebuilt.invalidRows;
+  }
   if (sheetNames.length > 1) {
     best.parsed.warnings = [...(best.parsed.warnings || []),
       'Workbook có ' + sheetNames.length + ' sheet; hệ thống chọn sheet “' + best.sheetName + '” có cấu trúc phù hợp nhất.'];
