@@ -224,6 +224,199 @@ test('V5.2 smart import exposes a dedicated multi-sheet chooser without clutteri
   expect(select.getAttribute('aria-label')).toContain('sheet Excel');
 });
 
+test('V5.3 Studio stepper exposes validation health per workflow step', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.querySelector('[data-tab="products"]').click();
+  document.querySelector('[data-tab="general"]').click();
+
+  const generalStep = document.querySelector('[data-studio-step="general"]');
+  const exportStep = document.querySelector('[data-studio-step="export"]');
+  expect(generalStep.dataset.health).toBe('error');
+  expect(generalStep.classList.contains('step-error')).toBe(true);
+  expect(exportStep.dataset.health).toBe('error');
+
+  company.value = previous;
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('[data-tab="products"]').click();
+  document.querySelector('[data-tab="general"]').click();
+  expect(generalStep.dataset.health).not.toBe('error');
+});
+
+test('V5.3 product warning guidance focuses the matching product row', async () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+
+  let card = document.querySelector('#productEditor .product-card:last-child');
+  const index = card.dataset.productIndex;
+  const name = card.querySelector('[data-product-key="name"]');
+  const qty = card.querySelector('[data-product-key="qty"]');
+
+  name.value = 'V5.3 guided row target';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  card = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
+  const refreshedQty = card.querySelector('[data-product-key="qty"]');
+  refreshedQty.value = '-2';
+  refreshedQty.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('studioCheckQuote').click();
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('V5.3 guided row target') && item.textContent.includes('số lượng âm'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  const targetCard = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
+  expect(document.activeElement).toBe(targetCard.querySelector('[data-product-key="qty"]'));
+
+  targetCard.querySelector('.danger-icon').click();
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 duplicate product names still route a warning to the exact row and field', async () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+  document.getElementById('addProduct').click();
+
+  const cards = Array.from(document.querySelectorAll('#productEditor .product-card')).slice(-2);
+  for (const card of cards) {
+    const name = card.querySelector('[data-product-key="name"]');
+    name.value = 'Sản phẩm trùng tên V5.3';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  const refreshedCards = Array.from(document.querySelectorAll('#productEditor .product-card')).slice(-2);
+  const secondIndex = refreshedCards[1].dataset.productIndex;
+  const secondQty = refreshedCards[1].querySelector('[data-product-key="qty"]');
+  secondQty.value = '-3';
+  secondQty.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('studioCheckQuote').click();
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('Dòng sản phẩm ' + (Number(secondIndex) + 1))
+      && item.textContent.includes('Sản phẩm trùng tên V5.3')
+      && item.textContent.includes('số lượng âm'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  const targetCard = document.querySelector('#productEditor .product-card[data-product-index="' + secondIndex + '"]');
+  expect(document.activeElement).toBe(targetCard.querySelector('[data-product-key="qty"]'));
+
+  targetCard.querySelector('.danger-icon').click();
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 payment guidance targets the actionable missing control', async () => {
+  document.querySelector('[data-tab="payment"]').click();
+  const showTotals = document.getElementById('showTotals');
+  const discount = document.getElementById('discountPct');
+  const previousTotals = showTotals.checked;
+  const previousDiscount = discount.value;
+
+  showTotals.checked = false;
+  showTotals.dispatchEvent(new Event('change', { bubbles: true }));
+  discount.value = '5';
+  discount.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioCheckQuote').click();
+
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('bảng tổng cộng đang bị ẩn'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  expect(document.activeElement).toBe(showTotals);
+
+  discount.value = previousDiscount;
+  discount.dispatchEvent(new Event('input', { bubbles: true }));
+  showTotals.checked = previousTotals;
+  showTotals.dispatchEvent(new Event('change', { bubbles: true }));
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 guided validation panel exists and is hidden until requested', () => {
+  const panel = document.getElementById('studioGuidancePanel');
+  const list = document.getElementById('studioGuidanceList');
+  const summary = document.getElementById('studioGuidanceSummary');
+  expect(panel).toBeTruthy();
+  expect(list).toBeTruthy();
+  expect(summary).toBeTruthy();
+  expect(panel.hidden).toBe(true);
+});
+
+test('V5.3 guided correction can return focus to the issue with Escape', async () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioCheckQuote').click();
+
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('Thiếu tên công ty'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  expect(document.activeElement).toBe(company);
+  company.value = ' ';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  const refreshedIssue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('Thiếu tên công ty'));
+  expect(refreshedIssue).toBeTruthy();
+  expect(refreshedIssue).not.toBe(issue);
+  expect(document.activeElement).toBe(company);
+
+  company.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  expect(document.activeElement).toBe(refreshedIssue);
+
+  company.value = previous || 'Tùng Gia Bảo';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 open guidance refreshes immediately after a field is corrected', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioCheckQuote').click();
+  expect(document.getElementById('studioGuidancePanel').textContent).toContain('Thiếu tên công ty');
+
+  company.value = previous || 'Tùng Gia Bảo';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioGuidancePanel').textContent).not.toContain('Thiếu tên công ty');
+
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 Studio validation opens guided issues instead of relying only on alerts', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('studioCheckQuote').click();
+  const panel = document.getElementById('studioGuidancePanel');
+  expect(panel.hidden).toBe(false);
+  expect(panel.textContent).toContain('Thiếu tên công ty');
+  expect(panel.querySelector('.studio-guidance-item.error')).toBeTruthy();
+
+  company.value = previous;
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('closeStudioGuidance').click();
+  expect(panel.hidden).toBe(true);
+});
+
 test('V5 dynamic feedback exposes live, busy and empty-state semantics', async () => {
   const toast = document.getElementById('toast');
   expect(toast.getAttribute('role')).toBe('status');

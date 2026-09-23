@@ -67,9 +67,10 @@ if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missi
 if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
 if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is missing');
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
+if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v52-smart-entry-rc1")) fail('Service-worker cache version was not upgraded for V5.2 release candidate');
+if (!sw.includes("pricereport-shell-v53-guided-entry-rc1")) fail('Service-worker cache version was not upgraded for V5.3 release candidate');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');

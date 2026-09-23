@@ -2,36 +2,23 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V3.3 fixed outside-table typography / adjustable table font
+## Trạng thái hiện tại — V5.3 RC1 Guided Data Entry
 
-- Bố cục A4 chuẩn lấy mẫu PDF doanh nghiệp làm baseline: logo trái, khối công ty cân giữa ở cột phải, tiêu đề độc lập ở tâm trang.
-- 8 template đều kế thừa cùng geometry; template chỉ thay đổi typography, viền, accent và treatment bảng.
-- Preview A4 thời gian thực, ước tính số trang, chế độ rộng, zoom, tùy chỉnh nhịp khoảng cách và mật độ bảng.
-- Chế độ **Sắp xếp trực tiếp** trên preview: kéo bằng chuột/chạm các khối và nhiều trường con, lưu offset theo mm, tinh chỉnh bằng phím mũi tên và khôi phục vị trí nhanh. Chế độ giữ nguyên qua nhiều lần kéo/render và chỉ kết thúc khi bấm **Xong sắp xếp**.
-- Có **Tự động sắp xếp**: xóa offset thủ công không an toàn, cân lại tiêu đề/logo và tự chọn khoảng cách/mật độ bảng theo lượng nội dung; sau đó vẫn giữ chế độ kéo để tinh chỉnh tay.
-- Logo có resize 18–90 mm theo cơ chế scale thị giác trong slot header cố định; phóng/thu không làm thay đổi chiều cao header hay đẩy nội dung. Có dịch X/Y độc lập và vẫn kéo trực tiếp trên preview.
-- Baseline báo giá đã chuyển sang **HKD Tùng Gia Bảo**, gồm 72 mặt hàng từ workbook mẫu và giữ nguyên 3 nhóm hàng.
-- Product editor dạng card, focus mode, thu gọn/mở rộng, nhân bản, sắp xếp, nhóm hàng và ghi chú co giãn.
-- Hỗ trợ dạng **bảng giá**: bật/tắt độc lập Quy cách, Số lượng, Đơn giá, Thành tiền, Ghi chú; nhóm hàng được in thành dòng phân cách trong bảng.
-- **Nhập dữ liệu thông minh** từ Excel: tự nhận diện tên đơn vị, địa chỉ, tiêu đề/phụ đề, Kính gửi, lời mở đầu, nhóm hàng, sản phẩm, ngày tháng và người ký; luôn có màn hình kiểm tra trước khi áp dụng.
-- **OCR chữ viết tay**: tải ảnh JPG/PNG, tiền xử lý ảnh, nhận dạng tiếng Việt + tiếng Anh, map nội dung sang các field liên quan và cho phép chỉnh văn bản OCR thô rồi phân tích lại. Nếu OCR tự động lỗi, review vẫn mở để nhập/chỉnh văn bản thủ công.
-- Review Smart Import giờ coi **chỉnh/xóa thủ công là quyết định cuối cùng**: xóa trắng một field thực sự xóa khi Apply; OCR phân tích lại thay đúng các field do OCR tạo ra nhưng không ghi đè field đã đến từ Excel.
-- Excel/Auto-arrange tự bỏ các cột tùy chọn hoàn toàn trống (như Ghi chú hoặc Quy cách) để bảng giá 72 dòng rộng rãi, rõ số và chuyên nghiệp hơn.
-- Smart Import có trạng thái bận, giới hạn kích thước file, tự chọn sheet Excel phù hợp nhất trong workbook nhiều sheet, nút **Bắt đầu lại**, và không trộn draft cũ sau khi Hủy.
-- Danh sách lớn từ 24 sản phẩm tự thu gọn trong editor để thao tác thực tế nhanh hơn; dữ liệu và bản in không thay đổi.
-- Tự tính tạm tính, giảm giá, VAT, phí khác, tổng cộng và đọc số tiền VND bằng chữ.
-- Preflight trước in/PDF: phát hiện thiếu dữ liệu, mâu thuẫn VAT/điều khoản, thông tin thanh toán chưa đủ, logo thiếu và cấu hình tổng tiền không nhất quán.
-- Lịch sử báo giá có trạng thái, mã quote chống trùng, duplicate chống đè lịch sử và thống kê theo từng loại tiền tệ.
-- Danh bạ khách hàng có chuẩn hóa SĐT để giảm trùng.
-- Danh mục sản phẩm có lưu loại tiền tệ; không tự dùng sai đơn giá khi chuyển VND/USD/RUB.
-- Preset chỉ lưu cấu hình tái sử dụng, không mang theo khách hàng, mã báo giá hoặc sản phẩm giao dịch.
-- Logo được lưu riêng khỏi state autosave để tránh ghi base64 lớn ở mỗi lần gõ; history/preset không nhân bản logo trùng.
-- Full backup/restore schema v4; dữ liệu import được normalize/clamp, từ chối schema tương lai và rollback về snapshot cũ nếu LocalStorage ghi lỗi giữa chừng.
-- Ngày báo giá dùng lịch địa phương của trình duyệt, tránh lệch ngày do UTC; preflight chặn ngày không hợp lệ ở trạng thái phát hành.
-- Print nhiều trang cho phép nội dung A4 tràn sang trang kế tiếp, lặp header bảng và hạn chế cắt các block tổng tiền/điều khoản/chữ ký.
-- PWA/offline với Service Worker cache v18; chunk động và tài nguyên OCR sau lần tải đầu cũng được runtime-cache để tăng khả năng dùng lại khi mất mạng.
-- Dữ liệu nằm trên trình duyệt hiện tại.
-- Responsive desktop/mobile.
+- Quotation Studio dùng quy trình 6 bước rõ ràng: **Thông tin → Sản phẩm → Thanh toán → Điều khoản → Thiết kế → Xuất**.
+- Mỗi bước có trạng thái **sẵn sàng / cần kiểm tra / có lỗi** từ cùng một validation engine, không tạo hệ kiểm tra song song.
+- Nút **Kiểm tra** mở guidance ngay trong Studio, phân biệt lỗi và cảnh báo, đưa người dùng tới đúng bước/field cần sửa.
+- Guidance cập nhật liên tục sau khi nhập liệu; thao tác bàn phím hỗ trợ quay lại đúng issue bằng **Escape** kể cả sau khi danh sách issue được render lại.
+- Cảnh báo sản phẩm định tuyến tới đúng khu vực sản phẩm và, khi xác định được, đúng dòng sản phẩm.
+- V5.2 Smart Data Entry vẫn là nền tảng: nhận diện cột Excel Việt/Anh, Smart Paste, chọn sheet, review mapping, sửa dòng lỗi, xử lý trùng có kiểm soát và Undo.
+- Product editor dùng data grid kiểu bảng tính, hỗ trợ nhập liên tục bằng bàn phím, bulk edit, autocomplete và lưu nhanh vào Data Library.
+- Danh bạ khách hàng và danh mục sản phẩm dùng canonical identity để giảm trùng do khác định dạng SĐT, khoảng trắng hoặc hoa/thường.
+- Import áp dụng theo transaction: nếu lưu bền thất bại thì rollback state và giữ màn review để thử lại, không báo thành công giả.
+- Export Excel/CSV giữ dữ liệu sản phẩm có cấu trúc; backup/restore và PC storage tiếp tục dùng các guard dữ liệu hiện có.
+- Preview A4, print/PDF, 8 template, typography ngoài bảng cố định và cỡ chữ trong bảng điều chỉnh độc lập vẫn được giữ.
+- Logo mặc định giữ ảnh gốc; chế độ xóa nền là thao tác minh bạch trên bản render, không phá file nguồn.
+- PWA/offline dùng cache generation riêng của V5.3 RC1 để tránh tái sử dụng asset V5.2 cũ.
+- Dữ liệu nghiệp vụ vẫn **local-first**; không có storage engine thứ hai cho khách hàng/sản phẩm.
+- Device classification / Device Gate và Application Management contract vẫn giữ kiến trúc hiện có.
 
 ## Kiểm thử
 

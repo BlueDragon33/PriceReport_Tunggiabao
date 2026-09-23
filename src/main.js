@@ -610,6 +610,36 @@ function currentQuoteHistoryState() {
     : 'dirty';
 }
 
+function updateStudioStepHealth() {
+  const result = validateQuote();
+  const issues = [
+    ...result.errors.map(message => ({ tone: 'error', message })),
+    ...result.warnings.map(message => ({ tone: 'warn', message }))
+  ];
+
+  const stageTone = new Map();
+  issues.forEach((issue) => {
+    const target = validationTargetForMessage(issue.message);
+    const stage = STUDIO_STAGE_BY_TAB[target?.tab] || target?.tab || 'general';
+    const current = stageTone.get(stage);
+    if (issue.tone === 'error' || current !== 'error') stageTone.set(stage, issue.tone);
+  });
+
+  document.querySelectorAll('[data-studio-step]').forEach((button) => {
+    const stage = button.dataset.studioStep;
+    let tone = stageTone.get(stage) || 'ready';
+    if (stage === 'export') {
+      tone = result.errors.length ? 'error' : result.warnings.length ? 'warn' : 'ready';
+    }
+    button.classList.remove('step-ready', 'step-warn', 'step-error');
+    button.classList.add('step-' + tone);
+    const label = STUDIO_WORKFLOW.find(item => item.tab === stage)?.label || stage;
+    const status = tone === 'error' ? 'có lỗi cần sửa' : tone === 'warn' ? 'có mục cần kiểm tra' : 'sẵn sàng';
+    button.title = label + ' · ' + status;
+    button.dataset.health = tone;
+  });
+}
+
 function syncStudioContext(tab = '') {
   const quoteLabel = document.getElementById('studioQuoteLabel');
   const quoteStatus = document.getElementById('studioQuoteStatus');
@@ -637,6 +667,8 @@ function syncStudioContext(tab = '') {
     button.classList.toggle('active', active);
     button.setAttribute('aria-current', active ? 'step' : 'false');
   });
+
+  updateStudioStepHealth();
 
   const workflowIndex = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
   const position = document.getElementById('studioWorkflowPosition');
@@ -787,7 +819,14 @@ function moveStudioWorkflow(direction) {
 document.getElementById('studioPrevStep')?.addEventListener('click', () => moveStudioWorkflow(-1));
 document.getElementById('studioNextStep')?.addEventListener('click', () => moveStudioWorkflow(1));
 document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurrentQuote);
-document.getElementById('studioCheckQuote')?.addEventListener('click', () => document.getElementById('preflightCheck')?.click());
+document.getElementById('studioCheckQuote')?.addEventListener('click', () => {
+  updateDocumentHealth();
+  renderStudioGuidance();
+});
+document.getElementById('closeStudioGuidance')?.addEventListener('click', () => {
+  const panel = document.getElementById('studioGuidancePanel');
+  if (panel) panel.hidden = true;
+});
 document.getElementById('studioPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
 document.addEventListener('keydown', (event) => {
@@ -1923,6 +1962,7 @@ function renderEditorProducts() {
       renderTotals();
       updateDocumentHealth();
       syncStudioContext('products');
+      refreshOpenStudioGuidance();
       syncProductRowValidation(card, product);
       requestAnimationFrame(updatePageEstimate);
     };
@@ -2407,6 +2447,7 @@ function render() {
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
   syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
+  refreshOpenStudioGuidance();
   syncLayoutEditModeUI();
   requestAnimationFrame(() => {
     updatePageEstimate();
@@ -4079,10 +4120,10 @@ function validateQuote(data = state) {
       errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
       return;
     }
-    if (name && qty < 0) warnings.push('Sản phẩm "' + name + '" có số lượng âm.');
-    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
-    if (name && price < 0) warnings.push('Sản phẩm "' + name + '" có đơn giá âm.');
-    else if (name && data.showPrice && price === 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
+    if (name && qty < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng âm.');
+    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng bằng 0.');
+    if (name && price < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có đơn giá âm.');
+    else if (name && data.showPrice && price === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" chưa có đơn giá.');
   });
 
   if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
@@ -4102,6 +4143,170 @@ function validateQuote(data = state) {
   if (data.showPaymentBlock && partialBank) warnings.push('Thông tin tài khoản ngân hàng đang nhập dở.');
 
   return { errors, warnings };
+}
+
+function validationTargetForMessage(message) {
+  const text = String(message || '');
+  const productField = /số lượng/i.test(text) ? 'qty' : /đơn giá/i.test(text) ? 'price' : 'name';
+  const productRowMatch = text.match(/Dòng sản phẩm\s+(\d+)/i);
+  if (productRowMatch) {
+    return {
+      tab: 'products',
+      productIndex: Math.max(0, Number(productRowMatch[1]) - 1),
+      productKey: productField
+    };
+  }
+  if (/chưa có sản phẩm hợp lệ/i.test(text)) {
+    return { tab: 'products', productIndex: 0, productKey: 'name' };
+  }
+  const productNameMatch = text.match(/Sản phẩm\s+"([^"]+)"/i);
+  if (productNameMatch) {
+    const productName = productNameMatch[1].trim();
+    const productIndex = (Array.isArray(state.products) ? state.products : [])
+      .findIndex(product => String(product?.name || '').trim() === productName);
+    return {
+      tab: 'products',
+      productIndex: productIndex >= 0 ? productIndex : null,
+      productKey: productField
+    };
+  }
+
+  if (/Có giảm giá\/VAT\/phí khác nhưng bảng tổng cộng đang bị ẩn/i.test(text)) {
+    return { tab: 'payment', fieldId: 'showTotals' };
+  }
+  if (/đã bao gồm\s*VAT/i.test(text)) {
+    return { tab: 'terms', fieldId: 'termsText' };
+  }
+  if (/Thông tin tài khoản ngân hàng đang nhập dở/i.test(text)) {
+    const fieldId = !state.bankName ? 'bankName' : !state.bankAccount ? 'bankAccount' : !state.bankOwner ? 'bankOwner' : 'bankName';
+    return { tab: 'payment', fieldId };
+  }
+
+  const rules = [
+    [/tên công ty|email công ty|logo/i, { tab: 'general', fieldId: /email công ty/i.test(text) ? 'companyEmail' : (/logo/i.test(text) ? 'logoInput' : 'companyName') }],
+    [/tiêu đề báo giá/i, { tab: 'general', fieldId: 'quoteTitle' }],
+    [/kính gửi/i, { tab: 'general', fieldId: 'recipientLine' }],
+    [/số báo giá/i, { tab: 'general', fieldId: 'quoteNo' }],
+    [/ngày báo giá/i, { tab: 'general', fieldId: 'quoteDate' }],
+    [/email khách hàng/i, { tab: 'customer', fieldId: 'customerEmail' }],
+    [/ngân hàng|tài khoản/i, { tab: 'payment', fieldId: 'bankName' }],
+    [/điều khoản/i, { tab: 'terms', fieldId: 'termsText' }],
+    [/chữ ký|chức danh/i, { tab: 'terms', fieldId: 'rightTitle' }]
+  ];
+  for (const [pattern, target] of rules) {
+    if (pattern.test(text)) return target;
+  }
+  return { tab: 'general', fieldId: null };
+}
+
+function focusValidationTarget(target, returnTarget = null) {
+  if (!target) return;
+  openTab(target.tab || 'general');
+  requestAnimationFrame(() => {
+    const installReturnKey = (field) => {
+      if (!field || !returnTarget) return;
+      if (field._studioGuidanceReturnKeyHandler) {
+        field.removeEventListener('keydown', field._studioGuidanceReturnKeyHandler);
+      }
+      const returnKey = returnTarget.dataset?.validationKey || '';
+      const handleReturnKey = (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        field.removeEventListener('keydown', handleReturnKey);
+        delete field._studioGuidanceReturnKeyHandler;
+        const currentIssue = returnKey
+          ? Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+            .find(item => item.dataset.validationKey === returnKey)
+          : null;
+        const connectedReturnTarget = returnTarget.isConnected ? returnTarget : null;
+        const fallback = document.getElementById('closeStudioGuidance') || document.getElementById('studioCheckQuote');
+        (currentIssue || connectedReturnTarget || fallback)?.focus?.();
+      };
+      field._studioGuidanceReturnKeyHandler = handleReturnKey;
+      field.addEventListener('keydown', handleReturnKey);
+    };
+
+    if (Number.isInteger(target.productIndex)) {
+      const card = document.querySelector('#productEditor .product-card[data-product-index="' + target.productIndex + '"]');
+      const productKey = target.productKey || 'name';
+      const input = card?.querySelector('[data-product-key="' + productKey + '"]')
+        || card?.querySelector('[data-product-key="name"], input, select, textarea');
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input?.focus?.();
+      installReturnKey(input);
+      return;
+    }
+    const field = target.fieldId ? document.getElementById(target.fieldId) : null;
+    field?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    field?.focus?.();
+    installReturnKey(field);
+  });
+}
+
+function renderStudioGuidance({ focusFirst = false } = {}) {
+  const panel = document.getElementById('studioGuidancePanel');
+  const list = document.getElementById('studioGuidanceList');
+  const summary = document.getElementById('studioGuidanceSummary');
+  if (!panel || !list || !summary) return;
+
+  const result = validateQuote();
+  const items = [
+    ...result.errors.map(message => ({ tone: 'error', label: 'Cần sửa', message })),
+    ...result.warnings.map(message => ({ tone: 'warn', label: 'Kiểm tra', message }))
+  ];
+
+  list.innerHTML = '';
+  if (!items.length) {
+    summary.textContent = 'Báo giá đã sẵn sàng để in.';
+    panel.hidden = false;
+    const ready = document.createElement('div');
+    ready.className = 'studio-guidance-ready';
+    ready.textContent = '✓ Không phát hiện lỗi nghiệp vụ.';
+    list.appendChild(ready);
+    return;
+  }
+
+  summary.textContent = result.errors.length
+    ? result.errors.length + ' lỗi • ' + result.warnings.length + ' mục cần kiểm tra'
+    : result.warnings.length + ' mục cần kiểm tra';
+
+  items.forEach((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'studio-guidance-item ' + item.tone;
+    button.dataset.validationIndex = String(index);
+    const target = validationTargetForMessage(item.message);
+    button.dataset.validationKey = [
+      item.tone,
+      target?.tab || '',
+      Number.isInteger(target?.productIndex) ? String(target.productIndex) : '',
+      target?.productKey || '',
+      target?.fieldId || '',
+      item.message
+    ].join('|');
+
+    const badge = document.createElement('span');
+    badge.className = 'studio-guidance-tone';
+    badge.textContent = item.label;
+
+    const message = document.createElement('strong');
+    message.textContent = item.message;
+
+    const action = document.createElement('small');
+    action.textContent = 'Bấm để tới chỗ cần xử lý';
+
+    button.append(badge, message, action);
+    button.addEventListener('click', () => focusValidationTarget(target, button));
+    list.appendChild(button);
+  });
+
+  panel.hidden = false;
+  if (focusFirst && items.length) focusValidationTarget(validationTargetForMessage(items[0].message));
+}
+
+function refreshOpenStudioGuidance() {
+  const panel = document.getElementById('studioGuidancePanel');
+  if (panel && !panel.hidden) renderStudioGuidance();
 }
 
 function updateDocumentHealth() {
