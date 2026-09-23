@@ -68,3 +68,9 @@ Current Pass 18 finding: seven Studio editor panes still used the generic legacy
 - Report/print stylesheet: `src/styles.css`, isolated from application selector families.
 - Report stylesheet debt ceiling: <=45,000 chars, <=428 `!important`, <=6 media blocks.
 - V5 release remains pre-production until Pass 18 QA and CI are green.
+
+### Pass 18 cleanup addendum
+- Removed all seven static inline style attributes from `index.html`.
+- Application color swatches are now owned by scoped V5 classes.
+- The initially hidden A4 customer metadata block is now owned by the report stylesheet through `.report-customer-meta`.
+- DOM regression prevents static application inline presentation from returning.
