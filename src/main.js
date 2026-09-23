@@ -2246,6 +2246,7 @@ let smartImportImageUrl = '';
 let smartImportBusy = false;
 let smartImportLastFocus = null;
 let smartImportManualFields = new Set();
+let smartImportExcelCandidates = [];
 
 
 function resetSmartImportDraft() {
@@ -2259,6 +2260,8 @@ function resetSmartImportDraft() {
   const preview = document.getElementById('handwritingPreview');
   const excelInput = document.getElementById('excelSmartImportInput');
   const handwritingInput = document.getElementById('handwritingSmartImportInput');
+  const sheetPicker = document.getElementById('excelSheetPicker');
+  const sheetSelect = document.getElementById('excelSheetSelect');
   if (review) review.hidden = true;
   if (apply) apply.disabled = true;
   if (raw) raw.value = '';
@@ -2267,6 +2270,9 @@ function resetSmartImportDraft() {
   if (preview) preview.removeAttribute('src');
   if (excelInput) excelInput.value = '';
   if (handwritingInput) handwritingInput.value = '';
+  if (sheetPicker) sheetPicker.hidden = true;
+  if (sheetSelect) sheetSelect.innerHTML = '';
+  smartImportExcelCandidates = [];
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
   document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
@@ -2464,6 +2470,42 @@ function closeSmartImport({ discard = false, force = false } = {}) {
   return true;
 }
 
+function prepareExcelCandidate(candidate, sheetCount) {
+  const parsed = clone(candidate.parsed);
+  parsed.sheetName = candidate.sheetName;
+  parsed.sheetCount = sheetCount;
+  parsed.sourceRowCount = candidate.rowCount;
+  return parsed;
+}
+
+function renderExcelSheetPicker(candidates, selectedName) {
+  const picker = document.getElementById('excelSheetPicker');
+  const select = document.getElementById('excelSheetSelect');
+  if (!picker || !select) return;
+  select.innerHTML = '';
+  candidates.forEach((candidate, index) => {
+    const option = document.createElement('option');
+    option.value = candidate.sheetName;
+    option.textContent = candidate.sheetName + ' · ' + candidate.rowCount + ' dòng · ' +
+      candidate.parsed.products.length + ' sản phẩm' + (index === 0 ? ' · Đề xuất' : '');
+    select.appendChild(option);
+  });
+  select.value = selectedName || candidates[0]?.sheetName || '';
+  picker.hidden = candidates.length <= 1;
+  syncExcelSheetSummary();
+}
+
+function syncExcelSheetSummary() {
+  const select = document.getElementById('excelSheetSelect');
+  const summary = document.getElementById('excelSheetSummary');
+  const candidate = smartImportExcelCandidates.find(item => item.sheetName === select?.value);
+  if (!summary || !candidate) return;
+  const warningCount = candidate.parsed.warnings?.length || 0;
+  summary.textContent = candidate.rowCount + ' dòng đọc được · ' +
+    candidate.parsed.products.length + ' sản phẩm · ' +
+    (warningCount ? warningCount + ' cảnh báo' : 'không có cảnh báo cấu trúc');
+}
+
 async function parseExcelFile(file) {
   setSmartImportProgress('Đang đọc workbook và nhận diện cấu trúc...', 'working');
   const XLSX = await import('xlsx');
@@ -2477,16 +2519,12 @@ async function parseExcelFile(file) {
     const parsed = parseSpreadsheetRows(rows);
     const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
     const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
-    return { sheetName, parsed, score };
+    return { sheetName, parsed, score, rowCount: rows.filter(row => Array.isArray(row) && row.some(value => String(value ?? '').trim())).length };
   }).sort((a, b) => b.score - a.score);
+  smartImportExcelCandidates = candidates;
   const best = candidates[0];
-  best.parsed.sheetName = best.sheetName;
-  best.parsed.sheetCount = sheetNames.length;
-  if (sheetNames.length > 1) {
-    best.parsed.warnings = [...(best.parsed.warnings || []),
-      'Workbook có ' + sheetNames.length + ' sheet; hệ thống chọn sheet “' + best.sheetName + '” có cấu trúc phù hợp nhất.'];
-  }
-  return best.parsed;
+  renderExcelSheetPicker(candidates, best.sheetName);
+  return prepareExcelCandidate(best, sheetNames.length);
 }
 
 async function imageToOcrCanvasUrl(file) {
@@ -2584,6 +2622,17 @@ function setupSmartImport() {
 
   document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
     if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
+  });
+
+  document.getElementById('excelSheetSelect')?.addEventListener('change', (event) => {
+    const candidate = smartImportExcelCandidates.find(item => item.sheetName === event.target.value);
+    if (!candidate) return;
+    syncDraftFromImportReview();
+    const parsed = prepareExcelCandidate(candidate, smartImportExcelCandidates.length);
+    smartImportDraft = mergeSmartImportSource(parsed, { replaceSourceFields: true, preferNext: true });
+    renderSmartImportReview();
+    syncExcelSheetSummary();
+    setSmartImportProgress('Đang xem sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
   });
 
   document.getElementById('excelSmartImportInput')?.addEventListener('change', async (event) => {
