@@ -2926,15 +2926,62 @@ function renderSmartImportIssues() {
     title.textContent = 'Dòng ' + issue.rowNumber;
     const detail = document.createElement('span');
     const reasons = (issue.reasons || []).map(reason => reasonLabels[reason] || reason);
-    detail.textContent = [
-      issue.name ? 'Tên: ' + issue.name : '',
-      issue.qty ? 'SL: ' + issue.qty : '',
-      issue.price ? 'Giá: ' + issue.price : '',
-      reasons.length ? reasons.join(', ') : 'Cần kiểm tra'
-    ].filter(Boolean).join(' • ');
+    detail.textContent = reasons.length ? reasons.join(' • ') : 'Cần kiểm tra';
+
+    const editor = document.createElement('div');
+    editor.className = 'import-issue-editor';
+    const rowIndex = Number(issue.rowNumber) - 1;
+    const rawRow = Array.isArray(meta?.rows?.[rowIndex]) ? meta.rows[rowIndex] : [];
+    const fields = [
+      ['name', 'Tên sản phẩm', 'text'],
+      ['qty', 'Số lượng', 'text'],
+      ['price', 'Đơn giá', 'text']
+    ];
+    const controls = {};
+
+    fields.forEach(([field, labelText, inputType]) => {
+      const sourceIndex = meta?.mapping?.[field];
+      if (sourceIndex == null) return;
+      const label = document.createElement('label');
+      const caption = document.createElement('span');
+      caption.textContent = labelText;
+      const input = document.createElement('input');
+      input.type = inputType;
+      input.value = String(rawRow[sourceIndex] ?? '');
+      input.dataset.issueField = field;
+      label.append(caption, input);
+      editor.appendChild(label);
+      controls[field] = { input, sourceIndex };
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'import-issue-actions';
+    const saveButton = document.createElement('button');
+    saveButton.type = 'button';
+    saveButton.className = 'btn primary';
+    saveButton.textContent = 'Sửa và kiểm tra lại';
+    saveButton.addEventListener('click', () => {
+      if (!meta || !Array.isArray(meta.rows) || rowIndex < 0 || rowIndex >= meta.rows.length) return;
+      const nextRow = Array.isArray(meta.rows[rowIndex]) ? [...meta.rows[rowIndex]] : [];
+      Object.values(controls).forEach(({ input, sourceIndex }) => {
+        nextRow[sourceIndex] = input.value;
+      });
+      meta.rows[rowIndex] = nextRow;
+      rebuildSmartImportProductsFromMapping();
+      renderSmartImportReview();
+      const stillInvalid = (meta.invalidRows || []).some(row => Number(row.rowNumber) === Number(issue.rowNumber));
+      setSmartImportProgress(
+        stillInvalid
+          ? 'Dòng ' + issue.rowNumber + ' vẫn chưa hợp lệ. Kiểm tra lại dữ liệu vừa sửa.'
+          : 'Đã sửa dòng ' + issue.rowNumber + ' và đưa lại vào danh sách nhập.',
+        stillInvalid ? 'error' : 'success'
+      );
+    });
+    actions.appendChild(saveButton);
+
     const note = document.createElement('small');
-    note.textContent = 'Dòng này chưa được đưa vào báo giá.';
-    item.append(title, detail, note);
+    note.textContent = 'Dòng này chưa được đưa vào báo giá cho tới khi kiểm tra lại thành công.';
+    item.append(title, detail, editor, actions, note);
     list.appendChild(item);
   });
 
