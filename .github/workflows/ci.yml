@@ -39,8 +39,10 @@ jobs:
         run: node scripts/production-config.test.mjs
       - name: Service worker tests
         run: node scripts/service-worker.test.mjs
-      - name: DOM regression tests
-        run: npm run test:dom
+      - name: App DOM regression tests
+        run: npx vitest run tests/app.test.js
+      - name: Migration DOM regression tests
+        run: npx vitest run tests/migration.test.js
       - name: Smoke tests
         run: node scripts/smoke.mjs
       - run: npm run build
