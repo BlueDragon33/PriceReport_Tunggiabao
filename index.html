@@ -766,10 +766,18 @@
       </div>
     </section>
 
-    <aside class="design" id="designPanel">
-      <button class="panel-edge-toggle design-edge-toggle" id="toggleDesignPanel" type="button" aria-label="Thu gọn bảng thiết kế" title="Thu gọn / mở bảng thiết kế">‹</button>
-      <div class="panel-head"><h2>CHỌN MẪU TEMPLATE</h2><p>Đổi phong cách mà không làm mất dữ liệu.</p></div>
-      <div class="panel-body">
+    <aside class="design studio-inspector" id="designPanel">
+      <button class="panel-edge-toggle design-edge-toggle" id="toggleDesignPanel" type="button" aria-label="Thu gọn Inspector" title="Thu gọn / mở Inspector">‹</button>
+      <div class="panel-head inspector-head">
+        <h2>INSPECTOR</h2>
+        <p>Chỉnh đúng phần đang cần, không làm rối vùng soạn báo giá.</p>
+        <div class="inspector-tabs" role="tablist" aria-label="Inspector báo giá">
+          <button type="button" class="active" role="tab" aria-selected="true" data-inspector-tab="design">Thiết kế</button>
+          <button type="button" role="tab" aria-selected="false" data-inspector-tab="content">Nội dung</button>
+          <button type="button" role="tab" aria-selected="false" data-inspector-tab="check">Kiểm tra</button>
+        </div>
+      </div>
+      <div class="panel-body inspector-panel" data-inspector-panel="design">
         <div class="card">
           <h3>Mẫu báo giá</h3>
           <div class="template-grid">
@@ -897,7 +905,37 @@
           <div class="help">Tên đơn vị, địa chỉ, tiêu đề, kính gửi, lời mở đầu, điều khoản và chữ ký dùng cỡ cố định.</div>
           <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
         </div>
-        <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
+        <button class="btn block" id="closeDesign">Đóng Inspector</button>
+      </div>
+
+      <div class="panel-body inspector-panel" data-inspector-panel="content" hidden>
+        <div class="card inspector-content-card">
+          <h3>Nội dung báo giá</h3>
+          <p class="inspector-helper">Chọn khối cần sửa. Canvas vẫn ở giữa để bạn thấy kết quả ngay.</p>
+          <div class="inspector-content-actions">
+            <button type="button" data-inspector-open-tab="general"><span>▤</span><b>Thông tin chung</b><small>Doanh nghiệp, khách hàng, mã và ngày</small></button>
+            <button type="button" data-inspector-open-tab="products"><span>◆</span><b>Sản phẩm / Dịch vụ</b><small>Bảng hàng hóa, giá và ghi chú</small></button>
+            <button type="button" data-inspector-open-tab="payment"><span>₫</span><b>Thanh toán</b><small>VAT, giảm giá, ngân hàng</small></button>
+            <button type="button" data-inspector-open-tab="terms"><span>≡</span><b>Điều khoản & chữ ký</b><small>Điều khoản, lời kết, đại diện ký</small></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body inspector-panel" data-inspector-panel="check" hidden>
+        <div class="card inspector-check-card">
+          <div class="inspector-check-heading">
+            <div><h3>Kiểm tra báo giá</h3><p id="inspectorCheckSummary">Đang kiểm tra…</p></div>
+            <button class="btn" id="inspectorRunCheck" type="button">Kiểm tra lại</button>
+          </div>
+          <section class="inspector-issues inspector-errors" id="inspectorErrors" aria-labelledby="inspectorErrorsTitle">
+            <strong id="inspectorErrorsTitle">Lỗi cần sửa</strong>
+            <div id="inspectorErrorList"></div>
+          </section>
+          <section class="inspector-issues inspector-warnings" id="inspectorWarnings" aria-labelledby="inspectorWarningsTitle">
+            <strong id="inspectorWarningsTitle">Cần kiểm tra</strong>
+            <div id="inspectorWarningList"></div>
+          </section>
+        </div>
       </div>
     </aside>
 
