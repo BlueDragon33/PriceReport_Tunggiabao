@@ -13,6 +13,7 @@ import {
   localDateISO
 } from './core.js';
 import { parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { csvFromRows, productRowsForExport as buildProductExportRows } from './exporters.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2462,27 +2463,7 @@ function fullBackupPayload() {
 }
 
 function productRowsForExport() {
-  const rows = [[
-    'STT','Nhóm hàng','Tên sản phẩm','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú'
-  ]];
-  (state.products || [])
-    .filter(product => productHasDraftContent(product))
-    .forEach((product, index) => {
-      const qty = Number(product.qty || 0);
-      const price = Number(product.price || 0);
-      rows.push([
-        index + 1,
-        product.group || '',
-        product.name || '',
-        product.pack || '',
-        product.unit || '',
-        qty,
-        price,
-        qty * price,
-        product.note || ''
-      ]);
-    });
-  return rows;
+  return buildProductExportRows(state.products);
 }
 
 function excelRowsForCurrentQuote() {
@@ -2507,14 +2488,8 @@ function excelRowsForCurrentQuote() {
   return rows;
 }
 
-function csvEscape(value) {
-  const text = String(value ?? '');
-  return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
-}
-
 function exportCurrentQuoteCsv() {
-  const rows = productRowsForExport();
-  const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  const csv = csvFromRows(productRowsForExport());
   const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.csv';
   download(name, csv, 'text/csv;charset=utf-8');
   toast('Đã xuất file CSV');
