@@ -313,63 +313,6 @@ select:disabled{background:#f5f7fa;color:#66758b}
   .sectionbar{break-after:avoid;page-break-after:avoid}
 }
 
-/* Responsive behavior keeps the same hierarchy on smaller devices */
-@media(max-width:1280px){
-  :root{--nav:104px;--edit:340px}
-  .shell{grid-template-columns:var(--nav) var(--edit) minmax(0,1fr)}
-  .design{
-    position:fixed;left:var(--nav);top:0;bottom:0;width:315px;z-index:70;
-    transform:translateX(-112%);transition:.2s;box-shadow:18px 0 38px rgba(28,48,75,.15)
-  }
-  .design.open{transform:none}
-  .preview-right-tools .page-estimate{display:none}
-}
-@media(max-width:980px){
-  body{overflow:auto}
-  .shell{height:auto;display:block}
-  .nav{
-    height:auto;position:sticky;top:0;z-index:90;display:flex;flex-direction:row;align-items:center;
-    overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid #dfe7ee;padding:7px
-  }
-  .brand{min-width:50px;width:50px;height:44px;margin:0}
-  .nav button,.nav button.nav-secondary{min-width:82px;min-height:54px;padding:5px;font-size:10px}
-  .nav-glyph{font-size:18px}
-  .nav .spacer,.tip{display:none}
-  .editor,.preview{height:auto}
-  .design{left:0}
-  .preview{min-height:100vh;padding-left:8px;padding-right:8px}
-  .preview-tools{margin-left:-8px;margin-right:-8px;overflow-x:auto}
-  .preview-right-tools{flex-wrap:nowrap}
-  .toolbar-btn{padding:0 9px}
-  .paper-wrap{margin-left:auto;margin-right:auto}
-}
-@media(max-width:620px){
-  .panel-body{padding:12px}
-  .grid2,.grid3,.history-stats{grid-template-columns:1fr}
-  .history-item,.master-item{align-items:flex-start;flex-direction:column}
-  .history-actions,.master-actions{width:100%;flex-wrap:wrap}
-  .preview-left-tools .toolbar-btn:not(.active-preview){display:none}
-  .toolbar-btn.pdf,.toolbar-btn.print{min-width:auto}
-}
-
-@media(max-width:1500px){
-  .shell.product-focus{grid-template-columns:104px minmax(520px,620px) minmax(0,1fr)}
-}
-@media(max-width:980px){
-  .shell.product-focus{display:block}
-  .shell.product-focus .design{display:none}
-  .product-workspace-head{flex-direction:column}
-  .product-card-body,.shell.product-focus .product-card-body{grid-template-columns:1fr 1fr}
-  .shell.product-focus .product-field:first-child,.shell.product-focus .product-field:last-child{grid-column:1/-1}
-}
-@media(max-width:620px){
-  .product-card-body,.shell.product-focus .product-card-body{grid-template-columns:1fr}
-  .product-field.wide,.shell.product-focus .product-field:first-child,.shell.product-focus .product-field:last-child{grid-column:auto}
-  .product-card-head{align-items:flex-start}
-  .product-card-actions{flex-wrap:wrap;justify-content:flex-end}
-}
-
-
 /* =========================
    V1.8 REPORT TEMPLATE POLISH
    ========================= */
@@ -1215,8 +1158,6 @@ select:disabled{background:#f5f7fa;color:#66758b}
   --rhythm-md:5.3mm;
   --rhythm-lg:7mm
 }
-.product-card.collapsed .product-card-head{min-height:38px}
-
 
 /* V3.0 mobile/tablet report view + reliable document font scaling */
 .paper .company{font-size:var(--fs-company,9.6px)!important}
