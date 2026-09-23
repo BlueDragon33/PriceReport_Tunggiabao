@@ -237,6 +237,31 @@ test('V5 Pass 18 applies one Studio surface language across all editor panes', (
   expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
 });
 
+test('V5.2 product entry uses one spreadsheet-style grid surface', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const shell = document.querySelector('.product-data-grid-shell');
+  const header = document.querySelector('.product-data-grid-head');
+  const editor = document.getElementById('productEditor');
+  expect(shell).toBeTruthy();
+  expect(header.children.length).toBe(9);
+  expect(header.textContent).toContain('Tên sản phẩm');
+  expect(header.textContent).toContain('Đơn giá');
+  expect(editor.classList.contains('product-data-grid')).toBe(true);
+  const first = editor.querySelector('.product-card');
+  expect(first.dataset.productIndex).toBe('0');
+  expect(first.querySelector('[data-product-field="name"]')).toBeTruthy();
+});
+
+test('Enter on the last product cell creates a new row for continuous data entry', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const before = document.querySelectorAll('#productEditor .product-card').length;
+  const lastName = document.querySelector('#productEditor .product-card:last-child [data-product-key="name"]');
+  lastName.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before + 1);
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before);
+});
+
 test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
