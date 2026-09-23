@@ -3074,6 +3074,14 @@ body.v5-ui .studio-stepper button.active{
 
 /* ---------- Responsive V5: application only ---------- */
 @media(max-width:1280px){
+  body.v5-ui .shell:not(.app-workspace) .design.inspector-drawer-open{
+    display:block;position:fixed;z-index:120;top:var(--studio-command-height);right:0;bottom:0;width:min(350px,92vw);
+    grid-column:auto;grid-row:auto;overflow:auto;box-shadow:-18px 0 44px rgba(20,42,70,.18)
+  }
+  body.v5-ui .design.inspector-drawer-open .studio-inspector-tabs{grid-template-columns:repeat(3,1fr) 32px}
+  body.v5-ui .design.inspector-drawer-open .studio-inspector-close{display:block}
+  body.v5-ui .studio-v6-command-actions #studioV6Check{display:inline-flex}
+
   body.v5-ui{--nav:104px;--edit:340px}
   body.v5-ui .shell:not(.app-workspace):not(.report-view){
     grid-template-columns:var(--nav) var(--edit) minmax(0,1fr);
@@ -3127,7 +3135,6 @@ body.v5-ui .studio-stepper button.active{
   body.v5-ui .studio-v6-commandbar{grid-template-columns:minmax(170px,1fr) auto}
   body.v5-ui .studio-v6-save-state{display:none}
   body.v5-ui .studio-v6-command-actions .studio-command-search{display:none}
-  body.v5-ui .studio-v6-command-actions #studioV6Check,
   body.v5-ui .studio-v6-command-actions #studioV6Preview{display:none}
   body.v5-ui .shell.data-entry-mode{grid-template-columns:var(--nav) minmax(0,1fr)}
   body.v5-ui .shell.data-entry-mode .design{display:none}
@@ -3764,6 +3771,7 @@ body.v5-ui .studio-inspector-tabs{
   position:sticky;top:0;z-index:30;height:43px;padding:7px 8px;border-bottom:1px solid var(--v5-border);
   background:rgba(255,255,255,.98);display:grid;grid-template-columns:repeat(3,1fr);gap:4px
 }
+body.v5-ui .studio-inspector-close{display:none}
 body.v5-ui .studio-inspector-tabs button{
   border:0;border-radius:8px;background:transparent;color:var(--v5-muted);font-size:8.5px;font-weight:800
 }
