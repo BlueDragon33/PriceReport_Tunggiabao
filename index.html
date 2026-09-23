@@ -574,8 +574,24 @@
               </div>
             </div>
             <div class="product-paste-hint" id="productPasteHint">Mẹo: copy nhiều ô trong Excel rồi Ctrl+V trực tiếp tại bảng. Hệ thống tự nhận cột phổ biến.</div>
-            <div class="product-data-grid-head" aria-hidden="true">
-              <span>STT</span><span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Số lượng</span><span>Đơn giá</span><span>Thành tiền</span><span>Ghi chú</span><span></span>
+            <div class="product-bulk-bar" id="productBulkBar" hidden>
+              <strong id="productBulkCount">0 dòng đã chọn</strong>
+              <div class="product-bulk-field"><input id="bulkGroupValue" type="text" placeholder="Nhóm hàng"><button class="btn" id="bulkApplyGroup" type="button">Áp dụng nhóm</button></div>
+              <div class="product-bulk-field"><input id="bulkUnitValue" type="text" placeholder="ĐVT"><button class="btn" id="bulkApplyUnit" type="button">Áp dụng ĐVT</button></div>
+              <div class="product-bulk-field">
+                <select id="bulkPriceAdjust">
+                  <option value="5">Tăng giá 5%</option>
+                  <option value="10">Tăng giá 10%</option>
+                  <option value="-5">Giảm giá 5%</option>
+                  <option value="-10">Giảm giá 10%</option>
+                </select>
+                <button class="btn" id="bulkApplyPrice" type="button">Áp dụng giá</button>
+              </div>
+              <button class="btn" id="bulkDuplicateProducts" type="button">Nhân bản</button>
+              <button class="btn danger" id="bulkDeleteProducts" type="button">Xóa dòng</button>
+            </div>
+            <div class="product-data-grid-head">
+              <label class="product-select-all"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả sản phẩm"><span>STT</span></label><span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Số lượng</span><span>Đơn giá</span><span>Thành tiền</span><span>Ghi chú</span><span></span>
             </div>
             <div id="productEditor" class="product-editor-list product-data-grid" tabindex="0" aria-label="Bảng nhập sản phẩm"></div>
           </div>
