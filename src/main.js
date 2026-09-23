@@ -447,6 +447,40 @@ const setText = (id, value) => {
   if (el) el.textContent = value == null ? '' : value;
 };
 
+const STUDIO_STAGE_BY_TAB = {
+  general: 'general',
+  customer: 'general',
+  products: 'products',
+  payment: 'payment',
+  terms: 'payment',
+  design: 'design',
+  presets: 'design',
+  export: 'export'
+};
+
+function syncStudioContext(tab = '') {
+  const quoteLabel = document.getElementById('studioQuoteLabel');
+  const quoteStatus = document.getElementById('studioQuoteStatus');
+  const historyState = document.getElementById('studioHistoryState');
+  if (quoteLabel) quoteLabel.textContent = String(state.quoteNo || '').trim() || 'Báo giá mới';
+  if (quoteStatus) {
+    const currentStatus = state.quoteStatus || 'draft';
+    quoteStatus.textContent = statusLabel(currentStatus);
+    quoteStatus.className = 'studio-status-badge status-' + currentStatus;
+  }
+  if (historyState) {
+    const saved = Boolean(state.historyRecordId);
+    historyState.textContent = saved ? 'Đã lưu lịch sử' : 'Chưa lưu lịch sử';
+    historyState.classList.toggle('saved', saved);
+  }
+  const stage = STUDIO_STAGE_BY_TAB[tab] || '';
+  document.querySelectorAll('[data-studio-step]').forEach((button) => {
+    const active = Boolean(stage) && button.dataset.studioStep === stage;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-current', active ? 'step' : 'false');
+  });
+}
+
 const tabMeta = {
   dashboard: ['TRANG CHỦ', 'Tổng quan báo giá, khách hàng, sản phẩm và trạng thái ứng dụng.'],
   general: ['TẠO BÁO GIÁ', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
@@ -496,6 +530,7 @@ function openTab(tab) {
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
 
+  syncStudioContext(tab);
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
@@ -514,6 +549,11 @@ function openTab(tab) {
 
 document.querySelectorAll('.nav button[data-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.tab));
+});
+
+document.getElementById('studioBackHome')?.addEventListener('click', () => openTab('dashboard'));
+document.querySelectorAll('[data-studio-step]').forEach((button) => {
+  button.addEventListener('click', () => openTab(button.dataset.studioStep));
 });
 
 function dashboardStatusClass(status) {
@@ -1253,6 +1293,8 @@ function renderLogo() {
     if (state.showLogo) docHead.style.removeProperty('grid-template-columns');
     else docHead.style.gridTemplateColumns = '1fr';
   }
+  const activeTab = document.querySelector('.nav button[data-tab].active')?.dataset?.tab || '';
+  syncStudioContext(activeTab);
 }
 
 function layoutOffset(key) {
