@@ -1962,6 +1962,7 @@ function renderEditorProducts() {
       renderTotals();
       updateDocumentHealth();
       syncStudioContext('products');
+      refreshOpenStudioGuidance();
       syncProductRowValidation(card, product);
       requestAnimationFrame(updatePageEstimate);
     };
@@ -2446,6 +2447,7 @@ function render() {
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
   syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
+  refreshOpenStudioGuidance();
   syncLayoutEditModeUI();
   requestAnimationFrame(() => {
     updatePageEstimate();
@@ -4234,6 +4236,11 @@ function renderStudioGuidance({ focusFirst = false } = {}) {
 
   panel.hidden = false;
   if (focusFirst && items.length) focusValidationTarget(validationTargetForMessage(items[0].message));
+}
+
+function refreshOpenStudioGuidance() {
+  const panel = document.getElementById('studioGuidancePanel');
+  if (panel && !panel.hidden) renderStudioGuidance();
 }
 
 function updateDocumentHealth() {
