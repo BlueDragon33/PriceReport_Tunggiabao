@@ -192,6 +192,16 @@ body.v5-ui .shell.app-workspace .nav-glyph{
   font-size:16px;
   opacity:.95;
 }
+body.v5-ui .shell.app-workspace .nav button[data-tab="customer"],
+body.v5-ui .shell.app-workspace .nav button[data-tab="products"],
+body.v5-ui .shell.app-workspace .nav button[data-tab="payment"],
+body.v5-ui .shell.app-workspace .nav button[data-tab="terms"],
+body.v5-ui .shell.app-workspace .nav button[data-tab="design"],
+body.v5-ui .shell.app-workspace .nav button[data-tab="view"],
+body.v5-ui .shell.app-workspace .nav button[data-tab="presets"]{display:none}
+body.v5-ui .shell.app-workspace .mobile-more-toggle{display:none}
+body.v5-ui .mobile-more-menu{display:none}
+
 body.v5-ui .shell.app-workspace .device-profile-chip{
   margin-top:8px;
   background:rgba(255,255,255,.055);
@@ -601,6 +611,77 @@ body.v5-ui .studio-stepper button.active{
   body.v5-ui .shell.app-workspace .nav-section-label,
   body.v5-ui .shell.app-workspace .device-profile-chip,
   body.v5-ui .shell.app-workspace .tip{display:none}
+  body.v5-ui .shell.app-workspace .nav button[data-tab="customer"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="products"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="payment"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="terms"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="design"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="view"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="export"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="presets"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="system"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="settings"]{display:none}
+  body.v5-ui .shell.app-workspace .mobile-more-toggle{
+    display:flex;
+    min-width:70px;
+    width:auto;
+  }
+  body.v5-ui .mobile-more-menu{
+    position:fixed;
+    z-index:160;
+    left:12px;
+    right:12px;
+    top:66px;
+    padding:12px;
+    border:1px solid var(--v5-border);
+    border-radius:14px;
+    background:var(--v5-surface);
+    box-shadow:0 22px 54px rgba(16,40,76,.22);
+  }
+  body.v5-ui .mobile-more-menu:not([hidden]){display:block}
+  body.v5-ui .mobile-more-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2px 4px 10px;
+  }
+  body.v5-ui .mobile-more-head strong{font-size:12px;color:var(--v5-text)}
+  body.v5-ui .mobile-more-head button{
+    width:32px;
+    height:32px;
+    border:0;
+    border-radius:8px;
+    background:#eef2f7;
+    color:#61738a;
+    font-size:19px;
+  }
+  body.v5-ui .mobile-more-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+  body.v5-ui .shell.app-workspace .mobile-more-grid button{
+    display:flex;
+    width:100%;
+    min-width:0;
+    min-height:66px;
+    padding:8px 4px;
+    border:1px solid var(--v5-border);
+    border-radius:10px;
+    background:var(--v5-surface-soft);
+    color:#2b4a70;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    text-align:center;
+  }
+  body.v5-ui .shell.app-workspace .mobile-more-grid button:hover{
+    border-color:#bfd2e9;
+    background:var(--v5-primary-soft);
+  }
+  body.v5-ui .shell.app-workspace .mobile-more-grid button span{font-size:18px;color:var(--v5-primary)}
+  body.v5-ui .shell.app-workspace .mobile-more-grid button b{font-size:8.5px}
   body.v5-ui .shell.app-workspace .nav button,
   body.v5-ui .shell.app-workspace .nav button.nav-secondary{
     min-width:76px;
@@ -633,6 +714,7 @@ body.v5-ui .studio-stepper button.active{
 }
 
 @media(max-width:620px){
+  body.v5-ui .mobile-more-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   body.v5-ui .dashboard-topbar,
   body.v5-ui .history-workspace-header,
   body.v5-ui .master-workspace-header,
