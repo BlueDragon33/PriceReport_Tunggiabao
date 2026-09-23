@@ -1016,22 +1016,22 @@ test('failed history persistence keeps a changed quotation visibly unsaved', () 
     .find(item => item.querySelector('.history-quote-cell strong')?.textContent === 'BG-V51-SAVE-FAIL');
   expect(row).toBeTruthy();
   row.querySelector('.history-actions .btn.primary').click();
-  expect(document.getElementById('studioHistoryState').textContent).toBe('Đã lưu lịch sử');
+  expect(document.getElementById('studioV6HistoryState').textContent).toBe('Đã lưu lịch sử');
 
   const title = document.getElementById('quoteTitle');
   title.value = (title.value || 'BẢNG BÁO GIÁ') + ' · chỉnh sửa';
   title.dispatchEvent(new Event('input', { bubbles: true }));
-  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+  expect(document.getElementById('studioV6HistoryState').textContent).toBe('Có thay đổi chưa lưu');
 
   const nativeSetItem = Storage.prototype.setItem;
   const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
     if (key === historyKey) throw new DOMException('Quota exceeded', 'QuotaExceededError');
     return nativeSetItem.call(this, key, value);
   });
-  document.getElementById('studioSaveQuote').click();
+  document.getElementById('studioV6Save').click();
   spy.mockRestore();
 
-  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+  expect(document.getElementById('studioV6HistoryState').textContent).toBe('Có thay đổi chưa lưu');
   expect(JSON.parse(localStorage.getItem(historyKey))[0].data.quoteTitle).not.toContain('· chỉnh sửa');
 
   if (previousHistory == null) localStorage.removeItem(historyKey);
@@ -1071,7 +1071,7 @@ test('updating a saved quotation cannot reuse another quotation number', () => {
   const quoteNo = document.getElementById('quoteNo');
   quoteNo.value = 'BG-V51-B';
   quoteNo.dispatchEvent(new Event('input', { bubbles: true }));
-  document.getElementById('studioSaveQuote').click();
+  document.getElementById('studioV6Save').click();
 
   expect(document.getElementById('quoteNo').value).not.toBe('BG-V51-B');
   const stored = JSON.parse(localStorage.getItem(historyKey));
