@@ -455,6 +455,34 @@ function persistState(recordHistory = true) {
 
 const save = () => persistState(true);
 
+function restoreEditSnapshot(index) {
+  if (index < 0 || index >= editHistory.length || index === editHistoryIndex) return false;
+  restoringEditHistory = true;
+  editHistoryIndex = index;
+  state = merge(clone(editHistory[index]));
+  syncLegacyCompanyAddress();
+  const logoSaved = saveLogoAsset(state.logo || '');
+  const stateSaved = persistState(false);
+  restoringEditHistory = false;
+  syncInputs();
+  resetCollapsedProductsForState();
+  renderEditorProducts();
+  render();
+  updateEditHistoryButtons();
+  if (!logoSaved || !stateSaved) setAutosaveState('error');
+  return true;
+}
+
+function undoEdit() {
+  if (editHistoryIndex <= 0) return false;
+  return restoreEditSnapshot(editHistoryIndex - 1);
+}
+
+function redoEdit() {
+  if (editHistoryIndex >= editHistory.length - 1) return false;
+  return restoreEditSnapshot(editHistoryIndex + 1);
+}
+
 function captureStorageSnapshot(keys) {
   const snapshot = {};
   try {
