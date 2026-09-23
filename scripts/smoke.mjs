@@ -288,10 +288,9 @@ if (!js.includes("row.className = 'master-item master-table-row customer-table-g
 if (!js.includes("row.className = 'master-item master-table-row product-table-grid'")) fail('V4.4 product table renderer is missing');
 if (!appCss.includes('.master-workspace-header') || !appCss.includes('.master-table-row')) fail('Master-data workspace styles are missing');
 
-if (!html.includes('id="studioBackHome"') || !html.includes('id="studioQuoteLabel"') || !html.includes('class="studio-stepper"')) fail('V4.5 quotation studio context header is missing');
-if (!js.includes('function syncStudioContext(tab')) fail('V4.5 studio context synchronizer is missing');
-if (!js.includes("document.querySelectorAll('[data-studio-step]')")) fail('V4.5 studio step navigation is not wired');
-if (!v5Css.includes('.studio-context-row') || !v5Css.includes('.studio-stepper button.active')) fail('Quotation studio context styles are missing from V5 UI');
+if (html.includes('class="studio-stepper"') || html.includes('id="studioSaveQuote"') || js.includes('function syncStudioContext(tab')) fail('Legacy V5 Studio stepper/command architecture must be removed');
+if (!html.includes('id="studioV6Commandbar"') || !html.includes('id="studioV6HistoryState"')) fail('V6 Studio command context is missing');
+if (!js.includes('function syncStudioV6Context(tab')) fail('V6 Studio context synchronizer is missing');
 
 if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-search-wrap')) fail('V4.6 dashboard global-search result surface is missing');
 if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
