@@ -200,6 +200,14 @@ test('V5 dynamic feedback exposes live, busy and empty-state semantics', async (
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5 Pass 18 applies one Studio surface language across all editor panes', () => {
+  for (const id of ['general','customer','products','payment','terms','design','presets']) {
+    const pane = document.getElementById('pane-' + id);
+    expect(pane.classList.contains('studio-pane')).toBe(true);
+  }
+  expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
+});
+
 test('product editor can add a row and keep preview in sync', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
