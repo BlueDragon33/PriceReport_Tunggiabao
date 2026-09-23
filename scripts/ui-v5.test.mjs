@@ -39,6 +39,23 @@ for (const family of forbiddenLegacyApplicationFamilies) {
   }
 }
 
+const semanticTokens = [
+  '--v5-divider:#edf1f5',
+  '--v5-heading:#18385f',
+  '--v5-data-heading:#29415f',
+  '--v5-data-value:#294667',
+  '--v5-accent-purple:#7653d9',
+  '--v5-accent-purple-soft:#f2edff',
+  '--v5-danger-surface:#fffafa'
+];
+for (const token of semanticTokens) {
+  if (!css.includes(token)) fail('V5 semantic token missing: ' + token);
+}
+for (const literal of ['#edf1f5','#18385f','#29415f','#294667','#7653d9','#f2edff','#fffafa']) {
+  const count = css.toLowerCase().split(literal).length - 1;
+  if (count > 1) fail('Semantic color literal escaped token ownership: ' + literal + ' (' + count + ')');
+}
+
 const mediaCount = (css.match(/@media/g) || []).length;
 if (mediaCount > 4) fail('V5 responsive layer has too many media-query blocks: ' + mediaCount);
 
