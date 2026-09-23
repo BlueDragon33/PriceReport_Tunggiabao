@@ -3753,8 +3753,6 @@ body.v5-ui .shell:not(.app-workspace) .preview{
 body.v5-ui .shell:not(.app-workspace) .preview-tools{
   min-height:44px;background:rgba(244,247,251,.94);border-bottom:1px solid #dbe3ed
 }
-body.v5-ui .shell:not(.app-workspace) .paper-wrap{padding-top:22px}
-
 body.v5-ui .shell:not(.app-workspace) .design{
   grid-column:3;grid-row:1;display:block;background:#fff;border-right:1px solid #dbe3ed
 }
