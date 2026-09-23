@@ -2105,6 +2105,187 @@ body.v5-ui .product-field textarea{width:100%}
 body.v5-ui .product-field textarea{min-height:58px;resize:vertical}
 body.v5-ui .add-product-btn{margin-top:11px;min-height:38px}
 
+body.v5-ui .product-data-grid-shell{
+  width:100%;
+  overflow:auto;
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-surface);
+}
+body.v5-ui .product-data-grid-head,
+body.v5-ui .product-data-grid .product-card{
+  min-width:1010px;
+  display:grid;
+  grid-template-columns:46px 132px minmax(210px,1.5fr) 130px 76px 72px 118px 160px 76px;
+}
+body.v5-ui .product-data-grid-head{
+  position:sticky;
+  top:0;
+  z-index:5;
+  min-height:36px;
+  align-items:center;
+  border-bottom:1px solid var(--v5-border);
+  background:var(--v5-surface-soft);
+  color:var(--v5-data-heading);
+  font-size:8.5px;
+  font-weight:900;
+}
+body.v5-ui .product-data-grid-head span{
+  padding:0 7px;
+  border-left:1px solid var(--v5-divider);
+}
+body.v5-ui .product-data-grid-head span:first-child{border-left:0;text-align:center}
+body.v5-ui .product-data-grid{
+  min-width:1010px;
+  gap:0;
+}
+body.v5-ui .product-data-grid .product-card{
+  min-height:44px;
+  overflow:visible;
+  border:0;
+  border-bottom:1px solid var(--v5-divider);
+  border-radius:0;
+  box-shadow:none;
+  align-items:stretch;
+}
+body.v5-ui .product-data-grid .product-card:last-child{border-bottom:0}
+body.v5-ui .product-data-grid .product-card:focus-within{
+  position:relative;
+  z-index:2;
+  border-color:var(--v5-primary);
+  box-shadow:inset 0 0 0 2px rgba(36,119,232,.10);
+}
+body.v5-ui .product-data-grid .product-card-head{display:contents}
+body.v5-ui .product-data-grid .product-card-identity{
+  grid-column:1;
+  grid-row:1;
+  padding:5px;
+  justify-content:center;
+  border-right:1px solid var(--v5-divider);
+}
+body.v5-ui .product-data-grid .product-card-identity>div{display:none}
+body.v5-ui .product-data-grid .product-index{
+  width:30px;
+  height:30px;
+  border-radius:6px;
+  background:transparent;
+  color:var(--v5-muted);
+}
+body.v5-ui .product-data-grid .product-card-body,
+body.v5-ui .product-data-grid .product-card.collapsed .product-card-body{
+  display:contents;
+}
+body.v5-ui .product-data-grid .product-field{
+  grid-row:1;
+  min-width:0;
+  padding:4px;
+  border-right:1px solid var(--v5-divider);
+  justify-content:center;
+}
+body.v5-ui .product-data-grid .product-field.wide{grid-column:auto}
+body.v5-ui .product-data-grid .product-field>span{display:none}
+body.v5-ui .product-data-grid .product-field input,
+body.v5-ui .product-data-grid .product-field textarea{
+  width:100%;
+  min-width:0;
+  min-height:34px;
+  height:34px;
+  padding:6px 7px;
+  border:1px solid transparent;
+  border-radius:6px;
+  background:transparent;
+  font-size:9.5px;
+}
+body.v5-ui .product-data-grid .product-field textarea{
+  resize:none;
+  line-height:1.25;
+}
+body.v5-ui .product-data-grid .product-field input:hover,
+body.v5-ui .product-data-grid .product-field textarea:hover{
+  background:var(--v5-surface-soft);
+}
+body.v5-ui .product-data-grid .product-field input:focus,
+body.v5-ui .product-data-grid .product-field textarea:focus{
+  border-color:var(--v5-primary);
+  background:var(--v5-surface);
+}
+body.v5-ui .product-data-grid [data-product-field="group"]{grid-column:2}
+body.v5-ui .product-data-grid [data-product-field="name"]{grid-column:3}
+body.v5-ui .product-data-grid [data-product-field="pack"]{grid-column:4}
+body.v5-ui .product-data-grid [data-product-field="unit"]{grid-column:5}
+body.v5-ui .product-data-grid [data-product-field="qty"]{grid-column:6}
+body.v5-ui .product-data-grid [data-product-field="price"]{grid-column:7}
+body.v5-ui .product-data-grid [data-product-field="note"]{grid-column:8}
+body.v5-ui .product-data-grid .product-card-actions{
+  grid-column:9;
+  grid-row:1;
+  padding:5px;
+  justify-content:center;
+  border-left:0;
+}
+body.v5-ui .product-data-grid .product-card-actions .mini-action:nth-child(-n+3){display:none}
+body.v5-ui .product-data-grid .product-card-actions .mini-action{
+  width:28px;
+  height:28px;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid-shell{
+  overflow:visible;
+  border:0;
+  background:transparent;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid-head{display:none}
+body.v5-ui[data-device-class="phone"] .product-data-grid{
+  min-width:0;
+  gap:10px;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card{
+  min-width:0;
+  display:block;
+  overflow:hidden;
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-sm);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card-head{
+  min-height:48px;
+  padding:8px 10px;
+  display:flex;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card-identity{
+  padding:0;
+  justify-content:flex-start;
+  border-right:0;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card-identity>div{display:flex}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-index{
+  background:var(--v5-primary-soft);
+  color:var(--v5-primary);
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card-body{
+  padding:11px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card.collapsed .product-card-body{display:none}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-field{
+  padding:0;
+  border-right:0;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-field>span{display:block}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-field input,
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-field textarea{
+  min-height:46px;
+  height:auto;
+  border-color:var(--v5-border-strong);
+  background:var(--v5-surface);
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card-actions{
+  padding:0;
+  border-left:0;
+}
+body.v5-ui[data-device-class="phone"] .product-data-grid .product-card-actions .mini-action:nth-child(-n+3){display:grid}
+
 body.v5-ui .shell.product-focus{
   grid-template-columns:var(--nav) minmax(560px,680px) minmax(0,1fr);
 }
