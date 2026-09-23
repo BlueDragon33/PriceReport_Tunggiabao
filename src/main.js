@@ -2783,7 +2783,8 @@ function rebuildSmartImportProductsFromMapping() {
   if (!meta || !Array.isArray(meta.rows)) return;
   const rebuilt = parseMappedSpreadsheetRows(meta.rows, {
     headerIndex: meta.headerIndex,
-    mapping: meta.mapping
+    mapping: meta.mapping,
+    excludedRows: meta.excludedRows
   });
   smartImportDraft.products = rebuilt.products;
   smartImportDraft.groups = rebuilt.groups;
@@ -2991,10 +2992,82 @@ function renderSmartImportIssues() {
     const title = document.createElement('strong');
     title.textContent = 'Có thể trùng dữ liệu';
     const detail = document.createElement('span');
-    detail.textContent = (group.names || []).join(' ↔ ') || 'Các dòng có tên/đơn vị/quy cách giống nhau';
+    const rowLabels = (group.rowNumbers || []).map(rowNumber => 'dòng ' + rowNumber);
+    detail.textContent = [
+      (group.names || []).filter(Boolean)[0] || 'Sản phẩm',
+      rowLabels.length ? rowLabels.join(', ') : ''
+    ].filter(Boolean).join(' • ');
+
     const note = document.createElement('small');
-    note.textContent = 'Hệ thống giữ nguyên tất cả, không tự gộp.';
-    item.append(title, detail, note);
+    note.textContent = 'Mặc định đang giữ tất cả. Chỉ bỏ hoặc gộp khi bạn chọn rõ ràng.';
+    const actions = document.createElement('div');
+    actions.className = 'import-issue-actions import-duplicate-actions';
+
+    (group.rowNumbers || []).slice(1).forEach((rowNumber) => {
+      const skip = document.createElement('button');
+      skip.type = 'button';
+      skip.className = 'btn';
+      skip.textContent = 'Bỏ dòng ' + rowNumber;
+      skip.addEventListener('click', () => {
+        const previousExcluded = [...(meta.excludedRows || [])];
+        meta.excludedRows = [...new Set([...previousExcluded, Number(rowNumber)])];
+        rebuildSmartImportProductsFromMapping();
+        renderSmartImportReview();
+        toast('Đã bỏ dòng ' + rowNumber + ' khỏi lần nhập này', {
+          label: 'Hoàn tác',
+          duration: 6000,
+          onClick: () => {
+            meta.excludedRows = previousExcluded;
+            rebuildSmartImportProductsFromMapping();
+            renderSmartImportReview();
+          }
+        });
+      });
+      actions.appendChild(skip);
+    });
+
+    const samePrice = Array.isArray(group.prices) && group.prices.length > 1 &&
+      group.prices.every(price => Number(price) === Number(group.prices[0]));
+    const canMergeQuantity = samePrice && meta?.mapping?.qty != null &&
+      Array.isArray(group.quantities) && group.quantities.every(qty => Number.isFinite(Number(qty))) &&
+      Array.isArray(group.rowNumbers) && group.rowNumbers.length > 1;
+
+    if (canMergeQuantity) {
+      const mergeButton = document.createElement('button');
+      mergeButton.type = 'button';
+      mergeButton.className = 'btn primary';
+      mergeButton.textContent = 'Gộp số lượng';
+      mergeButton.addEventListener('click', () => {
+        const [firstRowNumber, ...otherRowNumbers] = group.rowNumbers.map(Number);
+        const firstRowIndex = firstRowNumber - 1;
+        if (!Array.isArray(meta.rows?.[firstRowIndex])) return;
+
+        const previousRow = [...meta.rows[firstRowIndex]];
+        const previousExcluded = [...(meta.excludedRows || [])];
+        const qtyIndex = meta.mapping.qty;
+        const totalQty = group.quantities.reduce((sum, qty) => sum + Number(qty || 0), 0);
+        const nextRow = [...meta.rows[firstRowIndex]];
+        nextRow[qtyIndex] = totalQty;
+        meta.rows[firstRowIndex] = nextRow;
+        meta.excludedRows = [...new Set([...previousExcluded, ...otherRowNumbers])];
+
+        rebuildSmartImportProductsFromMapping();
+        renderSmartImportReview();
+        toast('Đã gộp ' + group.rowNumbers.length + ' dòng cùng giá thành một dòng', {
+          label: 'Hoàn tác',
+          duration: 6000,
+          onClick: () => {
+            meta.rows[firstRowIndex] = previousRow;
+            meta.excludedRows = previousExcluded;
+            rebuildSmartImportProductsFromMapping();
+            renderSmartImportReview();
+          }
+        });
+      });
+      actions.appendChild(mergeButton);
+    }
+
+    item.append(title, detail, note, actions);
     list.appendChild(item);
   });
 
