@@ -270,7 +270,7 @@ test('product grid exposes autocomplete sources for name group and unit', () => 
   expect(first.querySelector('[data-product-key="unit"]').getAttribute('list')).toBe('productUnitSuggestions');
   expect(document.getElementById('productNameSuggestions')).toBeTruthy();
   expect(document.getElementById('productGroupSuggestions')).toBeTruthy();
-  expect(document.getElementById('productUnitSuggestions').textContent).toContain('Hộp');
+  expect(Array.from(document.getElementById('productUnitSuggestions').options).map(option => option.value)).toContain('Hộp');
 });
 
 test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
