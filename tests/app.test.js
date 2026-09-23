@@ -486,6 +486,188 @@ test('customer entry fields share autocomplete sources without a second customer
   expect(document.getElementById('customerPhoneSuggestions')).toBeTruthy();
 });
 
+test('V5.4 Data Library renders 100, 300 and 500 products and searches Vietnamese text without accents', () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const beforeRaw = localStorage.getItem(key);
+  const search = document.getElementById('productCatalogSearch');
+
+  for (const size of [100, 300, 500]) {
+    const catalog = Array.from({ length: size }, (_, index) => ({
+      id: 'perf-product-' + size + '-' + index,
+      group: index % 2 ? 'Trứng gia cầm' : 'Thực phẩm',
+      name: 'Sản phẩm Trứng số ' + (index + 1),
+      pack: 'Hộp ' + ((index % 5) + 1),
+      unit: 'Hộp',
+      price: 28000 + index,
+      currency: 'VND',
+      note: index % 7 === 0 ? 'Giao sáng' : ''
+    }));
+    localStorage.setItem(key, JSON.stringify(catalog));
+    search.value = '';
+    document.querySelector('[data-tab="master"]').click();
+    expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(size);
+    expect(document.getElementById('productCatalogResultCount').textContent).toBe(String(size));
+  }
+
+  search.value = 'trung so 500';
+  search.dispatchEvent(new Event('input', { bubbles: true }));
+  const rows = document.querySelectorAll('#productCatalogList .master-item');
+  expect(rows.length).toBe(1);
+  expect(rows[0].textContent).toContain('Sản phẩm Trứng số 500');
+
+  if (beforeRaw == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, beforeRaw);
+  search.value = '';
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.4 Data Management filters, currency-aware duplicates and bulk selection work together', () => {
+  const catalogKeyName = 'tunggiabao-price-report-catalog-v1';
+  const customerKeyName = 'tunggiabao-price-report-customers-v1';
+  const beforeCatalog = localStorage.getItem(catalogKeyName);
+  const beforeCustomers = localStorage.getItem(customerKeyName);
+
+  localStorage.setItem(catalogKeyName, JSON.stringify([
+    { id:'dm-p1', group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', price:28000, currency:'VND', note:'' },
+    { id:'dm-p2', group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', price:29000, currency:'VND', note:'Giá khác' },
+    { id:'dm-p3', group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', price:1.2, currency:'USD', note:'Biến thể tiền tệ hợp lệ' },
+    { id:'dm-p4', group:'Thịt', name:'Ức gà', pack:'', unit:'kg', price:3.1, currency:'USD', note:'' }
+  ]));
+  localStorage.setItem(customerKeyName, JSON.stringify([
+    { id:'dm-c1', name:'Khách có SĐT', company:'A', phone:'0912345678', email:'', address:'', contact:'' },
+    { id:'dm-c2', name:'Khách thiếu SĐT', company:'B', phone:'', email:'b@example.com', address:'', contact:'' }
+  ]));
+
+  document.getElementById('productCatalogSearch').value = '';
+  document.getElementById('customerLibrarySearch').value = '';
+  document.getElementById('customerLibraryFilter').value = '';
+  document.getElementById('productCatalogCurrencyFilter').value = '';
+  document.getElementById('productCatalogDuplicateOnly').checked = false;
+  document.querySelector('[data-tab="master"]').click();
+
+  expect(document.getElementById('productCatalogDuplicateSummary').hidden).toBe(false);
+  expect(document.getElementById('productCatalogDuplicateCount').textContent).toContain('1 nhóm trùng');
+
+  const duplicateOnly = document.getElementById('productCatalogDuplicateOnly');
+  duplicateOnly.checked = true;
+  duplicateOnly.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(2);
+  expect(document.getElementById('productCatalogList').textContent).not.toContain('Biến thể tiền tệ hợp lệ');
+
+  duplicateOnly.checked = false;
+  duplicateOnly.dispatchEvent(new Event('change', { bubbles: true }));
+  const groupFilter = document.getElementById('productCatalogGroupFilter');
+  groupFilter.value = 'Trứng';
+  groupFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(3);
+
+  groupFilter.value = '';
+  groupFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  const currencyFilter = document.getElementById('productCatalogCurrencyFilter');
+  currencyFilter.value = 'USD';
+  currencyFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(2);
+
+  currencyFilter.value = '';
+  currencyFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  const productSelect = document.querySelector('#productCatalogList .master-row-select');
+  productSelect.checked = true;
+  productSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('productCatalogBulkBar').hidden).toBe(false);
+  expect(document.getElementById('productCatalogBulkCount').textContent).toContain('1 sản phẩm');
+  document.getElementById('clearProductCatalogSelection').click();
+  expect(document.getElementById('productCatalogBulkBar').hidden).toBe(true);
+
+  const customerFilter = document.getElementById('customerLibraryFilter');
+  customerFilter.value = 'missing-phone';
+  customerFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#customerLibraryList .master-item').length).toBe(1);
+  expect(document.getElementById('customerLibraryList').textContent).toContain('Khách thiếu SĐT');
+
+  if (beforeCatalog == null) localStorage.removeItem(catalogKeyName);
+  else localStorage.setItem(catalogKeyName, beforeCatalog);
+  if (beforeCustomers == null) localStorage.removeItem(customerKeyName);
+  else localStorage.setItem(customerKeyName, beforeCustomers);
+  customerFilter.value = '';
+  currencyFilter.value = '';
+  duplicateOnly.checked = false;
+  groupFilter.value = '';
+  document.querySelector('[data-tab="master"]').click();
+});
+
+
+test('V5.4 customer library CSV import reviews and applies valid rows transactionally', async () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Nguyễn Văn A,Công ty A,0912345678,a@example.com,Nha Trang,Anh A',
+    ',Công ty B,,b@example.com,Hà Nội,Chị B'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'khach-hang.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+    expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('2');
+  });
+  expect(document.getElementById('dataLibraryImportInvalidCount').textContent).toBe('0');
+  expect(document.getElementById('applyDataLibraryImport').disabled).toBe(false);
+
+  document.getElementById('applyDataLibraryImport').click();
+  const imported = JSON.parse(localStorage.getItem(key));
+  expect(imported.length).toBe(2);
+  expect(imported.some(item => item.phone === '0912345678')).toBe(true);
+  expect(imported.some(item => item.email === 'b@example.com')).toBe(true);
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(true);
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.4 product import excludes duplicate groups and preserves currency variants', async () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Nhóm hàng,Tên SP,Quy cách,ĐVT,Đơn giá,Tiền tệ,Ghi chú',
+    'Trứng,Trứng gà,Hộp 10,Hộp,28000,VND,Bản 1',
+    'Trứng,Trứng gà,Hộp 10,Hộp,29000,VND,Bản trùng',
+    'Trứng,Trứng gà,Hộp 10,Hộp,1.2,USD,Biến thể USD'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'san-pham.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('productLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+    expect(document.getElementById('dataLibraryImportDuplicateCount').textContent).toBe('1');
+  });
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+  expect(document.getElementById('dataLibraryImportNotice').textContent).toContain('không được tự gộp');
+
+  document.getElementById('applyDataLibraryImport').click();
+  const imported = JSON.parse(localStorage.getItem(key));
+  expect(imported.length).toBe(1);
+  expect(imported[0].currency).toBe('USD');
+  expect(imported[0].note).toBe('Biến thể USD');
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
 test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
   document.querySelector('[data-tab="products"]').click();
   const quickSave = document.getElementById('saveProductsToCatalogTop');

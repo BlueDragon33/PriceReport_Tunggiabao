@@ -357,11 +357,31 @@
                 <span class="master-panel-icon">●</span>
                 <div><h3>Danh bạ khách hàng</h3><p>Lưu và sử dụng lại thông tin khách hàng cho báo giá mới.</p></div>
               </div>
-              <button class="btn primary" id="saveCurrentCustomer">＋ Lưu khách hàng hiện tại</button>
+              <div class="master-head-actions">
+                <button class="btn" id="importCustomerLibraryExcel" type="button">⇩ Nhập Excel/CSV</button>
+                <button class="btn" id="exportCustomerLibraryExcel" type="button">⇧ Excel</button>
+                <button class="btn" id="exportCustomerLibraryCsv" type="button">⇧ CSV</button>
+                <button class="btn primary" id="saveCurrentCustomer">＋ Lưu khách hàng hiện tại</button>
+                <input id="customerLibraryExcelInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+              </div>
             </div>
             <div class="master-toolbar">
               <div class="master-search-box"><span>⌕</span><input id="customerLibrarySearch" placeholder="Tên, công ty, SĐT, email..."></div>
+              <select id="customerLibraryFilter" class="master-filter" aria-label="Lọc khách hàng">
+                <option value="">Tất cả khách hàng</option>
+                <option value="has-phone">Có số điện thoại</option>
+                <option value="missing-phone">Thiếu số điện thoại</option>
+                <option value="has-email">Có email</option>
+                <option value="missing-email">Thiếu email</option>
+              </select>
               <div class="master-result-summary"><span id="customerLibraryResultCount">0</span><small>kết quả</small></div>
+            </div>
+            <div class="master-bulk-bar" id="customerLibraryBulkBar" hidden>
+              <strong id="customerLibraryBulkCount">0 khách hàng đã chọn</strong>
+              <div>
+                <button class="btn" id="clearCustomerLibrarySelection" type="button">Bỏ chọn</button>
+                <button class="btn danger" id="deleteSelectedCustomers" type="button">Xóa đã chọn</button>
+              </div>
             </div>
             <div class="master-table-shell customer-table-shell app-data-table">
               <div class="master-table-head customer-table-grid" aria-hidden="true">
@@ -377,11 +397,39 @@
                 <span class="master-panel-icon product-icon">◆</span>
                 <div><h3>Danh mục sản phẩm</h3><p>Lưu giá, quy cách và nhóm sản phẩm để thêm nhanh vào báo giá.</p></div>
               </div>
-              <button class="btn primary" id="saveCurrentProducts">＋ Lưu sản phẩm trong báo giá</button>
+              <div class="master-head-actions">
+                <button class="btn" id="importProductLibraryExcel" type="button">⇩ Nhập Excel/CSV</button>
+                <button class="btn" id="exportProductLibraryExcel" type="button">⇧ Excel</button>
+                <button class="btn" id="exportProductLibraryCsv" type="button">⇧ CSV</button>
+                <button class="btn primary" id="saveCurrentProducts">＋ Lưu sản phẩm trong báo giá</button>
+                <input id="productLibraryExcelInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+              </div>
             </div>
-            <div class="master-toolbar">
+            <div class="master-toolbar master-toolbar-products">
               <div class="master-search-box"><span>⌕</span><input id="productCatalogSearch" placeholder="Tên sản phẩm, nhóm, quy cách, đơn vị..."></div>
+              <select id="productCatalogGroupFilter" class="master-filter" aria-label="Lọc theo nhóm sản phẩm">
+                <option value="">Tất cả nhóm</option>
+              </select>
+              <select id="productCatalogCurrencyFilter" class="master-filter" aria-label="Lọc theo tiền tệ">
+                <option value="">Mọi tiền tệ</option>
+                <option value="VND">VND</option>
+                <option value="USD">USD</option>
+                <option value="RUB">RUB</option>
+              </select>
+              <label class="master-duplicate-filter"><input id="productCatalogDuplicateOnly" type="checkbox"> Chỉ bản ghi trùng</label>
               <div class="master-result-summary"><span id="productCatalogResultCount">0</span><small>kết quả</small></div>
+            </div>
+            <div class="master-bulk-bar" id="productCatalogBulkBar" hidden>
+              <strong id="productCatalogBulkCount">0 sản phẩm đã chọn</strong>
+              <div>
+                <button class="btn primary" id="addSelectedCatalogProducts" type="button">Thêm vào báo giá</button>
+                <button class="btn" id="clearProductCatalogSelection" type="button">Bỏ chọn</button>
+                <button class="btn danger" id="deleteSelectedCatalogProducts" type="button">Xóa đã chọn</button>
+              </div>
+            </div>
+            <div class="master-duplicate-summary" id="productCatalogDuplicateSummary" hidden>
+              <strong id="productCatalogDuplicateCount">0 nhóm trùng</strong>
+              <span>Dựa trên nhóm + tên + quy cách + đơn vị + tiền tệ. Hệ thống không tự xóa.</span>
             </div>
             <div class="master-table-shell product-table-shell app-data-table">
               <div class="master-table-head product-table-grid" aria-hidden="true">
@@ -1287,6 +1335,39 @@
       </footer>
     </section>
   </div>
+  <div class="data-library-import-backdrop" id="dataLibraryImportModal" hidden>
+    <section class="data-library-import-dialog" role="dialog" aria-modal="true" aria-labelledby="dataLibraryImportTitle">
+      <header class="data-library-import-head">
+        <div>
+          <strong id="dataLibraryImportTitle">KIỂM TRA DỮ LIỆU TRƯỚC KHI NHẬP</strong>
+          <span id="dataLibraryImportSubtitle">Chưa có dữ liệu.</span>
+        </div>
+        <button class="mini-action" id="closeDataLibraryImport" type="button" aria-label="Đóng">×</button>
+      </header>
+      <div class="data-library-import-body">
+        <div class="data-library-import-sheet-row" id="dataLibraryImportSheetRow" hidden>
+          <label for="dataLibraryImportSheetSelect">Sheet Excel</label>
+          <select id="dataLibraryImportSheetSelect"></select>
+        </div>
+        <div class="data-library-import-summary">
+          <article><small>Được áp dụng</small><strong id="dataLibraryImportValidCount">0</strong></article>
+          <article><small>Cập nhật bản có sẵn</small><strong id="dataLibraryImportUpdateCount">0</strong></article>
+          <article><small>Dòng lỗi</small><strong id="dataLibraryImportInvalidCount">0</strong></article>
+          <article><small>Nhóm trùng trong file</small><strong id="dataLibraryImportDuplicateCount">0</strong></article>
+        </div>
+        <div class="data-library-import-notice" id="dataLibraryImportNotice" role="status"></div>
+        <div class="data-library-import-preview">
+          <div class="data-library-import-preview-head" id="dataLibraryImportPreviewHead"></div>
+          <div id="dataLibraryImportPreviewBody"></div>
+        </div>
+      </div>
+      <footer class="data-library-import-actions">
+        <button class="btn" id="cancelDataLibraryImport" type="button">Hủy</button>
+        <button class="btn primary" id="applyDataLibraryImport" type="button" disabled>Áp dụng vào thư viện</button>
+      </footer>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 <script type="module" src="./src/main.js"></script>

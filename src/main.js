@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseCustomerSpreadsheetRows, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
 import { csvFromRows, productRowsForExport as buildProductExportRows } from './exporters.js';
 import {
   TUNGGIABAO_PRODUCTS,
@@ -1554,6 +1554,8 @@ function numberToWords(value) {
 
 let collapsedProducts = new Set();
 let selectedProductRows = new Set();
+let selectedCustomerLibraryIds = new Set();
+let selectedProductCatalogIds = new Set();
 
 function selectedProductIndices() {
   selectedProductRows = new Set(
@@ -1832,6 +1834,7 @@ function productField(label, key, value, type, onInput, className = '') {
 function renderEditorProducts() {
   const list = document.getElementById('productEditor');
   list.innerHTML = '';
+  const fragment = document.createDocumentFragment();
   refreshProductEntrySuggestions();
 
   state.products.forEach((product, index) => {
@@ -2004,8 +2007,9 @@ function renderEditorProducts() {
 
     card.append(head, body);
     syncProductRowValidation(card, product);
-    list.appendChild(card);
+    fragment.appendChild(card);
   });
+  list.appendChild(fragment);
 
   const collapseButton = document.getElementById('collapseAllProducts');
   if (collapseButton) {
@@ -3226,7 +3230,7 @@ async function parseExcelFile(file) {
   setSmartImportProgress('Đang đọc workbook và nhận diện cấu trúc...', 'working');
   const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer);
+  const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetNames = workbook.SheetNames || [];
   if (!sheetNames.length) throw new Error('Workbook không có sheet.');
 
@@ -4072,11 +4076,442 @@ document.getElementById('newQuote').addEventListener('click', () => {
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
 document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
 
+
+let dataLibraryImportDraft = null;
+let dataLibraryImportLastFocus = null;
+
+function dataLibraryImportKey(mode, item) {
+  return mode === 'customer' ? customerKey(item) : catalogKey(item);
+}
+
+function dataLibraryDuplicateGroups(mode, items) {
+  const groups = new Map();
+  (Array.isArray(items) ? items : []).forEach((item, index) => {
+    const key = dataLibraryImportKey(mode, item);
+    if (!key) return;
+    const indexes = groups.get(key) || [];
+    indexes.push(index);
+    groups.set(key, indexes);
+  });
+  return [...groups.entries()]
+    .filter(([, indexes]) => indexes.length > 1)
+    .map(([key, indexes]) => ({ key, indexes }));
+}
+
+function normalizeLibraryImportCandidate(mode, sheetName, rows) {
+  let items = [];
+  let invalidRows = [];
+  if (mode === 'customer') {
+    const parsed = parseCustomerSpreadsheetRows(rows);
+    items = (parsed.customers || []).map(customer => ({
+      name: String(customer.name || ''),
+      company: String(customer.company || ''),
+      address: String(customer.address || ''),
+      phone: String(customer.phone || ''),
+      email: String(customer.email || ''),
+      contact: String(customer.contact || '')
+    }));
+    invalidRows = parsed.invalidRows || [];
+  } else {
+    const parsed = parseSpreadsheetRows(rows);
+    if (parsed.spreadsheetMeta?.mapping) {
+      const rebuilt = parseMappedSpreadsheetRows(rows, {
+        headerIndex: parsed.spreadsheetMeta.headerIndex,
+        mapping: parsed.spreadsheetMeta.mapping
+      });
+      items = rebuilt.products || [];
+      invalidRows = rebuilt.invalidRows || [];
+    } else {
+      items = parsed.products || [];
+    }
+    items = items.map(product => ({
+      group: String(product.group || ''),
+      name: String(product.name || ''),
+      pack: String(product.pack || ''),
+      unit: String(product.unit || ''),
+      price: normalizeNonNegativeNumber(product.price),
+      currency: normalizeCatalogCurrency(product.currency || state.currency || 'VND'),
+      note: String(product.note || '')
+    }));
+  }
+
+  const duplicateGroups = dataLibraryDuplicateGroups(mode, items);
+  const duplicateKeys = new Set(duplicateGroups.map(group => group.key));
+  const existing = mode === 'customer' ? getCustomerLibrary() : getProductCatalog();
+  const existingKeys = new Set(existing.map(item => dataLibraryImportKey(mode, item)).filter(Boolean));
+  const accepted = items.filter(item => {
+    const key = dataLibraryImportKey(mode, item);
+    return key && !duplicateKeys.has(key);
+  });
+  const updateCount = accepted.filter(item => existingKeys.has(dataLibraryImportKey(mode, item))).length;
+
+  return {
+    mode,
+    sheetName,
+    rows,
+    items,
+    accepted,
+    invalidRows,
+    duplicateGroups,
+    duplicateKeys,
+    updateCount,
+    score: accepted.length * 12 - invalidRows.length * 2 - duplicateGroups.length * 4
+  };
+}
+
+async function readDataLibraryWorkbook(file, mode) {
+  const XLSX = await import('xlsx');
+  const buffer = await file.arrayBuffer();
+  const fileName = String(file?.name || '').toLowerCase();
+  const workbook = fileName.endsWith('.csv')
+    ? XLSX.read(new TextDecoder('utf-8').decode(buffer).replace(/^\uFEFF/, ''), { type: 'string', raw: true })
+    : XLSX.read(buffer, { type: 'array' });
+  const sheetNames = workbook.SheetNames || [];
+  if (!sheetNames.length) throw new Error('Workbook không có sheet dữ liệu.');
+  const candidates = sheetNames.map(sheetName => {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      header: 1,
+      defval: '',
+      raw: true
+    });
+    return normalizeLibraryImportCandidate(mode, sheetName, rows);
+  }).sort((a, b) => b.score - a.score);
+  return candidates;
+}
+
+function currentDataLibraryImportCandidate() {
+  if (!dataLibraryImportDraft?.candidates?.length) return null;
+  return dataLibraryImportDraft.candidates.find(candidate =>
+    candidate.sheetName === dataLibraryImportDraft.sheetName
+  ) || dataLibraryImportDraft.candidates[0];
+}
+
+function closeDataLibraryImport({ restoreFocus = true } = {}) {
+  const modal = document.getElementById('dataLibraryImportModal');
+  if (modal) modal.hidden = true;
+  document.body.classList.remove('data-library-import-open');
+  document.getElementById('customerLibraryExcelInput')?.setAttribute('value', '');
+  document.getElementById('productLibraryExcelInput')?.setAttribute('value', '');
+  if (restoreFocus) dataLibraryImportLastFocus?.focus?.();
+  dataLibraryImportDraft = null;
+}
+
+function renderDataLibraryImport() {
+  const candidate = currentDataLibraryImportCandidate();
+  const modal = document.getElementById('dataLibraryImportModal');
+  if (!candidate || !modal) return;
+
+  const isCustomer = candidate.mode === 'customer';
+  setText('dataLibraryImportTitle', isCustomer ? 'KIỂM TRA DANH BẠ TRƯỚC KHI NHẬP' : 'KIỂM TRA DANH MỤC TRƯỚC KHI NHẬP');
+  setText('dataLibraryImportSubtitle', (dataLibraryImportDraft.fileName || 'File dữ liệu') + ' • ' + candidate.sheetName);
+  setText('dataLibraryImportValidCount', candidate.accepted.length);
+  setText('dataLibraryImportUpdateCount', candidate.updateCount);
+  setText('dataLibraryImportInvalidCount', candidate.invalidRows.length);
+  setText('dataLibraryImportDuplicateCount', candidate.duplicateGroups.length);
+
+  const sheetRow = document.getElementById('dataLibraryImportSheetRow');
+  const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
+  if (sheetRow && sheetSelect) {
+    sheetRow.hidden = dataLibraryImportDraft.candidates.length <= 1;
+    sheetSelect.innerHTML = '';
+    dataLibraryImportDraft.candidates.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.sheetName;
+      option.textContent = item.sheetName + ' • ' + item.accepted.length + ' dòng áp dụng';
+      option.selected = item.sheetName === candidate.sheetName;
+      sheetSelect.appendChild(option);
+    });
+  }
+
+  const notice = document.getElementById('dataLibraryImportNotice');
+  if (notice) {
+    const messages = [];
+    if (candidate.invalidRows.length) messages.push(candidate.invalidRows.length + ' dòng lỗi sẽ được bỏ qua');
+    if (candidate.duplicateGroups.length) messages.push(candidate.duplicateGroups.length + ' nhóm trùng trong file sẽ không được tự gộp');
+    if (candidate.updateCount) messages.push(candidate.updateCount + ' bản ghi có sẵn sẽ được cập nhật');
+    notice.textContent = messages.length
+      ? messages.join(' • ') + '. Chỉ các dòng hợp lệ, không trùng trong file mới được áp dụng.'
+      : 'Dữ liệu hợp lệ. Bạn có thể áp dụng vào thư viện.';
+    notice.dataset.tone = candidate.invalidRows.length || candidate.duplicateGroups.length ? 'warning' : 'ready';
+  }
+
+  const head = document.getElementById('dataLibraryImportPreviewHead');
+  const body = document.getElementById('dataLibraryImportPreviewBody');
+  if (head && body) {
+    head.innerHTML = '';
+    body.innerHTML = '';
+    const headers = isCustomer
+      ? ['Trạng thái', 'Khách hàng', 'Công ty', 'SĐT', 'Email']
+      : ['Trạng thái', 'Sản phẩm', 'Nhóm', 'ĐVT / Quy cách', 'Đơn giá'];
+    headers.forEach(label => {
+      const span = document.createElement('span');
+      span.textContent = label;
+      head.appendChild(span);
+    });
+
+    const existing = isCustomer ? getCustomerLibrary() : getProductCatalog();
+    const existingKeys = new Set(existing.map(item => dataLibraryImportKey(candidate.mode, item)).filter(Boolean));
+    candidate.items.slice(0, 80).forEach(item => {
+      const key = dataLibraryImportKey(candidate.mode, item);
+      const row = document.createElement('div');
+      row.className = 'data-library-import-preview-row';
+      const duplicate = candidate.duplicateKeys.has(key);
+      const status = duplicate ? 'Trùng trong file' : existingKeys.has(key) ? 'Cập nhật' : 'Mới';
+      row.dataset.state = duplicate ? 'duplicate' : existingKeys.has(key) ? 'update' : 'new';
+      const values = isCustomer
+        ? [status, item.name || '—', item.company || '—', item.phone || '—', item.email || '—']
+        : [status, item.name || '—', item.group || '—', [item.unit, item.pack].filter(Boolean).join(' / ') || '—', moneyForCurrency(item.price, item.currency)];
+      values.forEach(value => {
+        const cell = document.createElement('span');
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+    if (candidate.items.length > 80) {
+      const more = document.createElement('div');
+      more.className = 'data-library-import-more';
+      more.textContent = 'Đang xem 80/' + candidate.items.length + ' dòng. Toàn bộ dòng hợp lệ vẫn được xử lý khi áp dụng.';
+      body.appendChild(more);
+    }
+  }
+
+  const apply = document.getElementById('applyDataLibraryImport');
+  if (apply) {
+    apply.disabled = candidate.accepted.length === 0;
+    apply.textContent = candidate.accepted.length
+      ? 'Áp dụng ' + candidate.accepted.length + ' dòng hợp lệ'
+      : 'Không có dòng hợp lệ để áp dụng';
+  }
+}
+
+async function openDataLibraryImport(file, mode, trigger) {
+  if (!file) return;
+  dataLibraryImportLastFocus = trigger || document.activeElement;
+  const modal = document.getElementById('dataLibraryImportModal');
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.classList.add('data-library-import-open');
+  setText('dataLibraryImportSubtitle', 'Đang đọc ' + file.name + '...');
+  document.getElementById('applyDataLibraryImport')?.setAttribute('disabled', '');
+  try {
+    const candidates = await readDataLibraryWorkbook(file, mode);
+    dataLibraryImportDraft = {
+      mode,
+      fileName: file.name,
+      candidates,
+      sheetName: candidates[0]?.sheetName || ''
+    };
+    if (!candidates[0] || (!candidates[0].items.length && !candidates[0].invalidRows.length)) {
+      throw new Error('Không nhận diện được dữ liệu phù hợp trong file.');
+    }
+    renderDataLibraryImport();
+    document.getElementById('dataLibraryImportSheetSelect')?.focus?.();
+  } catch (error) {
+    console.error('Data Library import failed:', error);
+    closeDataLibraryImport({ restoreFocus: false });
+    alert('Không thể đọc dữ liệu thư viện từ file này. Hãy kiểm tra tiêu đề cột và định dạng Excel/CSV.');
+    dataLibraryImportLastFocus?.focus?.();
+  }
+}
+
+function applyDataLibraryImport() {
+  const candidate = currentDataLibraryImportCandidate();
+  if (!candidate?.accepted?.length) return;
+
+  if (candidate.mode === 'customer') {
+    const next = getCustomerLibrary();
+    const indexByKey = new Map(next.map((item, index) => [customerKey(item), index]));
+    candidate.accepted.forEach(customer => {
+      const key = customerKey(customer);
+      const existingIndex = indexByKey.get(key);
+      const item = {
+        id: existingIndex != null
+          ? next[existingIndex].id
+          : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        ...customer
+      };
+      if (existingIndex != null) next[existingIndex] = item;
+      else {
+        indexByKey.set(key, next.length);
+        next.push(item);
+      }
+    });
+    if (!setCustomerLibrary(next)) return;
+    selectedCustomerLibraryIds.clear();
+    refreshCustomerEntrySuggestions();
+  } else {
+    const next = getProductCatalog();
+    const indexByKey = new Map(next.map((item, index) => [catalogKey(item), index]));
+    candidate.accepted.forEach(product => {
+      const normalized = {
+        group: product.group || '',
+        name: product.name || '',
+        pack: product.pack || '',
+        unit: product.unit || '',
+        price: normalizeNonNegativeNumber(product.price),
+        currency: normalizeCatalogCurrency(product.currency || 'VND'),
+        note: product.note || ''
+      };
+      const key = catalogKey(normalized);
+      const existingIndex = indexByKey.get(key);
+      const item = {
+        id: existingIndex != null
+          ? next[existingIndex].id
+          : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        ...normalized
+      };
+      if (existingIndex != null) next[existingIndex] = item;
+      else {
+        indexByKey.set(key, next.length);
+        next.push(item);
+      }
+    });
+    if (!setProductCatalog(next)) return;
+    selectedProductCatalogIds.clear();
+    refreshProductEntrySuggestions();
+  }
+
+  const applied = candidate.accepted.length;
+  const updated = candidate.updateCount;
+  closeDataLibraryImport({ restoreFocus: false });
+  renderMasterData();
+  renderDashboard();
+  toast('Đã áp dụng ' + applied + ' dòng' + (updated ? ' • cập nhật ' + updated + ' bản ghi' : ''));
+}
+
+function customerLibraryRowsForExport() {
+  return [
+    ['Tên khách hàng', 'Công ty', 'SĐT', 'Email', 'Địa chỉ', 'Người liên hệ'],
+    ...getCustomerLibrary().map(item => [
+      item.name || '', item.company || '', item.phone || '', item.email || '', item.address || '', item.contact || ''
+    ])
+  ];
+}
+
+function productLibraryRowsForExport() {
+  return [
+    ['Nhóm hàng', 'Tên SP', 'Quy cách', 'ĐVT', 'Đơn giá', 'Tiền tệ', 'Ghi chú'],
+    ...getProductCatalog().map(item => [
+      item.group || '', item.name || '', item.pack || '', item.unit || '',
+      normalizeNonNegativeNumber(item.price), normalizeCatalogCurrency(item.currency || 'VND'), item.note || ''
+    ])
+  ];
+}
+
+function exportDataLibraryCsv(mode) {
+  const rows = mode === 'customer' ? customerLibraryRowsForExport() : productLibraryRowsForExport();
+  const base = mode === 'customer' ? 'danh-ba-khach-hang' : 'danh-muc-san-pham';
+  download(base + '.csv', csvFromRows(rows), 'text/csv;charset=utf-8');
+  toast('Đã xuất ' + (mode === 'customer' ? 'danh bạ khách hàng' : 'danh mục sản phẩm') + ' dạng CSV');
+}
+
+async function exportDataLibraryExcel(mode) {
+  try {
+    const rows = mode === 'customer' ? customerLibraryRowsForExport() : productLibraryRowsForExport();
+    const XLSX = await import('xlsx');
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    sheet['!cols'] = mode === 'customer'
+      ? [{wch:24},{wch:26},{wch:16},{wch:28},{wch:36},{wch:22}]
+      : [{wch:18},{wch:34},{wch:20},{wch:12},{wch:16},{wch:12},{wch:28}];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, mode === 'customer' ? 'Khách hàng' : 'Sản phẩm');
+    const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+    const base = mode === 'customer' ? 'danh-ba-khach-hang' : 'danh-muc-san-pham';
+    downloadBlob(base + '.xlsx', new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    toast('Đã xuất ' + (mode === 'customer' ? 'danh bạ khách hàng' : 'danh mục sản phẩm') + ' dạng Excel');
+  } catch (error) {
+    console.error('Data Library Excel export failed:', error);
+    alert('Không thể xuất Excel từ thư viện dữ liệu.');
+  }
+}
+
 document.getElementById('saveCurrentCustomer').addEventListener('click', saveCurrentCustomerToLibrary);
 document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('saveProductsToCatalogTop')?.addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('customerLibrarySearch').addEventListener('input', renderMasterData);
+document.getElementById('customerLibraryFilter')?.addEventListener('change', renderMasterData);
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
+document.getElementById('productCatalogGroupFilter')?.addEventListener('change', renderMasterData);
+document.getElementById('productCatalogCurrencyFilter')?.addEventListener('change', renderMasterData);
+document.getElementById('productCatalogDuplicateOnly')?.addEventListener('change', renderMasterData);
+
+document.getElementById('clearCustomerLibrarySelection')?.addEventListener('click', () => {
+  selectedCustomerLibraryIds.clear();
+  renderMasterData();
+});
+document.getElementById('deleteSelectedCustomers')?.addEventListener('click', () => {
+  const ids = new Set(selectedCustomerLibraryIds);
+  if (!ids.size || !confirm('Xóa ' + ids.size + ' khách hàng đã chọn khỏi danh bạ?')) return;
+  if (!setCustomerLibrary(getCustomerLibrary().filter(item => !ids.has(item.id)))) return;
+  selectedCustomerLibraryIds.clear();
+  renderMasterData();
+  renderDashboard();
+  toast('Đã xóa ' + ids.size + ' khách hàng');
+});
+document.getElementById('clearProductCatalogSelection')?.addEventListener('click', () => {
+  selectedProductCatalogIds.clear();
+  renderMasterData();
+});
+document.getElementById('deleteSelectedCatalogProducts')?.addEventListener('click', () => {
+  const ids = new Set(selectedProductCatalogIds);
+  if (!ids.size || !confirm('Xóa ' + ids.size + ' sản phẩm đã chọn khỏi danh mục?')) return;
+  if (!setProductCatalog(getProductCatalog().filter(item => !ids.has(item.id)))) return;
+  selectedProductCatalogIds.clear();
+  renderMasterData();
+  renderDashboard();
+  toast('Đã xóa ' + ids.size + ' sản phẩm khỏi danh mục');
+});
+document.getElementById('addSelectedCatalogProducts')?.addEventListener('click', () => {
+  const ids = new Set(selectedProductCatalogIds);
+  const selected = getProductCatalog().filter(item => ids.has(item.id));
+  const changed = addCatalogProductsToQuote(selected);
+  if (changed) selectedProductCatalogIds.clear();
+});
+
+
+document.getElementById('importCustomerLibraryExcel')?.addEventListener('click', (event) => {
+  dataLibraryImportLastFocus = event.currentTarget;
+  document.getElementById('customerLibraryExcelInput')?.click();
+});
+document.getElementById('importProductLibraryExcel')?.addEventListener('click', (event) => {
+  dataLibraryImportLastFocus = event.currentTarget;
+  document.getElementById('productLibraryExcelInput')?.click();
+});
+document.getElementById('customerLibraryExcelInput')?.addEventListener('change', async (event) => {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+  await openDataLibraryImport(file, 'customer', dataLibraryImportLastFocus);
+  input.value = '';
+});
+document.getElementById('productLibraryExcelInput')?.addEventListener('change', async (event) => {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+  await openDataLibraryImport(file, 'product', dataLibraryImportLastFocus);
+  input.value = '';
+});
+document.getElementById('exportCustomerLibraryExcel')?.addEventListener('click', () => exportDataLibraryExcel('customer'));
+document.getElementById('exportCustomerLibraryCsv')?.addEventListener('click', () => exportDataLibraryCsv('customer'));
+document.getElementById('exportProductLibraryExcel')?.addEventListener('click', () => exportDataLibraryExcel('product'));
+document.getElementById('exportProductLibraryCsv')?.addEventListener('click', () => exportDataLibraryCsv('product'));
+document.getElementById('dataLibraryImportSheetSelect')?.addEventListener('change', (event) => {
+  if (!dataLibraryImportDraft) return;
+  dataLibraryImportDraft.sheetName = event.currentTarget.value;
+  renderDataLibraryImport();
+});
+document.getElementById('applyDataLibraryImport')?.addEventListener('click', applyDataLibraryImport);
+document.getElementById('cancelDataLibraryImport')?.addEventListener('click', () => closeDataLibraryImport());
+document.getElementById('closeDataLibraryImport')?.addEventListener('click', () => closeDataLibraryImport());
+document.getElementById('dataLibraryImportModal')?.addEventListener('click', (event) => {
+  if (event.target === event.currentTarget) closeDataLibraryImport();
+});
+document.addEventListener('keydown', (event) => {
+  const modal = document.getElementById('dataLibraryImportModal');
+  if (event.key === 'Escape' && modal && !modal.hidden) {
+    event.preventDefault();
+    closeDataLibraryImport();
+  }
+});
 
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
@@ -4766,6 +5201,13 @@ function canonicalLibraryText(value) {
     .toLocaleLowerCase('vi-VN');
 }
 
+function canonicalSearchText(value) {
+  return canonicalLibraryText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
 function canonicalLibraryPhone(value) {
   let phone = normalizePhone(value);
   if (phone.startsWith('0084') && phone.length >= 12) phone = '0' + phone.slice(4);
@@ -4776,7 +5218,10 @@ function canonicalLibraryPhone(value) {
 function customerKey(customer) {
   const phone = canonicalLibraryPhone(customer.phone);
   if (phone) return 'phone:' + phone;
-  return 'name:' + [customer.name, customer.company].map(canonicalLibraryText).filter(Boolean).join('|');
+  const nameCompany = [customer.name, customer.company].map(canonicalLibraryText).filter(Boolean).join('|');
+  if (nameCompany) return 'name:' + nameCompany;
+  const email = canonicalLibraryText(customer.email);
+  return email ? 'email:' + email : '';
 }
 
 function saveCurrentCustomerToLibrary() {
@@ -4956,33 +5401,102 @@ function applyProductBulkAction() {
   toast(persisted ? 'Đã áp dụng thao tác cho ' + indices.length + ' dòng' : 'Đã thay đổi tạm thời; chưa autosave được');
 }
 
-function addCatalogProduct(product) {
-  const key = productKey(product);
-  const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+function addCatalogProductsToQuote(products, { notify = true } = {}) {
+  const items = Array.isArray(products) ? products : [];
+  if (!items.length) return 0;
   const targetCurrency = normalizeCatalogCurrency(state.currency);
-  const currencyMatches = sourceCurrency === targetCurrency;
-  const catalogPrice = currencyMatches ? normalizeNonNegativeNumber(product.price) : 0;
-  const existing = state.products.find(item => productKey(item) === key);
-  if (existing) {
-    existing.qty = normalizeNonNegativeNumber(existing.qty) + 1;
-    if (currencyMatches) existing.price = catalogPrice;
-  } else {
-    state.products.push({
-      group: product.group || '',
-      name: product.name || '',
-      pack: product.pack || '',
-      unit: product.unit || '',
-      qty: 1,
-      price: catalogPrice,
-      note: product.note || ''
-    });
-  }
+  let changed = 0;
+  let currencyMismatch = 0;
+
+  items.forEach((product) => {
+    const key = productKey(product);
+    if (!key.replace(/\|/g, '')) return;
+    const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+    const currencyMatches = sourceCurrency === targetCurrency;
+    const catalogPrice = currencyMatches ? normalizeNonNegativeNumber(product.price) : 0;
+    const existing = state.products.find(item => productKey(item) === key);
+    if (existing) {
+      existing.qty = normalizeNonNegativeNumber(existing.qty) + 1;
+      if (currencyMatches) existing.price = catalogPrice;
+    } else {
+      state.products.push({
+        group: product.group || '',
+        name: product.name || '',
+        pack: product.pack || '',
+        unit: product.unit || '',
+        qty: 1,
+        price: catalogPrice,
+        note: product.note || ''
+      });
+    }
+    if (!currencyMatches) currencyMismatch += 1;
+    changed += 1;
+  });
+
+  if (!changed) return 0;
   const persisted = save();
   renderEditorProducts();
   render();
   openTab('products');
-  const successMessage = currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ';
-  toast(persisted ? successMessage : successMessage + ' — chưa autosave được');
+  if (notify) {
+    const mismatchText = currencyMismatch
+      ? ' • ' + currencyMismatch + ' dòng khác tiền tệ để giá 0'
+      : '';
+    toast((persisted ? 'Đã thêm ' : 'Đã thêm tạm thời ') + changed + ' sản phẩm vào báo giá' + mismatchText);
+  }
+  return changed;
+}
+
+function addCatalogProduct(product) {
+  return addCatalogProductsToQuote([product]);
+}
+
+function catalogDuplicateKeySet(products) {
+  const counts = new Map();
+  (Array.isArray(products) ? products : []).forEach((product) => {
+    const key = catalogKey(product);
+    const identity = productKey(product);
+    if (!identity.replace(/\|/g, '')) return;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+}
+
+function syncMasterBulkBars() {
+  const customerBar = document.getElementById('customerLibraryBulkBar');
+  const customerCount = document.getElementById('customerLibraryBulkCount');
+  const productBar = document.getElementById('productCatalogBulkBar');
+  const productCount = document.getElementById('productCatalogBulkCount');
+
+  if (customerBar) customerBar.hidden = selectedCustomerLibraryIds.size === 0;
+  if (customerCount) customerCount.textContent = selectedCustomerLibraryIds.size + ' khách hàng đã chọn';
+  if (productBar) productBar.hidden = selectedProductCatalogIds.size === 0;
+  if (productCount) productCount.textContent = selectedProductCatalogIds.size + ' sản phẩm đã chọn';
+}
+
+function syncProductGroupFilter(allProducts) {
+  const select = document.getElementById('productCatalogGroupFilter');
+  if (!select) return '';
+  const previous = select.value;
+  const groups = [...new Set(
+    (Array.isArray(allProducts) ? allProducts : [])
+      .map(item => String(item.group || '').trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'vi'));
+
+  select.innerHTML = '';
+  const all = document.createElement('option');
+  all.value = '';
+  all.textContent = 'Tất cả nhóm';
+  select.appendChild(all);
+  groups.forEach((group) => {
+    const option = document.createElement('option');
+    option.value = group;
+    option.textContent = group;
+    select.appendChild(option);
+  });
+  select.value = groups.includes(previous) ? previous : '';
+  return select.value;
 }
 
 function renderMasterData() {
@@ -4990,28 +5504,55 @@ function renderMasterData() {
   const productList = document.getElementById('productCatalogList');
   if (!customerList || !productList) return;
 
-  const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
-  const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
+  const customerQuery = canonicalSearchText(document.getElementById('customerLibrarySearch')?.value || '');
+  const productQuery = canonicalSearchText(document.getElementById('productCatalogSearch')?.value || '');
+  const customerFilter = document.getElementById('customerLibraryFilter')?.value || '';
+  const productCurrency = document.getElementById('productCatalogCurrencyFilter')?.value || '';
+  const duplicateOnly = Boolean(document.getElementById('productCatalogDuplicateOnly')?.checked);
 
   const allCustomers = getCustomerLibrary();
   const allProducts = getProductCatalog();
+  const productGroup = syncProductGroupFilter(allProducts);
+  const duplicateKeys = catalogDuplicateKeySet(allProducts);
+
+  const customerIds = new Set(allCustomers.map(item => item.id));
+  selectedCustomerLibraryIds = new Set([...selectedCustomerLibraryIds].filter(id => customerIds.has(id)));
+  const productIds = new Set(allProducts.map(item => item.id));
+  selectedProductCatalogIds = new Set([...selectedProductCatalogIds].filter(id => productIds.has(id)));
+
   const customers = allCustomers.filter(item => {
-    const haystack = [item.name, item.company, item.phone, item.email, item.address, item.contact]
-      .filter(Boolean).join(' ').toLowerCase();
-    return !customerQuery || haystack.includes(customerQuery);
+    const haystack = canonicalSearchText(
+      [item.name, item.company, item.phone, item.email, item.address, item.contact].filter(Boolean).join(' ')
+    );
+    if (customerQuery && !haystack.includes(customerQuery)) return false;
+    if (customerFilter === 'has-phone' && !canonicalLibraryPhone(item.phone)) return false;
+    if (customerFilter === 'missing-phone' && canonicalLibraryPhone(item.phone)) return false;
+    if (customerFilter === 'has-email' && !String(item.email || '').trim()) return false;
+    if (customerFilter === 'missing-email' && String(item.email || '').trim()) return false;
+    return true;
   });
+
   const products = allProducts.filter(item => {
-    const haystack = [item.group, item.name, item.pack, item.unit, item.note, item.currency]
-      .filter(Boolean).join(' ').toLowerCase();
-    return !productQuery || haystack.includes(productQuery);
+    const haystack = canonicalSearchText(
+      [item.group, item.name, item.pack, item.unit, item.note, item.currency].filter(Boolean).join(' ')
+    );
+    if (productQuery && !haystack.includes(productQuery)) return false;
+    if (productGroup && item.group !== productGroup) return false;
+    if (productCurrency && normalizeCatalogCurrency(item.currency || 'VND') !== productCurrency) return false;
+    if (duplicateOnly && !duplicateKeys.has(catalogKey(item))) return false;
+    return true;
   });
 
   setText('customerLibraryCount', allCustomers.length);
   setText('productCatalogCount', allProducts.length);
   setText('customerLibraryResultCount', customers.length);
   setText('productCatalogResultCount', products.length);
+  setText('productCatalogDuplicateCount', duplicateKeys.size + ' nhóm trùng');
+  const duplicateSummary = document.getElementById('productCatalogDuplicateSummary');
+  if (duplicateSummary) duplicateSummary.hidden = duplicateKeys.size === 0;
 
   customerList.innerHTML = '';
+  const customerFragment = document.createDocumentFragment();
   if (!customers.length) {
     customerList.innerHTML = '<div class="history-empty" role="status">Chưa có khách hàng phù hợp.</div>';
   } else {
@@ -5020,12 +5561,26 @@ function renderMasterData() {
       row.className = 'master-item master-table-row customer-table-grid';
 
       const nameCell = document.createElement('div');
-      nameCell.className = 'master-cell master-name-cell';
+      nameCell.className = 'master-cell master-name-cell master-select-cell';
+      const select = document.createElement('input');
+      select.type = 'checkbox';
+      select.className = 'master-row-select';
+      select.checked = selectedCustomerLibraryIds.has(customer.id);
+      select.setAttribute('aria-label', 'Chọn khách hàng ' + (customer.name || customer.company || ''));
+      select.addEventListener('change', () => {
+        if (select.checked) selectedCustomerLibraryIds.add(customer.id);
+        else selectedCustomerLibraryIds.delete(customer.id);
+        row.classList.toggle('bulk-selected', select.checked);
+        syncMasterBulkBars();
+      });
+      const identity = document.createElement('div');
       const name = document.createElement('strong');
       name.textContent = customer.name || customer.company || 'Khách hàng';
       const contact = document.createElement('small');
       contact.textContent = customer.contact || 'Chưa có người liên hệ';
-      nameCell.append(name, contact);
+      identity.append(name, contact);
+      nameCell.append(select, identity);
+      row.classList.toggle('bulk-selected', select.checked);
 
       const companyCell = document.createElement('div');
       companyCell.className = 'master-cell master-company-cell';
@@ -5055,31 +5610,48 @@ function renderMasterData() {
       del.addEventListener('click', () => {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
         if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
+        selectedCustomerLibraryIds.delete(customer.id);
         renderMasterData();
         renderDashboard();
       });
       actions.append(use, del);
       row.append(nameCell, companyCell, contactCell, addressCell, actions);
-      customerList.appendChild(row);
+      customerFragment.appendChild(row);
     });
+    customerList.appendChild(customerFragment);
   }
 
   productList.innerHTML = '';
+  const productFragment = document.createDocumentFragment();
   if (!products.length) {
     productList.innerHTML = '<div class="history-empty" role="status">Chưa có sản phẩm phù hợp.</div>';
   } else {
     products.forEach(product => {
       const row = document.createElement('div');
       row.className = 'master-item master-table-row product-table-grid';
-      const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+      const productCurrencyCode = normalizeCatalogCurrency(product.currency || 'VND');
 
       const nameCell = document.createElement('div');
-      nameCell.className = 'master-cell master-name-cell';
+      nameCell.className = 'master-cell master-name-cell master-select-cell';
+      const select = document.createElement('input');
+      select.type = 'checkbox';
+      select.className = 'master-row-select';
+      select.checked = selectedProductCatalogIds.has(product.id);
+      select.setAttribute('aria-label', 'Chọn sản phẩm ' + (product.name || ''));
+      select.addEventListener('change', () => {
+        if (select.checked) selectedProductCatalogIds.add(product.id);
+        else selectedProductCatalogIds.delete(product.id);
+        row.classList.toggle('bulk-selected', select.checked);
+        syncMasterBulkBars();
+      });
+      const identity = document.createElement('div');
       const name = document.createElement('strong');
       name.textContent = product.name || 'Sản phẩm';
       const currency = document.createElement('small');
-      currency.textContent = productCurrency;
-      nameCell.append(name, currency);
+      currency.textContent = productCurrencyCode + (duplicateKeys.has(catalogKey(product)) ? ' • Có thể trùng' : '');
+      identity.append(name, currency);
+      nameCell.append(select, identity);
+      row.classList.toggle('bulk-selected', select.checked);
 
       const groupCell = document.createElement('div');
       groupCell.className = 'master-cell master-group-cell';
@@ -5091,7 +5663,7 @@ function renderMasterData() {
 
       const priceCell = document.createElement('div');
       priceCell.className = 'master-cell master-price-cell';
-      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrency);
+      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrencyCode);
 
       const noteCell = document.createElement('div');
       noteCell.className = 'master-cell master-note-cell';
@@ -5109,14 +5681,17 @@ function renderMasterData() {
       del.addEventListener('click', () => {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
         if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
+        selectedProductCatalogIds.delete(product.id);
         renderMasterData();
         renderDashboard();
       });
       actions.append(add, del);
       row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
-      productList.appendChild(row);
+      productFragment.appendChild(row);
     });
+    productList.appendChild(productFragment);
   }
+  syncMasterBulkBars();
 }
 
 function normalizePresetStore(value) {

@@ -23,6 +23,14 @@ const requiredIds = [
   'exportAllData','importAllData','quoteStatus','quoteStatusFilter',
   'designPanel','paymentPrint','pSlogan','pageEstimate',
   'customerLibraryList','productCatalogList','saveCurrentCustomer','saveCurrentProducts',
+  'customerLibraryFilter','customerLibraryBulkBar','customerLibraryBulkCount','clearCustomerLibrarySelection','deleteSelectedCustomers',
+  'productCatalogGroupFilter','productCatalogCurrencyFilter','productCatalogDuplicateOnly','productCatalogBulkBar','productCatalogBulkCount',
+  'addSelectedCatalogProducts','clearProductCatalogSelection','deleteSelectedCatalogProducts','productCatalogDuplicateSummary','productCatalogDuplicateCount',
+  'importCustomerLibraryExcel','exportCustomerLibraryExcel','exportCustomerLibraryCsv','customerLibraryExcelInput',
+  'importProductLibraryExcel','exportProductLibraryExcel','exportProductLibraryCsv','productLibraryExcelInput',
+  'dataLibraryImportModal','dataLibraryImportTitle','dataLibraryImportSubtitle','dataLibraryImportSheetRow','dataLibraryImportSheetSelect',
+  'dataLibraryImportValidCount','dataLibraryImportUpdateCount','dataLibraryImportInvalidCount','dataLibraryImportDuplicateCount',
+  'dataLibraryImportNotice','dataLibraryImportPreviewHead','dataLibraryImportPreviewBody','cancelDataLibraryImport','applyDataLibraryImport','closeDataLibraryImport',
   'quickCustomerName','designShowStt','designShowPrice','designShowAmount','designShowTotals',
   'wideView','zoomOut','zoomIn','toolbarMenu',
   'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
@@ -348,3 +356,5 @@ if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline St
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
 if (/id="pCustomer"[^>]*style=/.test(html)) fail('V5 Pass 18 report customer meta must not use inline presentation');
 if (!v5Css.includes('.color.color-teal') || !css.includes('.report-customer-meta')) fail('V5 Pass 18 inline-style ownership migration is incomplete');
+
+if (!js.includes('parseCustomerSpreadsheetRows')) fail('Data Library customer import parser is not wired');
