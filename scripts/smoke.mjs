@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v35-publishing-center")) fail('Service-worker cache version was not upgraded for V4.7 publishing center');
+if (!sw.includes("pricereport-shell-v36-system-center")) fail('Service-worker cache version was not upgraded for V4.8 system center');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -249,7 +249,7 @@ if (!html.includes('id="pane-dashboard"')) fail('V4 dashboard workspace is missi
 if (!html.includes('data-tab="dashboard"')) fail('V4 application home navigation is missing');
 if (!html.includes('id="dashboardSearch"')) fail('V4 dashboard search is missing');
 if (!html.includes('id="dashRecentQuotes"')) fail('V4 recent quotation workspace is missing');
-if (!js.includes("['dashboard', 'history', 'master', 'export'].includes(tab)")) fail('Application workspace routing is missing');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'export'].includes(tab)")) fail('Application workspace routing is missing');
 if (!js.includes('function renderDashboard()')) fail('Dashboard data renderer is missing');
 if (!js.includes("openTab('dashboard')")) fail('Application must start on dashboard');
 if (!css.includes('.shell.app-workspace')) fail('Application workspace shell styles are missing');
@@ -290,6 +290,13 @@ if (!css.includes('.dashboard-search-result') || !css.includes('.dashboard-searc
 
 if (!html.includes('class="pane export-workspace"') || !html.includes('id="exportCenterHealth"')) fail('V4.7 publishing center workspace is missing');
 if (!html.includes('id="exportBackupHistoryCount"') || !html.includes('id="exportBackupCustomerCount"') || !html.includes('id="exportBackupProductCount"')) fail('V4.7 backup scope counters are missing');
-if (!js.includes("['dashboard', 'history', 'master', 'export'].includes(tab)")) fail('V4.7 export must use full-width application workspace');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'export'].includes(tab)")) fail('V4.7 export must use full-width application workspace');
 if (!js.includes('function renderExportCenter()')) fail('V4.7 export-center renderer is missing');
 if (!css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('V4.7 publishing center or print safeguard styles are missing');
+
+if (!html.includes('data-tab="system"') || !html.includes('id="pane-system"')) fail('V4.8 Device & System workspace is missing');
+if (!html.includes('id="systemLocalDeviceCode"') || !html.includes('id="systemRegistryDeviceCode"')) fail('V4.8 must distinguish local and registry device codes');
+if (!html.includes('id="systemBoundaryQuote"') || !html.includes('id="systemBoundaryCustomer"') || !html.includes('id="systemBoundaryPrivateKey"')) fail('V4.8 data-boundary indicators are missing');
+if (!js.includes('function renderSystemWorkspace()') || !js.includes('function refreshSystemWorkspace()')) fail('V4.8 system runtime renderer/refresh is missing');
+if (!js.includes("window.addEventListener('pricereport:device-access'")) fail('V4.8 must react to live Device Gate events');
+if (!css.includes('.system-workspace-header') || !css.includes('.system-status-grid')) fail('V4.8 system workspace styles are missing');
