@@ -596,6 +596,128 @@ test('V5.4 Data Management filters, currency-aware duplicates and bulk selection
 });
 
 
+
+test('V5.5 row-level customer deletion is reversible and refreshes autocomplete', () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([
+    { id:'v55-c1', name:'Khách Undo Một', company:'A', phone:'0911111111', email:'', address:'', contact:'' },
+    { id:'v55-c2', name:'Khách Undo Hai', company:'B', phone:'0922222222', email:'', address:'', contact:'' }
+  ]));
+  document.getElementById('customerLibrarySearch').value = '';
+  document.getElementById('customerLibraryFilter').value = '';
+  document.querySelector('[data-tab="master"]').click();
+
+  const firstRow = document.querySelector('#customerLibraryList .master-item');
+  expect(firstRow.textContent).toContain('Khách Undo Một');
+  firstRow.querySelector('.btn.danger').click();
+
+  let items = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(items).toHaveLength(1);
+  expect(items.some(item => item.id === 'v55-c1')).toBe(false);
+  expect([...document.querySelectorAll('#customerNameSuggestions option')].map(option => option.value))
+    .not.toContain('Khách Undo Một');
+
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo?.textContent).toBe('Hoàn tác');
+  undo.click();
+
+  items = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(items).toHaveLength(2);
+  expect(items.some(item => item.id === 'v55-c1')).toBe(true);
+  expect([...document.querySelectorAll('#customerNameSuggestions option')].map(option => option.value))
+    .toContain('Khách Undo Một');
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.5 bulk product deletion is reversible and refreshes autocomplete', () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([
+    { id:'v55-p1', group:'Trứng', name:'Sản phẩm Undo Một', pack:'', unit:'Hộp', price:10000, currency:'VND', note:'' },
+    { id:'v55-p2', group:'Trứng', name:'Sản phẩm Undo Hai', pack:'', unit:'Hộp', price:20000, currency:'VND', note:'' }
+  ]));
+  document.getElementById('productCatalogSearch').value = '';
+  document.getElementById('productCatalogGroupFilter').value = '';
+  document.getElementById('productCatalogCurrencyFilter').value = '';
+  document.getElementById('productCatalogDuplicateOnly').checked = false;
+  document.querySelector('[data-tab="master"]').click();
+
+  const firstRow = document.querySelector('#productCatalogList .master-item');
+  expect(firstRow.textContent).toContain('Sản phẩm Undo Một');
+  const select = firstRow.querySelector('.master-row-select');
+  select.checked = true;
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  document.getElementById('deleteSelectedCatalogProducts').click();
+
+  let items = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(items).toHaveLength(1);
+  expect(items.some(item => item.id === 'v55-p1')).toBe(false);
+  expect([...document.querySelectorAll('#productNameSuggestions option')].map(option => option.value))
+    .not.toContain('Sản phẩm Undo Một');
+
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo?.textContent).toBe('Hoàn tác');
+  undo.click();
+
+  items = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(items).toHaveLength(2);
+  expect(items.some(item => item.id === 'v55-p1')).toBe(true);
+  expect([...document.querySelectorAll('#productNameSuggestions option')].map(option => option.value))
+    .toContain('Sản phẩm Undo Một');
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.5 Data Library import can undo an update transaction', async () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([
+    { id:'v55-import-c1', name:'Khách Gốc', company:'Công ty Gốc', phone:'0933333333', email:'', address:'Nha Trang', contact:'' }
+  ]));
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Khách Đã Cập Nhật,Công ty Mới,0933333333,,Hà Nội,Chị A'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'cap-nhat-khach.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+    expect(document.getElementById('dataLibraryImportUpdateCount').textContent).toBe('1');
+  });
+
+  document.getElementById('applyDataLibraryImport').click();
+  let items = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(items).toHaveLength(1);
+  expect(items[0].id).toBe('v55-import-c1');
+  expect(items[0].name).toBe('Khách Đã Cập Nhật');
+
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo?.textContent).toBe('Hoàn tác');
+  undo.click();
+
+  items = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(items).toHaveLength(1);
+  expect(items[0].id).toBe('v55-import-c1');
+  expect(items[0].name).toBe('Khách Gốc');
+  expect(items[0].company).toBe('Công ty Gốc');
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
 test('V5.4 customer library CSV import reviews and applies valid rows transactionally', async () => {
   const key = 'tunggiabao-price-report-customers-v1';
   const before = localStorage.getItem(key);

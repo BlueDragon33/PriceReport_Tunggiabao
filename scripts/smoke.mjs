@@ -358,3 +358,5 @@ if (/id="pCustomer"[^>]*style=/.test(html)) fail('V5 Pass 18 report customer met
 if (!v5Css.includes('.color.color-teal') || !css.includes('.report-customer-meta')) fail('V5 Pass 18 inline-style ownership migration is incomplete');
 
 if (!js.includes('parseCustomerSpreadsheetRows')) fail('Data Library customer import parser is not wired');
+if (!js.includes('function offerDataLibraryUndo')) fail('V5.5 Data Library undo helper is missing');
+if (!js.includes("label: 'Hoàn tác'") || !js.includes('duration: 8000')) fail('V5.5 Data Library undo action contract is missing');
