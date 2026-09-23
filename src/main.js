@@ -2258,23 +2258,18 @@ function excelRowsForCurrentQuote() {
   if (state.recipientLine) rows.push([state.recipientLine]);
   if (state.intro) rows.push([state.intro]);
   rows.push([]);
-  rows.push(['STT','Mặt hàng','ĐVT','Đơn giá','Ghi chú']);
+  rows.push(['STT','Tên sản phẩm','Nhóm hàng','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú']);
 
-  let activeGroup = '';
-  let groupIndex = 0;
   (state.products || []).forEach((product, index) => {
-    const group = String(product.group || '').trim();
-    if (group && group !== activeGroup) {
-      activeGroup = group;
-      groupIndex = 0;
-      rows.push([group]);
-    }
-    groupIndex += 1;
     rows.push([
-      group ? groupIndex : index + 1,
+      index + 1,
       product.name || '',
+      product.group || '',
+      product.pack || '',
       product.unit || '',
+      Number(product.qty || 0),
       Number(product.price || 0),
+      Number(product.qty || 0) * Number(product.price || 0),
       product.note || ''
     ]);
   });
@@ -2289,7 +2284,10 @@ async function exportCurrentQuoteExcel() {
   try {
     const XLSX = await import('xlsx');
     const sheet = XLSX.utils.aoa_to_sheet(excelRowsForCurrentQuote());
-    sheet['!cols'] = [{ wch: 8 }, { wch: 42 }, { wch: 12 }, { wch: 16 }, { wch: 26 }];
+    sheet['!cols'] = [
+      { wch: 7 }, { wch: 36 }, { wch: 20 }, { wch: 20 }, { wch: 12 },
+      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 26 }
+    ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, 'Bảng báo giá');
     const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
