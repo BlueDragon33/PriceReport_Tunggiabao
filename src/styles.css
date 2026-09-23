@@ -1,4 +1,8 @@
-/* Report document begins here. Preview chrome moved to src/ui-v5.css. */
+*{box-sizing:border-box}
+html,body,#app{height:100%;margin:0}
+
+/* Report document begins here. Preview/application chrome lives in src/ui-v5.css. */
+
 .paper{
   --doc:#0b9b8e;position:relative;display:flex;flex-direction:column;width:210mm;min-height:297mm;overflow:hidden;
   background:
