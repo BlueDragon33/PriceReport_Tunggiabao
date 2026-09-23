@@ -222,10 +222,16 @@ export function parseCustomerSpreadsheetRows(rows, options = {}) {
 
   const duplicateMap = new Map();
   customers.forEach((customer, index) => {
+    const nameCompany = [customer.name, customer.company].map(value => fold(clean(value))).filter(Boolean).join('|');
+    const email = fold(clean(customer.email));
     const signature = customer.phone
       ? 'phone:' + customer.phone
-      : 'name:' + [customer.name, customer.company].map(value => fold(clean(value))).join('|');
-    if (!signature.replace(/(?:phone:|name:|\|)/g, '')) return;
+      : nameCompany
+        ? 'name:' + nameCompany
+        : email
+          ? 'email:' + email
+          : '';
+    if (!signature) return;
     const indexes = duplicateMap.get(signature) || [];
     indexes.push(index);
     duplicateMap.set(signature, indexes);
