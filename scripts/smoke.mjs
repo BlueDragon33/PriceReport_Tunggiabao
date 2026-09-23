@@ -266,7 +266,7 @@ if (!html.includes('data-create-quote')) fail('V4.2 dashboard must expose a true
 if (!js.includes("document.querySelectorAll('[data-create-quote]')")) fail('V4.2 create-new-quotation actions are not wired');
 if (!js.includes('function openMasterSection(section)')) fail('V4.2 focused master-data navigation is missing');
 if (!html.includes('id="customerLibraryCard"') || !html.includes('id="productCatalogCard"')) fail('V4.2 master-data section targets are missing');
-if (!css.includes('.master-section-highlight')) fail('V4.2 master-data focus feedback is missing');
+if (!v5Css.includes('.master-section-card.master-section-highlight')) fail('Master-data focus feedback is missing from V5 UI');
 
 if (!html.includes('id="historyPendingCount"') || !html.includes('id="historyResultCount"')) fail('V4.3 quotation management counters are missing');
 if (!html.includes('class="history-table-head"')) fail('V4.3 quotation management table header is missing');
@@ -283,7 +283,7 @@ if (!appCss.includes('.master-workspace-header') || !appCss.includes('.master-ta
 if (!html.includes('id="studioBackHome"') || !html.includes('id="studioQuoteLabel"') || !html.includes('class="studio-stepper"')) fail('V4.5 quotation studio context header is missing');
 if (!js.includes('function syncStudioContext(tab')) fail('V4.5 studio context synchronizer is missing');
 if (!js.includes("document.querySelectorAll('[data-studio-step]')")) fail('V4.5 studio step navigation is not wired');
-if (!css.includes('.studio-context-row') || !css.includes('.studio-stepper button.active')) fail('V4.5 quotation studio context styles are missing');
+if (!v5Css.includes('.studio-context-row') || !v5Css.includes('.studio-stepper button.active')) fail('Quotation studio context styles are missing from V5 UI');
 
 if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-search-wrap')) fail('V4.6 dashboard global-search result surface is missing');
 if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
@@ -294,7 +294,7 @@ if (!html.includes('id="pane-export"') || !html.includes('export-workspace') || 
 if (!html.includes('id="exportBackupHistoryCount"') || !html.includes('id="exportBackupCustomerCount"') || !html.includes('id="exportBackupProductCount"')) fail('V4.7 backup scope counters are missing');
 if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('V4.7+ export/settings must use full-width application workspace');
 if (!js.includes('function renderExportCenter()')) fail('V4.7 export-center renderer is missing');
-if (!css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('V4.7 publishing center or print safeguard styles are missing');
+if (!v5Css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('Publishing center or report-layer print safeguard is missing');
 
 if (!html.includes('data-tab="system"') || !html.includes('id="pane-system"')) fail('V4.8 Device & System workspace is missing');
 if (!html.includes('id="systemLocalDeviceCode"') || !html.includes('id="systemRegistryDeviceCode"')) fail('V4.8 must distinguish local and registry device codes');
@@ -311,7 +311,7 @@ if (!appCss.includes('.settings-workspace-header') || !appCss.includes('.managem
 
 if (!js.includes("const initialAppPage = getAppPreferences().startPage")) fail('V4.9 start-page preference is not applied during boot');
 if (!js.includes("if (getAppPreferences().autoPcSave)")) fail('V4.9 PC autosave preference is not enforced');
-if (!css.includes('.nav button[data-tab="settings"]{display:none}') && !css.includes('.nav button[data-tab="settings"]')) fail('V4.9 mobile settings navigation rule is missing');
+if (!v5Css.includes('.nav button[data-tab="settings"]')) fail('Mobile settings navigation rule is missing from V5 UI');
 
 if (!js.includes("import './ui-v5.css';")) fail('V5 application stylesheet is not loaded after legacy CSS');
 if (!html.includes('<body class="v5-ui">')) fail('V5 UI scope is missing from body');
