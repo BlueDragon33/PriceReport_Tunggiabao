@@ -77,6 +77,7 @@
           <div class="studio-context-badges">
             <span class="studio-status-badge" id="studioQuoteStatus">Bản nháp</span>
             <span class="studio-history-state" id="studioHistoryState">Chưa lưu lịch sử</span>
+            <span class="studio-autosave-state" id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
           </div>
         </div>
         <div class="studio-pane-title">
@@ -103,6 +104,16 @@
             <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
           </div>
           <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
+        </div>
+        <div class="draft-recovery-banner" id="draftRecoveryBanner" role="status" hidden>
+          <div>
+            <strong>Có bản đang soạn chưa lưu hoàn chỉnh</strong>
+            <span id="draftRecoveryDetail">Có thể khôi phục dữ liệu gần nhất trên tab này.</span>
+          </div>
+          <div class="draft-recovery-actions">
+            <button class="btn primary" id="restoreDraftRecovery" type="button">Khôi phục</button>
+            <button class="btn" id="discardDraftRecovery" type="button">Bỏ qua</button>
+          </div>
         </div>
       </div>
       <div class="panel-body">
