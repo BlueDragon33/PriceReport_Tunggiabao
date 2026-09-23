@@ -3835,7 +3835,7 @@ $$('.tpl').forEach((el) => {
   });
 });
 
-$('.color').forEach((el) => {
+$$('.color').forEach((el) => {
   el.addEventListener('click', () => {
     pushQuoteUndoSnapshot();
     state.accent = el.dataset.color;
