@@ -4147,8 +4147,20 @@ function validateQuote(data = state) {
 
 function validationTargetForMessage(message) {
   const text = String(message || '');
-  const productMatch = text.match(/Dòng sản phẩm\s+(\d+)/i) || text.match(/Sản phẩm\s+"[^"]+"/i);
-  if (productMatch) return { tab: 'products', productIndex: productMatch[1] ? Math.max(0, Number(productMatch[1]) - 1) : null };
+  const productRowMatch = text.match(/Dòng sản phẩm\s+(\d+)/i);
+  if (productRowMatch) {
+    return { tab: 'products', productIndex: Math.max(0, Number(productRowMatch[1]) - 1) };
+  }
+  if (/chưa có sản phẩm hợp lệ/i.test(text)) {
+    return { tab: 'products', productIndex: 0 };
+  }
+  const productNameMatch = text.match(/Sản phẩm\s+"([^"]+)"/i);
+  if (productNameMatch) {
+    const productName = productNameMatch[1].trim();
+    const productIndex = (Array.isArray(state.products) ? state.products : [])
+      .findIndex(product => String(product?.name || '').trim() === productName);
+    return { tab: 'products', productIndex: productIndex >= 0 ? productIndex : null };
+  }
 
   const rules = [
     [/tên công ty|email công ty|logo/i, { tab: 'general', fieldId: /email công ty/i.test(text) ? 'companyEmail' : (/logo/i.test(text) ? 'logoInput' : 'companyName') }],
