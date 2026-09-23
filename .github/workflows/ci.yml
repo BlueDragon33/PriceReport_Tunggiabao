@@ -39,7 +39,11 @@ jobs:
         run: node scripts/production-config.test.mjs
       - name: Service worker tests
         run: node scripts/service-worker.test.mjs
-      - name: App DOM regression tests
+      - name: V5.4 customer import DOM regression
+        run: npx vitest run tests/app.test.js -t "V5.4 customer library CSV import reviews and applies valid rows transactionally"
+      - name: V5.4 product import DOM regression
+        run: npx vitest run tests/app.test.js -t "V5.4 product import excludes duplicate groups and preserves currency variants"
+      - name: Full app DOM regression tests
         run: npx vitest run tests/app.test.js
       - name: Migration DOM regression tests
         run: npx vitest run tests/migration.test.js
