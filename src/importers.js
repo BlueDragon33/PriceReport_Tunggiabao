@@ -150,6 +150,79 @@ export function detectSpreadsheetHeader(rows) {
   return best;
 }
 
+export function parsePastedTable(rawText) {
+  const text = String(rawText || '').replace(/\r/g, '').trim();
+  if (!text) {
+    return {
+      source: 'paste',
+      fields: {},
+      products: [],
+      groups: [],
+      layoutHints: {},
+      warnings: ['Chưa có dữ liệu để dán.'],
+      unmatched: [],
+      spreadsheetMeta: null
+    };
+  }
+
+  const lines = text.split('\n').filter(line => line.trim());
+  const tabCount = lines.reduce((sum, line) => sum + (line.match(/\t/g) || []).length, 0);
+  const semicolonCount = lines.reduce((sum, line) => sum + (line.match(/;/g) || []).length, 0);
+  const delimiter = tabCount ? '\t' : (semicolonCount ? ';' : null);
+  const rows = lines.map(line => delimiter
+    ? line.split(delimiter).map(clean)
+    : [clean(line)]);
+
+  let header = detectSpreadsheetHeader(rows);
+  let headerIndex = header?.headerIndex ?? -1;
+  let mapping = header?.mapping ? { ...header.mapping } : null;
+  let confidence = header?.confidence ? { ...header.confidence } : {};
+
+  if (!mapping) {
+    const width = Math.max(...rows.map(row => row.length));
+    mapping = { name: 0 };
+    if (width >= 4) {
+      mapping.unit = 1;
+      mapping.qty = 2;
+      mapping.price = 3;
+      if (width >= 5) mapping.note = 4;
+    } else if (width === 3) {
+      const secondNumeric = rows.filter(row => parseNumber(row[1]).valid).length >= Math.ceil(rows.length * 0.6);
+      mapping.price = 2;
+      if (secondNumeric) mapping.qty = 1;
+      else mapping.unit = 1;
+    } else if (width === 2) {
+      mapping.price = 1;
+    }
+    confidence = Object.fromEntries(Object.keys(mapping).map(key => [key, key === 'name' ? 0.9 : 0.65]));
+  }
+
+  const headers = headerIndex >= 0
+    ? rows[headerIndex].map(clean)
+    : Array.from({ length: Math.max(...rows.map(row => row.length)) }, (_, index) => 'Cột ' + String.fromCharCode(65 + index));
+
+  const rebuilt = parseMappedSpreadsheetRows(rows, { headerIndex, mapping });
+  return {
+    source: 'paste',
+    fields: {},
+    products: rebuilt.products,
+    groups: rebuilt.groups,
+    layoutHints: {},
+    warnings: rebuilt.invalidRows.length
+      ? ['Có ' + rebuilt.invalidRows.length + ' dòng dán chưa đủ dữ liệu bắt buộc.']
+      : [],
+    unmatched: [],
+    spreadsheetMeta: {
+      headerIndex,
+      headers,
+      mapping,
+      confidence,
+      rows,
+      invalidRows: rebuilt.invalidRows
+    }
+  };
+}
+
 export function parseMappedSpreadsheetRows(rows, options = {}) {
   const safeRows = Array.isArray(rows) ? rows : [];
   const detected = detectSpreadsheetHeader(safeRows);
