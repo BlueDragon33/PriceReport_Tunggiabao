@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { inferSpreadsheetColumns, mergeImportDraft, normalizeImportedProduct, parseHandwritingText, parseSpreadsheetRows } from '../src/importers.js';
+import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -178,3 +178,40 @@ assert.equal(normalizedDirty.unit, 'Hộp');
 assert.equal(normalizedDirty.qty, 1);
 assert.equal(normalizedDirty.price, 28000);
 assert.equal(normalizedDirty.note, 'mới');
+
+
+const mappingRows = [
+  ['Bảng giá tháng 9'],
+  ['Tên hàng', 'ĐVT', 'Số lượng', 'Đơn giá', 'Ghi chú'],
+  ['Trứng gà', 'Hộp', 2, '28 000', 'Giao sáng'],
+  ['Trứng vịt', 'Khay', 3, '85.000', '']
+];
+const detectedHeader = detectSpreadsheetHeader(mappingRows);
+assert.equal(detectedHeader.headerIndex, 1);
+assert.equal(detectedHeader.mapping.name, 0);
+assert.equal(detectedHeader.mapping.unit, 1);
+assert.equal(detectedHeader.mapping.qty, 2);
+assert.equal(detectedHeader.mapping.price, 3);
+
+const remapped = parseMappedSpreadsheetRows(mappingRows, {
+  headerIndex: 1,
+  mapping: { name: 0, unit: 1, qty: 2, price: 3, note: 4 }
+});
+assert.equal(remapped.products.length, 2);
+assert.equal(remapped.products[0].price, 28000);
+assert.equal(remapped.products[1].qty, 3);
+assert.deepEqual(remapped.invalidRows, []);
+
+const dirtyMapped = parseMappedSpreadsheetRows([
+  ['Product', 'Qty', 'Price'],
+  ['Valid', 1, 12000],
+  ['Missing price', 2, ''],
+  ['', '', 30000],
+  ['TOTAL', '', 42000]
+], {
+  headerIndex: 0,
+  mapping: { name: 0, qty: 1, price: 2 }
+});
+assert.equal(dirtyMapped.products.length, 1);
+assert.equal(dirtyMapped.invalidRows.length, 2);
+assert.equal(dirtyMapped.invalidRows[0].rowNumber, 3);
