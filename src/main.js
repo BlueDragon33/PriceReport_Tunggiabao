@@ -408,7 +408,52 @@ function stateForStorage() {
   return data;
 }
 
-const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
+const EDIT_HISTORY_LIMIT = 120;
+let editHistory = [clone(state)];
+let editHistoryIndex = 0;
+let restoringEditHistory = false;
+
+function updateEditHistoryButtons() {
+  const undo = document.getElementById('studioUndo');
+  const redo = document.getElementById('studioRedo');
+  if (undo) undo.disabled = editHistoryIndex <= 0;
+  if (redo) redo.disabled = editHistoryIndex >= editHistory.length - 1;
+}
+
+function setAutosaveState(mode, timestamp = new Date()) {
+  const el = document.getElementById('studioAutosaveStatus');
+  if (!el) return;
+  el.dataset.state = mode;
+  if (mode === 'saving') el.textContent = '● Đang lưu…';
+  else if (mode === 'error') el.textContent = '⚠ Không thể lưu';
+  else el.textContent = '✓ Đã lưu lúc ' + timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function recordEditSnapshot() {
+  if (restoringEditHistory) return;
+  const snapshot = clone(state);
+  const current = editHistory[editHistoryIndex];
+  if (current && JSON.stringify(current) === JSON.stringify(snapshot)) return;
+  editHistory = editHistory.slice(0, editHistoryIndex + 1);
+  editHistory.push(snapshot);
+  if (editHistory.length > EDIT_HISTORY_LIMIT) editHistory.shift();
+  editHistoryIndex = editHistory.length - 1;
+  updateEditHistoryButtons();
+}
+
+function persistState(recordHistory = true) {
+  setAutosaveState('saving');
+  const persisted = safeStore(STORAGE, JSON.stringify(stateForStorage()));
+  if (persisted) {
+    if (recordHistory) recordEditSnapshot();
+    setAutosaveState('saved');
+  } else {
+    setAutosaveState('error');
+  }
+  return persisted;
+}
+
+const save = () => persistState(true);
 
 function captureStorageSnapshot(keys) {
   const snapshot = {};
