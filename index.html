@@ -361,7 +361,21 @@
             </div>
             <div class="master-toolbar">
               <div class="master-search-box"><span>⌕</span><input id="customerLibrarySearch" placeholder="Tên, công ty, SĐT, email..."></div>
+              <select id="customerLibraryFilter" class="master-filter" aria-label="Lọc khách hàng">
+                <option value="">Tất cả khách hàng</option>
+                <option value="has-phone">Có số điện thoại</option>
+                <option value="missing-phone">Thiếu số điện thoại</option>
+                <option value="has-email">Có email</option>
+                <option value="missing-email">Thiếu email</option>
+              </select>
               <div class="master-result-summary"><span id="customerLibraryResultCount">0</span><small>kết quả</small></div>
+            </div>
+            <div class="master-bulk-bar" id="customerLibraryBulkBar" hidden>
+              <strong id="customerLibraryBulkCount">0 khách hàng đã chọn</strong>
+              <div>
+                <button class="btn" id="clearCustomerLibrarySelection" type="button">Bỏ chọn</button>
+                <button class="btn danger" id="deleteSelectedCustomers" type="button">Xóa đã chọn</button>
+              </div>
             </div>
             <div class="master-table-shell customer-table-shell app-data-table">
               <div class="master-table-head customer-table-grid" aria-hidden="true">
@@ -379,9 +393,31 @@
               </div>
               <button class="btn primary" id="saveCurrentProducts">＋ Lưu sản phẩm trong báo giá</button>
             </div>
-            <div class="master-toolbar">
+            <div class="master-toolbar master-toolbar-products">
               <div class="master-search-box"><span>⌕</span><input id="productCatalogSearch" placeholder="Tên sản phẩm, nhóm, quy cách, đơn vị..."></div>
+              <select id="productCatalogGroupFilter" class="master-filter" aria-label="Lọc theo nhóm sản phẩm">
+                <option value="">Tất cả nhóm</option>
+              </select>
+              <select id="productCatalogCurrencyFilter" class="master-filter" aria-label="Lọc theo tiền tệ">
+                <option value="">Mọi tiền tệ</option>
+                <option value="VND">VND</option>
+                <option value="USD">USD</option>
+                <option value="RUB">RUB</option>
+              </select>
+              <label class="master-duplicate-filter"><input id="productCatalogDuplicateOnly" type="checkbox"> Chỉ bản ghi trùng</label>
               <div class="master-result-summary"><span id="productCatalogResultCount">0</span><small>kết quả</small></div>
+            </div>
+            <div class="master-bulk-bar" id="productCatalogBulkBar" hidden>
+              <strong id="productCatalogBulkCount">0 sản phẩm đã chọn</strong>
+              <div>
+                <button class="btn primary" id="addSelectedCatalogProducts" type="button">Thêm vào báo giá</button>
+                <button class="btn" id="clearProductCatalogSelection" type="button">Bỏ chọn</button>
+                <button class="btn danger" id="deleteSelectedCatalogProducts" type="button">Xóa đã chọn</button>
+              </div>
+            </div>
+            <div class="master-duplicate-summary" id="productCatalogDuplicateSummary" hidden>
+              <strong id="productCatalogDuplicateCount">0 nhóm trùng</strong>
+              <span>Dựa trên nhóm + tên + quy cách + đơn vị. Hệ thống không tự xóa.</span>
             </div>
             <div class="master-table-shell product-table-shell app-data-table">
               <div class="master-table-head product-table-grid" aria-hidden="true">
