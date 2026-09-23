@@ -1001,3 +1001,55 @@ test('updating a saved quotation cannot reuse another quotation number', () => {
   if (previousHistory == null) localStorage.removeItem(historyKey);
   else localStorage.setItem(historyKey, previousHistory);
 });
+
+
+test('product group heading repeats correctly after an ungrouped break', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const addDraft = ({ group = '', name }) => {
+    document.getElementById('addProduct').click();
+    const card = document.querySelector('.product-card:last-child');
+    const nameInput = card.querySelector('[data-product-key="name"]');
+    const groupInput = card.querySelector('[data-product-key="group"]');
+    groupInput.value = group;
+    groupInput.dispatchEvent(new Event('input', { bubbles: true }));
+    nameInput.value = name;
+    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  addDraft({ group: 'V51-GROUP-REPEAT', name: 'Sản phẩm nhóm A' });
+  addDraft({ name: 'Sản phẩm không nhóm' });
+  addDraft({ group: 'V51-GROUP-REPEAT', name: 'Sản phẩm nhóm B' });
+
+  const headings = Array.from(document.querySelectorAll('#qBody .qgroup-row'))
+    .filter(row => row.textContent === 'V51-GROUP-REPEAT');
+  expect(headings.length).toBe(2);
+});
+
+test('professional report suppresses empty terms and empty payment rows', () => {
+  document.querySelector('[data-tab="payment"]').click();
+  const showPayment = document.getElementById('showPaymentBlock');
+  showPayment.checked = true;
+  showPayment.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const method = document.getElementById('paymentMethod');
+  method.value = 'Tiền mặt';
+  method.dispatchEvent(new Event('input', { bubbles: true }));
+  for (const id of ['bankName','bankAccount','bankOwner']) {
+    const input = document.getElementById(id);
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  expect(document.getElementById('paymentPrint').style.display).toBe('block');
+  expect(document.getElementById('pBankName').closest('div').style.display).toBe('none');
+  expect(document.getElementById('pBankAccount').closest('div').style.display).toBe('none');
+  expect(document.getElementById('pBankOwner').closest('div').style.display).toBe('none');
+
+  document.querySelector('[data-tab="terms"]').click();
+  const showTerms = document.getElementById('showTerms');
+  showTerms.checked = true;
+  showTerms.dispatchEvent(new Event('change', { bubbles: true }));
+  const terms = document.getElementById('termsText');
+  terms.value = '   \n   ';
+  terms.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('termsBox').style.display).toBe('none');
+});
