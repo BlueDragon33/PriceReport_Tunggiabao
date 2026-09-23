@@ -520,7 +520,8 @@ const tabMeta = {
   design: ['THIẾT KẾ', 'Mẫu trình bày, màu sắc và định dạng A4.'],
   view: ['XEM BÁO CÁO', 'Chế độ đọc toàn màn hình cho điện thoại và máy tính bảng.'],
   export: ['XUẤT / NHẬP / IN', 'PDF, Excel, OCR và sao lưu dữ liệu.'],
-  presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.']
+  presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.'],
+  settings: ['CÀI ĐẶT ỨNG DỤNG', 'Khởi động, giao diện và hành vi lưu dữ liệu.']
 };
 
 function setMobileMoreMenu(open) {
@@ -537,7 +538,7 @@ function openTab(tab) {
   setMobileMoreMenu(false);
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
-  const appWorkspace = ['dashboard', 'history', 'master', 'system', 'export'].includes(tab);
+  const appWorkspace = ['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab);
 
   document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
@@ -564,6 +565,7 @@ function openTab(tab) {
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'export') renderExportCenter();
   if (tab === 'system') renderSystemWorkspace();
+  if (tab === 'settings') renderSettingsWorkspace();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
     setMajorPanelState('design', false);
@@ -633,6 +635,24 @@ function setSystemStateTone(elementId, state) {
   const card = document.getElementById(elementId);
   if (!card) return;
   card.dataset.state = state || 'unknown';
+}
+
+function renderSettingsWorkspace() {
+  const prefs = getAppPreferences();
+  const startPage = document.getElementById('settingsStartPage');
+  const showHero = document.getElementById('settingsShowDashboardHero');
+  const compact = document.getElementById('settingsCompactManagement');
+  const autoPc = document.getElementById('settingsAutoPcSave');
+
+  if (startPage) startPage.value = prefs.startPage;
+  if (showHero) showHero.checked = prefs.showDashboardHero;
+  if (compact) compact.checked = prefs.compactManagement;
+  if (autoPc) autoPc.checked = prefs.autoPcSave;
+
+  setText('settingsHistoryCount', getHistory().length);
+  setText('settingsCustomerCount', getCustomerLibrary().length);
+  setText('settingsProductCount', getProductCatalog().length);
+  setText('settingsPcSupport', supportsPcFolderAccess() ? 'Có hỗ trợ' : 'Không hỗ trợ');
 }
 
 function renderSystemWorkspace() {
@@ -935,6 +955,33 @@ function renderDashboard() {
 
 document.querySelectorAll('[data-open-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.openTab));
+});
+
+document.getElementById('settingsStartPage')?.addEventListener('change', (event) => {
+  saveAppPreferences({ startPage: event.currentTarget.value });
+});
+document.getElementById('settingsShowDashboardHero')?.addEventListener('change', (event) => {
+  saveAppPreferences({ showDashboardHero: event.currentTarget.checked });
+});
+document.getElementById('settingsCompactManagement')?.addEventListener('change', (event) => {
+  saveAppPreferences({ compactManagement: event.currentTarget.checked });
+});
+document.getElementById('settingsAutoPcSave')?.addEventListener('change', (event) => {
+  saveAppPreferences({ autoPcSave: event.currentTarget.checked });
+});
+document.getElementById('settingsResetUi')?.addEventListener('click', () => {
+  if (!confirm('Đặt lại cài đặt giao diện? Dữ liệu báo giá, lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
+  const current = getUiState();
+  const clean = { appPreferences: Object.assign({}, DEFAULT_APP_PREFERENCES) };
+  if (current && typeof current === 'object') {
+    // Deliberately drop panel/card collapse state while preserving no business data in UI_STATE.
+  }
+  saveUiState(clean);
+  applyAppPreferences();
+  setMajorPanelState('editor', false, false);
+  setMajorPanelState('design', false, false);
+  renderSettingsWorkspace();
+  toast('Đã đặt lại cài đặt giao diện');
 });
 
 document.querySelectorAll('[data-create-quote]').forEach((btn) => {
@@ -2342,6 +2389,38 @@ function setupSmartImport() {
   });
 }
 
+const DEFAULT_APP_PREFERENCES = {
+  startPage: 'dashboard',
+  showDashboardHero: true,
+  compactManagement: false,
+  autoPcSave: true
+};
+
+function getAppPreferences() {
+  const ui = getUiState();
+  const raw = isPlainObject(ui.appPreferences) ? ui.appPreferences : {};
+  const startPage = ['dashboard','history','general'].includes(raw.startPage) ? raw.startPage : 'dashboard';
+  return {
+    startPage,
+    showDashboardHero: raw.showDashboardHero !== false,
+    compactManagement: Boolean(raw.compactManagement),
+    autoPcSave: raw.autoPcSave !== false
+  };
+}
+
+function saveAppPreferences(next) {
+  const ui = getUiState();
+  ui.appPreferences = Object.assign({}, DEFAULT_APP_PREFERENCES, getAppPreferences(), next || {});
+  saveUiState(ui);
+  applyAppPreferences();
+}
+
+function applyAppPreferences() {
+  const prefs = getAppPreferences();
+  document.body.classList.toggle('dashboard-hero-hidden', !prefs.showDashboardHero);
+  document.body.classList.toggle('management-compact', prefs.compactManagement);
+}
+
 function getUiState() {
   try {
     const data = JSON.parse(localStorage.getItem(UI_STATE));
@@ -3039,7 +3118,9 @@ function saveCurrentQuote() {
   toast(currentSaved
     ? (existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá')
     : 'Đã lưu vào lịch sử; trạng thái hiện tại chưa thể autosave');
-  saveCurrentToPc({ notify: false }).catch((error) => console.warn('PC autosave skipped:', error));
+  if (getAppPreferences().autoPcSave) {
+    saveCurrentToPc({ notify: false }).catch((error) => console.warn('PC autosave skipped:', error));
+  }
   return true;
 }
 
@@ -4109,8 +4190,10 @@ function compactLegacyBrandAssets() {
 }
 
 compactLegacyBrandAssets();
-openTab('dashboard');
-renderDashboard();
+applyAppPreferences();
+const initialAppPage = getAppPreferences().startPage;
+openTab(initialAppPage);
+if (initialAppPage === 'dashboard') renderDashboard();
 
 setTimeout(() => {
   if (!document.querySelector('.shell')?.classList.contains('app-workspace')) {
