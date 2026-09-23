@@ -2103,3 +2103,83 @@ html[data-price-report-device-access="offline"] body{overflow:hidden}
   box-shadow:0 0 0 4px rgba(42,125,225,.10),0 14px 32px rgba(25,73,132,.10)!important;
   transform:translateY(-2px)
 }
+
+
+/* =========================
+   V4.3 QUOTATION MANAGEMENT
+   ========================= */
+.history-workspace{max-width:1480px!important;padding:26px 28px 42px!important}
+.history-workspace-header{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin-bottom:16px}
+.workspace-eyebrow{display:block;color:#2c7be8;font-size:9px;font-weight:900;letter-spacing:.15em;margin-bottom:6px}
+.history-workspace-header h2{margin:0;color:#15396f;font-size:24px;line-height:1.2}
+.history-workspace-header p{margin:6px 0 0;color:#7c8ba0;font-size:11px}
+.history-header-actions{display:flex;gap:9px;flex-wrap:wrap}
+.history-header-actions .btn{min-height:39px;border-radius:10px;padding:8px 13px}
+.history-stats-app{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.history-stats-app .history-kpi{border-radius:14px;padding:14px 15px;background:#fff;box-shadow:0 6px 18px rgba(20,49,83,.04)}
+.history-stats-app .history-kpi span{font-size:9.5px}
+.history-stats-app .history-kpi strong{display:block;font-size:19px;margin:3px 0;color:#15396e}
+.history-stats-app .history-kpi small{font-size:8.5px;color:#94a1b1}
+.history-stats-app .history-kpi-wide{grid-column:auto}
+.history-stats-app #historyRevenue{font-size:14px}
+.history-management-panel{background:#fff;border:1px solid #e3eaf2;border-radius:16px;padding:15px;box-shadow:0 8px 24px rgba(20,49,83,.045)}
+.history-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 210px auto;gap:10px;align-items:end;margin-bottom:13px}
+.history-toolbar label{font-size:9px;color:#718096;font-weight:700;margin-bottom:5px}
+.history-search-box{height:38px;border:1px solid #d6e0eb;border-radius:10px;display:flex;align-items:center;gap:7px;padding:0 10px;background:#fbfdff}
+.history-search-box span{font-size:17px;color:#64809e}
+.history-search-box input{height:34px;border:0!important;box-shadow:none!important;padding:0;background:transparent;font-size:10.5px}
+.history-search-box input:focus{outline:0}
+.history-filter-field select{height:38px;border-radius:10px;background:#fbfdff}
+.history-result-summary{height:38px;min-width:78px;border-radius:10px;background:#eef5ff;color:#2464ad;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 10px}
+.history-result-summary span{font-size:14px;font-weight:900}
+.history-result-summary small{font-size:8.5px}
+.history-table-shell{overflow:hidden;border:1px solid #e7edf4;border-radius:12px}
+.history-table-head,.history-table-row{
+  display:grid!important;grid-template-columns:1.05fr 1.45fr .72fr 1fr .86fr 1.25fr;
+  gap:10px;align-items:center
+}
+.history-table-head{min-height:38px;background:#f5f8fc;color:#697a90;padding:0 12px;font-size:8.8px;font-weight:800}
+.history-table-body{gap:0}
+.history-table-row{border:0!important;border-top:1px solid #edf1f5!important;border-radius:0!important;padding:10px 12px!important;box-shadow:none!important;min-height:62px}
+.history-table-row:first-child{border-top:0!important}
+.history-table-row:hover{background:#f9fbfe!important}
+.history-cell{min-width:0;font-size:9.8px;color:#4a5e79}
+.history-cell strong{display:block;color:#243e62;font-size:10.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-quote-cell strong{color:#176fd6}
+.history-cell small{display:block;margin-top:3px;color:#97a2b1;font-size:8.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-value-cell{font-weight:800;color:#294667;white-space:nowrap}
+.history-status-cell{display:flex;align-items:center}
+.history-action-cell{display:flex;justify-content:flex-end;gap:5px}
+.history-action-cell .btn{min-height:29px;padding:5px 8px;font-size:8.8px;border-radius:7px}
+.history-table-shell .history-empty{border:0;border-radius:0;padding:28px}
+
+@media(max-width:1180px){
+  .history-stats-app{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .history-table-head,.history-table-row{grid-template-columns:1fr 1.3fr .7fr 1fr .85fr 1.15fr}
+}
+@media(max-width:760px){
+  .history-workspace{padding:18px 12px 34px!important}
+  .history-workspace-header{flex-direction:column}
+  .history-header-actions{width:100%}
+  .history-header-actions .btn{flex:1}
+  .history-stats-app{grid-template-columns:1fr 1fr}
+  .history-toolbar{grid-template-columns:1fr 1fr}
+  .history-result-summary{grid-column:1/-1;justify-self:start}
+  .history-table-head{display:none!important}
+  .history-table-shell{border:0;border-radius:0;overflow:visible}
+  .history-table-body{gap:9px}
+  .history-table-row{
+    grid-template-columns:1fr auto!important;gap:8px 12px!important;
+    border:1px solid #e2eaf3!important;border-radius:12px!important;padding:12px!important;background:#fff
+  }
+  .history-quote-cell{grid-column:1}
+  .history-status-cell{grid-column:2;grid-row:1}
+  .history-customer-cell,.history-date-cell,.history-value-cell{grid-column:1}
+  .history-date-cell:before{content:"Ngày: ";color:#8a98aa}
+  .history-value-cell:before{content:"Giá trị: ";color:#8a98aa;font-weight:500}
+  .history-action-cell{grid-column:1/-1;justify-content:flex-start;padding-top:5px;border-top:1px solid #edf1f5}
+}
+@media(max-width:480px){
+  .history-stats-app,.history-toolbar{grid-template-columns:1fr}
+  .history-result-summary{grid-column:auto}
+}
