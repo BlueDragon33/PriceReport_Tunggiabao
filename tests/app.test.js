@@ -368,6 +368,12 @@ test('product autocomplete matches catalog names canonically and fills reusable 
 
   document.querySelector('[data-tab="products"]').click();
   const first = document.querySelector('#productEditor .product-card:first-child');
+  const original = Object.fromEntries(
+    ['group','name','pack','unit','qty','price','note'].map(field => [
+      field,
+      first.querySelector('[data-product-key="' + field + '"]')?.value ?? ''
+    ])
+  );
   const name = first.querySelector('[data-product-key="name"]');
   name.value = '  trứng   gà chuẩn  ';
   name.dispatchEvent(new Event('input', { bubbles: true }));
@@ -381,6 +387,13 @@ test('product autocomplete matches catalog names canonically and fills reusable 
 
   if (beforeRaw == null) localStorage.removeItem(key);
   else localStorage.setItem(key, beforeRaw);
+  const restoreCard = document.querySelector('#productEditor .product-card:first-child');
+  Object.entries(original).forEach(([field, value]) => {
+    const input = restoreCard.querySelector('[data-product-key="' + field + '"]');
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
 });
 
 test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
