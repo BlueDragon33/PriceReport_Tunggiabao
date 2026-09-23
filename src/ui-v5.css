@@ -1916,7 +1916,7 @@ body.v5-ui .page-estimate.warn{
   background:var(--v5-warning-soft);
   color:var(--v5-warning);
 }
-body.v5-ui .paper-wrap{
+body.v5-ui #paperWrap{
   width:210mm;
   min-height:297mm;
   margin:0 auto;
