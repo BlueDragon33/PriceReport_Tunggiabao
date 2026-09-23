@@ -1545,6 +1545,7 @@ let selectedProductRows = new Set();
 function clearProductSelection() {
   selectedProductRows.clear();
   syncProductBulkBar();
+  syncProductDuplicateNotice();
 }
 
 function syncProductBulkBar() {
@@ -1559,6 +1560,83 @@ function syncProductBulkBar() {
     selectAll.checked = count > 0 && count === state.products.length;
     selectAll.indeterminate = count > 0 && count < state.products.length;
   }
+}
+
+let ignoredDuplicateSignature = '';
+
+function duplicateFingerprint(product) {
+  const cleanPart = value => String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('vi-VN');
+  const name = cleanPart(product?.name);
+  if (!name) return '';
+  return [name, cleanPart(product?.pack), cleanPart(product?.unit)].join('|');
+}
+
+function productDuplicateGroups() {
+  const grouped = new Map();
+  (state.products || []).forEach((product, index) => {
+    const fingerprint = duplicateFingerprint(product);
+    if (!fingerprint) return;
+    const indices = grouped.get(fingerprint) || [];
+    indices.push(index);
+    grouped.set(fingerprint, indices);
+  });
+  return [...grouped.values()].filter(indices => indices.length > 1);
+}
+
+function duplicateSignature(groups) {
+  return groups.map(indices => indices.join(',')).join('|');
+}
+
+function syncProductDuplicateNotice() {
+  const groups = productDuplicateGroups();
+  const signature = duplicateSignature(groups);
+  const notice = document.getElementById('productDuplicateNotice');
+  const count = document.getElementById('productDuplicateCount');
+  const duplicateIndices = new Set(groups.flat());
+
+  document.querySelectorAll('#productEditor .product-grid-row').forEach((row) => {
+    row.classList.toggle('product-row-duplicate', duplicateIndices.has(Number(row.dataset.productIndex)));
+  });
+
+  if (!notice) return groups;
+  const visible = groups.length > 0 && signature !== ignoredDuplicateSignature;
+  notice.hidden = !visible;
+  if (count && groups.length) {
+    count.textContent = 'Phát hiện ' + duplicateIndices.size + ' dòng trong ' + groups.length + ' nhóm có thể bị trùng';
+  }
+  return groups;
+}
+
+function mergeDuplicateProductGroups() {
+  const groups = productDuplicateGroups();
+  if (!groups.length) return;
+  if (!confirm('Gộp các sản phẩm trùng? Số lượng sẽ được cộng vào dòng đầu tiên của mỗi nhóm.')) return;
+
+  const removeIndices = new Set();
+  groups.forEach(indices => {
+    const [firstIndex, ...rest] = indices;
+    const first = state.products[firstIndex];
+    if (!first) return;
+    const notes = new Set([String(first.note || '').trim()].filter(Boolean));
+    rest.forEach(index => {
+      const product = state.products[index];
+      if (!product) return;
+      first.qty = normalizeNonNegativeNumber(first.qty) + normalizeNonNegativeNumber(product.qty);
+      if (!normalizeNonNegativeNumber(first.price) && normalizeNonNegativeNumber(product.price)) first.price = normalizeNonNegativeNumber(product.price);
+      if (!first.group && product.group) first.group = product.group;
+      if (String(product.note || '').trim()) notes.add(String(product.note).trim());
+      removeIndices.add(index);
+    });
+    first.note = [...notes].join(' · ');
+  });
+
+  state.products = state.products.filter((_, index) => !removeIndices.has(index));
+  clearProductSelection();
+  ignoredDuplicateSignature = '';
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  toast(persisted ? 'Đã gộp các dòng trùng' : 'Đã gộp tạm thời • chưa lưu được');
 }
 
 function applyBulkProductMutation(mutator, message) {
@@ -3243,6 +3321,23 @@ render();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
   applyTungGiaBaoToCurrentQuote();
+});
+
+document.getElementById('reviewDuplicateProducts')?.addEventListener('click', () => {
+  const first = productDuplicateGroups()[0]?.[0];
+  if (!Number.isInteger(first)) return;
+  const row = document.querySelector('#productEditor .product-grid-row[data-product-index="' + first + '"]');
+  row?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  row?.querySelector('[data-product-key="name"]')?.focus();
+});
+
+document.getElementById('mergeDuplicateProducts')?.addEventListener('click', mergeDuplicateProductGroups);
+
+document.getElementById('keepDuplicateProducts')?.addEventListener('click', () => {
+  const groups = productDuplicateGroups();
+  ignoredDuplicateSignature = duplicateSignature(groups);
+  syncProductDuplicateNotice();
+  toast('Đã giữ nguyên các dòng trùng');
 });
 
 document.getElementById('selectAllProducts')?.addEventListener('change', (event) => {
