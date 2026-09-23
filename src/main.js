@@ -3124,27 +3124,58 @@ function renderMasterData() {
   const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
   const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
 
-  const customers = getCustomerLibrary().filter(item => {
-    const haystack = [item.name, item.company, item.phone, item.email].filter(Boolean).join(' ').toLowerCase();
+  const allCustomers = getCustomerLibrary();
+  const allProducts = getProductCatalog();
+  const customers = allCustomers.filter(item => {
+    const haystack = [item.name, item.company, item.phone, item.email, item.address, item.contact]
+      .filter(Boolean).join(' ').toLowerCase();
     return !customerQuery || haystack.includes(customerQuery);
   });
+  const products = allProducts.filter(item => {
+    const haystack = [item.group, item.name, item.pack, item.unit, item.note, item.currency]
+      .filter(Boolean).join(' ').toLowerCase();
+    return !productQuery || haystack.includes(productQuery);
+  });
+
+  setText('customerLibraryCount', allCustomers.length);
+  setText('productCatalogCount', allProducts.length);
+  setText('customerLibraryResultCount', customers.length);
+  setText('productCatalogResultCount', products.length);
+
   customerList.innerHTML = '';
   if (!customers.length) {
     customerList.innerHTML = '<div class="history-empty">Chưa có khách hàng phù hợp.</div>';
   } else {
     customers.forEach(customer => {
       const row = document.createElement('div');
-      row.className = 'master-item';
-      const info = document.createElement('div');
-      info.className = 'master-info';
-      const title = document.createElement('strong');
-      title.textContent = customer.name || customer.company || 'Khách hàng';
-      const meta = document.createElement('span');
-      meta.textContent = [customer.company, customer.phone, customer.email].filter(Boolean).join(' • ');
-      info.append(title, meta);
+      row.className = 'master-item master-table-row customer-table-grid';
+
+      const nameCell = document.createElement('div');
+      nameCell.className = 'master-cell master-name-cell';
+      const name = document.createElement('strong');
+      name.textContent = customer.name || customer.company || 'Khách hàng';
+      const contact = document.createElement('small');
+      contact.textContent = customer.contact || 'Chưa có người liên hệ';
+      nameCell.append(name, contact);
+
+      const companyCell = document.createElement('div');
+      companyCell.className = 'master-cell master-company-cell';
+      companyCell.textContent = customer.company || '—';
+
+      const contactCell = document.createElement('div');
+      contactCell.className = 'master-cell master-contact-cell';
+      const phone = document.createElement('strong');
+      phone.textContent = customer.phone || '—';
+      const email = document.createElement('small');
+      email.textContent = customer.email || 'Chưa có email';
+      contactCell.append(phone, email);
+
+      const addressCell = document.createElement('div');
+      addressCell.className = 'master-cell master-address-cell';
+      addressCell.textContent = customer.address || '—';
 
       const actions = document.createElement('div');
-      actions.className = 'master-actions';
+      actions.className = 'master-actions master-cell master-action-cell';
       const use = document.createElement('button');
       use.className = 'btn primary';
       use.textContent = 'Dùng';
@@ -3156,36 +3187,49 @@ function renderMasterData() {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
         if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
         renderMasterData();
+        renderDashboard();
       });
       actions.append(use, del);
-      row.append(info, actions);
+      row.append(nameCell, companyCell, contactCell, addressCell, actions);
       customerList.appendChild(row);
     });
   }
 
-  const products = getProductCatalog().filter(item => {
-    const haystack = [item.group, item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
-    return !productQuery || haystack.includes(productQuery);
-  });
   productList.innerHTML = '';
   if (!products.length) {
     productList.innerHTML = '<div class="history-empty">Chưa có sản phẩm phù hợp.</div>';
   } else {
     products.forEach(product => {
       const row = document.createElement('div');
-      row.className = 'master-item';
-      const info = document.createElement('div');
-      info.className = 'master-info';
-      const title = document.createElement('strong');
-      title.textContent = product.name || 'Sản phẩm';
-      const meta = document.createElement('span');
+      row.className = 'master-item master-table-row product-table-grid';
       const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
-      meta.textContent = [product.group, product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
-        .filter(Boolean).join(' • ');
-      info.append(title, meta);
+
+      const nameCell = document.createElement('div');
+      nameCell.className = 'master-cell master-name-cell';
+      const name = document.createElement('strong');
+      name.textContent = product.name || 'Sản phẩm';
+      const currency = document.createElement('small');
+      currency.textContent = productCurrency;
+      nameCell.append(name, currency);
+
+      const groupCell = document.createElement('div');
+      groupCell.className = 'master-cell master-group-cell';
+      groupCell.textContent = product.group || '—';
+
+      const packCell = document.createElement('div');
+      packCell.className = 'master-cell master-pack-cell';
+      packCell.textContent = [product.pack, product.unit].filter(Boolean).join(' / ') || '—';
+
+      const priceCell = document.createElement('div');
+      priceCell.className = 'master-cell master-price-cell';
+      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrency);
+
+      const noteCell = document.createElement('div');
+      noteCell.className = 'master-cell master-note-cell';
+      noteCell.textContent = product.note || '—';
 
       const actions = document.createElement('div');
-      actions.className = 'master-actions';
+      actions.className = 'master-actions master-cell master-action-cell';
       const add = document.createElement('button');
       add.className = 'btn primary';
       add.textContent = 'Thêm';
@@ -3197,9 +3241,10 @@ function renderMasterData() {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
         if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
         renderMasterData();
+        renderDashboard();
       });
       actions.append(add, del);
-      row.append(info, actions);
+      row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
       productList.appendChild(row);
     });
   }
