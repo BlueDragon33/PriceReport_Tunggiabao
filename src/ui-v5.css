@@ -4324,3 +4324,9 @@ body.v5-ui .import-issue-actions {
   display: flex;
   justify-content: flex-end;
 }
+
+
+body.v5-ui .import-duplicate-actions {
+  flex-wrap: wrap;
+  gap: var(--v5-space-2);
+}
