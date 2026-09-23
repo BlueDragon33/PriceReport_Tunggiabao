@@ -127,6 +127,40 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V4.9 settings persist application preferences without touching business data', () => {
+  const uiKey = 'tunggiabao-price-report-ui-v2';
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const beforeHistory = localStorage.getItem(historyKey);
+
+  document.querySelector('[data-tab="settings"]').click();
+  expect(document.getElementById('pane-settings').classList.contains('active')).toBe(true);
+
+  const hero = document.getElementById('settingsShowDashboardHero');
+  hero.checked = false;
+  hero.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.body.classList.contains('dashboard-hero-hidden')).toBe(true);
+
+  const compact = document.getElementById('settingsCompactManagement');
+  compact.checked = true;
+  compact.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.body.classList.contains('management-compact')).toBe(true);
+
+  const start = document.getElementById('settingsStartPage');
+  start.value = 'history';
+  start.dispatchEvent(new Event('change', { bubbles: true }));
+  const savedUi = JSON.parse(localStorage.getItem(uiKey));
+  expect(savedUi.appPreferences.startPage).toBe('history');
+  expect(localStorage.getItem(historyKey)).toBe(beforeHistory);
+
+  hero.checked = true;
+  hero.dispatchEvent(new Event('change', { bubbles: true }));
+  compact.checked = false;
+  compact.dispatchEvent(new Event('change', { bubbles: true }));
+  start.value = 'dashboard';
+  start.dispatchEvent(new Event('change', { bubbles: true }));
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('product editor can add a row and keep preview in sync', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
