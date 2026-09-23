@@ -97,3 +97,28 @@ Issue items were keyboard-focusable, but once a user activated an issue and focu
 
 ### Next pass
 Run a consolidated V5.3 gate, inspect failures, and only then decide whether to continue into guided defaults/prefill or package a V5.3 release candidate.
+
+## Pass 5 — Guidance routing and focus resilience
+
+### Finding
+The first consolidated tester pass found three interaction defects that source/DOM coverage had not modeled closely enough:
+- the Escape return handler was registered with `once: true`, so any ordinary key pressed while editing consumed the handler before Escape;
+- live guidance refresh rebuilds the issue list after an input event, which can detach the original issue button and leave Escape pointing at a stale DOM node;
+- product validation routing was incomplete: “Chưa có sản phẩm hợp lệ” fell back to the General step, while named-product warnings did not resolve the actual product row.
+
+### Corrections
+- Escape recovery now remains armed through normal typing and is removed only after Escape is actually handled.
+- Guidance items receive a stable validation key. After a live re-render, Escape resolves the current issue button by that key instead of focusing a detached node.
+- If the issue has disappeared after correction, focus falls back to the connected guidance control instead of a dead element.
+- “Chưa có sản phẩm hợp lệ” explicitly routes to Products.
+- Named-product warnings resolve the matching product row by name and focus that row when possible.
+- Existing row-number errors continue to use their exact source product index.
+
+### Regression coverage
+- Simulates a real `input` event while the guidance panel is open, verifies the issue button is replaced, then verifies Escape returns to the refreshed issue.
+- Verifies a named-product quantity warning focuses the matching product row.
+- Smoke gate now guards the no-product → Products routing contract.
+
+### Next pass
+Run the full V5.3 gate on the final head. If green, perform release-candidate cleanup and documentation/version alignment before merge.
+
