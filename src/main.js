@@ -651,8 +651,9 @@ function openTab(tab) {
     button.classList.toggle('active', activeBlock);
   });
 
+  const primaryNavTab = STUDIO_STAGE_BY_TAB[tab] ? 'general' : tab;
   document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
-    const active = el.dataset.tab === tab;
+    const active = el.dataset.tab === primaryNavTab;
     el.classList.toggle('active', active);
     if (active) el.setAttribute('aria-current', 'page');
     else el.removeAttribute('aria-current');
@@ -1466,167 +1467,7 @@ function focusProductName(index) {
   });
 }
 
-function productField(label, key, value, type, onInput, className = '') {
-  const wrap = document.createElement('label');
-  wrap.className = 'product-field ' + className;
-  const title = document.createElement('span');
-  title.textContent = label;
-  const input = key === 'note' ? document.createElement('textarea') : document.createElement('input');
-  if (key !== 'note') input.type = type || 'text';
-  input.dataset.productKey = key;
-  input.value = value == null ? '' : value;
-  if (type === 'number') {
-    input.min = '0';
-    input.step = key === 'price' ? '1000' : '1';
-    input.inputMode = 'decimal';
-  }
-  if (key === 'name') input.placeholder = 'Tên hàng hóa / dịch vụ';
-  if (key === 'pack') input.placeholder = 'VD: Hộp 10 quả';
-  if (key === 'unit') input.placeholder = 'VD: Hộp, kg, cái';
-  input.addEventListener('input', () => onInput(input));
-  wrap.append(title, input);
-  return wrap;
-}
-
 function renderEditorProducts() {
-  const grid = document.getElementById('productDataGridBody');
-  if (grid) {
-    renderProductDataGrid();
-    return;
-  }
-  const list = document.getElementById('productEditor');
-  if (!list) return;
-  list.innerHTML = '';
-
-  state.products.forEach((product, index) => {
-    const card = document.createElement('article');
-    card.className = 'product-card' + (collapsedProducts.has(index) ? ' collapsed' : '');
-
-    const head = document.createElement('div');
-    head.className = 'product-card-head';
-
-    const identity = document.createElement('div');
-    identity.className = 'product-card-identity';
-    const badge = document.createElement('span');
-    badge.className = 'product-index';
-    badge.textContent = String(index + 1);
-    const titleWrap = document.createElement('div');
-    const title = document.createElement('strong');
-    title.textContent = product.name || 'Sản phẩm chưa đặt tên';
-    const amount = document.createElement('span');
-    amount.className = 'product-live-total';
-    amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
-    titleWrap.append(title, amount);
-    identity.append(badge, titleWrap);
-
-    const actions = document.createElement('div');
-    actions.className = 'product-card-actions';
-
-    const collapse = document.createElement('button');
-    collapse.className = 'mini-action';
-    collapse.type = 'button';
-    collapse.title = collapsedProducts.has(index) ? 'Mở rộng' : 'Thu gọn';
-    collapse.setAttribute('aria-label', collapse.title + ' sản phẩm ' + (index + 1));
-    collapse.textContent = collapsedProducts.has(index) ? '＋' : '−';
-    collapse.addEventListener('click', () => {
-      if (collapsedProducts.has(index)) collapsedProducts.delete(index);
-      else collapsedProducts.add(index);
-      renderEditorProducts();
-    });
-
-    const up = document.createElement('button');
-    up.className = 'mini-action';
-    up.type = 'button';
-    up.title = 'Đưa lên';
-    up.setAttribute('aria-label', 'Đưa sản phẩm ' + (index + 1) + ' lên');
-    up.textContent = '↑';
-    up.disabled = index === 0;
-    up.addEventListener('click', () => {
-      if (index === 0) return;
-      [state.products[index - 1], state.products[index]] = [state.products[index], state.products[index - 1]];
-      save(); renderEditorProducts(); render();
-    });
-
-    const down = document.createElement('button');
-    down.className = 'mini-action';
-    down.type = 'button';
-    down.title = 'Đưa xuống';
-    down.setAttribute('aria-label', 'Đưa sản phẩm ' + (index + 1) + ' xuống');
-    down.textContent = '↓';
-    down.disabled = index === state.products.length - 1;
-    down.addEventListener('click', () => {
-      if (index >= state.products.length - 1) return;
-      [state.products[index + 1], state.products[index]] = [state.products[index], state.products[index + 1]];
-      save(); renderEditorProducts(); render();
-    });
-
-    const duplicate = document.createElement('button');
-    duplicate.className = 'mini-action';
-    duplicate.type = 'button';
-    duplicate.title = 'Nhân bản';
-    duplicate.setAttribute('aria-label', 'Nhân bản sản phẩm ' + (index + 1));
-    duplicate.textContent = '⧉';
-    duplicate.addEventListener('click', () => {
-      state.products.splice(index + 1, 0, clone(product));
-      save(); renderEditorProducts(); render();
-    });
-
-    const remove = document.createElement('button');
-    remove.className = 'mini-action danger-icon';
-    remove.type = 'button';
-    remove.title = 'Xóa';
-    remove.setAttribute('aria-label', 'Xóa sản phẩm ' + (index + 1));
-    remove.textContent = '×';
-    remove.addEventListener('click', () => {
-      if (productHasDraftContent(product) && !confirm('Xóa sản phẩm này khỏi báo giá?')) return;
-      state.products.splice(index, 1);
-      if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
-      collapsedProducts = new Set();
-      save(); renderEditorProducts(); render();
-    });
-
-    actions.append(collapse, up, down, duplicate, remove);
-    head.append(identity, actions);
-
-    const body = document.createElement('div');
-    body.className = 'product-card-body';
-
-    const updateProduct = (key, input, numeric = false) => {
-      if (numeric) {
-        const value = normalizeNonNegativeNumber(input.value);
-        product[key] = value;
-        if (Number(input.value) !== value) input.value = String(value);
-      } else {
-        product[key] = input.value;
-      }
-      if (key === 'name') title.textContent = product.name || 'Sản phẩm chưa đặt tên';
-      amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
-      save();
-      renderPreviewProducts();
-      renderTotals();
-      updateDocumentHealth();
-      syncStudioContext('products');
-      requestAnimationFrame(updatePageEstimate);
-    };
-
-    body.append(
-      productField('Nhóm hàng', 'group', product.group, 'text', input => updateProduct('group', input), 'wide'),
-      productField('Tên sản phẩm', 'name', product.name, 'text', input => updateProduct('name', input), 'wide'),
-      productField('Quy cách', 'pack', product.pack, 'text', input => updateProduct('pack', input)),
-      productField('Đơn vị tính', 'unit', product.unit, 'text', input => updateProduct('unit', input)),
-      productField('Số lượng', 'qty', product.qty, 'number', input => updateProduct('qty', input, true)),
-      productField('Đơn giá', 'price', product.price, 'number', input => updateProduct('price', input, true)),
-      productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'wide')
-    );
-
-    card.append(head, body);
-    list.appendChild(card);
-  });
-
-  const collapseButton = document.getElementById('collapseAllProducts');
-  if (collapseButton) {
-    collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
-  }
   renderProductDataGrid();
 }
 
@@ -3002,6 +2843,12 @@ function renderProductDataGrid() {
         gridEditBaseline = '';
       });
       input.addEventListener('keydown', (event) => {
+        const keyIndex = PRODUCT_GRID_KEYS.indexOf(key);
+        const focusCell = (rowIndex, columnKey) => {
+          const target = document.querySelector('[data-product-grid-index="' + rowIndex + '"][data-product-grid-key="' + columnKey + '"]');
+          target?.focus();
+          target?.select?.();
+        };
         if (event.key === 'Enter') {
           event.preventDefault();
           if (index === state.products.length - 1) {
@@ -3011,8 +2858,20 @@ function renderProductDataGrid() {
             renderEditorProducts();
             focusProductName(index + 1);
           } else {
-            focusProductName(index + 1);
+            focusCell(index + 1, key);
           }
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          focusCell(Math.min(state.products.length - 1, index + 1), key);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          focusCell(Math.max(0, index - 1), key);
+        } else if (event.key === 'ArrowRight' && keyIndex >= 0 && keyIndex < PRODUCT_GRID_KEYS.length - 1) {
+          event.preventDefault();
+          focusCell(index, PRODUCT_GRID_KEYS[keyIndex + 1]);
+        } else if (event.key === 'ArrowLeft' && keyIndex > 0) {
+          event.preventDefault();
+          focusCell(index, PRODUCT_GRID_KEYS[keyIndex - 1]);
         }
       });
       cell.appendChild(input);
@@ -3450,28 +3309,6 @@ initStudioV6();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
   applyTungGiaBaoToCurrentQuote();
-});
-
-document.getElementById('addProduct').addEventListener('click', () => {
-  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
-  const nextIndex = state.products.length - 1;
-  save();
-  renderEditorProducts();
-  render();
-  focusProductName(nextIndex);
-});
-
-document.getElementById('productFocusToggle').addEventListener('click', () => {
-  const shell = document.querySelector('.shell');
-  const enabled = shell.classList.toggle('product-focus');
-  document.getElementById('productFocusToggle').textContent = enabled ? '↙ Thu gọn vùng nhập' : '⛶ Mở rộng vùng nhập';
-  requestAnimationFrame(() => document.getElementById('fit').click());
-});
-
-document.getElementById('collapseAllProducts').addEventListener('click', () => {
-  if (collapsedProducts.size === state.products.length) collapsedProducts.clear();
-  else collapsedProducts = new Set(state.products.map((_, index) => index));
-  renderEditorProducts();
 });
 
 document.getElementById('resetLogoPosition').addEventListener('click', () => {
