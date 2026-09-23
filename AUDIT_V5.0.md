@@ -74,3 +74,6 @@ Current Pass 18 finding: seven Studio editor panes still used the generic legacy
 - Application color swatches are now owned by scoped V5 classes.
 - The initially hidden A4 customer metadata block is now owned by the report stylesheet through `.report-customer-meta`.
 - DOM regression prevents static application inline presentation from returning.
+
+### Pass 19 — semantic token normalization
+Pass 18 found no remaining application/report selector leakage, but repeated semantic colors were still hard-coded across Dashboard, management tables, Studio, Publishing and System surfaces. Pass 19 adds shared tokens for divider, heading/data text, purple accent and danger surface, preserving the exact existing colors while removing cross-workspace palette drift.
