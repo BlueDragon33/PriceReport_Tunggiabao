@@ -72,11 +72,15 @@ test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunti
   const menu = document.getElementById('mobileMoreMenu');
   expect(toggle).toBeTruthy();
   expect(menu.hidden).toBe(true);
+  toggle.focus();
   toggle.click();
   expect(menu.hidden).toBe(false);
   expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  expect(menu.getAttribute('role')).toBe('dialog');
+  expect(menu.contains(document.activeElement)).toBe(true);
   document.getElementById('mobileMoreClose').click();
   expect(menu.hidden).toBe(true);
+  expect(document.activeElement).toBe(toggle);
 });
 
 test('V4.1 dashboard recent quotation opens the selected record directly', () => {
@@ -113,7 +117,16 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
   search.dispatchEvent(new Event('input', { bubbles: true }));
   const result = document.querySelector('#dashboardSearchResults .dashboard-search-result[data-result-type="customer"]');
   expect(result).toBeTruthy();
-  result.click();
+  expect(search.getAttribute('role')).toBe('combobox');
+  expect(document.getElementById('dashboardSearchResults').getAttribute('role')).toBe('listbox');
+  search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  expect(search.getAttribute('aria-activedescendant')).toBeTruthy();
+  const activeOption = document.getElementById(search.getAttribute('aria-activedescendant'));
+  expect(activeOption?.getAttribute('aria-selected')).toBe('true');
+  while (document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active') !== result) {
+    search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  }
+  search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   expect(document.getElementById('pane-customer').classList.contains('active')).toBe(true);
   expect(document.getElementById('customerCompany').value).toBe('Công ty Search V46');
 
