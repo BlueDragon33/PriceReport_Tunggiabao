@@ -148,6 +148,7 @@
 .theme-modern .footer,.theme-blue .footer{color:#fff}
 .footer span{vertical-align:middle}
 .clickable:hover{outline:1px dashed rgba(13,127,242,.55);background:rgba(13,127,242,.025);cursor:pointer}
+.report-customer-meta{display:none;margin-bottom:3mm}
 /* Printing */
 @media print{
   @page{size:A4 portrait;margin:0}
