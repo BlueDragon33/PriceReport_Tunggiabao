@@ -140,35 +140,7 @@ select:disabled{background:#f5f7fa;color:#66758b}
 #pane-general>.card:first-child{padding:10px}
 #pane-general>.card:first-child h3{text-transform:none;font-size:11px;font-weight:500;color:#31435f;margin-bottom:8px}
 
-/* Preview workspace */
-.preview{height:100%;min-width:0;overflow:auto;background:#e8edf2;padding:0 14px 60px}
-.preview-tools{
-  position:sticky;top:0;z-index:40;min-height:52px;margin:0 -14px 10px;padding:6px 13px;
-  background:rgba(250,252,254,.98);backdrop-filter:blur(12px);border-bottom:1px solid #d9e2ea;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(32,53,80,.05)
-}
-.preview-left-tools,.preview-right-tools{display:flex;align-items:center;gap:7px}
-.toolbar-btn{
-  height:36px;border:1px solid #d4dee8;border-radius:8px;padding:0 12px;background:#f4f7fa;color:#3e526e;
-  font-size:11px;font-weight:700;white-space:nowrap
-}
-.toolbar-btn:hover{background:#edf3f8}
-.toolbar-btn.active-preview{background:#1684f6;border-color:#1684f6;color:#fff}
-.toolbar-btn.pdf{background:#0aa668;border-color:#0aa668;color:#fff;min-width:100px}
-.toolbar-btn.print{background:#0879e8;border-color:#0879e8;color:#fff;min-width:82px}
-.toolbar-btn.menu{width:38px;padding:0;font-size:21px;background:#f5f7fa}
-.zoom-control{height:36px;display:flex;align-items:center;border:1px solid #d4dee8;border-radius:8px;overflow:hidden;background:#fff}
-.zoom-btn,.zoom-value{height:34px;border:0;background:#fff;color:#29415f;padding:0}
-.zoom-btn{width:34px;font-size:18px}
-.zoom-value{width:58px;border-left:1px solid #e2e7ed;border-right:1px solid #e2e7ed;font-size:11px}
-.zoom-btn:hover,.zoom-value:hover{background:#f5f8fb}
-.zoom{font-size:10px;color:#5c6b82}
-.page-estimate{
-  display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#edf8f5;color:#217668;
-  font-size:9.5px;font-weight:800;border:1px solid #d1ebe5;white-space:nowrap
-}
-.page-estimate.warn{background:#fff5e7;color:#9a651f;border-color:#f1dfbd}
-.paper-wrap{width:210mm;min-height:297mm;margin:0 auto;transform-origin:top center}
+/* Report document begins here. Preview chrome moved to src/ui-v5.css. */
 .paper{
   --doc:#0b9b8e;position:relative;display:flex;flex-direction:column;width:210mm;min-height:297mm;overflow:hidden;
   background:
