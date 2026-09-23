@@ -462,7 +462,18 @@ const tabMeta = {
   presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.']
 };
 
+function setMobileMoreMenu(open) {
+  const menu = document.getElementById('mobileMoreMenu');
+  const toggle = document.getElementById('mobileMoreToggle');
+  if (!menu || !toggle) return;
+  const enabled = Boolean(open);
+  menu.hidden = !enabled;
+  toggle.setAttribute('aria-expanded', enabled ? 'true' : 'false');
+  document.body.classList.toggle('mobile-more-open', enabled);
+}
+
 function openTab(tab) {
+  setMobileMoreMenu(false);
   const shell = document.querySelector('.shell');
   const appWorkspace = ['dashboard', 'history', 'master'].includes(tab);
 
@@ -583,7 +594,7 @@ function renderDashboard() {
         const row = document.createElement('button');
         row.type = 'button';
         row.className = 'recent-quote-row';
-        row.addEventListener('click', () => openTab('history'));
+        row.addEventListener('click', () => loadQuoteRecord(record));
 
         const quote = document.createElement('strong');
         quote.textContent = data.quoteNo || 'Chưa có mã';
@@ -608,6 +619,13 @@ function renderDashboard() {
 document.querySelectorAll('[data-open-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.openTab));
 });
+
+document.getElementById('mobileMoreToggle')?.addEventListener('click', () => {
+  const menu = document.getElementById('mobileMoreMenu');
+  setMobileMoreMenu(Boolean(menu?.hidden));
+});
+document.getElementById('mobileMoreClose')?.addEventListener('click', () => setMobileMoreMenu(false));
+
 
 document.getElementById('dashboardSearch')?.addEventListener('keydown', (event) => {
   if (event.key !== 'Enter') return;
@@ -3665,6 +3683,10 @@ window.addEventListener('resize', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  if (!document.getElementById('mobileMoreMenu')?.hidden) {
+    setMobileMoreMenu(false);
+    return;
+  }
   if (!document.getElementById('smartImportModal')?.hidden) {
     if (!smartImportBusy) closeSmartImport();
     return;
