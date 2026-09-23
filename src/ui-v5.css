@@ -4236,7 +4236,7 @@ body.v5-ui .import-sheet-picker {
   padding: var(--v5-space-3);
   border: 1px solid var(--v5-border);
   border-radius: var(--v5-radius-lg);
-  background: var(--v5-surface-subtle);
+  background: var(--v5-surface-soft);
 }
 body.v5-ui .import-sheet-picker[hidden] { display: none; }
 body.v5-ui .import-sheet-picker label {
@@ -4246,12 +4246,12 @@ body.v5-ui .import-sheet-picker label {
 }
 body.v5-ui .import-sheet-picker label span,
 body.v5-ui .import-sheet-picker > small {
-  color: var(--v5-text-muted);
+  color: var(--v5-muted);
   font-size: 12px;
 }
 body.v5-ui .import-sheet-picker select {
   width: 100%;
-  min-height: var(--v5-control-height);
+  min-height: var(--v5-control);
 }
 body.v5-ui .import-sheet-picker > small {
   grid-column: 1 / -1;
@@ -4264,7 +4264,7 @@ body.v5-ui .import-issue-review {
   padding: var(--v5-space-3);
   border: 1px solid var(--v5-border);
   border-radius: var(--v5-radius-lg);
-  background: var(--v5-surface-subtle);
+  background: var(--v5-surface-soft);
 }
 body.v5-ui .import-issue-review[hidden] { display: none; }
 body.v5-ui .import-issue-review-head {
@@ -4279,7 +4279,7 @@ body.v5-ui .import-issue-review-head > div {
 }
 body.v5-ui .import-issue-review-head span,
 body.v5-ui .import-issue-item small {
-  color: var(--v5-text-muted);
+  color: var(--v5-muted);
   font-size: 12px;
 }
 body.v5-ui .import-issue-list {
