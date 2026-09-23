@@ -19,7 +19,7 @@
 
       <div class="nav-section-label">Tổng quan</div>
       <button class="active nav-dashboard" data-tab="dashboard"><span class="nav-glyph">⌂</span><span>Trang chủ</span></button>
-      <button data-tab="general"><span class="nav-glyph">＋</span><span>Tạo báo giá</span></button>
+      <button data-tab="general"><span class="nav-glyph">✎</span><span>Soạn báo giá</span></button>
       <button class="nav-secondary" data-tab="history"><span class="nav-glyph">▤</span><span>Quản lý báo giá</span></button>
 
       <div class="nav-section-label">Dữ liệu</div>
@@ -82,7 +82,7 @@
               <h2>Tạo báo giá nhanh, theo dõi rõ, quản lý tập trung.</h2>
               <p>Bắt đầu từ một báo giá mới hoặc tiếp tục công việc gần đây mà không phải tìm trong nhiều màn hình.</p>
               <div class="hero-actions">
-                <button class="btn primary dashboard-primary" type="button" data-open-tab="general">＋ Tạo báo giá mới</button>
+                <button class="btn primary dashboard-primary" type="button" data-create-quote>＋ Tạo báo giá mới</button>
                 <button class="btn dashboard-secondary" type="button" data-open-tab="history">Xem danh sách báo giá</button>
               </div>
             </div>
@@ -95,9 +95,9 @@
           </section>
 
           <section class="dashboard-quick-grid" aria-label="Thao tác nhanh">
-            <button type="button" class="quick-app-card quick-blue" data-open-tab="general"><span class="quick-icon">＋</span><b>Tạo báo giá</b><small>Khởi tạo và nhập nội dung</small></button>
-            <button type="button" class="quick-app-card quick-green" data-open-tab="master"><span class="quick-icon">●</span><b>Khách hàng</b><small>Danh bạ và thông tin mua hàng</small></button>
-            <button type="button" class="quick-app-card quick-orange" data-open-tab="products"><span class="quick-icon">◆</span><b>Sản phẩm</b><small>Danh mục, giá và quy cách</small></button>
+            <button type="button" class="quick-app-card quick-blue" data-create-quote><span class="quick-icon">＋</span><b>Tạo báo giá mới</b><small>Khởi tạo báo giá trống</small></button>
+            <button type="button" class="quick-app-card quick-green" data-open-master="customers"><span class="quick-icon">●</span><b>Khách hàng</b><small>Mở đúng danh bạ khách hàng</small></button>
+            <button type="button" class="quick-app-card quick-orange" data-open-master="products"><span class="quick-icon">◆</span><b>Sản phẩm</b><small>Mở đúng danh mục sản phẩm</small></button>
             <button type="button" class="quick-app-card quick-purple" data-open-tab="export"><span class="quick-icon">⇅</span><b>Xuất báo cáo</b><small>PDF, Excel, nhập và sao lưu</small></button>
           </section>
 
@@ -126,7 +126,7 @@
               <article class="dashboard-panel">
                 <div class="dashboard-panel-head"><div><h3>Thao tác nhanh</h3><p>Công việc thường dùng.</p></div></div>
                 <div class="side-actions">
-                  <button type="button" data-open-tab="general"><span>＋</span><b>Tạo báo giá mới</b><small>Mở studio soạn báo giá</small></button>
+                  <button type="button" data-create-quote><span>＋</span><b>Tạo báo giá mới</b><small>Khởi tạo báo giá trống</small></button>
                   <button type="button" data-open-tab="master"><span>▦</span><b>Quản lý danh mục</b><small>Khách hàng và sản phẩm</small></button>
                   <button type="button" data-open-tab="view"><span>▣</span><b>Xem báo cáo</b><small>Đọc bản A4 toàn màn hình</small></button>
                   <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất / sao lưu</b><small>PDF, Excel và backup</small></button>
@@ -246,7 +246,7 @@
         </div>
 
         <div class="pane" id="pane-master">
-          <div class="card">
+          <div class="card master-section-card" id="customerLibraryCard">
             <h3>Danh bạ khách hàng</h3>
             <div class="btns">
               <button class="btn primary" id="saveCurrentCustomer">Lưu khách hàng hiện tại</button>
@@ -258,7 +258,7 @@
             <div id="customerLibraryList" class="master-list"></div>
           </div>
 
-          <div class="card">
+          <div class="card master-section-card" id="productCatalogCard">
             <h3>Danh mục sản phẩm</h3>
             <div class="btns">
               <button class="btn primary" id="saveCurrentProducts">Lưu sản phẩm trong báo giá</button>
