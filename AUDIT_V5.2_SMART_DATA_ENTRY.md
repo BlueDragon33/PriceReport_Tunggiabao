@@ -85,3 +85,23 @@ DOM regression verifies the issue-review structure exists and remains hidden by 
 
 ### Next pass
 Add a controlled correction path for invalid rows so users can repair a row before applying the import, while preserving the current safe “only valid rows” default.
+
+
+## Pass 4 — Repair invalid rows before import
+
+### Finding
+Row-level issue review identified the exact source row, but the user still had to leave the import flow, edit the original workbook and start again. That breaks the target “just enter data” workflow.
+
+### Corrections
+- Invalid spreadsheet rows now expose inline repair controls for mapped product name, quantity and price.
+- Repair writes back into the imported row buffer, then reruns the same mapping/parser pipeline.
+- A repaired row is inserted into the preview only after it passes validation.
+- If the row is still invalid, it remains excluded and the UI explains that it still needs correction.
+- Original workbook row numbers are preserved in the issue review.
+- No invalid row is silently coerced or imported.
+
+### Regression coverage
+Importer tests now verify an invalid mapped row is excluded, can be corrected in the same row buffer, and becomes a valid product only after reparse.
+
+### Next pass
+Add explicit duplicate-resolution controls with safe defaults: keep all, skip selected duplicate, or merge only when the user asks.
