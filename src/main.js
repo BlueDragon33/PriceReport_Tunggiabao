@@ -1793,6 +1793,7 @@ function productField(label, key, value, type, onInput, className = '') {
 function renderEditorProducts() {
   const list = document.getElementById('productEditor');
   list.innerHTML = '';
+  const fragment = document.createDocumentFragment();
   refreshProductEntrySuggestions();
 
   state.products.forEach((product, index) => {
@@ -1964,8 +1965,9 @@ function renderEditorProducts() {
 
     card.append(head, body);
     syncProductRowValidation(card, product);
-    list.appendChild(card);
+    fragment.appendChild(card);
   });
+  list.appendChild(fragment);
 
   const collapseButton = document.getElementById('collapseAllProducts');
   if (collapseButton) {
@@ -4807,6 +4809,7 @@ function renderMasterData() {
   setText('productCatalogResultCount', products.length);
 
   customerList.innerHTML = '';
+  const customerFragment = document.createDocumentFragment();
   if (!customers.length) {
     customerList.innerHTML = '<div class="history-empty" role="status">Chưa có khách hàng phù hợp.</div>';
   } else {
@@ -4855,11 +4858,13 @@ function renderMasterData() {
       });
       actions.append(use, del);
       row.append(nameCell, companyCell, contactCell, addressCell, actions);
-      customerList.appendChild(row);
+      customerFragment.appendChild(row);
     });
+    customerList.appendChild(customerFragment);
   }
 
   productList.innerHTML = '';
+  const productFragment = document.createDocumentFragment();
   if (!products.length) {
     productList.innerHTML = '<div class="history-empty" role="status">Chưa có sản phẩm phù hợp.</div>';
   } else {
@@ -4909,8 +4914,9 @@ function renderMasterData() {
       });
       actions.append(add, del);
       row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
-      productList.appendChild(row);
+      productFragment.appendChild(row);
     });
+    productList.appendChild(productFragment);
   }
 }
 
