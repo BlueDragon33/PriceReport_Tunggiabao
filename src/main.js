@@ -494,15 +494,6 @@ const STATUS_LABELS = {
   expired: 'Hết hiệu lực'
 };
 
-const STUDIO_WORKFLOW = [
-  { tab: 'general', label: 'Thông tin' },
-  { tab: 'products', label: 'Sản phẩm' },
-  { tab: 'payment', label: 'Thanh toán' },
-  { tab: 'terms', label: 'Điều khoản' },
-  { tab: 'design', label: 'Thiết kế' },
-  { tab: 'export', label: 'Xuất' }
-];
-
 const STUDIO_STAGE_BY_TAB = {
   general: 'general',
   customer: 'general',
@@ -528,55 +519,6 @@ function currentQuoteHistoryState() {
   return JSON.stringify(comparableQuoteForHistory(state)) === JSON.stringify(comparableQuoteForHistory(record.data))
     ? 'saved'
     : 'dirty';
-}
-
-function syncStudioContext(tab = '') {
-  const quoteLabel = document.getElementById('studioQuoteLabel');
-  const quoteStatus = document.getElementById('studioQuoteStatus');
-  const historyState = document.getElementById('studioHistoryState');
-  if (quoteLabel) quoteLabel.textContent = String(state.quoteNo || '').trim() || 'Báo giá mới';
-  if (quoteStatus) {
-    const currentStatus = state.quoteStatus || 'draft';
-    quoteStatus.textContent = statusLabel(currentStatus);
-    quoteStatus.className = 'studio-status-badge status-' + currentStatus;
-  }
-  if (historyState) {
-    const historyMode = currentQuoteHistoryState();
-    historyState.textContent = historyMode === 'saved'
-      ? 'Đã lưu lịch sử'
-      : historyMode === 'dirty'
-        ? 'Có thay đổi chưa lưu'
-        : 'Chưa lưu lịch sử';
-    historyState.className = 'studio-history-state' +
-      (historyMode === 'saved' ? ' saved' : historyMode === 'dirty' ? ' dirty' : '');
-  }
-
-  const stage = STUDIO_STAGE_BY_TAB[tab] || '';
-  document.querySelectorAll('[data-studio-step]').forEach((button) => {
-    const active = Boolean(stage) && button.dataset.studioStep === stage;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-current', active ? 'step' : 'false');
-  });
-
-  const workflowIndex = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
-  const position = document.getElementById('studioWorkflowPosition');
-  const prev = document.getElementById('studioPrevStep');
-  const next = document.getElementById('studioNextStep');
-  if (position) {
-    position.textContent = workflowIndex >= 0
-      ? 'Bước ' + (workflowIndex + 1) + '/' + STUDIO_WORKFLOW.length + ' · ' + STUDIO_WORKFLOW[workflowIndex].label
-      : 'Quy trình ' + STUDIO_WORKFLOW.length + ' bước';
-  }
-  if (prev) {
-    prev.disabled = workflowIndex <= 0;
-    prev.title = workflowIndex > 0 ? 'Về ' + STUDIO_WORKFLOW[workflowIndex - 1].label : 'Đang ở bước đầu';
-  }
-  if (next) {
-    next.disabled = workflowIndex < 0 || workflowIndex >= STUDIO_WORKFLOW.length - 1;
-    next.title = workflowIndex >= 0 && workflowIndex < STUDIO_WORKFLOW.length - 1
-      ? 'Tiếp: ' + STUDIO_WORKFLOW[workflowIndex + 1].label
-      : 'Đang ở bước cuối';
-  }
 }
 
 const tabMeta = {
@@ -696,25 +638,6 @@ function openTab(tab) {
 document.querySelectorAll('.nav button[data-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.tab));
 });
-
-document.getElementById('studioBackHome')?.addEventListener('click', () => openTab('dashboard'));
-document.querySelectorAll('[data-studio-step]').forEach((button) => {
-  button.addEventListener('click', () => openTab(button.dataset.studioStep));
-});
-
-function moveStudioWorkflow(direction) {
-  const activeTab = document.querySelector('.pane.active')?.id?.replace('pane-', '') || '';
-  const stage = STUDIO_STAGE_BY_TAB[activeTab] || '';
-  const index = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
-  const target = STUDIO_WORKFLOW[index + direction];
-  if (target) openTab(target.tab);
-}
-
-document.getElementById('studioPrevStep')?.addEventListener('click', () => moveStudioWorkflow(-1));
-document.getElementById('studioNextStep')?.addEventListener('click', () => moveStudioWorkflow(1));
-document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurrentQuote);
-document.getElementById('studioCheckQuote')?.addEventListener('click', () => document.getElementById('preflightCheck')?.click());
-document.getElementById('studioPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
 document.addEventListener('keydown', (event) => {
   if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return;
@@ -1915,7 +1838,6 @@ function render() {
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
   const activeStudioTab = document.querySelector('.pane.active')?.id?.replace('pane-', '') || '';
-  syncStudioContext(activeStudioTab);
   syncStudioV6Context(activeStudioTab);
   renderStudioCheckPanel();
   syncLayoutEditModeUI();
@@ -3362,6 +3284,16 @@ async function importProductWorkbook(file) {
 function syncStudioV6Context(tab = '') {
   setText('studioV6QuoteName', String(state.quoteTitle || '').trim() || 'Báo giá mới');
   setText('studioV6QuoteNo', String(state.quoteNo || '').trim() || 'Chưa có mã');
+  const historyMode = currentQuoteHistoryState();
+  const historyState = document.getElementById('studioV6HistoryState');
+  if (historyState) {
+    historyState.textContent = historyMode === 'saved'
+      ? 'Đã lưu lịch sử'
+      : historyMode === 'dirty'
+        ? 'Có thay đổi chưa lưu'
+        : 'Chưa lưu lịch sử';
+    historyState.dataset.state = historyMode;
+  }
   const stage = STUDIO_STAGE_BY_TAB[tab] || tab;
   document.querySelectorAll('[data-studio-block]').forEach(button => button.classList.toggle('active', button.dataset.studioBlock === stage));
   syncUndoRedoButtons();
