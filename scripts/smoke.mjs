@@ -166,7 +166,7 @@ if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigratio
 
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
 if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
-if (!html.includes('Xuất/<br>Nhập/In')) fail('Export navigation does not expose Import');
+if (!html.includes('Xuất / Nhập / In')) fail('V4 export navigation does not expose Import clearly');
 if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
 if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
 if (!js.includes('function fitReportView')) fail('Finite responsive report-view sizing is missing');
