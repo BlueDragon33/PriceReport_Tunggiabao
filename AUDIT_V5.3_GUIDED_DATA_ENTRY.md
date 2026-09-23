@@ -58,3 +58,22 @@ Even with guided preflight, users still had to explicitly run validation to know
 
 ### Next pass
 Improve continuous feedback so step-health and the open guidance panel refresh after edits without forcing navigation between steps.
+
+
+## Pass 3 — Continuous guidance refresh
+
+### Finding
+Step health refreshed during Studio navigation, but an already-open guidance panel could become stale after the user corrected a field.
+
+### Corrections
+- Open guidance now refreshes automatically after normal bound-field edits.
+- Product-grid edits refresh the same guidance without forcing a full page rerender.
+- Corrected issues disappear immediately from the visible checklist.
+- Step health and document-health badges stay aligned with the same validation result.
+
+### Regression coverage
+- A missing-company error appears in guidance.
+- Restoring the company name clears that exact issue immediately while the panel remains open.
+
+### Next pass
+Audit keyboard flow and focus restoration across guided corrections, especially from issue item → field → return to validation, so users can complete the workflow without mouse-dependent recovery.
