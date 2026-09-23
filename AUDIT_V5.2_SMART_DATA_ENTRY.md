@@ -184,3 +184,26 @@ DOM tests now verify:
 
 ### Next pass
 Audit Data Library reuse flows and import-to-library handoff so repeated customer/product entry is reduced without creating a second storage engine.
+
+
+## Pass 8 — Data Library reuse without a second storage engine
+
+### Finding
+Customer and product reuse already shared one local-first Data Library, but two friction points remained:
+- saving the current product set required leaving the product-entry surface;
+- reusable-data keys treated formatting differences such as `+84...` vs `0...`, repeated spaces and casing differences as different records.
+
+### Corrections
+- Added a direct “Lưu danh mục” action to the product-entry command bar.
+- The action reuses the existing product-catalog persistence path; no parallel catalog/store was introduced.
+- Customer identity now canonicalizes Vietnamese phone formats for deduplication.
+- Customer fallback identity and product identity now collapse internal whitespace, normalize Unicode and compare case-insensitively.
+- Display values remain untouched; canonicalization is used only for identity/deduplication.
+
+### Regression coverage
+DOM tests verify:
+- the product-entry surface exposes the direct library-save action;
+- saving the same customer once with `+84` and once with local `0` phone format updates one library record instead of creating two.
+
+### Next pass
+Audit the Studio’s product/customer search and keyboard paths for “data-entry-only” users, then clean remaining friction before promoting V5.2 to a release candidate.
