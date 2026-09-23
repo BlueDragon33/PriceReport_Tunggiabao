@@ -59,6 +59,8 @@ test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunti
 });
 
 test('V4.1 dashboard recent quotation opens the selected record directly', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const previousHistory = localStorage.getItem(historyKey);
   document.querySelector('[data-tab="general"]').click();
   document.getElementById('saveQuoteToHistory').click();
   const quoteNo = document.getElementById('quoteNo').value;
@@ -68,6 +70,8 @@ test('V4.1 dashboard recent quotation opens the selected record directly', () =>
   recent.click();
   expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
   expect(document.getElementById('quoteNo').value).toBe(quoteNo);
+  if (previousHistory == null) localStorage.removeItem(historyKey);
+  else localStorage.setItem(historyKey, previousHistory);
 });
 
 test('product editor can add a row and keep preview in sync', () => {
