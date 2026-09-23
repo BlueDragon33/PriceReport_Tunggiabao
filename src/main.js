@@ -762,10 +762,36 @@ document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurren
 document.getElementById('studioCheckQuote')?.addEventListener('click', () => document.getElementById('preflightCheck')?.click());
 document.getElementById('studioPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
+document.getElementById('studioUndo')?.addEventListener('click', () => {
+  if (undoEdit()) toast('Đã hoàn tác');
+});
+document.getElementById('studioRedo')?.addEventListener('click', () => {
+  if (redoEdit()) toast('Đã làm lại');
+});
+updateEditHistoryButtons();
+
 document.addEventListener('keydown', (event) => {
-  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return;
-  event.preventDefault();
-  saveCurrentQuote();
+  if (!(event.ctrlKey || event.metaKey)) return;
+  const key = event.key.toLowerCase();
+  if (key === 's') {
+    event.preventDefault();
+    saveCurrentQuote();
+    return;
+  }
+  if (key === 'z' && event.shiftKey) {
+    event.preventDefault();
+    if (redoEdit()) toast('Đã làm lại');
+    return;
+  }
+  if (key === 'z') {
+    event.preventDefault();
+    if (undoEdit()) toast('Đã hoàn tác');
+    return;
+  }
+  if (key === 'y') {
+    event.preventDefault();
+    if (redoEdit()) toast('Đã làm lại');
+  }
 });
 
 function dashboardStatusClass(status) {
