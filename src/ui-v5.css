@@ -2200,6 +2200,28 @@ body.v5-ui .product-data-grid .product-field textarea{
   resize:none;
   line-height:1.25;
 }
+body.v5-ui .product-field.cell-error input,
+body.v5-ui .product-field.cell-error textarea{
+  border-color:var(--v5-danger);
+  background:var(--v5-danger-soft);
+}
+body.v5-ui .product-field.cell-warning input,
+body.v5-ui .product-field.cell-warning textarea{
+  border-color:var(--v5-warning);
+  background:var(--v5-warning-soft);
+}
+body.v5-ui .product-cell-validation{
+  display:block;
+  margin-top:2px;
+  color:var(--v5-danger);
+  font-size:7.4px;
+  font-weight:750;
+  line-height:1.2;
+}
+body.v5-ui .product-field.cell-warning .product-cell-validation{color:var(--v5-warning)}
+body.v5-ui .product-data-grid .product-field:has(.product-cell-validation){
+  padding-bottom:3px;
+}
 body.v5-ui .product-data-grid .product-field input:hover,
 body.v5-ui .product-data-grid .product-field textarea:hover{
   background:var(--v5-surface-soft);
