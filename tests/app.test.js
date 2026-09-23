@@ -95,6 +95,37 @@ test('V4.1 dashboard recent quotation opens the selected record directly', () =>
   else localStorage.setItem(historyKey, previousHistory);
 });
 
+test('V4.6 dashboard global search can find a saved customer and open it', () => {
+  const customersKey = 'tunggiabao-price-report-customers-v1';
+  const previousCustomers = localStorage.getItem(customersKey);
+  const previousName = document.getElementById('customerName').value;
+  const previousCompany = document.getElementById('customerCompany').value;
+
+  document.getElementById('customerName').value = 'Khách V46';
+  document.getElementById('customerName').dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('customerCompany').value = 'Công ty Search V46';
+  document.getElementById('customerCompany').dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('saveCurrentCustomer').click();
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  const search = document.getElementById('dashboardSearch');
+  search.value = 'Search V46';
+  search.dispatchEvent(new Event('input', { bubbles: true }));
+  const result = document.querySelector('#dashboardSearchResults .dashboard-search-result[data-result-type="customer"]');
+  expect(result).toBeTruthy();
+  result.click();
+  expect(document.getElementById('pane-customer').classList.contains('active')).toBe(true);
+  expect(document.getElementById('customerCompany').value).toBe('Công ty Search V46');
+
+  if (previousCustomers == null) localStorage.removeItem(customersKey);
+  else localStorage.setItem(customersKey, previousCustomers);
+  document.getElementById('customerName').value = previousName;
+  document.getElementById('customerName').dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('customerCompany').value = previousCompany;
+  document.getElementById('customerCompany').dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('product editor can add a row and keep preview in sync', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
