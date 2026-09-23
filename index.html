@@ -1062,7 +1062,7 @@
   </div>
 
   <div class="smart-import-backdrop" id="smartImportModal" hidden>
-    <section class="smart-import-dialog" role="dialog" aria-modal="true" aria-labelledby="smartImportTitle">
+    <section class="smart-import-dialog" id="smartImportDialog" role="dialog" aria-modal="true" aria-labelledby="smartImportTitle" aria-busy="false">
       <header class="smart-import-head">
         <div>
           <strong id="smartImportTitle">NHẬP DỮ LIỆU THÔNG MINH</strong>
@@ -1147,7 +1147,7 @@
       </footer>
     </section>
   </div>
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 <script type="module" src="./src/main.js"></script>
 </body>
