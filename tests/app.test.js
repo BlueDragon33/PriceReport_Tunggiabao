@@ -877,6 +877,7 @@ test('V4.7 publishing center exposes export, import, PC and backup controls in a
   expect(document.getElementById('exportCenterHealth').textContent.length).toBeGreaterThan(0);
   expect(document.getElementById('exportCenterQuote').textContent.length).toBeGreaterThan(0);
   expect(document.getElementById('exportExcel')).toBeTruthy();
+  expect(document.getElementById('exportCsv')).toBeTruthy();
   expect(document.getElementById('importExcelQuick')).toBeTruthy();
   expect(document.getElementById('importHandwritingQuick')).toBeTruthy();
   expect(document.getElementById('exportJson')).toBeTruthy();
