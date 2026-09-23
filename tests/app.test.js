@@ -46,6 +46,30 @@ test('V4 boots into application dashboard and enters quotation studio from a qui
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 });
 
+test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
+  const toggle = document.getElementById('mobileMoreToggle');
+  const menu = document.getElementById('mobileMoreMenu');
+  expect(toggle).toBeTruthy();
+  expect(menu.hidden).toBe(true);
+  toggle.click();
+  expect(menu.hidden).toBe(false);
+  expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  document.getElementById('mobileMoreClose').click();
+  expect(menu.hidden).toBe(true);
+});
+
+test('V4.1 dashboard recent quotation opens the selected record directly', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.getElementById('saveQuoteToHistory').click();
+  const quoteNo = document.getElementById('quoteNo').value;
+  document.querySelector('[data-tab="dashboard"]').click();
+  const recent = document.querySelector('#dashRecentQuotes .recent-quote-row');
+  expect(recent).toBeTruthy();
+  recent.click();
+  expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
+  expect(document.getElementById('quoteNo').value).toBe(quoteNo);
+});
+
 test('product editor can add a row and keep preview in sync', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
