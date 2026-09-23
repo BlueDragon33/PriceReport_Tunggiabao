@@ -30,13 +30,28 @@
       <div class="mobile-more-menu" id="mobileMoreMenu" role="dialog" aria-modal="true" aria-labelledby="mobileMoreTitle" hidden>
         <div class="mobile-more-head"><strong id="mobileMoreTitle">Công cụ báo giá</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
         <div class="mobile-more-grid">
+          <button type="button" data-open-tab="customer"><span>●</span><b>Khách hàng</b></button>
           <button type="button" data-open-tab="products"><span>◆</span><b>Sản phẩm</b></button>
           <button type="button" data-open-tab="payment"><span>₫</span><b>Thanh toán</b></button>
           <button type="button" data-open-tab="terms"><span>≡</span><b>Điều khoản</b></button>
           <button type="button" data-open-tab="design"><span>◉</span><b>Thiết kế</b></button>
+          <button type="button" data-open-tab="view"><span>▣</span><b>Xem A4</b></button>
           <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất & dữ liệu</b></button>
+          <button type="button" data-open-tab="presets"><span>▱</span><b>Lưu mẫu</b></button>
           <button type="button" data-open-tab="system"><span>⚙</span><b>Thiết bị</b></button>
         </div>
+      </div>
+
+      <div class="nav-routing-hooks" hidden aria-hidden="true">
+        <button type="button" data-tab="customer" tabindex="-1"></button>
+        <button type="button" data-tab="products" tabindex="-1"></button>
+        <button type="button" data-tab="payment" tabindex="-1"></button>
+        <button type="button" data-tab="terms" tabindex="-1"></button>
+        <button type="button" data-tab="design" tabindex="-1"></button>
+        <button type="button" data-tab="view" tabindex="-1"></button>
+        <button type="button" data-tab="export" tabindex="-1"></button>
+        <button type="button" data-tab="presets" tabindex="-1"></button>
+        <button type="button" data-tab="system" tabindex="-1"></button>
       </div>
 
       <div class="spacer"></div>
