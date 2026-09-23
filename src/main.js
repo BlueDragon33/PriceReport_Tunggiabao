@@ -4563,6 +4563,13 @@ function canonicalLibraryText(value) {
     .toLocaleLowerCase('vi-VN');
 }
 
+function canonicalSearchText(value) {
+  return canonicalLibraryText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
 function canonicalLibraryPhone(value) {
   let phone = normalizePhone(value);
   if (phone.startsWith('0084') && phone.length >= 12) phone = '0' + phone.slice(4);
@@ -4787,19 +4794,21 @@ function renderMasterData() {
   const productList = document.getElementById('productCatalogList');
   if (!customerList || !productList) return;
 
-  const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
-  const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
+  const customerQuery = canonicalSearchText(document.getElementById('customerLibrarySearch')?.value || '');
+  const productQuery = canonicalSearchText(document.getElementById('productCatalogSearch')?.value || '');
 
   const allCustomers = getCustomerLibrary();
   const allProducts = getProductCatalog();
   const customers = allCustomers.filter(item => {
-    const haystack = [item.name, item.company, item.phone, item.email, item.address, item.contact]
-      .filter(Boolean).join(' ').toLowerCase();
+    const haystack = canonicalSearchText(
+      [item.name, item.company, item.phone, item.email, item.address, item.contact].filter(Boolean).join(' ')
+    );
     return !customerQuery || haystack.includes(customerQuery);
   });
   const products = allProducts.filter(item => {
-    const haystack = [item.group, item.name, item.pack, item.unit, item.note, item.currency]
-      .filter(Boolean).join(' ').toLowerCase();
+    const haystack = canonicalSearchText(
+      [item.group, item.name, item.pack, item.unit, item.note, item.currency].filter(Boolean).join(' ')
+    );
     return !productQuery || haystack.includes(productQuery);
   });
 
