@@ -51,5 +51,20 @@ Every pass must satisfy:
 - Cleanup gate: migrated legacy declarations are marked for deletion; no new ad-hoc override stack.
 
 ## Current execution
-Pass 1 completed: baseline inventory.
-Passes 2–3 started: V5 tokens, isolation guard, shell and navigation.
+Passes 1–17 completed and covered by regression/smoke gates:
+- Inventory and baseline metrics captured.
+- V5 tokens and strict body-scoped application layer established.
+- Shell, desktop/mobile navigation and shared primitives consolidated.
+- Dashboard, quotation management, master data, Studio context/product tools, Publishing, System and Settings migrated.
+- Legacy application CSS removed from the report stylesheet; report/print debt is guarded.
+- Responsive layer reduced to four V5 media-query blocks.
+- Keyboard navigation, focus restoration, busy/empty/error feedback semantics added.
+
+Pass 18 in progress: final tester/visual-consistency cleanup.
+Current Pass 18 finding: seven Studio editor panes still used the generic legacy card language. They are now scoped under one `studio-pane` surface system so General, Customer, Products, Payment, Terms, Design and Presets share spacing, border, radius, heading and help-note treatment.
+
+### Current V5 metrics
+- Application stylesheet: `src/ui-v5.css`, zero `!important`, four responsive blocks.
+- Report/print stylesheet: `src/styles.css`, isolated from application selector families.
+- Report stylesheet debt ceiling: <=45,000 chars, <=428 `!important`, <=6 media blocks.
+- V5 release remains pre-production until Pass 18 QA and CI are green.
