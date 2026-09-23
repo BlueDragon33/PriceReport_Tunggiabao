@@ -303,10 +303,16 @@ test('V5.3 guided correction can return focus to the issue with Escape', async (
   await new Promise(resolve => requestAnimationFrame(resolve));
 
   expect(document.activeElement).toBe(company);
-  company.dispatchEvent(new KeyboardEvent('keydown', { key: 'A', bubbles: true }));
+  company.value = ' ';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  const refreshedIssue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('Thiếu tên công ty'));
+  expect(refreshedIssue).toBeTruthy();
+  expect(refreshedIssue).not.toBe(issue);
   expect(document.activeElement).toBe(company);
+
   company.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  expect(document.activeElement).toBe(issue);
+  expect(document.activeElement).toBe(refreshedIssue);
 
   company.value = previous || 'Tùng Gia Bảo';
   company.dispatchEvent(new Event('input', { bubbles: true }));
