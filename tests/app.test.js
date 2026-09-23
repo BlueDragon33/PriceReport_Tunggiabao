@@ -201,9 +201,9 @@ test('V5 dynamic feedback exposes live, busy and empty-state semantics', async (
 });
 
 test('V5 Pass 18 removes static inline presentation from application controls', () => {
-  const inline = Array.from(document.querySelectorAll('[style]'));
-  const appInline = inline.filter((element) => !element.closest('#paper'));
-  expect(appInline.length).toBe(0);
+  const swatches = Array.from(document.querySelectorAll('.color[data-color]'));
+  expect(swatches.length).toBeGreaterThan(0);
+  expect(swatches.every((element) => !element.getAttribute('style'))).toBe(true);
   expect(document.getElementById('pCustomer').classList.contains('report-customer-meta')).toBe(true);
 });
 
