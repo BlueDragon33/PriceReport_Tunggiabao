@@ -310,3 +310,6 @@ if (!css.includes('.settings-workspace-header') || !css.includes('.management-co
 if (!js.includes("const initialAppPage = getAppPreferences().startPage")) fail('V4.9 start-page preference is not applied during boot');
 if (!js.includes("if (getAppPreferences().autoPcSave)")) fail('V4.9 PC autosave preference is not enforced');
 if (!css.includes('.nav button[data-tab="settings"]{display:none}') && !css.includes('.nav button[data-tab="settings"]')) fail('V4.9 mobile settings navigation rule is missing');
+
+if (!js.includes("import './ui-v5.css';")) fail('V5 application stylesheet is not loaded after legacy CSS');
+if (!html.includes('<body class="v5-ui">')) fail('V5 UI scope is missing from body');
