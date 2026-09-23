@@ -2800,7 +2800,7 @@ body.v5-ui .import-product-preview-head{
 body.v5-ui .import-product-preview-row{
   min-height:31px;
   padding:0 8px;
-  border-top:1px solid #edf1f5;
+  border-top:1px solid var(--v5-divider);
   color:#344a62;
   font-size:8.8px;
 }
@@ -2810,7 +2810,7 @@ body.v5-ui .import-product-preview-row span:nth-child(5){
 }
 body.v5-ui .import-product-preview-more{
   padding:7px 8px;
-  border-top:1px solid #edf1f5;
+  border-top:1px solid var(--v5-divider);
   color:#72839a;
   font-size:8.5px;
 }
