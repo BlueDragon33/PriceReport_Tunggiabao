@@ -5057,8 +5057,9 @@ function addCatalogProduct(product) {
 function catalogDuplicateKeySet(products) {
   const counts = new Map();
   (Array.isArray(products) ? products : []).forEach((product) => {
-    const key = productKey(product);
-    if (!key.replace(/\|/g, '')) return;
+    const key = catalogKey(product);
+    const identity = productKey(product);
+    if (!identity.replace(/\|/g, '')) return;
     counts.set(key, (counts.get(key) || 0) + 1);
   });
   return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
@@ -5141,7 +5142,7 @@ function renderMasterData() {
     if (productQuery && !haystack.includes(productQuery)) return false;
     if (productGroup && item.group !== productGroup) return false;
     if (productCurrency && normalizeCatalogCurrency(item.currency || 'VND') !== productCurrency) return false;
-    if (duplicateOnly && !duplicateKeys.has(productKey(item))) return false;
+    if (duplicateOnly && !duplicateKeys.has(catalogKey(item))) return false;
     return true;
   });
 
@@ -5250,7 +5251,7 @@ function renderMasterData() {
       const name = document.createElement('strong');
       name.textContent = product.name || 'Sản phẩm';
       const currency = document.createElement('small');
-      currency.textContent = productCurrencyCode + (duplicateKeys.has(productKey(product)) ? ' • Có thể trùng' : '');
+      currency.textContent = productCurrencyCode + (duplicateKeys.has(catalogKey(product)) ? ' • Có thể trùng' : '');
       identity.append(name, currency);
       nameCell.append(select, identity);
       row.classList.toggle('bulk-selected', select.checked);
