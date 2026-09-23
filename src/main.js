@@ -518,7 +518,7 @@ function openTab(tab) {
   setMobileMoreMenu(false);
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
-  const appWorkspace = ['dashboard', 'history', 'master'].includes(tab);
+  const appWorkspace = ['dashboard', 'history', 'master', 'export'].includes(tab);
 
   document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
@@ -543,6 +543,7 @@ function openTab(tab) {
   if (tab !== 'design') document.getElementById('designPanel')?.classList.remove('open');
   if (appWorkspace) setPreviewCustomizer(false);
   if (tab === 'dashboard') renderDashboard();
+  if (tab === 'export') renderExportCenter();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
     setMajorPanelState('design', false);
@@ -702,6 +703,42 @@ function renderDashboardSearchResults(rawQuery) {
   }
   box.hidden = false;
   input.setAttribute('aria-expanded', 'true');
+}
+
+function renderExportCenter() {
+  const validation = validateQuote();
+  const namedProducts = (Array.isArray(state.products) ? state.products : [])
+    .filter(product => String(product?.name || '').trim());
+  const history = getHistory();
+  const customers = getCustomerLibrary();
+  const products = getProductCatalog();
+
+  setText('exportCenterQuote', String(state.quoteNo || '').trim() || 'Báo giá mới');
+  setText('exportCenterQuoteStatus', statusLabel(state.quoteStatus || 'draft'));
+  setText('exportCenterProducts', namedProducts.length);
+  setText('exportCenterStored', (history.length + customers.length + products.length) + ' mục');
+  setText('exportBackupHistoryCount', history.length);
+  setText('exportBackupCustomerCount', customers.length);
+  setText('exportBackupProductCount', products.length);
+
+  const health = document.getElementById('exportCenterHealth');
+  const detail = document.getElementById('exportCenterHealthDetail');
+  const card = health?.closest('.export-status-card');
+  card?.classList.remove('health-ok','health-warn','health-error');
+
+  if (validation.errors.length) {
+    setText('exportCenterHealth', validation.errors.length + ' lỗi');
+    setText('exportCenterHealthDetail', 'Cần sửa trước khi in/PDF.');
+    card?.classList.add('health-error');
+  } else if (validation.warnings.length) {
+    setText('exportCenterHealth', validation.warnings.length + ' mục cần kiểm tra');
+    setText('exportCenterHealthDetail', 'Có thể rà lại trước khi phát hành.');
+    card?.classList.add('health-warn');
+  } else {
+    setText('exportCenterHealth', 'Sẵn sàng');
+    setText('exportCenterHealthDetail', 'Không phát hiện lỗi nghiệp vụ.');
+    card?.classList.add('health-ok');
+  }
 }
 
 function renderDashboard() {
@@ -1422,6 +1459,7 @@ function renderLogo() {
   }
   const activeTab = document.querySelector('.nav button[data-tab].active')?.dataset?.tab || '';
   syncStudioContext(activeTab);
+  if (activeTab === 'export') renderExportCenter();
 }
 
 function layoutOffset(key) {
@@ -2524,6 +2562,8 @@ document.getElementById('importJson').addEventListener('change', (event) => {
       syncInputs();
       renderEditorProducts();
       render();
+      renderDashboard();
+      renderExportCenter();
       toast('Đã nhập dữ liệu');
     } catch (error) {
       if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
@@ -2598,6 +2638,8 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       renderHistory();
       renderPresets();
       renderMasterData();
+      renderDashboard();
+      renderExportCenter();
       toast('Đã khôi phục toàn bộ dữ liệu');
     } catch (error) {
       if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
