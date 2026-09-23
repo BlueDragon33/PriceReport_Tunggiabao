@@ -105,3 +105,28 @@ Importer tests now verify an invalid mapped row is excluded, can be corrected in
 
 ### Next pass
 Add explicit duplicate-resolution controls with safe defaults: keep all, skip selected duplicate, or merge only when the user asks.
+
+
+## Pass 5 — Controlled duplicate resolution
+
+### Finding
+Duplicate candidates were visible but the only behavior was “keep everything”. The target workflow requires safe resolution controls without allowing the importer to silently delete or merge business data.
+
+### Corrections
+- Duplicate detection now preserves original workbook row numbers.
+- Default remains “keep all”.
+- Users can explicitly skip an individual later duplicate row for the current import only.
+- Skip actions support immediate Undo.
+- “Merge quantity” appears only when:
+  - the duplicate rows share the same detected product signature;
+  - all duplicate rows have the same unit price;
+  - a quantity column is mapped.
+- Merge updates the first source row quantity, excludes the later duplicate rows, reparses the import, and supports Undo.
+- Rows with different prices are never auto-merged.
+- Excluded source rows are persisted in the import draft so remapping/re-rendering does not resurrect them.
+
+### Regression coverage
+Importer tests verify duplicate source row numbers, quantities, prices and explicit source-row exclusion.
+
+### Next pass
+Add data-normalization and validation improvements for phones, money and text values, then audit autosave/import history interactions before moving deeper into Data Library.
