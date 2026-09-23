@@ -50,11 +50,13 @@
           <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất / Nhập</b></button>
           <button type="button" data-open-tab="presets"><span>▱</span><b>Lưu mẫu</b></button>
           <button type="button" data-open-tab="system"><span>⚙</span><b>Thiết bị & hệ thống</b></button>
+          <button type="button" data-open-tab="settings"><span>☷</span><b>Cài đặt ứng dụng</b></button>
         </div>
       </div>
 
       <div class="nav-section-label">Hệ thống</div>
       <button class="nav-secondary" data-tab="system"><span class="nav-glyph">⚙</span><span>Thiết bị & hệ thống</span></button>
+      <button class="nav-secondary" data-tab="settings"><span class="nav-glyph">☷</span><span>Cài đặt ứng dụng</span></button>
 
       <div class="spacer"></div>
       <div class="device-profile-chip" id="deviceProfileChip" aria-live="polite">
@@ -345,6 +347,79 @@
               <div id="productCatalogList" class="master-list master-table-body"></div>
             </div>
           </section>
+        </div>
+
+        <div class="pane settings-workspace" id="pane-settings">
+          <div class="settings-workspace-header">
+            <div>
+              <span class="workspace-eyebrow">CẤU HÌNH ỨNG DỤNG</span>
+              <h2>Cài đặt ứng dụng</h2>
+              <p>Tùy chỉnh cách PriceReport khởi động và hiển thị mà không thay đổi dữ liệu báo giá.</p>
+            </div>
+            <div class="settings-header-actions">
+              <button class="btn" type="button" data-open-tab="system">⚙ Thiết bị & hệ thống</button>
+              <button class="btn" type="button" data-open-tab="export">⛁ Sao lưu dữ liệu</button>
+            </div>
+          </div>
+
+          <section class="settings-status-grid">
+            <article class="settings-status-card"><span>▤</span><div><small>Báo giá đã lưu</small><strong id="settingsHistoryCount">0</strong></div></article>
+            <article class="settings-status-card"><span>●</span><div><small>Khách hàng</small><strong id="settingsCustomerCount">0</strong></div></article>
+            <article class="settings-status-card"><span>◆</span><div><small>Sản phẩm</small><strong id="settingsProductCount">0</strong></div></article>
+            <article class="settings-status-card"><span>▣</span><div><small>Lưu thư mục PC</small><strong id="settingsPcSupport">Đang kiểm tra</strong></div></article>
+          </section>
+
+          <div class="settings-grid">
+            <section class="settings-panel">
+              <div class="settings-panel-head"><div><h3>Khởi động & điều hướng</h3><p>Chọn nơi ứng dụng mở đầu và mức độ thông tin trên Dashboard.</p></div></div>
+
+              <label class="settings-field">
+                <span><b>Màn hình mở mặc định</b><small>Áp dụng từ lần tải ứng dụng tiếp theo.</small></span>
+                <select id="settingsStartPage">
+                  <option value="dashboard">Trang chủ</option>
+                  <option value="history">Quản lý báo giá</option>
+                  <option value="general">Soạn báo giá</option>
+                </select>
+              </label>
+
+              <label class="settings-switch-row">
+                <span><b>Hiện phần giới thiệu lớn trên Trang chủ</b><small>Tắt để Dashboard ngắn và tập trung vào KPI/bảng dữ liệu.</small></span>
+                <input id="settingsShowDashboardHero" type="checkbox">
+              </label>
+
+              <label class="settings-switch-row">
+                <span><b>Chế độ bảng quản trị gọn</b><small>Giảm chiều cao dòng ở Báo giá, Khách hàng và Sản phẩm trên desktop.</small></span>
+                <input id="settingsCompactManagement" type="checkbox">
+              </label>
+            </section>
+
+            <section class="settings-panel">
+              <div class="settings-panel-head"><div><h3>Lưu & bảo vệ dữ liệu</h3><p>Các tùy chọn này không gửi nội dung báo giá ra Control Plane.</p></div></div>
+
+              <label class="settings-switch-row">
+                <span><b>Tự lưu thêm vào thư mục PC</b><small>Chỉ hoạt động khi Chrome/Edge đã được cấp quyền thư mục.</small></span>
+                <input id="settingsAutoPcSave" type="checkbox">
+              </label>
+
+              <div class="settings-info-row">
+                <span><b>Dữ liệu nghiệp vụ</b><small>Báo giá, khách hàng và danh mục vẫn local-first.</small></span>
+                <strong>Local-first</strong>
+              </div>
+              <div class="settings-info-row">
+                <span><b>Device Gate</b><small>Quản trị thiết bị tách khỏi dữ liệu báo giá.</small></span>
+                <button class="link-button" type="button" data-open-tab="system">Mở trạng thái →</button>
+              </div>
+              <div class="settings-info-row">
+                <span><b>Sao lưu toàn bộ</b><small>Xuất History, mẫu, khách hàng và sản phẩm.</small></span>
+                <button class="link-button" type="button" data-open-tab="export">Mở trung tâm dữ liệu →</button>
+              </div>
+            </section>
+
+            <section class="settings-panel settings-reset-panel">
+              <div class="settings-panel-head"><div><h3>Đặt lại giao diện</h3><p>Chỉ xóa tùy chọn giao diện và trạng thái thu gọn. Không xóa báo giá hay danh bạ.</p></div></div>
+              <button class="btn danger" id="settingsResetUi" type="button">Đặt lại cài đặt giao diện</button>
+            </section>
+          </div>
         </div>
 
         <div class="pane system-workspace" id="pane-system">
