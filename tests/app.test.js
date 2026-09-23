@@ -247,6 +247,36 @@ test('V5.3 Studio stepper exposes validation health per workflow step', () => {
   expect(generalStep.dataset.health).not.toBe('error');
 });
 
+test('V5.3 product warning guidance focuses the matching product row', async () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+
+  let card = document.querySelector('#productEditor .product-card:last-child');
+  const index = card.dataset.productIndex;
+  const name = card.querySelector('[data-product-key="name"]');
+  const qty = card.querySelector('[data-product-key="qty"]');
+
+  name.value = 'V5.3 guided row target';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  card = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
+  const refreshedQty = card.querySelector('[data-product-key="qty"]');
+  refreshedQty.value = '-2';
+  refreshedQty.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('studioCheckQuote').click();
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('V5.3 guided row target') && item.textContent.includes('số lượng âm'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  const targetCard = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
+  expect(targetCard.contains(document.activeElement)).toBe(true);
+
+  targetCard.querySelector('.danger-icon').click();
+  document.getElementById('closeStudioGuidance').click();
+});
+
 test('V5.3 guided validation panel exists and is hidden until requested', () => {
   const panel = document.getElementById('studioGuidancePanel');
   const list = document.getElementById('studioGuidanceList');
