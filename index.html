@@ -309,13 +309,21 @@
             </div>
           </div>
 
-          <section class="master-management-panel master-section-card app-surface-panel" id="customerLibraryCard">
+          <div class="master-data-tabs" role="tablist" aria-label="Loại dữ liệu">
+            <button class="active" type="button" data-master-tab="customers" role="tab" aria-selected="true">● Khách hàng</button>
+            <button type="button" data-master-tab="products" role="tab" aria-selected="false">◆ Sản phẩm</button>
+          </div>
+
+          <section class="master-management-panel master-section-card app-surface-panel" id="customerLibraryCard" data-master-panel="customers">
             <div class="master-panel-head">
               <div>
                 <span class="master-panel-icon">●</span>
                 <div><h3>Danh bạ khách hàng</h3><p>Lưu và sử dụng lại thông tin khách hàng cho báo giá mới.</p></div>
               </div>
-              <button class="btn primary" id="saveCurrentCustomer">＋ Lưu khách hàng hiện tại</button>
+              <div class="master-panel-actions">
+                <button class="btn" id="exportCustomerCsv" type="button">CSV</button>
+                <button class="btn primary" id="saveCurrentCustomer">＋ Lưu khách hàng hiện tại</button>
+              </div>
             </div>
             <div class="master-toolbar">
               <div class="master-search-box"><span>⌕</span><input id="customerLibrarySearch" placeholder="Tên, công ty, SĐT, email..."></div>
@@ -329,23 +337,45 @@
             </div>
           </section>
 
-          <section class="master-management-panel master-section-card app-surface-panel" id="productCatalogCard">
+          <section class="master-management-panel master-section-card app-surface-panel" id="productCatalogCard" data-master-panel="products" hidden>
             <div class="master-panel-head">
               <div>
                 <span class="master-panel-icon product-icon">◆</span>
                 <div><h3>Danh mục sản phẩm</h3><p>Lưu giá, quy cách và nhóm sản phẩm để thêm nhanh vào báo giá.</p></div>
               </div>
-              <button class="btn primary" id="saveCurrentProducts">＋ Lưu sản phẩm trong báo giá</button>
+              <div class="master-panel-actions">
+                <button class="btn" id="catalogAddProduct" type="button">＋ Thêm mới</button>
+                <label class="btn file-btn" for="catalogExcelInput">▦ Nhập Excel</label>
+                <input class="hidden-input" id="catalogExcelInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <button class="btn" id="exportCatalogCsv" type="button">CSV</button>
+                <button class="btn primary" id="saveCurrentProducts">Lưu từ báo giá</button>
+              </div>
             </div>
             <div class="master-toolbar">
               <div class="master-search-box"><span>⌕</span><input id="productCatalogSearch" placeholder="Tên sản phẩm, nhóm, quy cách, đơn vị..."></div>
               <div class="master-result-summary"><span id="productCatalogResultCount">0</span><small>kết quả</small></div>
             </div>
-            <div class="master-table-shell product-table-shell app-data-table">
-              <div class="master-table-head product-table-grid" aria-hidden="true">
-                <span>Sản phẩm</span><span>Nhóm</span><span>Quy cách / ĐVT</span><span>Đơn giá</span><span>Ghi chú</span><span>Thao tác</span>
+            <div class="catalog-bulk-bar" id="catalogBulkBar" hidden>
+              <strong id="catalogBulkCount">0 dòng được chọn</strong>
+              <select id="catalogBulkAction" aria-label="Thao tác hàng loạt danh mục">
+                <option value="group">Đổi nhóm</option>
+                <option value="unit">Đổi ĐVT</option>
+                <option value="price-up">Tăng giá %</option>
+                <option value="price-down">Giảm giá %</option>
+                <option value="duplicate">Nhân bản</option>
+                <option value="delete">Xóa</option>
+              </select>
+              <input id="catalogBulkValue" placeholder="Giá trị áp dụng" aria-label="Giá trị thao tác hàng loạt danh mục">
+              <button class="btn primary" id="applyCatalogBulk" type="button">Áp dụng</button>
+              <button class="btn" id="clearCatalogSelection" type="button">Bỏ chọn</button>
+            </div>
+            <div class="product-grid-shell catalog-product-grid" id="catalogProductGridShell">
+              <div class="product-grid-head catalog-product-grid-head" role="row">
+                <span class="product-grid-select-head"><input id="catalogSelectAll" type="checkbox" aria-label="Chọn tất cả sản phẩm"> STT</span>
+                <span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Đơn giá</span><span>Ghi chú</span><span></span>
               </div>
-              <div id="productCatalogList" class="master-list master-table-body"></div>
+              <div class="product-data-grid" id="productCatalogGridBody" role="grid" aria-label="Danh mục sản phẩm"></div>
+              <div class="product-grid-empty" id="catalogGridEmpty" hidden><strong>Chưa có sản phẩm</strong><span>Thêm mới, nhập Excel hoặc lưu từ báo giá hiện tại.</span></div>
             </div>
           </section>
         </div>
