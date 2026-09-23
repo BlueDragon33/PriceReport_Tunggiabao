@@ -4120,10 +4120,10 @@ function validateQuote(data = state) {
       errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
       return;
     }
-    if (name && qty < 0) warnings.push('Sản phẩm "' + name + '" có số lượng âm.');
-    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
-    if (name && price < 0) warnings.push('Sản phẩm "' + name + '" có đơn giá âm.');
-    else if (name && data.showPrice && price === 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
+    if (name && qty < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng âm.');
+    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng bằng 0.');
+    if (name && price < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có đơn giá âm.');
+    else if (name && data.showPrice && price === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" chưa có đơn giá.');
   });
 
   if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
@@ -4147,19 +4147,39 @@ function validateQuote(data = state) {
 
 function validationTargetForMessage(message) {
   const text = String(message || '');
+  const productField = /số lượng/i.test(text) ? 'qty' : /đơn giá/i.test(text) ? 'price' : 'name';
   const productRowMatch = text.match(/Dòng sản phẩm\s+(\d+)/i);
   if (productRowMatch) {
-    return { tab: 'products', productIndex: Math.max(0, Number(productRowMatch[1]) - 1) };
+    return {
+      tab: 'products',
+      productIndex: Math.max(0, Number(productRowMatch[1]) - 1),
+      productKey: productField
+    };
   }
   if (/chưa có sản phẩm hợp lệ/i.test(text)) {
-    return { tab: 'products', productIndex: 0 };
+    return { tab: 'products', productIndex: 0, productKey: 'name' };
   }
   const productNameMatch = text.match(/Sản phẩm\s+"([^"]+)"/i);
   if (productNameMatch) {
     const productName = productNameMatch[1].trim();
     const productIndex = (Array.isArray(state.products) ? state.products : [])
       .findIndex(product => String(product?.name || '').trim() === productName);
-    return { tab: 'products', productIndex: productIndex >= 0 ? productIndex : null };
+    return {
+      tab: 'products',
+      productIndex: productIndex >= 0 ? productIndex : null,
+      productKey: productField
+    };
+  }
+
+  if (/Có giảm giá\/VAT\/phí khác nhưng bảng tổng cộng đang bị ẩn/i.test(text)) {
+    return { tab: 'payment', fieldId: 'showTotals' };
+  }
+  if (/đã bao gồm\s*VAT/i.test(text)) {
+    return { tab: 'terms', fieldId: 'termsText' };
+  }
+  if (/Thông tin tài khoản ngân hàng đang nhập dở/i.test(text)) {
+    const fieldId = !state.bankName ? 'bankName' : !state.bankAccount ? 'bankAccount' : !state.bankOwner ? 'bankOwner' : 'bankName';
+    return { tab: 'payment', fieldId };
   }
 
   const rules = [
@@ -4170,7 +4190,6 @@ function validationTargetForMessage(message) {
     [/ngày báo giá/i, { tab: 'general', fieldId: 'quoteDate' }],
     [/email khách hàng/i, { tab: 'customer', fieldId: 'customerEmail' }],
     [/ngân hàng|tài khoản/i, { tab: 'payment', fieldId: 'bankName' }],
-    [/giảm giá|VAT|phí khác|tổng cộng/i, { tab: 'payment', fieldId: 'discountPct' }],
     [/điều khoản/i, { tab: 'terms', fieldId: 'termsText' }],
     [/chữ ký|chức danh/i, { tab: 'terms', fieldId: 'rightTitle' }]
   ];
@@ -4209,7 +4228,9 @@ function focusValidationTarget(target, returnTarget = null) {
 
     if (Number.isInteger(target.productIndex)) {
       const card = document.querySelector('#productEditor .product-card[data-product-index="' + target.productIndex + '"]');
-      const input = card?.querySelector('[data-product-key="name"], input, select, textarea');
+      const productKey = target.productKey || 'name';
+      const input = card?.querySelector('[data-product-key="' + productKey + '"]')
+        || card?.querySelector('[data-product-key="name"], input, select, textarea');
       card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       input?.focus?.();
       installReturnKey(input);
@@ -4259,6 +4280,7 @@ function renderStudioGuidance({ focusFirst = false } = {}) {
       item.tone,
       target?.tab || '',
       Number.isInteger(target?.productIndex) ? String(target.productIndex) : '',
+      target?.productKey || '',
       target?.fieldId || '',
       item.message
     ].join('|');
