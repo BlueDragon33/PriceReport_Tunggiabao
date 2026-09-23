@@ -547,6 +547,16 @@ test('smart import dialog can parse corrected handwriting text for review withou
 });
 
 
+test('smart import exposes one editable Excel mapping review surface', () => {
+  document.getElementById('openSmartImport').click();
+  expect(document.getElementById('smartImportMapping')).toBeTruthy();
+  expect(document.getElementById('smartImportMappingRows')).toBeTruthy();
+  expect(document.getElementById('smartImportMappingStatus')).toBeTruthy();
+  expect(document.getElementById('smartImportProductPreview')).toBeTruthy();
+  expect(document.querySelector('.import-product-preview-head').textContent).toContain('Tên sản phẩm');
+  document.getElementById('cancelSmartImport').click();
+});
+
 test('collection writes do not show false success when localStorage rejects a customer save', () => {
   const nativeSetItem = Storage.prototype.setItem;
   const key = 'tunggiabao-price-report-customers-v1';
