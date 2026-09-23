@@ -809,6 +809,9 @@ test('V5.5 starting a new import clears stale review while the new file is parsi
   expect(document.getElementById('dataLibraryImportPreviewBody').textContent).toBe('');
   expect(document.getElementById('applyDataLibraryImport').disabled).toBe(true);
 
+  await vi.waitFor(() => {
+    expect(typeof releaseRead).toBe('function');
+  });
   releaseRead();
   await vi.waitFor(() => {
     expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
