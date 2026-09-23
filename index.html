@@ -93,9 +93,12 @@
               <h1>Quản lý báo giá dễ dàng hơn mỗi ngày</h1>
               <p>Tập trung báo giá, khách hàng, sản phẩm và thiết bị trong một ứng dụng.</p>
             </div>
-            <div class="dashboard-search">
-              <span aria-hidden="true">⌕</span>
-              <input id="dashboardSearch" type="search" placeholder="Tìm mã báo giá hoặc khách hàng..." autocomplete="off">
+            <div class="dashboard-search-wrap">
+              <div class="dashboard-search">
+                <span aria-hidden="true">⌕</span>
+                <input id="dashboardSearch" type="search" placeholder="Tìm báo giá, khách hàng, sản phẩm..." autocomplete="off" aria-controls="dashboardSearchResults" aria-expanded="false">
+              </div>
+              <div id="dashboardSearchResults" class="dashboard-search-results" hidden></div>
             </div>
           </header>
 
