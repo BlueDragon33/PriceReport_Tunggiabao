@@ -57,7 +57,11 @@ test('V4.5 quotation studio shows current quote context and navigable workflow s
   expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
   expect(document.querySelector('[data-studio-step="products"]').classList.contains('active')).toBe(true);
 
+  document.querySelector('[data-studio-step="design"]').click();
+  expect(document.getElementById('designPanel').classList.contains('open')).toBe(true);
+
   document.getElementById('studioBackHome').click();
+  expect(document.getElementById('designPanel').classList.contains('open')).toBe(false);
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 
   document.querySelector('[data-tab="general"]').click();
