@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseGenericProductRows, parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2613,9 +2613,25 @@ async function parseExcelFile(file) {
   const candidates = sheetNames.map((sheetName) => {
     const worksheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
-    const parsed = parseSpreadsheetRows(rows);
+    const reportParsed = parseSpreadsheetRows(rows);
+    const genericParsed = parseGenericProductRows(rows);
+    let parsed = reportParsed;
+    if (genericParsed.products.length > reportParsed.products.length) {
+      parsed = Object.assign({}, reportParsed, {
+        source: 'excel',
+        products: genericParsed.products,
+        groups: genericParsed.groups,
+        layoutHints: Object.assign({}, reportParsed.layoutHints || {}, genericParsed.layoutHints || {}),
+        warnings: [...new Set([
+          ...(reportParsed.warnings || []).filter(message => !/Không tìm thấy dòng sản phẩm/i.test(message)),
+          ...(genericParsed.warnings || [])
+        ])],
+        columnMapping: genericParsed.columnMapping || []
+      });
+    }
     const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
-    const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
+    const mappingBonus = (parsed.columnMapping || []).length * 2;
+    const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount + mappingBonus;
     return { sheetName, parsed, score, rowCount: rows.filter(row => Array.isArray(row) && row.some(value => String(value ?? '').trim())).length };
   }).sort((a, b) => b.score - a.score);
   smartImportExcelCandidates = candidates;
