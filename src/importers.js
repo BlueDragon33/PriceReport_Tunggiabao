@@ -45,7 +45,7 @@ const looksLikeGroup = (row) => {
 };
 
 const parseNumber = (value) => {
-  if (typeof value === 'number' && Number.isFinite(value)) return { valid: true, value: Math.max(0, value) };
+  if (typeof value === 'number' && Number.isFinite(value)) return { valid: true, value };
   const raw = clean(value);
   if (!raw) return { valid: false, value: 0 };
   const text = raw
@@ -53,7 +53,7 @@ const parseNumber = (value) => {
     .replace(/[.,](?=\d{3}(?:\D|$))/g, '')
     .replace(',', '.');
   const parsed = Number(text);
-  return Number.isFinite(parsed) ? { valid: true, value: Math.max(0, parsed) } : { valid: false, value: 0 };
+  return Number.isFinite(parsed) ? { valid: true, value: parsed } : { valid: false, value: 0 };
 };
 
 const numberValue = (value) => parseNumber(value).value;
@@ -255,6 +255,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     };
     const name = clean(rawProduct.name);
     const parsedPrice = parseNumber(rawProduct.price);
+    const parsedQty = mapping.qty != null ? parseNumber(rawProduct.qty) : { valid: true, value: 1 };
 
     if ((!name || !parsedPrice.valid) && values.length === 1) {
       currentGroup = values[0];
@@ -264,11 +265,18 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
 
     if (!name && !parsedPrice.valid) return;
     if (/^(tong|tong cong|cong|subtotal|total)$/i.test(fold(name))) return;
-    if (!name || !parsedPrice.valid) {
+    if (!name || !parsedPrice.valid || parsedPrice.value < 0 || (parsedQty.valid && parsedQty.value < 0)) {
+      const reasons = [];
+      if (!name) reasons.push('missing-name');
+      if (!parsedPrice.valid) reasons.push('invalid-price');
+      if (parsedPrice.valid && parsedPrice.value < 0) reasons.push('negative-price');
+      if (parsedQty.valid && parsedQty.value < 0) reasons.push('negative-qty');
       invalidRows.push({
         rowNumber: headerIndex + offset + 2,
         name,
-        price: clean(rawProduct.price)
+        price: clean(rawProduct.price),
+        qty: clean(rawProduct.qty),
+        reasons
       });
       return;
     }
@@ -279,7 +287,25 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     products.push(product);
   });
 
-  return { products, groups, invalidRows };
+  const duplicateMap = new Map();
+  products.forEach((product, index) => {
+    const signature = [product.name, product.unit, product.pack]
+      .map(value => fold(clean(value)))
+      .join('|');
+    if (!signature.replace(/\|/g, '')) return;
+    const indexes = duplicateMap.get(signature) || [];
+    indexes.push(index);
+    duplicateMap.set(signature, indexes);
+  });
+  const duplicates = [...duplicateMap.entries()]
+    .filter(([, indexes]) => indexes.length > 1)
+    .map(([signature, indexes]) => ({
+      signature,
+      indexes,
+      names: indexes.map(index => products[index].name)
+    }));
+
+  return { products, groups, invalidRows, duplicates };
 }
 
 export function parseSpreadsheetRows(rows) {
