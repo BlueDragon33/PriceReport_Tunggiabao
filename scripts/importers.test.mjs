@@ -236,3 +236,31 @@ assert.equal(pastedNoHeader.spreadsheetMeta.headers[0], 'Cột A');
 assert.equal(pastedNoHeader.spreadsheetMeta.mapping.unit, 1);
 assert.equal(pastedNoHeader.spreadsheetMeta.mapping.qty, 2);
 assert.equal(pastedNoHeader.spreadsheetMeta.mapping.price, 3);
+
+
+const invalidNegative = parseMappedSpreadsheetRows([
+  ['Tên sản phẩm', 'Số lượng', 'Đơn giá'],
+  ['Giá âm', 1, -12000],
+  ['SL âm', -2, 15000],
+  ['Hợp lệ', 2, 15000]
+], {
+  headerIndex: 0,
+  mapping: { name: 0, qty: 1, price: 2 }
+});
+assert.equal(invalidNegative.products.length, 1);
+assert.equal(invalidNegative.invalidRows.length, 2);
+assert.ok(invalidNegative.invalidRows[0].reasons.includes('negative-price'));
+assert.ok(invalidNegative.invalidRows[1].reasons.includes('negative-qty'));
+
+const duplicateRows = parseMappedSpreadsheetRows([
+  ['Tên sản phẩm', 'ĐVT', 'Đơn giá'],
+  [' Trứng gà tươi ', 'Hộp', 28000],
+  ['Trứng gà tươi', 'Hộp', 28500],
+  ['Trứng vịt', 'Khay', 85000]
+], {
+  headerIndex: 0,
+  mapping: { name: 0, unit: 1, price: 2 }
+});
+assert.equal(duplicateRows.products.length, 3);
+assert.equal(duplicateRows.duplicates.length, 1);
+assert.deepEqual(duplicateRows.duplicates[0].indexes, [0, 1]);
