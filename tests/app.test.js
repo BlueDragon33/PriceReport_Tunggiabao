@@ -273,6 +273,8 @@ test('V5.3 guided correction can return focus to the issue with Escape', async (
   await new Promise(resolve => requestAnimationFrame(resolve));
 
   expect(document.activeElement).toBe(company);
+  company.dispatchEvent(new KeyboardEvent('keydown', { key: 'A', bubbles: true }));
+  expect(document.activeElement).toBe(company);
   company.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   expect(document.activeElement).toBe(issue);
 
