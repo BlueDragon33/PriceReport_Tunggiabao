@@ -1489,7 +1489,13 @@ function productField(label, key, value, type, onInput, className = '') {
 }
 
 function renderEditorProducts() {
+  const grid = document.getElementById('productDataGridBody');
+  if (grid) {
+    renderProductDataGrid();
+    return;
+  }
   const list = document.getElementById('productEditor');
+  if (!list) return;
   list.innerHTML = '';
 
   state.products.forEach((product, index) => {
@@ -2982,14 +2988,14 @@ function renderProductDataGrid() {
       input.addEventListener('input', () => {
         if (key === 'qty' || key === 'price') product[key] = normalizeGridNumber(input.value);
         else product[key] = input.value;
-        if (key === 'name') fillProductFromCatalog(product);
+        const catalogFilled = key === 'name' ? fillProductFromCatalog(product) : false;
         save();
         renderPreviewProducts();
         renderTotals();
         updateDocumentHealth();
         renderStudioCheckPanel();
         syncStudioV6Context('products');
-        if (key === 'name') scheduleProductGridRender();
+        if (catalogFilled) scheduleProductGridRender();
       });
       input.addEventListener('blur', () => {
         if (gridEditBaseline && gridEditBaseline !== quoteSnapshotString()) pushQuoteUndoSnapshot(gridEditBaseline);
@@ -3132,6 +3138,44 @@ function parseClipboardTable(text) {
     .filter(line => line.trim())
     .map(line => line.split('\t'));
 }
+function chooseWorkbookSheet(sheetNames) {
+  if (!Array.isArray(sheetNames) || sheetNames.length <= 1) return Promise.resolve(sheetNames?.[0] || '');
+  const host = document.getElementById('productImportSummary');
+  if (!host) return Promise.resolve(sheetNames[0]);
+  host.innerHTML = '';
+  host.dataset.tone = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'product-sheet-picker';
+  const label = document.createElement('label');
+  label.textContent = 'Bạn muốn lấy sheet nào?';
+  const select = document.createElement('select');
+  sheetNames.forEach((name) => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+  const apply = document.createElement('button');
+  apply.type = 'button';
+  apply.className = 'btn primary';
+  apply.textContent = 'Đọc sheet';
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'btn';
+  cancel.textContent = 'Hủy';
+  wrap.append(label, select, apply, cancel);
+  host.appendChild(wrap);
+  return new Promise((resolve) => {
+    const finish = (value) => {
+      host.innerHTML = '';
+      resolve(value);
+    };
+    apply.addEventListener('click', () => finish(select.value), { once: true });
+    cancel.addEventListener('click', () => finish(''), { once: true });
+    select.focus();
+  });
+}
+
 async function importProductWorkbook(file) {
   if (!file) return;
   setProductImportSummary('Đang đọc ' + file.name + '…');
@@ -3140,14 +3184,10 @@ async function importProductWorkbook(file) {
     const bytes = await file.arrayBuffer();
     const workbook = XLSX.read(bytes, { type: 'array', cellDates: true });
     if (!workbook.SheetNames.length) throw new Error('Workbook không có sheet.');
-    let sheetName = workbook.SheetNames[0];
-    if (workbook.SheetNames.length > 1) {
-      const requested = window.prompt(
-        'File có nhiều sheet. Nhập tên sheet cần lấy:\n' + workbook.SheetNames.join(' · '),
-        sheetName
-      );
-      if (requested === null) return;
-      if (workbook.SheetNames.includes(requested)) sheetName = requested;
+    const sheetName = await chooseWorkbookSheet(workbook.SheetNames);
+    if (!sheetName) {
+      setProductImportSummary('Đã hủy nhập Excel.');
+      return;
     }
     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: false });
     const products = rowsToProducts(rows);
@@ -3280,6 +3320,8 @@ function openCommandPalette() {
   const input = document.getElementById('commandPaletteInput');
   if (!modal) return;
   modal.hidden = false;
+  if (input) input.value = '';
+  filterCommandPalette('');
   requestAnimationFrame(() => input?.focus());
 }
 function closeCommandPalette() {
@@ -3317,6 +3359,7 @@ function initStudioV6() {
   document.getElementById('studioUndo')?.addEventListener('click', undoQuoteChange);
   document.getElementById('studioRedo')?.addEventListener('click', redoQuoteChange);
   document.getElementById('studioCommandPalette')?.addEventListener('click', openCommandPalette);
+  document.getElementById('studioV6More')?.addEventListener('click', openCommandPalette);
   document.getElementById('commandPaletteClose')?.addEventListener('click', closeCommandPalette);
   document.getElementById('commandPaletteModal')?.addEventListener('click', event => {
     if (event.target?.id === 'commandPaletteModal') closeCommandPalette();
