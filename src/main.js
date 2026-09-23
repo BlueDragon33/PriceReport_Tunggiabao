@@ -2461,6 +2461,30 @@ function fullBackupPayload() {
   };
 }
 
+function productRowsForExport() {
+  const rows = [[
+    'STT','Nhóm hàng','Tên sản phẩm','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú'
+  ]];
+  (state.products || [])
+    .filter(product => productHasDraftContent(product))
+    .forEach((product, index) => {
+      const qty = Number(product.qty || 0);
+      const price = Number(product.price || 0);
+      rows.push([
+        index + 1,
+        product.group || '',
+        product.name || '',
+        product.pack || '',
+        product.unit || '',
+        qty,
+        price,
+        qty * price,
+        product.note || ''
+      ]);
+    });
+  return rows;
+}
+
 function excelRowsForCurrentQuote() {
   const rows = [];
   rows.push([state.companyName || '']);
@@ -2471,47 +2495,53 @@ function excelRowsForCurrentQuote() {
   rows.push([]);
   rows.push([state.quoteTitle || 'BẢNG BÁO GIÁ']);
   if (state.quoteSubtitle) rows.push([state.quoteSubtitle]);
+  if (state.quoteNo) rows.push(['Mã báo giá:', state.quoteNo]);
+  if (state.quoteDate) rows.push(['Ngày báo giá:', state.quoteDate]);
   if (state.recipientLine) rows.push([state.recipientLine]);
   if (state.intro) rows.push([state.intro]);
   rows.push([]);
-  rows.push(['STT','Mặt hàng','ĐVT','Đơn giá','Ghi chú']);
-
-  let activeGroup = '';
-  let groupIndex = 0;
-  (state.products || []).forEach((product, index) => {
-    const group = String(product.group || '').trim();
-    if (group && group !== activeGroup) {
-      activeGroup = group;
-      groupIndex = 0;
-      rows.push([group]);
-    }
-    groupIndex += 1;
-    rows.push([
-      group ? groupIndex : index + 1,
-      product.name || '',
-      product.unit || '',
-      Number(product.price || 0),
-      product.note || ''
-    ]);
-  });
-
+  rows.push(...productRowsForExport());
   rows.push([]);
   if (state.dateLine) rows.push(['', state.dateLine]);
   if (state.rightName) rows.push(['', state.rightName]);
   return rows;
 }
 
+function csvEscape(value) {
+  const text = String(value ?? '');
+  return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+function exportCurrentQuoteCsv() {
+  const rows = productRowsForExport();
+  const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.csv';
+  download(name, csv, 'text/csv;charset=utf-8');
+  toast('Đã xuất file CSV');
+}
+
 async function exportCurrentQuoteExcel() {
   try {
     const XLSX = await import('xlsx');
     const sheet = XLSX.utils.aoa_to_sheet(excelRowsForCurrentQuote());
-    sheet['!cols'] = [{ wch: 8 }, { wch: 42 }, { wch: 12 }, { wch: 16 }, { wch: 26 }];
+    sheet['!cols'] = [
+      { wch: 8 }, { wch: 20 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
+      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
+    ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, 'Bảng báo giá');
+
+    const dataSheet = XLSX.utils.aoa_to_sheet(productRowsForExport());
+    dataSheet['!cols'] = [
+      { wch: 8 }, { wch: 20 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
+      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
+    ];
+    XLSX.utils.book_append_sheet(workbook, dataSheet, 'Dữ liệu sản phẩm');
+
     const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
     const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.xlsx';
     downloadBlob(name, new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-    toast('Đã xuất file Excel');
+    toast('Đã xuất Excel đầy đủ dữ liệu');
   } catch (error) {
     console.error('Excel export failed:', error);
     alert('Không thể xuất Excel. Hãy thử tải lại trang rồi thực hiện lại.');
@@ -3601,6 +3631,7 @@ document.getElementById('preflightCheck')?.addEventListener('click', () => {
 });
 
 document.getElementById('exportExcel')?.addEventListener('click', exportCurrentQuoteExcel);
+document.getElementById('exportCsv')?.addEventListener('click', exportCurrentQuoteCsv);
 document.getElementById('importExcelQuick')?.addEventListener('click', () => {
   openSmartImport();
   document.getElementById('excelSmartImportInput')?.click();
