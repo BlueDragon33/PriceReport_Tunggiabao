@@ -324,3 +324,11 @@ if (!html.includes('role="combobox"') || !html.includes('role="listbox"')) fail(
 if (!js.includes("event.key === 'ArrowDown' || event.key === 'ArrowUp'")) fail('V5 global-search keyboard navigation is missing');
 if (!html.includes('id="mobileMoreMenu" role="dialog"')) fail('V5 mobile More dialog semantics are missing');
 if (!js.includes('mobileMoreFocusable()')) fail('V5 mobile More focus trap is missing');
+
+for (const studioPane of ['general','customer','products','payment','terms','design','presets']) {
+  if (!html.includes('class="pane studio-pane studio-pane-' + studioPane + '" id="pane-' + studioPane + '"')) {
+    fail('V5 Pass 18 studio pane scope missing: ' + studioPane);
+  }
+}
+if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
+if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
