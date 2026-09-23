@@ -249,7 +249,7 @@ if (!html.includes('id="pane-dashboard"')) fail('V4 dashboard workspace is missi
 if (!html.includes('data-tab="dashboard"')) fail('V4 application home navigation is missing');
 if (!html.includes('id="dashboardSearch"')) fail('V4 dashboard search is missing');
 if (!html.includes('id="dashRecentQuotes"')) fail('V4 recent quotation workspace is missing');
-if (!js.includes("['dashboard', 'history', 'master', 'system', 'export'].includes(tab)")) fail('Application workspace routing is missing');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('Application workspace routing is missing');
 if (!js.includes('function renderDashboard()')) fail('Dashboard data renderer is missing');
 if (!js.includes("openTab('dashboard')")) fail('Application must start on dashboard');
 if (!css.includes('.shell.app-workspace')) fail('Application workspace shell styles are missing');
@@ -290,7 +290,7 @@ if (!css.includes('.dashboard-search-result') || !css.includes('.dashboard-searc
 
 if (!html.includes('class="pane export-workspace"') || !html.includes('id="exportCenterHealth"')) fail('V4.7 publishing center workspace is missing');
 if (!html.includes('id="exportBackupHistoryCount"') || !html.includes('id="exportBackupCustomerCount"') || !html.includes('id="exportBackupProductCount"')) fail('V4.7 backup scope counters are missing');
-if (!js.includes("['dashboard', 'history', 'master', 'system', 'export'].includes(tab)")) fail('V4.7 export must use full-width application workspace');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('V4.7+ export/settings must use full-width application workspace');
 if (!js.includes('function renderExportCenter()')) fail('V4.7 export-center renderer is missing');
 if (!css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('V4.7 publishing center or print safeguard styles are missing');
 
