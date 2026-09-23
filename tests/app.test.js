@@ -196,7 +196,7 @@ test('V5 dynamic feedback exposes live, busy and empty-state semantics', async (
   }
 
   document.querySelector('[data-tab="system"]').click();
-  expect(document.getElementById('pane-system').hasAttribute('aria-busy')).toBe(true);
+  expect(document.getElementById('pane-system').getAttribute('aria-busy')).toBe('false');
   document.querySelector('[data-tab="general"]').click();
 });
 
