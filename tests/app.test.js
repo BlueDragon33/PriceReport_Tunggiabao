@@ -486,6 +486,41 @@ test('customer entry fields share autocomplete sources without a second customer
   expect(document.getElementById('customerPhoneSuggestions')).toBeTruthy();
 });
 
+test('V5.4 Data Library renders 100, 300 and 500 products and searches Vietnamese text without accents', () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const beforeRaw = localStorage.getItem(key);
+  const search = document.getElementById('productCatalogSearch');
+
+  for (const size of [100, 300, 500]) {
+    const catalog = Array.from({ length: size }, (_, index) => ({
+      id: 'perf-product-' + size + '-' + index,
+      group: index % 2 ? 'Trứng gia cầm' : 'Thực phẩm',
+      name: 'Sản phẩm Trứng số ' + (index + 1),
+      pack: 'Hộp ' + ((index % 5) + 1),
+      unit: 'Hộp',
+      price: 28000 + index,
+      currency: 'VND',
+      note: index % 7 === 0 ? 'Giao sáng' : ''
+    }));
+    localStorage.setItem(key, JSON.stringify(catalog));
+    search.value = '';
+    document.querySelector('[data-tab="master"]').click();
+    expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(size);
+    expect(document.getElementById('productCatalogResultCount').textContent).toBe(String(size));
+  }
+
+  search.value = 'trung so 500';
+  search.dispatchEvent(new Event('input', { bubbles: true }));
+  const rows = document.querySelectorAll('#productCatalogList .master-item');
+  expect(rows.length).toBe(1);
+  expect(rows[0].textContent).toContain('Sản phẩm Trứng số 500');
+
+  if (beforeRaw == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, beforeRaw);
+  search.value = '';
+  document.querySelector('[data-tab="master"]').click();
+});
+
 test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
   document.querySelector('[data-tab="products"]').click();
   const quickSave = document.getElementById('saveProductsToCatalogTop');
