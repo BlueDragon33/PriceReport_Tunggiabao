@@ -447,10 +447,72 @@ const setText = (id, value) => {
   if (el) el.textContent = value == null ? '' : value;
 };
 
+let latestDeviceAccess = {
+  state: String(document.documentElement?.dataset?.priceReportDeviceAccess || ''),
+  deviceCode: '',
+  lastKnownStatus: '',
+  message: ''
+};
+
+function captureDeviceAccess(detail = {}) {
+  const identity = detail?.identity || {};
+  latestDeviceAccess = {
+    state: String(detail?.state || document.documentElement?.dataset?.priceReportDeviceAccess || ''),
+    deviceCode: typeof identity.deviceCode === 'string' ? identity.deviceCode : '',
+    lastKnownStatus: typeof identity.lastKnownStatus === 'string' ? identity.lastKnownStatus : '',
+    message: typeof detail?.message === 'string' ? detail.message : ''
+  };
+}
+
+
+const STATUS_LABELS = {
+  draft: 'Bản nháp',
+  sent: 'Đã gửi',
+  accepted: 'Đã chấp nhận',
+  rejected: 'Từ chối',
+  expired: 'Hết hiệu lực'
+};
+
+const STUDIO_STAGE_BY_TAB = {
+  general: 'general',
+  customer: 'general',
+  products: 'products',
+  payment: 'payment',
+  terms: 'payment',
+  design: 'design',
+  presets: 'design',
+  export: 'export'
+};
+
+function syncStudioContext(tab = '') {
+  const quoteLabel = document.getElementById('studioQuoteLabel');
+  const quoteStatus = document.getElementById('studioQuoteStatus');
+  const historyState = document.getElementById('studioHistoryState');
+  if (quoteLabel) quoteLabel.textContent = String(state.quoteNo || '').trim() || 'Báo giá mới';
+  if (quoteStatus) {
+    const currentStatus = state.quoteStatus || 'draft';
+    quoteStatus.textContent = statusLabel(currentStatus);
+    quoteStatus.className = 'studio-status-badge status-' + currentStatus;
+  }
+  if (historyState) {
+    const saved = Boolean(state.historyRecordId);
+    historyState.textContent = saved ? 'Đã lưu lịch sử' : 'Chưa lưu lịch sử';
+    historyState.classList.toggle('saved', saved);
+  }
+  const stage = STUDIO_STAGE_BY_TAB[tab] || '';
+  document.querySelectorAll('[data-studio-step]').forEach((button) => {
+    const active = Boolean(stage) && button.dataset.studioStep === stage;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-current', active ? 'step' : 'false');
+  });
+}
+
 const tabMeta = {
-  general: ['THÔNG TIN CÔNG TY', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
+  dashboard: ['TRANG CHỦ', 'Tổng quan báo giá, khách hàng, sản phẩm và trạng thái ứng dụng.'],
+  general: ['TẠO BÁO GIÁ', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
   history: ['QUẢN LÝ BÁO GIÁ', 'Lưu, tìm kiếm, mở lại và nhân bản các báo giá.'],
   master: ['DANH MỤC', 'Tái sử dụng khách hàng và sản phẩm thường dùng.'],
+  system: ['THIẾT BỊ & HỆ THỐNG', 'Trạng thái thiết bị, Device Gate và Application Management.'],
   customer: ['KHÁCH HÀNG', 'Thông tin người nhận và đơn vị mua hàng.'],
   products: ['SẢN PHẨM', 'Danh mục, số lượng, đơn giá và cột hiển thị.'],
   payment: ['THANH TOÁN', 'Chiết khấu, VAT, tổng tiền và tài khoản.'],
@@ -458,11 +520,27 @@ const tabMeta = {
   design: ['THIẾT KẾ', 'Mẫu trình bày, màu sắc và định dạng A4.'],
   view: ['XEM BÁO CÁO', 'Chế độ đọc toàn màn hình cho điện thoại và máy tính bảng.'],
   export: ['XUẤT / NHẬP / IN', 'PDF, Excel, OCR và sao lưu dữ liệu.'],
-  presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.']
+  presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.'],
+  settings: ['CÀI ĐẶT ỨNG DỤNG', 'Khởi động, giao diện và hành vi lưu dữ liệu.']
 };
 
+function setMobileMoreMenu(open) {
+  const menu = document.getElementById('mobileMoreMenu');
+  const toggle = document.getElementById('mobileMoreToggle');
+  if (!menu || !toggle) return;
+  const enabled = Boolean(open);
+  menu.hidden = !enabled;
+  toggle.setAttribute('aria-expanded', enabled ? 'true' : 'false');
+  document.body.classList.toggle('mobile-more-open', enabled);
+}
+
 function openTab(tab) {
-  $$('.nav button[data-tab]').forEach((el) => {
+  setMobileMoreMenu(false);
+  if (tab !== 'dashboard') closeDashboardSearchResults();
+  const shell = document.querySelector('.shell');
+  const appWorkspace = ['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab);
+
+  document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
     el.classList.toggle('active', active);
     if (active) el.setAttribute('aria-current', 'page');
@@ -470,14 +548,24 @@ function openTab(tab) {
   });
 
   if (tab === 'view') {
+    shell?.classList.remove('app-workspace');
     setReportViewMode(true);
     return;
   }
 
+  shell?.classList.toggle('app-workspace', appWorkspace);
   setReportViewMode(false);
-  $$('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
+  document.querySelectorAll('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
   document.getElementById('paneTitle').textContent = tabMeta[tab][0];
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
+
+  syncStudioContext(tab);
+  if (tab !== 'design') document.getElementById('designPanel')?.classList.remove('open');
+  if (appWorkspace) setPreviewCustomizer(false);
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'export') renderExportCenter();
+  if (tab === 'system') renderSystemWorkspace();
+  if (tab === 'settings') renderSettingsWorkspace();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
     setMajorPanelState('design', false);
@@ -493,9 +581,492 @@ function openTab(tab) {
   }
 }
 
-$$('.nav button[data-tab]').forEach((btn) => {
+document.querySelectorAll('.nav button[data-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.tab));
 });
+
+document.getElementById('studioBackHome')?.addEventListener('click', () => openTab('dashboard'));
+document.querySelectorAll('[data-studio-step]').forEach((button) => {
+  button.addEventListener('click', () => openTab(button.dataset.studioStep));
+});
+
+function dashboardStatusClass(status) {
+  return ['draft','sent','accepted','rejected','expired'].includes(status) ? status : 'draft';
+}
+
+function dashboardRevenueLabel(history) {
+  const totals = historyTotalsByCurrency(history);
+  const entries = Object.entries(totals).filter(([, value]) => Number(value || 0) !== 0);
+  if (!entries.length) return '0 VND';
+  const preferred = entries.find(([currency]) => currency === 'VND') || entries[0];
+  const suffix = entries.length > 1 ? ' +' + (entries.length - 1) : '';
+  return moneyForCurrency(preferred[1], preferred[0]) + suffix;
+}
+
+function systemAccessLabel(value) {
+  return ({
+    'classification-only': 'Phân loại cục bộ',
+    authorized: 'Đã duyệt',
+    pending: 'Chờ duyệt',
+    blocked: 'Đã khóa',
+    offline: 'Không kết nối',
+    checking: 'Đang kiểm tra'
+  })[String(value || '')] || 'Chưa có trạng thái';
+}
+
+function managementStateLabel(value) {
+  return ({
+    ready: 'Sẵn sàng quản trị từ xa',
+    'classification-only': 'Chỉ phân loại cục bộ',
+    unavailable: 'Không đọc được contract',
+    loading: 'Đang đọc contract'
+  })[String(value || '')] || 'Đang đọc contract';
+}
+
+function readinessLabel(value) {
+  const raw = String(value || '');
+  if (raw === 'available') return 'Sẵn sàng';
+  if (raw.startsWith('implemented')) return 'Đã triển khai · chờ hạ tầng';
+  if (!raw) return 'Chưa xác minh';
+  return raw;
+}
+
+function setSystemStateTone(elementId, state) {
+  const card = document.getElementById(elementId);
+  if (!card) return;
+  card.dataset.state = state || 'unknown';
+}
+
+function renderSettingsWorkspace() {
+  const prefs = getAppPreferences();
+  const startPage = document.getElementById('settingsStartPage');
+  const showHero = document.getElementById('settingsShowDashboardHero');
+  const compact = document.getElementById('settingsCompactManagement');
+  const autoPc = document.getElementById('settingsAutoPcSave');
+
+  if (startPage) startPage.value = prefs.startPage;
+  if (showHero) showHero.checked = prefs.showDashboardHero;
+  if (compact) compact.checked = prefs.compactManagement;
+  if (autoPc) autoPc.checked = prefs.autoPcSave;
+
+  setText('settingsHistoryCount', getHistory().length);
+  setText('settingsCustomerCount', getCustomerLibrary().length);
+  setText('settingsProductCount', getProductCatalog().length);
+  setText('settingsPcSupport', supportsPcFolderAccess() ? 'Có hỗ trợ' : 'Không hỗ trợ');
+}
+
+function renderSystemWorkspace() {
+  const runtime = window.PriceReportManagement;
+  const local = runtime?.getLocalDeviceRecord?.() || {};
+  const profile = runtime?.getDeviceProfile?.() || {};
+  const contract = runtime?.managementContract || null;
+  const readiness = contract?.readiness || {};
+  const boundary = contract?.boundary || {};
+  const policy = contract?.policy || {};
+  const accessState = latestDeviceAccess.state || String(document.documentElement?.dataset?.priceReportDeviceAccess || '');
+
+  setText('systemDeviceLabel', local.deviceLabel || profile.label || 'Chưa nhận diện');
+  setText('systemDeviceClass', [local.deviceClass || profile.id, local.uiProfile || profile.shell].filter(Boolean).join(' · ') || '—');
+  setText('systemAccessState', systemAccessLabel(accessState));
+  setText('systemAccessMessage', latestDeviceAccess.message || (accessState === 'classification-only' ? 'Remote Device Gate chưa bật.' : '—'));
+  setText('systemManagementState', managementStateLabel(runtime?.managementReadiness));
+  setText('systemManagementDetail', runtime?.managementError || (runtime?.remoteAdminReady ? 'Contract production đã xác minh readiness.' : 'Remote Admin chưa đạt đầy đủ readiness.'));
+  setText('systemRemoteAdminState', runtime?.remoteAdminReady ? 'Sẵn sàng' : 'Chưa bật');
+
+  setText('systemDetailDeviceClass', local.deviceLabel || profile.label || local.deviceClass || profile.id || '—');
+  setText('systemUiProfile', local.uiProfile || profile.shell || '—');
+  setText('systemLocalDeviceCode', local.deviceCode || '—');
+  setText('systemRegistryDeviceCode', latestDeviceAccess.deviceCode || 'Chưa cấp registry');
+  setText('systemViewport', local.width && local.height ? local.width + ' × ' + local.height + ' px' : '—');
+  setText('systemPlatform', local.platform || '—');
+  setText('systemLastSeen', local.lastSeenAt ? new Date(local.lastSeenAt).toLocaleString('vi-VN') : '—');
+  setText('systemEnvironmentChanged', local.environmentChanged ? 'Có' : 'Không');
+
+  setText('systemRegistryReady', readinessLabel(readiness.deviceRegistry));
+  setText('systemGatewayReady', readinessLabel(readiness.deviceGateway));
+  setText('systemAdminApiReady', readinessLabel(readiness.adminApi));
+  setText('systemAuditReady', readinessLabel(readiness.remoteAuditApi));
+  setText('systemContractApp', contract?.application?.name || 'PriceReport Tùng Gia Bảo');
+  setText('systemContractMeta', [
+    contract?.application?.category || runtime?.category || 'Kế toán',
+    'namespace ' + (contract?.device?.namespace || runtime?.deviceNamespace || 'KT-')
+  ].join(' · '));
+
+  setText('systemBoundaryLocal', boundary.localFirst === true ? 'Có · dữ liệu nghiệp vụ ưu tiên trên thiết bị' : contract ? 'Không' : 'Đang đọc contract');
+  setText('systemBoundaryQuote', boundary.quotationDataInControlPlane === false ? 'Không' : contract ? 'Có / cần kiểm tra' : 'Đang đọc contract');
+  setText('systemBoundaryCustomer', boundary.customerDataInControlPlane === false ? 'Không' : contract ? 'Có / cần kiểm tra' : 'Đang đọc contract');
+  setText('systemBoundaryPrivateKey', policy.privateKeyMayLeaveDevice === false ? 'Không · khóa riêng ở lại thiết bị' : contract ? 'Có / cần kiểm tra' : 'Đang đọc contract');
+
+  setSystemStateTone('systemAccessCard', accessState);
+  setSystemStateTone('systemManagementCard', runtime?.managementReadiness || 'loading');
+}
+
+async function refreshSystemWorkspace() {
+  const button = document.getElementById('systemRefreshRuntime');
+  if (button) {
+    button.disabled = true;
+    button.textContent = '↻ Đang kiểm tra...';
+  }
+  try {
+    deviceProfileRuntime?.refreshDeviceProfile?.();
+    const runtime = window.PriceReportManagement;
+    if (runtime?.refreshDeviceProfile) runtime.refreshDeviceProfile();
+    if (runtime?.refreshManagementReadiness) await runtime.refreshManagementReadiness();
+    if (deviceAccessRuntime?.enabled && typeof deviceAccessRuntime.refresh === 'function') {
+      await deviceAccessRuntime.refresh();
+    }
+  } catch (error) {
+    console.warn('System workspace refresh failed:', error);
+  } finally {
+    renderSystemWorkspace();
+    if (button) {
+      button.disabled = false;
+      button.textContent = '↻ Kiểm tra lại';
+    }
+  }
+}
+
+function updateDashboardSystemState() {
+  const stateEl = document.getElementById('dashSystemState');
+  const detailEl = document.getElementById('dashSystemDetail');
+  if (!stateEl || !detailEl) return;
+  const runtime = window.PriceReportManagement;
+  const accessState = document.documentElement?.dataset?.priceReportDeviceAccess || '';
+  if (runtime?.remoteAdminReady) {
+    stateEl.textContent = 'Đã kết nối quản trị';
+    detailEl.textContent = 'Thiết bị và Application Management đang dùng contract production đã xác minh.';
+    return;
+  }
+  if (accessState && accessState !== 'classification-only') {
+    stateEl.textContent = 'Thiết bị đang được quản lý';
+    detailEl.textContent = 'Device Gate đang hoạt động ở trạng thái: ' + accessState + '.';
+    return;
+  }
+  stateEl.textContent = 'Ứng dụng sẵn sàng';
+  detailEl.textContent = 'Dữ liệu báo giá chạy local-first; quản trị từ xa đang ở chế độ an toàn.';
+}
+
+function closeDashboardSearchResults() {
+  const box = document.getElementById('dashboardSearchResults');
+  const input = document.getElementById('dashboardSearch');
+  if (box) {
+    box.hidden = true;
+    box.innerHTML = '';
+  }
+  input?.setAttribute('aria-expanded', 'false');
+}
+
+function appendDashboardSearchResult(box, { type, eyebrow, title, subtitle, onSelect }) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'dashboard-search-result';
+  button.dataset.resultType = type;
+
+  const icon = document.createElement('span');
+  icon.className = 'dashboard-search-result-icon';
+  icon.textContent = type === 'quote' ? '▤' : type === 'customer' ? '●' : '◆';
+
+  const content = document.createElement('span');
+  content.className = 'dashboard-search-result-copy';
+  const meta = document.createElement('small');
+  meta.textContent = eyebrow;
+  const strong = document.createElement('strong');
+  strong.textContent = title;
+  const sub = document.createElement('em');
+  sub.textContent = subtitle || '';
+  content.append(meta, strong, sub);
+
+  button.append(icon, content);
+  button.addEventListener('click', () => {
+    closeDashboardSearchResults();
+    onSelect();
+  });
+  box.appendChild(button);
+}
+
+function renderDashboardSearchResults(rawQuery) {
+  const box = document.getElementById('dashboardSearchResults');
+  const input = document.getElementById('dashboardSearch');
+  if (!box || !input) return;
+
+  const query = String(rawQuery || '').trim().toLowerCase();
+  if (query.length < 2) {
+    closeDashboardSearchResults();
+    return;
+  }
+
+  const quotes = getHistory().filter(record => {
+    const data = record.data || {};
+    return [data.quoteNo, data.customerName, data.customerCompany, data.customerPhone]
+      .filter(Boolean).join(' ').toLowerCase().includes(query);
+  }).slice(0, 4);
+  const customers = getCustomerLibrary().filter(customer =>
+    [customer.name, customer.company, customer.phone, customer.email, customer.address]
+      .filter(Boolean).join(' ').toLowerCase().includes(query)
+  ).slice(0, 4);
+  const products = getProductCatalog().filter(product =>
+    [product.name, product.group, product.pack, product.unit, product.note]
+      .filter(Boolean).join(' ').toLowerCase().includes(query)
+  ).slice(0, 4);
+
+  box.innerHTML = '';
+  quotes.forEach(record => {
+    const data = record.data || {};
+    appendDashboardSearchResult(box, {
+      type: 'quote',
+      eyebrow: 'BÁO GIÁ',
+      title: data.quoteNo || 'Chưa có mã',
+      subtitle: data.customerCompany || data.customerName || 'Chưa có khách hàng',
+      onSelect: () => loadQuoteRecord(record)
+    });
+  });
+  customers.forEach(customer => {
+    appendDashboardSearchResult(box, {
+      type: 'customer',
+      eyebrow: 'KHÁCH HÀNG',
+      title: customer.name || customer.company || 'Khách hàng',
+      subtitle: [customer.company, customer.phone].filter(Boolean).join(' • '),
+      onSelect: () => useCustomer(customer)
+    });
+  });
+  products.forEach(product => {
+    const currency = normalizeCatalogCurrency(product.currency || 'VND');
+    appendDashboardSearchResult(box, {
+      type: 'product',
+      eyebrow: 'SẢN PHẨM',
+      title: product.name || 'Sản phẩm',
+      subtitle: [product.group, moneyForCurrency(Number(product.price || 0), currency)].filter(Boolean).join(' • '),
+      onSelect: () => addCatalogProduct(product)
+    });
+  });
+
+  if (!box.children.length) {
+    const empty = document.createElement('div');
+    empty.className = 'dashboard-search-empty';
+    empty.textContent = 'Không tìm thấy báo giá, khách hàng hoặc sản phẩm phù hợp.';
+    box.appendChild(empty);
+  }
+  box.hidden = false;
+  input.setAttribute('aria-expanded', 'true');
+}
+
+function renderExportCenter() {
+  const validation = validateQuote();
+  const namedProducts = (Array.isArray(state.products) ? state.products : [])
+    .filter(product => String(product?.name || '').trim());
+  const history = getHistory();
+  const customers = getCustomerLibrary();
+  const products = getProductCatalog();
+
+  setText('exportCenterQuote', String(state.quoteNo || '').trim() || 'Báo giá mới');
+  setText('exportCenterQuoteStatus', statusLabel(state.quoteStatus || 'draft'));
+  setText('exportCenterProducts', namedProducts.length);
+  setText('exportCenterStored', (history.length + customers.length + products.length) + ' mục');
+  setText('exportBackupHistoryCount', history.length);
+  setText('exportBackupCustomerCount', customers.length);
+  setText('exportBackupProductCount', products.length);
+
+  const health = document.getElementById('exportCenterHealth');
+  const detail = document.getElementById('exportCenterHealthDetail');
+  const card = health?.closest('.export-status-card');
+  card?.classList.remove('health-ok','health-warn','health-error');
+
+  if (validation.errors.length) {
+    setText('exportCenterHealth', validation.errors.length + ' lỗi');
+    setText('exportCenterHealthDetail', 'Cần sửa trước khi in/PDF.');
+    card?.classList.add('health-error');
+  } else if (validation.warnings.length) {
+    setText('exportCenterHealth', validation.warnings.length + ' mục cần kiểm tra');
+    setText('exportCenterHealthDetail', 'Có thể rà lại trước khi phát hành.');
+    card?.classList.add('health-warn');
+  } else {
+    setText('exportCenterHealth', 'Sẵn sàng');
+    setText('exportCenterHealthDetail', 'Không phát hiện lỗi nghiệp vụ.');
+    card?.classList.add('health-ok');
+  }
+}
+
+function renderDashboard() {
+  const history = getHistory();
+  const customers = getCustomerLibrary();
+  const products = getProductCatalog();
+  const statusOf = (record) => record?.data?.quoteStatus || record?.status || 'draft';
+  const pending = history.filter((record) => ['draft','sent'].includes(statusOf(record))).length;
+  const accepted = history.filter((record) => statusOf(record) === 'accepted').length;
+
+  setText('dashQuoteCount', history.length);
+  setText('dashCustomerCount', customers.length);
+  setText('dashProductCount', products.length);
+  setText('dashPendingCount', pending);
+  setText('dashAcceptedCount', accepted);
+  setText('dashRevenue', dashboardRevenueLabel(history));
+
+  const now = new Date();
+  const monthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const monthCount = history.filter((record) => {
+    const date = String(record?.data?.quoteDate || record?.savedAt || '');
+    return date.slice(0, 7) === monthKey;
+  }).length;
+  setText('dashMonthCount', monthCount + ' báo giá');
+  const progress = Math.min(100, monthCount * 10);
+  const progressBar = document.getElementById('dashProgressBar');
+  if (progressBar) progressBar.style.width = progress + '%';
+  setText('dashProgressText', monthCount
+    ? 'Đã tạo ' + monthCount + ' báo giá trong tháng hiện tại.'
+    : 'Bắt đầu bằng báo giá đầu tiên của tháng.');
+
+  const list = document.getElementById('dashRecentQuotes');
+  if (list) {
+    list.innerHTML = '';
+    const recent = history.slice(0, 6);
+    if (!recent.length) {
+      const empty = document.createElement('div');
+      empty.className = 'dashboard-empty';
+      empty.textContent = 'Chưa có báo giá đã lưu. Tạo báo giá mới để bắt đầu.';
+      list.appendChild(empty);
+    } else {
+      recent.forEach((record) => {
+        const data = record.data || {};
+        const status = statusOf(record);
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'recent-quote-row';
+        row.addEventListener('click', () => loadQuoteRecord(record));
+
+        const quote = document.createElement('strong');
+        quote.textContent = data.quoteNo || 'Chưa có mã';
+        const customer = document.createElement('span');
+        customer.textContent = data.customerCompany || data.customerName || 'Chưa có khách hàng';
+        const date = document.createElement('span');
+        date.textContent = data.quoteDate || String(record.savedAt || '').slice(0, 10) || '—';
+        const total = document.createElement('span');
+        total.className = 'recent-total';
+        total.textContent = moneyForCurrency(record.total ?? calcTotal(data), record.currency || data.currency || 'VND');
+        const badge = document.createElement('span');
+        badge.className = 'dashboard-status status-' + dashboardStatusClass(status);
+        badge.textContent = statusLabel(status);
+        row.append(quote, customer, date, total, badge);
+        list.appendChild(row);
+      });
+    }
+  }
+  updateDashboardSystemState();
+}
+
+document.querySelectorAll('[data-open-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => openTab(btn.dataset.openTab));
+});
+
+document.getElementById('settingsStartPage')?.addEventListener('change', (event) => {
+  saveAppPreferences({ startPage: event.currentTarget.value });
+});
+document.getElementById('settingsShowDashboardHero')?.addEventListener('change', (event) => {
+  saveAppPreferences({ showDashboardHero: event.currentTarget.checked });
+});
+document.getElementById('settingsCompactManagement')?.addEventListener('change', (event) => {
+  saveAppPreferences({ compactManagement: event.currentTarget.checked });
+});
+document.getElementById('settingsAutoPcSave')?.addEventListener('change', (event) => {
+  saveAppPreferences({ autoPcSave: event.currentTarget.checked });
+});
+document.getElementById('settingsResetUi')?.addEventListener('click', () => {
+  if (!confirm('Đặt lại cài đặt giao diện? Dữ liệu báo giá, lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
+  const current = getUiState();
+  const clean = { appPreferences: Object.assign({}, DEFAULT_APP_PREFERENCES) };
+  if (current && typeof current === 'object') {
+    // Deliberately drop panel/card collapse state while preserving no business data in UI_STATE.
+  }
+  saveUiState(clean);
+  applyAppPreferences();
+  setMajorPanelState('editor', false, false);
+  setMajorPanelState('design', false, false);
+  renderSettingsWorkspace();
+  toast('Đã đặt lại cài đặt giao diện');
+});
+
+document.querySelectorAll('[data-create-quote]').forEach((btn) => {
+  btn.addEventListener('click', () => createNewQuote());
+});
+
+function openMasterSection(section) {
+  openTab('master');
+  const targetId = section === 'products' ? 'productCatalogCard' : 'customerLibraryCard';
+  requestAnimationFrame(() => {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    target.classList.add('master-section-highlight');
+    setTimeout(() => target.classList.remove('master-section-highlight'), 900);
+  });
+}
+
+document.querySelectorAll('[data-open-master]').forEach((btn) => {
+  btn.addEventListener('click', () => openMasterSection(btn.dataset.openMaster));
+});
+
+document.getElementById('mobileMoreToggle')?.addEventListener('click', () => {
+  const menu = document.getElementById('mobileMoreMenu');
+  setMobileMoreMenu(Boolean(menu?.hidden));
+});
+document.getElementById('mobileMoreClose')?.addEventListener('click', () => setMobileMoreMenu(false));
+
+
+document.getElementById('dashboardSearch')?.addEventListener('input', (event) => {
+  renderDashboardSearchResults(event.currentTarget.value);
+});
+document.getElementById('dashboardSearch')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeDashboardSearchResults();
+    return;
+  }
+  if (event.key !== 'Enter') return;
+  const firstResult = document.querySelector('#dashboardSearchResults .dashboard-search-result');
+  if (firstResult && !document.getElementById('dashboardSearchResults')?.hidden) {
+    firstResult.click();
+    return;
+  }
+  const value = event.currentTarget.value.trim();
+  openTab('history');
+  const search = document.getElementById('quoteSearch');
+  if (search) {
+    search.value = value;
+    renderHistory();
+    search.focus();
+  }
+});
+
+window.addEventListener('pricereport:management-readiness', () => {
+  updateDashboardSystemState();
+  renderSystemWorkspace();
+});
+window.addEventListener('pricereport:device-profile', () => {
+  renderSystemWorkspace();
+});
+window.addEventListener('pricereport:device-access', (event) => {
+  captureDeviceAccess(event.detail || {});
+  updateDashboardSystemState();
+  renderSystemWorkspace();
+});
+
+document.getElementById('systemRefreshRuntime')?.addEventListener('click', () => {
+  void refreshSystemWorkspace();
+});
+document.getElementById('systemCopyDeviceCode')?.addEventListener('click', async () => {
+  const runtime = window.PriceReportManagement;
+  const localCode = runtime?.getLocalDeviceRecord?.()?.deviceCode || '';
+  const code = latestDeviceAccess.deviceCode || localCode;
+  if (!code) {
+    toast('Chưa có mã thiết bị để sao chép');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(code);
+    toast('Đã sao chép mã thiết bị');
+  } catch {
+    toast('Không thể sao chép mã thiết bị');
+  }
+});
+
 
 function applyTungGiaBaoToCurrentQuote({ confirmReplace = true } = {}) {
   if (confirmReplace && !window.confirm('Thay thông tin doanh nghiệp và danh sách sản phẩm hiện tại bằng dữ liệu Tùng Gia Bảo? Thiết kế, logo và dữ liệu khách hàng vẫn được giữ.')) {
@@ -1088,6 +1659,9 @@ function renderLogo() {
     if (state.showLogo) docHead.style.removeProperty('grid-template-columns');
     else docHead.style.gridTemplateColumns = '1fr';
   }
+  const activeTab = document.querySelector('.nav button[data-tab].active')?.dataset?.tab || '';
+  syncStudioContext(activeTab);
+  if (activeTab === 'export') renderExportCenter();
 }
 
 function layoutOffset(key) {
@@ -1815,6 +2389,38 @@ function setupSmartImport() {
   });
 }
 
+const DEFAULT_APP_PREFERENCES = {
+  startPage: 'dashboard',
+  showDashboardHero: true,
+  compactManagement: false,
+  autoPcSave: true
+};
+
+function getAppPreferences() {
+  const ui = getUiState();
+  const raw = isPlainObject(ui.appPreferences) ? ui.appPreferences : {};
+  const startPage = ['dashboard','history','general'].includes(raw.startPage) ? raw.startPage : 'dashboard';
+  return {
+    startPage,
+    showDashboardHero: raw.showDashboardHero !== false,
+    compactManagement: Boolean(raw.compactManagement),
+    autoPcSave: raw.autoPcSave !== false
+  };
+}
+
+function saveAppPreferences(next) {
+  const ui = getUiState();
+  ui.appPreferences = Object.assign({}, DEFAULT_APP_PREFERENCES, getAppPreferences(), next || {});
+  saveUiState(ui);
+  applyAppPreferences();
+}
+
+function applyAppPreferences() {
+  const prefs = getAppPreferences();
+  document.body.classList.toggle('dashboard-hero-hidden', !prefs.showDashboardHero);
+  document.body.classList.toggle('management-compact', prefs.compactManagement);
+}
+
 function getUiState() {
   try {
     const data = JSON.parse(localStorage.getItem(UI_STATE));
@@ -2190,6 +2796,8 @@ document.getElementById('importJson').addEventListener('change', (event) => {
       syncInputs();
       renderEditorProducts();
       render();
+      renderDashboard();
+      renderExportCenter();
       toast('Đã nhập dữ liệu');
     } catch (error) {
       if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
@@ -2264,6 +2872,8 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
       renderHistory();
       renderPresets();
       renderMasterData();
+      renderDashboard();
+      renderExportCenter();
       toast('Đã khôi phục toàn bộ dữ liệu');
     } catch (error) {
       if (previousState && (error?.code === 'STORAGE_WRITE_FAILED' || error?.code === 'STORAGE_ROLLBACK_FAILED')) {
@@ -2454,14 +3064,6 @@ function calcTotal(data) {
   return calcQuoteTotal(data);
 }
 
-const STATUS_LABELS = {
-  draft: 'Bản nháp',
-  sent: 'Đã gửi',
-  accepted: 'Đã chấp nhận',
-  rejected: 'Từ chối',
-  expired: 'Hết hiệu lực'
-};
-
 function quoteLabel(data) {
   return data.quoteNo || 'Chưa có số báo giá';
 }
@@ -2516,7 +3118,9 @@ function saveCurrentQuote() {
   toast(currentSaved
     ? (existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá')
     : 'Đã lưu vào lịch sử; trạng thái hiện tại chưa thể autosave');
-  saveCurrentToPc({ notify: false }).catch((error) => console.warn('PC autosave skipped:', error));
+  if (getAppPreferences().autoPcSave) {
+    saveCurrentToPc({ notify: false }).catch((error) => console.warn('PC autosave skipped:', error));
+  }
   return true;
 }
 
@@ -2679,8 +3283,13 @@ function renderHistory() {
 
   document.getElementById('historyCount').textContent = String(all.length);
   const acceptedCount = all.filter(record => (record?.data?.quoteStatus || record?.status || 'draft') === 'accepted').length;
+  const pendingCount = all.filter(record => ['draft','sent'].includes(record?.data?.quoteStatus || record?.status || 'draft')).length;
   const acceptedEl = document.getElementById('historyAcceptedCount');
+  const pendingEl = document.getElementById('historyPendingCount');
+  const resultEl = document.getElementById('historyResultCount');
   if (acceptedEl) acceptedEl.textContent = String(acceptedCount);
+  if (pendingEl) pendingEl.textContent = String(pendingCount);
+  if (resultEl) resultEl.textContent = String(items.length);
 
   const totalsByCurrency = historyTotalsByCurrency(all);
   const revenueEl = document.getElementById('historyRevenue');
@@ -2705,30 +3314,46 @@ function renderHistory() {
 
   items.forEach(record => {
     const data = record.data || {};
-    const row = document.createElement('div');
-    row.className = 'history-item';
-
-    const info = document.createElement('div');
-    info.className = 'history-info';
-    const titleLine = document.createElement('div');
-    titleLine.className = 'history-title-line';
-    const title = document.createElement('strong');
-    title.textContent = quoteLabel(data);
-    const badge = document.createElement('span');
     const currentStatus = data.quoteStatus || record.status || 'draft';
+    const customer = data.customerCompany || data.customerName || 'Chưa nhập khách hàng';
+    const recordCurrency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
+
+    const row = document.createElement('div');
+    row.className = 'history-item history-table-row';
+
+    const quoteCell = document.createElement('div');
+    quoteCell.className = 'history-cell history-quote-cell';
+    const quoteStrong = document.createElement('strong');
+    quoteStrong.textContent = quoteLabel(data);
+    const quoteSub = document.createElement('small');
+    quoteSub.textContent = data.quoteSubtitle || 'Báo giá';
+    quoteCell.append(quoteStrong, quoteSub);
+
+    const customerCell = document.createElement('div');
+    customerCell.className = 'history-cell history-customer-cell';
+    const customerStrong = document.createElement('strong');
+    customerStrong.textContent = customer;
+    const customerSub = document.createElement('small');
+    customerSub.textContent = data.customerPhone || data.customerName || '—';
+    customerCell.append(customerStrong, customerSub);
+
+    const dateCell = document.createElement('div');
+    dateCell.className = 'history-cell history-date-cell';
+    dateCell.textContent = formatDate(data.quoteDate || '') || '—';
+
+    const totalCell = document.createElement('div');
+    totalCell.className = 'history-cell history-value-cell';
+    totalCell.textContent = moneyForCurrency(Number(record.total ?? calcTotal(data)), recordCurrency);
+
+    const statusCell = document.createElement('div');
+    statusCell.className = 'history-cell history-status-cell';
+    const badge = document.createElement('span');
     badge.className = 'status-badge status-' + currentStatus;
     badge.textContent = statusLabel(currentStatus);
-    titleLine.append(title, badge);
-
-    const meta = document.createElement('span');
-    const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
-    const recordCurrency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
-    meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
-      moneyForCurrency(Number(record.total ?? calcTotal(data)), recordCurrency);
-    info.append(titleLine, meta);
+    statusCell.appendChild(badge);
 
     const actions = document.createElement('div');
-    actions.className = 'history-actions';
+    actions.className = 'history-actions history-cell history-action-cell';
     const open = document.createElement('button');
     open.className = 'btn primary';
     open.textContent = 'Mở';
@@ -2746,11 +3371,12 @@ function renderHistory() {
       if (!confirm('Xóa ' + quoteLabel(data) + '?')) return;
       if (!setHistory(getHistory().filter(item => item.id !== record.id))) return;
       renderHistory();
+      renderDashboard();
       toast('Đã xóa báo giá');
     });
 
     actions.append(open, copy, del);
-    row.append(info, actions);
+    row.append(quoteCell, customerCell, dateCell, totalCell, statusCell, actions);
     list.appendChild(row);
   });
 }
@@ -2937,27 +3563,58 @@ function renderMasterData() {
   const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
   const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
 
-  const customers = getCustomerLibrary().filter(item => {
-    const haystack = [item.name, item.company, item.phone, item.email].filter(Boolean).join(' ').toLowerCase();
+  const allCustomers = getCustomerLibrary();
+  const allProducts = getProductCatalog();
+  const customers = allCustomers.filter(item => {
+    const haystack = [item.name, item.company, item.phone, item.email, item.address, item.contact]
+      .filter(Boolean).join(' ').toLowerCase();
     return !customerQuery || haystack.includes(customerQuery);
   });
+  const products = allProducts.filter(item => {
+    const haystack = [item.group, item.name, item.pack, item.unit, item.note, item.currency]
+      .filter(Boolean).join(' ').toLowerCase();
+    return !productQuery || haystack.includes(productQuery);
+  });
+
+  setText('customerLibraryCount', allCustomers.length);
+  setText('productCatalogCount', allProducts.length);
+  setText('customerLibraryResultCount', customers.length);
+  setText('productCatalogResultCount', products.length);
+
   customerList.innerHTML = '';
   if (!customers.length) {
     customerList.innerHTML = '<div class="history-empty">Chưa có khách hàng phù hợp.</div>';
   } else {
     customers.forEach(customer => {
       const row = document.createElement('div');
-      row.className = 'master-item';
-      const info = document.createElement('div');
-      info.className = 'master-info';
-      const title = document.createElement('strong');
-      title.textContent = customer.name || customer.company || 'Khách hàng';
-      const meta = document.createElement('span');
-      meta.textContent = [customer.company, customer.phone, customer.email].filter(Boolean).join(' • ');
-      info.append(title, meta);
+      row.className = 'master-item master-table-row customer-table-grid';
+
+      const nameCell = document.createElement('div');
+      nameCell.className = 'master-cell master-name-cell';
+      const name = document.createElement('strong');
+      name.textContent = customer.name || customer.company || 'Khách hàng';
+      const contact = document.createElement('small');
+      contact.textContent = customer.contact || 'Chưa có người liên hệ';
+      nameCell.append(name, contact);
+
+      const companyCell = document.createElement('div');
+      companyCell.className = 'master-cell master-company-cell';
+      companyCell.textContent = customer.company || '—';
+
+      const contactCell = document.createElement('div');
+      contactCell.className = 'master-cell master-contact-cell';
+      const phone = document.createElement('strong');
+      phone.textContent = customer.phone || '—';
+      const email = document.createElement('small');
+      email.textContent = customer.email || 'Chưa có email';
+      contactCell.append(phone, email);
+
+      const addressCell = document.createElement('div');
+      addressCell.className = 'master-cell master-address-cell';
+      addressCell.textContent = customer.address || '—';
 
       const actions = document.createElement('div');
-      actions.className = 'master-actions';
+      actions.className = 'master-actions master-cell master-action-cell';
       const use = document.createElement('button');
       use.className = 'btn primary';
       use.textContent = 'Dùng';
@@ -2969,36 +3626,49 @@ function renderMasterData() {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
         if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
         renderMasterData();
+        renderDashboard();
       });
       actions.append(use, del);
-      row.append(info, actions);
+      row.append(nameCell, companyCell, contactCell, addressCell, actions);
       customerList.appendChild(row);
     });
   }
 
-  const products = getProductCatalog().filter(item => {
-    const haystack = [item.group, item.name, item.pack, item.unit, item.note].filter(Boolean).join(' ').toLowerCase();
-    return !productQuery || haystack.includes(productQuery);
-  });
   productList.innerHTML = '';
   if (!products.length) {
     productList.innerHTML = '<div class="history-empty">Chưa có sản phẩm phù hợp.</div>';
   } else {
     products.forEach(product => {
       const row = document.createElement('div');
-      row.className = 'master-item';
-      const info = document.createElement('div');
-      info.className = 'master-info';
-      const title = document.createElement('strong');
-      title.textContent = product.name || 'Sản phẩm';
-      const meta = document.createElement('span');
+      row.className = 'master-item master-table-row product-table-grid';
       const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
-      meta.textContent = [product.group, product.pack, product.unit, moneyForCurrency(Number(product.price || 0), productCurrency)]
-        .filter(Boolean).join(' • ');
-      info.append(title, meta);
+
+      const nameCell = document.createElement('div');
+      nameCell.className = 'master-cell master-name-cell';
+      const name = document.createElement('strong');
+      name.textContent = product.name || 'Sản phẩm';
+      const currency = document.createElement('small');
+      currency.textContent = productCurrency;
+      nameCell.append(name, currency);
+
+      const groupCell = document.createElement('div');
+      groupCell.className = 'master-cell master-group-cell';
+      groupCell.textContent = product.group || '—';
+
+      const packCell = document.createElement('div');
+      packCell.className = 'master-cell master-pack-cell';
+      packCell.textContent = [product.pack, product.unit].filter(Boolean).join(' / ') || '—';
+
+      const priceCell = document.createElement('div');
+      priceCell.className = 'master-cell master-price-cell';
+      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrency);
+
+      const noteCell = document.createElement('div');
+      noteCell.className = 'master-cell master-note-cell';
+      noteCell.textContent = product.note || '—';
 
       const actions = document.createElement('div');
-      actions.className = 'master-actions';
+      actions.className = 'master-actions master-cell master-action-cell';
       const add = document.createElement('button');
       add.className = 'btn primary';
       add.textContent = 'Thêm';
@@ -3010,9 +3680,10 @@ function renderMasterData() {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
         if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
         renderMasterData();
+        renderDashboard();
       });
       actions.append(add, del);
-      row.append(info, actions);
+      row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
       productList.appendChild(row);
     });
   }
@@ -3414,7 +4085,9 @@ function setReportViewMode(enabled) {
     requestAnimationFrame(fitReportView);
   } else {
     resetReportViewScale();
-    requestAnimationFrame(() => document.getElementById('fit')?.click());
+    if (!shell.classList.contains('app-workspace')) {
+      requestAnimationFrame(() => document.getElementById('fit')?.click());
+    }
   }
 }
 
@@ -3517,8 +4190,16 @@ function compactLegacyBrandAssets() {
 }
 
 compactLegacyBrandAssets();
+applyAppPreferences();
+const initialAppPage = getAppPreferences().startPage;
+openTab(initialAppPage);
+if (initialAppPage === 'dashboard') renderDashboard();
 
-setTimeout(() => document.getElementById('fit').click(), 60);
+setTimeout(() => {
+  if (!document.querySelector('.shell')?.classList.contains('app-workspace')) {
+    document.getElementById('fit')?.click();
+  }
+}, 60);
 window.addEventListener('resize', () => {
   if (document.querySelector('.shell')?.classList.contains('report-view')) {
     requestAnimationFrame(fitReportView);
@@ -3530,6 +4211,10 @@ window.addEventListener('resize', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  if (!document.getElementById('mobileMoreMenu')?.hidden) {
+    setMobileMoreMenu(false);
+    return;
+  }
   if (!document.getElementById('smartImportModal')?.hidden) {
     if (!smartImportBusy) closeSmartImport();
     return;

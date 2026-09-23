@@ -4,6 +4,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
 const css = fs.readFileSync('src/styles.css', 'utf8');
 const sw = fs.readFileSync('public/sw.js', 'utf8');
+const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 
 function fail(message) {
   console.error('SMOKE FAIL:', message);
@@ -62,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v27-source")) fail('Service-worker cache version was not upgraded');
+if (!sw.includes("pricereport-shell-v37-settings")) fail('Service-worker cache version was not upgraded for V4.9 application settings');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -165,7 +166,7 @@ if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigratio
 
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
 if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
-if (!html.includes('Xuất/<br>Nhập/In')) fail('Export navigation does not expose Import');
+if (!html.includes('Xuất / Nhập / In')) fail('V4 export navigation does not expose Import clearly');
 if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
 if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
 if (!js.includes('function fitReportView')) fail('Finite responsive report-view sizing is missing');
@@ -214,7 +215,15 @@ if (!fs.existsSync('public/management-contract.json')) fail('Application Managem
 const managementContract = JSON.parse(fs.readFileSync('public/management-contract.json','utf8'));
 if (managementContract.application?.category !== 'Kế toán') fail('PriceReport must be classified as Kế toán');
 if (managementContract.device?.namespace !== 'KT-') fail('Accounting device namespace must be KT-');
-if (managementContract.policy?.remoteAdminReady !== false) fail('Static client must not claim remote admin readiness');
+if (managementContract.policy?.remoteAdminReady !== false) fail('Checked-in source contract must remain rollout-off before production materialization');
+if (!deviceProfileJs.includes('resolveRemoteAdminReady')) fail('Runtime management readiness resolver is missing');
+if (!deviceProfileJs.includes("MANAGEMENT_CONTRACT_URL = './management-contract.json'")) fail('Runtime must read the deployed management contract');
+if (!deviceProfileJs.includes("cache: 'no-store'")) fail('Runtime management readiness must bypass stale HTTP caches');
+if (!deviceProfileJs.includes('refreshManagementReadiness')) fail('Runtime management readiness refresh API is missing');
+if (!deviceProfileJs.includes("'pricereport:management-readiness'")) fail('Runtime management readiness event is missing');
+if (deviceProfileJs.includes('remoteAdminReady: false,\n    getDeviceProfile')) fail('Legacy hard-coded remoteAdminReady runtime block remains');
+if (!deviceProfileJs.includes('deviceGateOwnsDeviceChip')) fail('Device Gate chip ownership guard is missing');
+if (!deviceProfileJs.includes('priceReportDeviceAccess')) fail('Profile runtime must respect Device Gate access state before updating the device chip');
 
 if (!js.includes('startPriceReportDeviceAccess')) fail('KT Device Gate runtime is not started');
 if (!fs.existsSync('src/device-access-gate.js')) fail('KT Device Gate module is missing');
@@ -235,3 +244,69 @@ const deployControlWorkflow = fs.readFileSync('.github/workflows/deploy-control-
 if (!pagesWorkflow.includes('control_origin:')) fail('Pages workflow must accept explicit KT control-origin handoff');
 if (!pagesWorkflow.includes("inputs.control_origin || vars.PRICE_REPORT_CONTROL_ORIGIN")) fail('Pages workflow must prefer the forwarded KT control origin');
 if (!deployControlWorkflow.includes('-f control_origin="$PRICE_REPORT_CONTROL_ORIGIN"')) fail('KT deploy workflow must forward its verified environment-scoped origin to Pages');
+
+if (!html.includes('id="pane-dashboard"')) fail('V4 dashboard workspace is missing');
+if (!html.includes('data-tab="dashboard"')) fail('V4 application home navigation is missing');
+if (!html.includes('id="dashboardSearch"')) fail('V4 dashboard search is missing');
+if (!html.includes('id="dashRecentQuotes"')) fail('V4 recent quotation workspace is missing');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('Application workspace routing is missing');
+if (!js.includes('function renderDashboard()')) fail('Dashboard data renderer is missing');
+if (!js.includes("openTab('dashboard')")) fail('Application must start on dashboard');
+if (!css.includes('.shell.app-workspace')) fail('Application workspace shell styles are missing');
+if (!css.includes('.dashboard-main-grid')) fail('Dashboard responsive grid is missing');
+
+if (!html.includes('id="mobileMoreToggle"') || !html.includes('id="mobileMoreMenu"')) fail('V4.1 compact mobile navigation is missing');
+if (!js.includes('function setMobileMoreMenu(open)')) fail('V4.1 mobile navigation controller is missing');
+if (!js.includes("row.addEventListener('click', () => loadQuoteRecord(record))")) fail('Recent dashboard quotation must open the selected record directly');
+if (!css.includes('.mobile-more-grid')) fail('V4.1 mobile action sheet styles are missing');
+
+if (!html.includes('data-create-quote')) fail('V4.2 dashboard must expose a true create-new-quotation action');
+if (!js.includes("document.querySelectorAll('[data-create-quote]')")) fail('V4.2 create-new-quotation actions are not wired');
+if (!js.includes('function openMasterSection(section)')) fail('V4.2 focused master-data navigation is missing');
+if (!html.includes('id="customerLibraryCard"') || !html.includes('id="productCatalogCard"')) fail('V4.2 master-data section targets are missing');
+if (!css.includes('.master-section-highlight')) fail('V4.2 master-data focus feedback is missing');
+
+if (!html.includes('id="historyPendingCount"') || !html.includes('id="historyResultCount"')) fail('V4.3 quotation management counters are missing');
+if (!html.includes('class="history-table-head"')) fail('V4.3 quotation management table header is missing');
+if (!js.includes("row.className = 'history-item history-table-row'")) fail('V4.3 quotation management row renderer is missing');
+if (!css.includes('.history-workspace-header') || !css.includes('.history-table-row')) fail('V4.3 quotation management workspace styles are missing');
+
+if (!html.includes('id="customerLibraryCount"') || !html.includes('id="productCatalogCount"')) fail('V4.4 master-data totals are missing');
+if (!html.includes('id="customerLibraryResultCount"') || !html.includes('id="productCatalogResultCount"')) fail('V4.4 master-data filter counters are missing');
+if (!html.includes('class="master-table-head customer-table-grid"') || !html.includes('class="master-table-head product-table-grid"')) fail('V4.4 master-data table headers are missing');
+if (!js.includes("row.className = 'master-item master-table-row customer-table-grid'")) fail('V4.4 customer table renderer is missing');
+if (!js.includes("row.className = 'master-item master-table-row product-table-grid'")) fail('V4.4 product table renderer is missing');
+if (!css.includes('.master-workspace-header') || !css.includes('.master-table-row')) fail('V4.4 master-data workspace styles are missing');
+
+if (!html.includes('id="studioBackHome"') || !html.includes('id="studioQuoteLabel"') || !html.includes('class="studio-stepper"')) fail('V4.5 quotation studio context header is missing');
+if (!js.includes('function syncStudioContext(tab')) fail('V4.5 studio context synchronizer is missing');
+if (!js.includes("document.querySelectorAll('[data-studio-step]')")) fail('V4.5 studio step navigation is not wired');
+if (!css.includes('.studio-context-row') || !css.includes('.studio-stepper button.active')) fail('V4.5 quotation studio context styles are missing');
+
+if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-search-wrap')) fail('V4.6 dashboard global-search result surface is missing');
+if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
+if (!js.includes("type: 'quote'") || !js.includes("type: 'customer'") || !js.includes("type: 'product'")) fail('V4.6 global search must cover quotes, customers and products');
+if (!css.includes('.dashboard-search-result') || !css.includes('.dashboard-search-results')) fail('V4.6 global-search styles are missing');
+
+if (!html.includes('class="pane export-workspace"') || !html.includes('id="exportCenterHealth"')) fail('V4.7 publishing center workspace is missing');
+if (!html.includes('id="exportBackupHistoryCount"') || !html.includes('id="exportBackupCustomerCount"') || !html.includes('id="exportBackupProductCount"')) fail('V4.7 backup scope counters are missing');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('V4.7+ export/settings must use full-width application workspace');
+if (!js.includes('function renderExportCenter()')) fail('V4.7 export-center renderer is missing');
+if (!css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('V4.7 publishing center or print safeguard styles are missing');
+
+if (!html.includes('data-tab="system"') || !html.includes('id="pane-system"')) fail('V4.8 Device & System workspace is missing');
+if (!html.includes('id="systemLocalDeviceCode"') || !html.includes('id="systemRegistryDeviceCode"')) fail('V4.8 must distinguish local and registry device codes');
+if (!html.includes('id="systemBoundaryQuote"') || !html.includes('id="systemBoundaryCustomer"') || !html.includes('id="systemBoundaryPrivateKey"')) fail('V4.8 data-boundary indicators are missing');
+if (!js.includes('function renderSystemWorkspace()') || !js.includes('function refreshSystemWorkspace()')) fail('V4.8 system runtime renderer/refresh is missing');
+if (!js.includes("window.addEventListener('pricereport:device-access'")) fail('V4.8 must react to live Device Gate events');
+if (!css.includes('.system-workspace-header') || !css.includes('.system-status-grid')) fail('V4.8 system workspace styles are missing');
+
+if (!html.includes('data-tab="settings"') || !html.includes('id="pane-settings"')) fail('V4.9 application settings workspace is missing');
+if (!html.includes('id="settingsStartPage"') || !html.includes('id="settingsAutoPcSave"') || !html.includes('id="settingsResetUi"')) fail('V4.9 core settings controls are missing');
+if (!js.includes('function getAppPreferences()') || !js.includes('function renderSettingsWorkspace()')) fail('V4.9 settings preference runtime is missing');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('V4.9 settings must use full-width application workspace');
+if (!css.includes('.settings-workspace-header') || !css.includes('.management-compact .history-table-row')) fail('V4.9 settings workspace or compact-management styles are missing');
+
+if (!js.includes("const initialAppPage = getAppPreferences().startPage")) fail('V4.9 start-page preference is not applied during boot');
+if (!js.includes("if (getAppPreferences().autoPcSave)")) fail('V4.9 PC autosave preference is not enforced');
+if (!css.includes('.nav button[data-tab="settings"]{display:none}') && !css.includes('.nav button[data-tab="settings"]')) fail('V4.9 mobile settings navigation rule is missing');

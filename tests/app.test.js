@@ -30,6 +30,137 @@ test('app boots and renders reference quotation without runtime failure', () => 
   expect(document.getElementById('documentHealth').textContent).toBe('Sẵn sàng in');
 });
 
+test('V4 boots into application dashboard and exposes separate new-quote and editor-entry actions', () => {
+  const shell = document.querySelector('.shell');
+  expect(shell.classList.contains('app-workspace')).toBe(true);
+  expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
+  expect(document.querySelector('[data-tab="dashboard"]').getAttribute('aria-current')).toBe('page');
+  expect(document.querySelector('#pane-dashboard [data-create-quote]')).toBeTruthy();
+
+  document.querySelector('[data-tab="general"]').click();
+  expect(shell.classList.contains('app-workspace')).toBe(false);
+  expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  expect(shell.classList.contains('app-workspace')).toBe(true);
+  expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
+});
+
+test('V4.5 quotation studio shows current quote context and navigable workflow steps', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const quoteNo = document.getElementById('quoteNo').value;
+  expect(document.getElementById('studioQuoteLabel').textContent).toBe(quoteNo || 'Báo giá mới');
+  expect(document.querySelector('[data-studio-step="general"]').classList.contains('active')).toBe(true);
+
+  document.querySelector('[data-studio-step="products"]').click();
+  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
+  expect(document.querySelector('[data-studio-step="products"]').classList.contains('active')).toBe(true);
+
+  document.querySelector('[data-studio-step="design"]').click();
+  expect(document.getElementById('designPanel').classList.contains('open')).toBe(true);
+
+  document.getElementById('studioBackHome').click();
+  expect(document.getElementById('designPanel').classList.contains('open')).toBe(false);
+  expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
+
+  document.querySelector('[data-tab="general"]').click();
+});
+
+test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
+  const toggle = document.getElementById('mobileMoreToggle');
+  const menu = document.getElementById('mobileMoreMenu');
+  expect(toggle).toBeTruthy();
+  expect(menu.hidden).toBe(true);
+  toggle.click();
+  expect(menu.hidden).toBe(false);
+  expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  document.getElementById('mobileMoreClose').click();
+  expect(menu.hidden).toBe(true);
+});
+
+test('V4.1 dashboard recent quotation opens the selected record directly', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const previousHistory = localStorage.getItem(historyKey);
+  document.querySelector('[data-tab="general"]').click();
+  document.getElementById('saveQuoteToHistory').click();
+  const quoteNo = document.getElementById('quoteNo').value;
+  document.querySelector('[data-tab="dashboard"]').click();
+  const recent = document.querySelector('#dashRecentQuotes .recent-quote-row');
+  expect(recent).toBeTruthy();
+  recent.click();
+  expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
+  expect(document.getElementById('quoteNo').value).toBe(quoteNo);
+  if (previousHistory == null) localStorage.removeItem(historyKey);
+  else localStorage.setItem(historyKey, previousHistory);
+});
+
+test('V4.6 dashboard global search can find a saved customer and open it', () => {
+  const customersKey = 'tunggiabao-price-report-customers-v1';
+  const previousCustomers = localStorage.getItem(customersKey);
+  const fieldIds = ['customerName','customerCompany','customerAddress','customerPhone','customerEmail','customerContact','recipientLine'];
+  const previousFields = Object.fromEntries(fieldIds.map(id => [id, document.getElementById(id).value]));
+
+  document.getElementById('customerName').value = 'Khách V46';
+  document.getElementById('customerName').dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('customerCompany').value = 'Công ty Search V46';
+  document.getElementById('customerCompany').dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('saveCurrentCustomer').click();
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  const search = document.getElementById('dashboardSearch');
+  search.value = 'Search V46';
+  search.dispatchEvent(new Event('input', { bubbles: true }));
+  const result = document.querySelector('#dashboardSearchResults .dashboard-search-result[data-result-type="customer"]');
+  expect(result).toBeTruthy();
+  result.click();
+  expect(document.getElementById('pane-customer').classList.contains('active')).toBe(true);
+  expect(document.getElementById('customerCompany').value).toBe('Công ty Search V46');
+
+  if (previousCustomers == null) localStorage.removeItem(customersKey);
+  else localStorage.setItem(customersKey, previousCustomers);
+  fieldIds.forEach((id) => {
+    const el = document.getElementById(id);
+    el.value = previousFields[id];
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  document.querySelector('[data-tab="general"]').click();
+});
+
+test('V4.9 settings persist application preferences without touching business data', () => {
+  const uiKey = 'tunggiabao-price-report-ui-v2';
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const beforeHistory = localStorage.getItem(historyKey);
+  const beforeUi = localStorage.getItem(uiKey);
+
+  document.querySelector('[data-tab="settings"]').click();
+  expect(document.getElementById('pane-settings').classList.contains('active')).toBe(true);
+
+  const hero = document.getElementById('settingsShowDashboardHero');
+  hero.checked = false;
+  hero.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.body.classList.contains('dashboard-hero-hidden')).toBe(true);
+
+  const compact = document.getElementById('settingsCompactManagement');
+  compact.checked = true;
+  compact.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.body.classList.contains('management-compact')).toBe(true);
+
+  const start = document.getElementById('settingsStartPage');
+  start.value = 'history';
+  start.dispatchEvent(new Event('change', { bubbles: true }));
+  const savedUi = JSON.parse(localStorage.getItem(uiKey));
+  expect(savedUi.appPreferences.startPage).toBe('history');
+  expect(localStorage.getItem(historyKey)).toBe(beforeHistory);
+
+  if (beforeUi == null) localStorage.removeItem(uiKey);
+  else localStorage.setItem(uiKey, beforeUi);
+  const previousPrefs = beforeUi ? (JSON.parse(beforeUi).appPreferences || {}) : {};
+  document.body.classList.toggle('dashboard-hero-hidden', previousPrefs.showDashboardHero === false);
+  document.body.classList.toggle('management-compact', Boolean(previousPrefs.compactManagement));
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('product editor can add a row and keep preview in sync', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
@@ -51,6 +182,10 @@ test('template selection applies real document profile', () => {
 test('history save records one quotation and print preflight reaches print', () => {
   document.getElementById('saveQuoteToHistory').click();
   expect(document.getElementById('historyCount').textContent).toBe('1');
+  expect(document.getElementById('historyPendingCount').textContent).toBe('1');
+  expect(document.getElementById('historyResultCount').textContent).toBe('1');
+  expect(document.querySelectorAll('#quoteHistoryList .history-table-row').length).toBe(1);
+  expect(document.querySelectorAll('#quoteHistoryList .history-table-row .history-cell').length).toBe(6);
 
   document.querySelector('.print-action').click();
   expect(window.print).toHaveBeenCalled();
@@ -81,6 +216,12 @@ test('malformed local collections are normalized instead of crashing management 
   expect(() => document.querySelector('[data-tab="history"]').click()).not.toThrow();
   expect(document.getElementById('historyCount').textContent).toBe('1');
   expect(() => document.querySelector('[data-tab="master"]').click()).not.toThrow();
+  expect(document.getElementById('customerLibraryCount').textContent).toBe('1');
+  expect(document.getElementById('productCatalogCount').textContent).toBe('1');
+  expect(document.getElementById('customerLibraryResultCount').textContent).toBe('1');
+  expect(document.getElementById('productCatalogResultCount').textContent).toBe('1');
+  expect(document.querySelectorAll('#customerLibraryList .master-table-row').length).toBe(1);
+  expect(document.querySelectorAll('#productCatalogList .master-table-row').length).toBe(1);
   expect(document.getElementById('productCatalogList').textContent).toContain('SP');
   expect(document.getElementById('productCatalogList').textContent).toContain('0 VND');
 
@@ -496,15 +637,48 @@ test('report view tab enters a dedicated responsive preview mode and exits clean
   expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 });
 
-test('export pane exposes Excel import/export, OCR import and PC workspace controls', () => {
+test('V4.8 device and system center shows real runtime state and separates local from registry code', () => {
+  document.querySelector('[data-tab="system"]').click();
+  expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
+  expect(document.getElementById('pane-system').classList.contains('active')).toBe(true);
+  expect(document.getElementById('systemLocalDeviceCode').textContent).toMatch(/^KT-/);
+  expect(document.getElementById('systemDetailDeviceClass').textContent.length).toBeGreaterThan(0);
+
+  window.dispatchEvent(new CustomEvent('pricereport:device-access', {
+    detail: {
+      state: 'pending',
+      identity: { deviceCode: 'KT-TEST-0001', lastKnownStatus: 'pending' },
+      message: 'Đang chờ duyệt thử nghiệm'
+    }
+  }));
+  expect(document.getElementById('systemAccessState').textContent).toContain('Chờ duyệt');
+  expect(document.getElementById('systemRegistryDeviceCode').textContent).toBe('KT-TEST-0001');
+
+  window.dispatchEvent(new CustomEvent('pricereport:device-access', {
+    detail: { state: 'classification-only', identity: null, message: 'Remote Device Gate chưa bật.' }
+  }));
+  expect(document.getElementById('systemAccessState').textContent).toContain('Phân loại cục bộ');
+  document.querySelector('[data-tab="general"]').click();
+});
+
+test('V4.7 publishing center exposes export, import, PC and backup controls in app workspace', () => {
   document.querySelector('[data-tab="export"]').click();
+  expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
+  expect(document.getElementById('pane-export').classList.contains('active')).toBe(true);
+  expect(document.getElementById('exportCenterHealth').textContent.length).toBeGreaterThan(0);
+  expect(document.getElementById('exportCenterQuote').textContent.length).toBeGreaterThan(0);
   expect(document.getElementById('exportExcel')).toBeTruthy();
   expect(document.getElementById('importExcelQuick')).toBeTruthy();
   expect(document.getElementById('importHandwritingQuick')).toBeTruthy();
+  expect(document.getElementById('exportJson')).toBeTruthy();
+  expect(document.getElementById('importJson')).toBeTruthy();
   expect(document.getElementById('choosePcFolder')).toBeTruthy();
   expect(document.getElementById('savePcNow')).toBeTruthy();
   expect(document.getElementById('restorePcLatest')).toBeTruthy();
+  expect(document.getElementById('exportAllData')).toBeTruthy();
+  expect(document.getElementById('importAllData')).toBeTruthy();
   expect(document.getElementById('pcFolderStatus').textContent.length).toBeGreaterThan(0);
+  document.querySelector('[data-tab="general"]').click();
 });
 
 
