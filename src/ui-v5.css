@@ -337,38 +337,32 @@ body.v5-ui .workspace-eyebrow{
 }
 
 /* ---------- Shared surfaces ---------- */
-body.v5-ui :where(
-  .dashboard-panel,
-  .history-management-panel,
-  .master-management-panel,
-  .export-center-panel,
-  .settings-panel,
-  .system-center-panel
-){
+body.v5-ui .dashboard-panel,
+body.v5-ui .history-management-panel,
+body.v5-ui .master-management-panel,
+body.v5-ui .export-center-panel,
+body.v5-ui .settings-panel,
+body.v5-ui .system-center-panel{
   border:1px solid var(--v5-border);
   border-radius:var(--v5-radius-md);
   background:var(--v5-surface);
   box-shadow:var(--v5-shadow-sm);
 }
-body.v5-ui :where(
-  .dashboard-panel-head,
-  .master-panel-head,
-  .export-panel-head,
-  .settings-panel-head,
-  .system-panel-head
-) h3{
+body.v5-ui .dashboard-panel-head h3,
+body.v5-ui .master-panel-head h3,
+body.v5-ui .export-panel-head h3,
+body.v5-ui .settings-panel-head h3,
+body.v5-ui .system-panel-head h3{
   color:var(--v5-text);
   font-size:12.5px;
   font-weight:800;
   letter-spacing:0;
 }
-body.v5-ui :where(
-  .dashboard-panel-head,
-  .master-panel-head,
-  .export-panel-head,
-  .settings-panel-head,
-  .system-panel-head
-) p{
+body.v5-ui .dashboard-panel-head p,
+body.v5-ui .master-panel-head p,
+body.v5-ui .export-panel-head p,
+body.v5-ui .settings-panel-head p,
+body.v5-ui .system-panel-head p{
   color:var(--v5-muted);
   font-size:9px;
   line-height:1.5;
