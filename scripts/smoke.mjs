@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v36-system-center")) fail('Service-worker cache version was not upgraded for V4.8 system center');
+if (!sw.includes("pricereport-shell-v37-settings")) fail('Service-worker cache version was not upgraded for V4.9 application settings');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -300,3 +300,9 @@ if (!html.includes('id="systemBoundaryQuote"') || !html.includes('id="systemBoun
 if (!js.includes('function renderSystemWorkspace()') || !js.includes('function refreshSystemWorkspace()')) fail('V4.8 system runtime renderer/refresh is missing');
 if (!js.includes("window.addEventListener('pricereport:device-access'")) fail('V4.8 must react to live Device Gate events');
 if (!css.includes('.system-workspace-header') || !css.includes('.system-status-grid')) fail('V4.8 system workspace styles are missing');
+
+if (!html.includes('data-tab="settings"') || !html.includes('id="pane-settings"')) fail('V4.9 application settings workspace is missing');
+if (!html.includes('id="settingsStartPage"') || !html.includes('id="settingsAutoPcSave"') || !html.includes('id="settingsResetUi"')) fail('V4.9 core settings controls are missing');
+if (!js.includes('function getAppPreferences()') || !js.includes('function renderSettingsWorkspace()')) fail('V4.9 settings preference runtime is missing');
+if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('V4.9 settings must use full-width application workspace');
+if (!css.includes('.settings-workspace-header') || !css.includes('.management-compact .history-table-row')) fail('V4.9 settings workspace or compact-management styles are missing');
