@@ -531,6 +531,8 @@ function openTab(tab) {
   document.getElementById('paneSub').textContent = tabMeta[tab][1];
 
   syncStudioContext(tab);
+  if (tab !== 'design') document.getElementById('designPanel')?.classList.remove('open');
+  if (appWorkspace) setPreviewCustomizer(false);
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
