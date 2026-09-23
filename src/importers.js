@@ -432,7 +432,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     const signature = [product.name, product.unit, product.pack]
       .map(value => fold(clean(value)))
       .join('|');
-    if (!signature.replace(/|/g, '')) return;
+    if (!signature.replace(/\|/g, '')) return;
     const indexes = duplicateMap.get(signature) || [];
     indexes.push(index);
     duplicateMap.set(signature, indexes);
@@ -502,7 +502,8 @@ export function parseSpreadsheetRows(rows) {
         unit: activeColumnMapping.unit != null ? cells[activeColumnMapping.unit] : '',
         qty: activeColumnMapping.qty != null ? cells[activeColumnMapping.qty] : 1,
         price: activeColumnMapping.price != null ? cells[activeColumnMapping.price] : '',
-        note: activeColumnMapping.note != null ? cells[activeColumnMapping.note] : ''
+        note: activeColumnMapping.note != null ? cells[activeColumnMapping.note] : '',
+        currency: activeColumnMapping.currency != null ? cells[activeColumnMapping.currency] : ''
       };
       const parsedPrice = parseNumber(rawProduct.price);
       const name = clean(rawProduct.name);
