@@ -56,3 +56,51 @@ Required before continuing:
 ### Next pass
 
 After the gate is green, audit Data Management Center controls against the prompt: filter, bulk selection, duplicate review and Excel import/export using the existing shared storage/data model.
+
+
+## Pass 12A — Data Management filters, duplicate review and bulk selection
+
+### Finding
+
+The Data Management Center had basic search and per-row use/delete actions, but the prompt requires a practical management surface for repeated data work. Missing controls included structured filters, duplicate visibility and bulk selection.
+
+### Corrections
+
+Customer Library:
+- filter all / has phone / missing phone / has email / missing email;
+- per-row selection;
+- bulk clear selection;
+- bulk delete with confirmation.
+
+Product Library:
+- dynamic group filter;
+- currency filter;
+- duplicate-only filter;
+- duplicate group count and non-destructive warning;
+- per-row selection;
+- bulk add selected products to the quotation using one save/render cycle;
+- bulk delete with confirmation;
+- bulk clear selection.
+
+Duplicate review uses the existing canonical product identity (group + name + pack + unit) and never deletes or merges automatically.
+
+### UX / architecture
+
+- Existing customer/product localStorage collections remain the only persistence engines.
+- Filters reuse canonical search and normalization logic.
+- Toolbars use flex wrapping; no additional responsive media-query block was introduced.
+- Selected records are pruned automatically when underlying data is removed.
+- Bulk add batches state mutation and performs one save/render instead of repeatedly invoking the single-row path.
+
+### Regression coverage
+
+DOM tests verify:
+- duplicate count and duplicate-only filtering;
+- group and currency filtering;
+- customer missing-phone filtering;
+- product row selection and bulk-bar state;
+- selection clearing.
+
+### Next pass
+
+Pass 12B: add Data Library Excel/CSV import/export by reusing the existing XLSX/import parsing and normalization layers. Imports must preview/validate before persistence and must not introduce a second import engine.
