@@ -3853,3 +3853,61 @@ body.v5-ui .product-data-grid .product-field textarea {
 body.v5-ui .product-data-grid .product-card.collapsed .product-card-body {
   display: none;
 }
+
+
+body.v5-ui .excel-sheet-picker {
+  display: grid;
+  grid-template-columns: minmax(220px,1fr) minmax(260px,1fr);
+  gap: 12px 18px;
+  align-items: end;
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid rgba(37,99,235,.18);
+  border-radius: 12px;
+  background: rgba(37,99,235,.055);
+}
+
+body.v5-ui .excel-sheet-picker[hidden] {
+  display: none;
+}
+
+body.v5-ui .excel-sheet-picker > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+body.v5-ui .excel-sheet-picker > div:first-child strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+body.v5-ui .excel-sheet-picker > div:first-child small {
+  color: #64748b;
+  line-height: 1.45;
+}
+
+body.v5-ui .excel-sheet-picker label {
+  display: grid;
+  gap: 5px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.v5-ui .excel-sheet-picker select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(148,163,184,.34);
+  border-radius: 9px;
+  background: #fff;
+  padding: 6px 9px;
+  color: #0f172a;
+}
+
+body.v5-ui .excel-sheet-summary {
+  grid-column: 1 / -1;
+  padding-top: 9px;
+  border-top: 1px solid rgba(148,163,184,.18);
+  color: #475569;
+  font-size: 12px;
+}
