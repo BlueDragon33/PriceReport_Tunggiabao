@@ -12,7 +12,8 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { csvFromRows, productRowsForExport as buildProductExportRows } from './exporters.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -43,6 +44,7 @@ const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
 const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
+const RECOVERY_STORAGE = 'tunggiabao-price-report-recovery-v1';
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -408,7 +410,105 @@ function stateForStorage() {
   return data;
 }
 
-const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
+function updateAutosaveIndicator(mode, timestamp = Date.now()) {
+  const el = document.getElementById('studioAutosaveState');
+  if (!el) return;
+  el.dataset.state = mode;
+  if (mode === 'saving') {
+    el.textContent = '● Đang lưu...';
+  } else if (mode === 'saved') {
+    const time = new Date(timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    el.textContent = '✓ Đã lưu lúc ' + time;
+  } else if (mode === 'error') {
+    el.textContent = '⚠ Không thể lưu';
+  } else {
+    el.textContent = 'Đã nạp bản lưu';
+  }
+}
+
+function writeRecoverySnapshot() {
+  try {
+    sessionStorage.setItem(RECOVERY_STORAGE, JSON.stringify({
+      savedAt: Date.now(),
+      data: stateForStorage()
+    }));
+    return true;
+  } catch (error) {
+    console.warn('Draft recovery snapshot could not be stored.', error);
+    return false;
+  }
+}
+
+function clearRecoverySnapshot() {
+  try {
+    sessionStorage.removeItem(RECOVERY_STORAGE);
+  } catch (error) {
+    console.warn('Draft recovery snapshot could not be cleared.', error);
+  }
+}
+
+function readRecoverySnapshot() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(RECOVERY_STORAGE) || 'null');
+    if (!parsed || !isPlainObject(parsed.data)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function save() {
+  updateAutosaveIndicator('saving');
+  writeRecoverySnapshot();
+  const persisted = safeStore(STORAGE, JSON.stringify(stateForStorage()));
+  if (persisted) {
+    clearRecoverySnapshot();
+    updateAutosaveIndicator('saved');
+  } else {
+    updateAutosaveIndicator('error');
+  }
+  return persisted;
+}
+
+function offerDraftRecovery() {
+  const banner = document.getElementById('draftRecoveryBanner');
+  const detail = document.getElementById('draftRecoveryDetail');
+  const snapshot = readRecoverySnapshot();
+  if (!banner || !snapshot) return false;
+
+  const stored = JSON.stringify(stateForStorage());
+  const recovery = JSON.stringify(snapshot.data);
+  if (stored === recovery) {
+    clearRecoverySnapshot();
+    return false;
+  }
+
+  const time = new Date(Number(snapshot.savedAt || Date.now())).toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  if (detail) detail.textContent = 'Bản khôi phục gần nhất lúc ' + time + ' chưa được ghi hoàn chỉnh vào bộ nhớ chính.';
+  banner.hidden = false;
+
+  document.getElementById('restoreDraftRecovery')?.addEventListener('click', () => {
+    state = merge(snapshot.data);
+    const persisted = save();
+    syncInputs();
+    resetCollapsedProductsForState();
+    selectedProductRows.clear();
+    renderEditorProducts();
+    render();
+    banner.hidden = true;
+    toast(persisted ? 'Đã khôi phục bản đang soạn' : 'Đã khôi phục tạm thời; bộ nhớ chính vẫn chưa ghi được');
+  }, { once: true });
+
+  document.getElementById('discardDraftRecovery')?.addEventListener('click', () => {
+    clearRecoverySnapshot();
+    banner.hidden = true;
+    updateAutosaveIndicator('idle');
+  }, { once: true });
+  return true;
+}
 
 function captureStorageSnapshot(keys) {
   const snapshot = {};
@@ -1414,6 +1514,70 @@ function numberToWords(value) {
 }
 
 let collapsedProducts = new Set();
+let selectedProductRows = new Set();
+
+function selectedProductIndices() {
+  selectedProductRows = new Set(
+    [...selectedProductRows].filter(index => Number.isInteger(index) && index >= 0 && index < state.products.length)
+  );
+  return [...selectedProductRows].sort((a, b) => a - b);
+}
+
+function syncProductBulkActionInput() {
+  const action = document.getElementById('productBulkAction');
+  const value = document.getElementById('productBulkValue');
+  if (!action || !value) return;
+  const needsValue = ['group','unit','price'].includes(action.value);
+  value.disabled = !needsValue;
+  value.hidden = !needsValue;
+  value.type = action.value === 'price' ? 'number' : 'text';
+  value.placeholder = action.value === 'group'
+    ? 'Nhập nhóm hàng'
+    : action.value === 'unit'
+      ? 'Nhập ĐVT'
+      : action.value === 'price'
+        ? 'VD: 5 hoặc -10'
+        : '';
+  if (action.value === 'price') {
+    value.step = '0.1';
+    value.min = '-100';
+  } else {
+    value.removeAttribute('step');
+    value.removeAttribute('min');
+  }
+}
+
+function syncProductBulkBar() {
+  const indices = selectedProductIndices();
+  const bar = document.getElementById('productBulkBar');
+  const count = document.getElementById('productBulkCount');
+  const selectAll = document.getElementById('selectAllProducts');
+  if (bar) bar.hidden = indices.length === 0;
+  if (count) count.textContent = indices.length + ' dòng đã chọn';
+  if (selectAll) {
+    selectAll.checked = state.products.length > 0 && indices.length === state.products.length;
+    selectAll.indeterminate = indices.length > 0 && indices.length < state.products.length;
+  }
+  syncProductBulkActionInput();
+}
+
+function clearProductSelection({ rerender = true } = {}) {
+  selectedProductRows.clear();
+  if (rerender) renderEditorProducts();
+  else syncProductBulkBar();
+}
+
+function setupProductBulkActions() {
+  document.getElementById('selectAllProducts')?.addEventListener('change', (event) => {
+    selectedProductRows = event.currentTarget.checked
+      ? new Set(state.products.map((_, index) => index))
+      : new Set();
+    renderEditorProducts();
+  });
+  document.getElementById('clearProductSelection')?.addEventListener('click', () => clearProductSelection());
+  document.getElementById('productBulkAction')?.addEventListener('change', syncProductBulkActionInput);
+  document.getElementById('applyProductBulk')?.addEventListener('click', applyProductBulkAction);
+}
 
 function resetCollapsedProductsForState() {
   collapsedProducts = state.products.length >= 24
@@ -1431,18 +1595,143 @@ function productHasDraftContent(product) {
   return normalizeNonNegativeNumber(product.qty) !== 1;
 }
 
-function focusProductName(index) {
+function focusProductCell(index, key = 'name') {
   requestAnimationFrame(() => {
-    const cards = document.querySelectorAll('#productEditor .product-card');
-    const target = cards[index]?.querySelector('[data-product-key="name"]');
+    const card = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
+    const target = card?.querySelector('[data-product-key="' + key + '"]');
     target?.focus();
     target?.select?.();
+  });
+}
+
+function focusProductName(index) {
+  focusProductCell(index, 'name');
+}
+
+function appendBlankProduct({ focusKey = 'name' } = {}) {
+  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  const nextIndex = state.products.length - 1;
+  collapsedProducts.delete(nextIndex);
+  save();
+  renderEditorProducts();
+  render();
+  focusProductCell(nextIndex, focusKey);
+  return nextIndex;
+}
+
+function refreshCustomerEntrySuggestions() {
+  const customers = getCustomerLibrary();
+  ensureSuggestionList('customerNameSuggestions', customers.map(item => item.name));
+  ensureSuggestionList('customerCompanySuggestions', customers.map(item => item.company));
+  ensureSuggestionList('customerPhoneSuggestions', customers.map(item => item.phone));
+}
+
+function matchCustomerSuggestion(field, rawValue) {
+  const value = String(rawValue || '').trim();
+  if (!value) return null;
+  const customers = getCustomerLibrary();
+  if (field === 'phone') {
+    const normalized = canonicalLibraryPhone(value);
+    return customers.find(item => canonicalLibraryPhone(item.phone) === normalized) || null;
+  }
+  const canonical = canonicalLibraryText(value);
+  return customers.find(item => canonicalLibraryText(item?.[field]) === canonical) || null;
+}
+
+function setupCustomerEntryAutocomplete() {
+  refreshCustomerEntrySuggestions();
+  document.querySelectorAll('[data-customer-autocomplete]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const customer = matchCustomerSuggestion(input.dataset.customerAutocomplete, input.value);
+      if (!customer) return;
+      useCustomer(customer, { navigate: false, focus: false, notify: true });
+    });
+  });
+}
+
+function ensureSuggestionList(id, values) {
+  let list = document.getElementById(id);
+  if (!list) {
+    list = document.createElement('datalist');
+    list.id = id;
+    document.body.appendChild(list);
+  }
+  list.innerHTML = '';
+  [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]
+    .slice(0, 300)
+    .forEach((value) => {
+      const option = document.createElement('option');
+      option.value = value;
+      list.appendChild(option);
+    });
+}
+
+function refreshProductEntrySuggestions() {
+  const catalog = getProductCatalog();
+  ensureSuggestionList('productNameSuggestions', catalog.map(item => item.name));
+  ensureSuggestionList('productGroupSuggestions', [
+    ...catalog.map(item => item.group),
+    ...state.products.map(item => item.group)
+  ]);
+  ensureSuggestionList('productUnitSuggestions', [
+    'Cái','Bộ','Hộp','Khay','Gói','Túi','Chai','Thùng','Kg','g','Lít','ml','m','m²',
+    ...catalog.map(item => item.unit),
+    ...state.products.map(item => item.unit)
+  ]);
+}
+
+function productCellIssue(product, key) {
+  const name = String(product?.name || '').trim();
+  const qty = Number(product?.qty);
+  const price = Number(product?.price);
+
+  if (key === 'name' && !name && productHasDraftContent(product)) {
+    return { tone: 'error', message: 'Cần nhập tên sản phẩm.' };
+  }
+  if (key === 'qty' && name) {
+    if (!Number.isFinite(qty)) return { tone: 'error', message: 'Số lượng không hợp lệ.' };
+    if (qty < 0) return { tone: 'warning', message: 'Số lượng không được âm.' };
+    if (qty === 0 && (state.showQty || state.showAmount || state.showTotals)) {
+      return { tone: 'warning', message: 'Số lượng đang bằng 0.' };
+    }
+  }
+  if (key === 'price' && name) {
+    if (!Number.isFinite(price)) return { tone: 'error', message: 'Đơn giá không hợp lệ.' };
+    if (price < 0) return { tone: 'warning', message: 'Đơn giá không được âm.' };
+    if (price === 0 && state.showPrice) return { tone: 'warning', message: 'Chưa có đơn giá.' };
+  }
+  return null;
+}
+
+function syncProductRowValidation(card, product) {
+  if (!card) return;
+  card.querySelectorAll('[data-product-key]').forEach((input) => {
+    const key = input.dataset.productKey;
+    const field = input.closest('.product-field');
+    if (!field) return;
+    field.classList.remove('cell-error', 'cell-warning');
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
+    field.querySelector('.product-cell-validation')?.remove();
+
+    const issue = productCellIssue(product, key);
+    if (!issue) return;
+    field.classList.add(issue.tone === 'error' ? 'cell-error' : 'cell-warning');
+    input.setAttribute('aria-invalid', 'true');
+    const message = document.createElement('small');
+    message.className = 'product-cell-validation';
+    message.id = 'product-cell-' + card.dataset.productIndex + '-' + key + '-message';
+    message.setAttribute('role', 'status');
+    message.textContent = issue.message;
+    input.setAttribute('aria-describedby', message.id);
+    field.appendChild(message);
   });
 }
 
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
   wrap.className = 'product-field ' + className;
+  wrap.dataset.productField = key;
   const title = document.createElement('span');
   title.textContent = label;
   const input = key === 'note' ? document.createElement('textarea') : document.createElement('input');
@@ -1454,10 +1743,49 @@ function productField(label, key, value, type, onInput, className = '') {
     input.step = key === 'price' ? '1000' : '1';
     input.inputMode = 'decimal';
   }
-  if (key === 'name') input.placeholder = 'Tên hàng hóa / dịch vụ';
+  if (key === 'name') {
+    input.placeholder = 'Tên hàng hóa / dịch vụ';
+    input.setAttribute('list', 'productNameSuggestions');
+    input.setAttribute('autocomplete', 'off');
+  }
+  if (key === 'group') {
+    input.setAttribute('list', 'productGroupSuggestions');
+    input.setAttribute('autocomplete', 'off');
+  }
   if (key === 'pack') input.placeholder = 'VD: Hộp 10 quả';
-  if (key === 'unit') input.placeholder = 'VD: Hộp, kg, cái';
+  if (key === 'unit') {
+    input.placeholder = 'VD: Hộp, kg, cái';
+    input.setAttribute('list', 'productUnitSuggestions');
+    input.setAttribute('autocomplete', 'off');
+  }
   input.addEventListener('input', () => onInput(input));
+  input.addEventListener('keydown', (event) => {
+    const card = input.closest('.product-card');
+    const rowIndex = Number(card?.dataset.productIndex);
+    if (!Number.isInteger(rowIndex)) return;
+
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      const targetIndex = rowIndex + (event.key === 'ArrowDown' ? 1 : -1);
+      if (targetIndex >= 0 && targetIndex < state.products.length) {
+        event.preventDefault();
+        focusProductCell(targetIndex, key);
+      }
+      return;
+    }
+
+    if (event.key === 'Enter' && key !== 'note' && !event.shiftKey) {
+      event.preventDefault();
+      if (rowIndex >= state.products.length - 1) appendBlankProduct({ focusKey: 'name' });
+      else focusProductCell(rowIndex + 1, key);
+      return;
+    }
+
+    if (event.key === 'Tab' && !event.shiftKey && key === 'note') {
+      event.preventDefault();
+      if (rowIndex >= state.products.length - 1) appendBlankProduct({ focusKey: 'name' });
+      else focusProductCell(rowIndex + 1, 'name');
+    }
+  });
   wrap.append(title, input);
   return wrap;
 }
@@ -1465,16 +1793,32 @@ function productField(label, key, value, type, onInput, className = '') {
 function renderEditorProducts() {
   const list = document.getElementById('productEditor');
   list.innerHTML = '';
+  refreshProductEntrySuggestions();
 
   state.products.forEach((product, index) => {
     const card = document.createElement('article');
-    card.className = 'product-card' + (collapsedProducts.has(index) ? ' collapsed' : '');
+    card.className = 'product-card product-grid-row' + (collapsedProducts.has(index) ? ' collapsed' : '');
+    card.dataset.productIndex = String(index);
 
     const head = document.createElement('div');
     head.className = 'product-card-head';
 
     const identity = document.createElement('div');
     identity.className = 'product-card-identity';
+    const selectWrap = document.createElement('label');
+    selectWrap.className = 'product-row-select-wrap';
+    const selectRow = document.createElement('input');
+    selectRow.type = 'checkbox';
+    selectRow.className = 'product-row-select';
+    selectRow.checked = selectedProductRows.has(index);
+    selectRow.setAttribute('aria-label', 'Chọn sản phẩm ' + (index + 1));
+    selectRow.addEventListener('change', () => {
+      if (selectRow.checked) selectedProductRows.add(index);
+      else selectedProductRows.delete(index);
+      syncProductBulkBar();
+      card.classList.toggle('bulk-selected', selectRow.checked);
+    });
+    selectWrap.appendChild(selectRow);
     const badge = document.createElement('span');
     badge.className = 'product-index';
     badge.textContent = String(index + 1);
@@ -1485,7 +1829,8 @@ function renderEditorProducts() {
     amount.className = 'product-live-total';
     amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
     titleWrap.append(title, amount);
-    identity.append(badge, titleWrap);
+    identity.append(selectWrap, badge, titleWrap);
+    card.classList.toggle('bulk-selected', selectRow.checked);
 
     const actions = document.createElement('div');
     actions.className = 'product-card-actions';
@@ -1512,6 +1857,7 @@ function renderEditorProducts() {
     up.addEventListener('click', () => {
       if (index === 0) return;
       [state.products[index - 1], state.products[index]] = [state.products[index], state.products[index - 1]];
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1525,6 +1871,7 @@ function renderEditorProducts() {
     down.addEventListener('click', () => {
       if (index >= state.products.length - 1) return;
       [state.products[index + 1], state.products[index]] = [state.products[index], state.products[index + 1]];
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1536,6 +1883,7 @@ function renderEditorProducts() {
     duplicate.textContent = '⧉';
     duplicate.addEventListener('click', () => {
       state.products.splice(index + 1, 0, clone(product));
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1550,6 +1898,7 @@ function renderEditorProducts() {
       state.products.splice(index, 1);
       if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1561,9 +1910,9 @@ function renderEditorProducts() {
 
     const updateProduct = (key, input, numeric = false) => {
       if (numeric) {
-        const value = normalizeNonNegativeNumber(input.value);
-        product[key] = value;
-        if (Number(input.value) !== value) input.value = String(value);
+        const raw = String(input.value || '').trim();
+        const value = raw === '' ? 0 : Number(raw);
+        product[key] = Number.isFinite(value) ? value : 0;
       } else {
         product[key] = input.value;
       }
@@ -1574,6 +1923,7 @@ function renderEditorProducts() {
       renderTotals();
       updateDocumentHealth();
       syncStudioContext('products');
+      syncProductRowValidation(card, product);
       requestAnimationFrame(updatePageEstimate);
     };
 
@@ -1587,7 +1937,33 @@ function renderEditorProducts() {
       productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'wide')
     );
 
+    const nameInput = body.querySelector('[data-product-key="name"]');
+    nameInput?.addEventListener('change', () => {
+      const requested = canonicalLibraryText(nameInput.value);
+      if (!requested) return;
+      const selected = getProductCatalog().find(item =>
+        canonicalLibraryText(item.name) === requested
+      );
+      if (!selected) return;
+      const currencyMatches = normalizeCatalogCurrency(selected.currency || 'VND') === normalizeCatalogCurrency(state.currency);
+      product.group = selected.group || product.group || '';
+      product.name = selected.name || product.name || '';
+      product.pack = selected.pack || '';
+      product.unit = selected.unit || '';
+      product.price = currencyMatches ? normalizeNonNegativeNumber(selected.price) : 0;
+      product.note = selected.note || '';
+      if (!normalizeNonNegativeNumber(product.qty)) product.qty = 1;
+      save();
+      renderEditorProducts();
+      render();
+      focusProductCell(index, 'qty');
+      toast(currencyMatches
+        ? 'Đã điền thông tin từ danh mục'
+        : 'Đã điền sản phẩm; đơn giá để 0 vì khác loại tiền tệ');
+    });
+
     card.append(head, body);
+    syncProductRowValidation(card, product);
     list.appendChild(card);
   });
 
@@ -1595,6 +1971,7 @@ function renderEditorProducts() {
   if (collapseButton) {
     collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
   }
+  syncProductBulkBar();
 }
 
 function renderPreviewProducts() {
@@ -2037,11 +2414,28 @@ function render() {
   });
 }
 
-function toast(message) {
+let toastTimer = null;
+function toast(message, action = null) {
   const el = document.getElementById('toast');
-  el.textContent = message;
+  if (!el) return;
+  if (toastTimer) clearTimeout(toastTimer);
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = message;
+  el.appendChild(text);
+  if (action?.label && typeof action.onClick === 'function') {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toast-action';
+    button.textContent = action.label;
+    button.addEventListener('click', () => {
+      action.onClick();
+      el.classList.remove('show');
+    }, { once: true });
+    el.appendChild(button);
+  }
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 1600);
+  toastTimer = setTimeout(() => el.classList.remove('show'), action?.duration || 1600);
 }
 
 function downloadBlob(name, blob) {
@@ -2068,6 +2462,10 @@ function fullBackupPayload() {
   };
 }
 
+function productRowsForExport() {
+  return buildProductExportRows(state.products);
+}
+
 function excelRowsForCurrentQuote() {
   const rows = [];
   rows.push([state.companyName || '']);
@@ -2078,47 +2476,47 @@ function excelRowsForCurrentQuote() {
   rows.push([]);
   rows.push([state.quoteTitle || 'BẢNG BÁO GIÁ']);
   if (state.quoteSubtitle) rows.push([state.quoteSubtitle]);
+  if (state.quoteNo) rows.push(['Mã báo giá:', state.quoteNo]);
+  if (state.quoteDate) rows.push(['Ngày báo giá:', state.quoteDate]);
   if (state.recipientLine) rows.push([state.recipientLine]);
   if (state.intro) rows.push([state.intro]);
   rows.push([]);
-  rows.push(['STT','Mặt hàng','ĐVT','Đơn giá','Ghi chú']);
-
-  let activeGroup = '';
-  let groupIndex = 0;
-  (state.products || []).forEach((product, index) => {
-    const group = String(product.group || '').trim();
-    if (group && group !== activeGroup) {
-      activeGroup = group;
-      groupIndex = 0;
-      rows.push([group]);
-    }
-    groupIndex += 1;
-    rows.push([
-      group ? groupIndex : index + 1,
-      product.name || '',
-      product.unit || '',
-      Number(product.price || 0),
-      product.note || ''
-    ]);
-  });
-
+  rows.push(...productRowsForExport());
   rows.push([]);
   if (state.dateLine) rows.push(['', state.dateLine]);
   if (state.rightName) rows.push(['', state.rightName]);
   return rows;
 }
 
+function exportCurrentQuoteCsv() {
+  const csv = csvFromRows(productRowsForExport());
+  const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.csv';
+  download(name, csv, 'text/csv;charset=utf-8');
+  toast('Đã xuất file CSV');
+}
+
 async function exportCurrentQuoteExcel() {
   try {
     const XLSX = await import('xlsx');
     const sheet = XLSX.utils.aoa_to_sheet(excelRowsForCurrentQuote());
-    sheet['!cols'] = [{ wch: 8 }, { wch: 42 }, { wch: 12 }, { wch: 16 }, { wch: 26 }];
+    sheet['!cols'] = [
+      { wch: 8 }, { wch: 20 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
+      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
+    ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, 'Bảng báo giá');
+
+    const dataSheet = XLSX.utils.aoa_to_sheet(productRowsForExport());
+    dataSheet['!cols'] = [
+      { wch: 8 }, { wch: 20 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
+      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
+    ];
+    XLSX.utils.book_append_sheet(workbook, dataSheet, 'Dữ liệu sản phẩm');
+
     const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
     const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.xlsx';
     downloadBlob(name, new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-    toast('Đã xuất file Excel');
+    toast('Đã xuất Excel đầy đủ dữ liệu');
   } catch (error) {
     console.error('Excel export failed:', error);
     alert('Không thể xuất Excel. Hãy thử tải lại trang rồi thực hiện lại.');
@@ -2246,6 +2644,8 @@ let smartImportImageUrl = '';
 let smartImportBusy = false;
 let smartImportLastFocus = null;
 let smartImportManualFields = new Set();
+let smartImportSheetCandidates = [];
+let lastImportUndoSnapshot = null;
 
 
 function resetSmartImportDraft() {
@@ -2259,6 +2659,10 @@ function resetSmartImportDraft() {
   const preview = document.getElementById('handwritingPreview');
   const excelInput = document.getElementById('excelSmartImportInput');
   const handwritingInput = document.getElementById('handwritingSmartImportInput');
+  const pastePanel = document.getElementById('smartPastePanel');
+  const pasteText = document.getElementById('smartPasteText');
+  const sheetPicker = document.getElementById('smartImportSheetPicker');
+  const sheetSelect = document.getElementById('smartImportSheetSelect');
   if (review) review.hidden = true;
   if (apply) apply.disabled = true;
   if (raw) raw.value = '';
@@ -2267,9 +2671,24 @@ function resetSmartImportDraft() {
   if (preview) preview.removeAttribute('src');
   if (excelInput) excelInput.value = '';
   if (handwritingInput) handwritingInput.value = '';
+  if (pastePanel) pastePanel.hidden = true;
+  if (pasteText) pasteText.value = '';
+  smartImportSheetCandidates = [];
+  if (sheetPicker) sheetPicker.hidden = true;
+  if (sheetSelect) sheetSelect.innerHTML = '';
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
   document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
+  const mapping = document.getElementById('smartImportMapping');
+  if (mapping) mapping.hidden = true;
+  const mappingRows = document.getElementById('smartImportMappingRows');
+  if (mappingRows) mappingRows.innerHTML = '';
+  const productPreview = document.getElementById('smartImportProductPreview');
+  if (productPreview) productPreview.innerHTML = '';
+  const issues = document.getElementById('smartImportIssues');
+  const issueList = document.getElementById('smartImportIssueList');
+  if (issues) issues.hidden = true;
+  if (issueList) issueList.innerHTML = '';
   setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
 }
 
@@ -2349,6 +2768,314 @@ function supplementImportFields(draft) {
   return fields;
 }
 
+const IMPORT_MAPPING_TARGETS = [
+  ['name', 'Tên sản phẩm'],
+  ['group', 'Nhóm hàng'],
+  ['pack', 'Quy cách'],
+  ['unit', 'ĐVT'],
+  ['qty', 'Số lượng'],
+  ['price', 'Đơn giá'],
+  ['note', 'Ghi chú']
+];
+
+function rebuildSmartImportProductsFromMapping() {
+  const meta = smartImportDraft?.spreadsheetMeta;
+  if (!meta || !Array.isArray(meta.rows)) return;
+  const rebuilt = parseMappedSpreadsheetRows(meta.rows, {
+    headerIndex: meta.headerIndex,
+    mapping: meta.mapping,
+    excludedRows: meta.excludedRows
+  });
+  smartImportDraft.products = rebuilt.products;
+  smartImportDraft.groups = rebuilt.groups;
+  meta.invalidRows = rebuilt.invalidRows;
+  meta.duplicates = rebuilt.duplicates;
+}
+
+function renderSmartImportProductPreview() {
+  const host = document.getElementById('smartImportProductPreview');
+  if (!host) return;
+  host.innerHTML = '';
+  const products = Array.isArray(smartImportDraft?.products) ? smartImportDraft.products : [];
+  const rows = products.slice(0, 5);
+  rows.forEach((product, index) => {
+    const row = document.createElement('div');
+    row.className = 'import-product-preview-row';
+    const cells = [
+      String(index + 1),
+      product.name || '—',
+      product.unit || '—',
+      String(product.qty ?? 1),
+      new Intl.NumberFormat('vi-VN').format(Number(product.price || 0))
+    ];
+    cells.forEach((value) => {
+      const cell = document.createElement('span');
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+    host.appendChild(row);
+  });
+  if (products.length > rows.length) {
+    const more = document.createElement('div');
+    more.className = 'import-product-preview-more';
+    more.textContent = '… và ' + (products.length - rows.length) + ' dòng khác';
+    host.appendChild(more);
+  }
+}
+
+function renderSmartImportMapping() {
+  const section = document.getElementById('smartImportMapping');
+  const host = document.getElementById('smartImportMappingRows');
+  const status = document.getElementById('smartImportMappingStatus');
+  if (!section || !host) return;
+  const meta = smartImportDraft?.spreadsheetMeta;
+  if (!meta || !Array.isArray(meta.rows) || !Array.isArray(meta.headers)) {
+    section.hidden = true;
+    return;
+  }
+
+  section.hidden = false;
+  host.innerHTML = '';
+  const mappingEntries = Object.entries(meta.mapping || {});
+  meta.headers.forEach((header, sourceIndex) => {
+    const headerText = String(header || '').trim();
+    if (!headerText) return;
+    const current = mappingEntries.find(([, index]) => Number(index) === sourceIndex)?.[0] || '';
+    const row = document.createElement('div');
+    row.className = 'import-mapping-row';
+
+    const source = document.createElement('div');
+    source.className = 'import-mapping-source';
+    const sourceName = document.createElement('strong');
+    sourceName.textContent = headerText;
+    const confidence = document.createElement('small');
+    const confidenceValue = current ? Number(meta.confidence?.[current] || 0) : 0;
+    confidence.textContent = current
+      ? 'Độ tin cậy ' + Math.round(confidenceValue * 100) + '%'
+      : 'Chưa dùng cột này';
+    source.append(sourceName, confidence);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'import-mapping-arrow';
+    arrow.textContent = '→';
+
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'Ánh xạ cột ' + headerText);
+    const ignore = document.createElement('option');
+    ignore.value = '';
+    ignore.textContent = 'Bỏ qua';
+    select.appendChild(ignore);
+    IMPORT_MAPPING_TARGETS.forEach(([key, label]) => {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = label;
+      option.selected = current === key;
+      select.appendChild(option);
+    });
+    select.addEventListener('change', () => {
+      const nextField = select.value;
+      const nextMapping = { ...(meta.mapping || {}) };
+      Object.entries(nextMapping).forEach(([field, index]) => {
+        if (Number(index) === sourceIndex || (nextField && field === nextField)) delete nextMapping[field];
+      });
+      if (nextField) nextMapping[nextField] = sourceIndex;
+      meta.mapping = nextMapping;
+      meta.confidence = { ...(meta.confidence || {}), ...(nextField ? { [nextField]: 1 } : {}) };
+      rebuildSmartImportProductsFromMapping();
+      renderSmartImportReview();
+    });
+
+    row.append(source, arrow, select);
+    host.appendChild(row);
+  });
+
+  const invalidCount = Array.isArray(meta.invalidRows) ? meta.invalidRows.length : 0;
+  const duplicateCount = Array.isArray(meta.duplicates) ? meta.duplicates.length : 0;
+  if (status) {
+    const flags = [];
+    if (invalidCount) flags.push(invalidCount + ' dòng cần kiểm tra');
+    if (duplicateCount) flags.push(duplicateCount + ' nhóm có thể trùng');
+    status.textContent = smartImportDraft.products.length + ' dòng hợp lệ' +
+      (flags.length ? ' • ' + flags.join(' • ') : ' • mapping sẵn sàng');
+    status.dataset.tone = flags.length ? 'warn' : 'ok';
+  }
+  renderSmartImportProductPreview();
+}
+
+function renderSmartImportIssues() {
+  const section = document.getElementById('smartImportIssues');
+  const list = document.getElementById('smartImportIssueList');
+  const summary = document.getElementById('smartImportIssueSummary');
+  if (!section || !list) return;
+
+  const meta = smartImportDraft?.spreadsheetMeta;
+  const invalidRows = Array.isArray(meta?.invalidRows) ? meta.invalidRows : [];
+  const duplicates = Array.isArray(meta?.duplicates) ? meta.duplicates : [];
+  list.innerHTML = '';
+
+  const reasonLabels = {
+    'missing-name': 'Thiếu tên sản phẩm',
+    'invalid-price': 'Đơn giá không hợp lệ',
+    'negative-price': 'Đơn giá âm',
+    'negative-qty': 'Số lượng âm'
+  };
+
+  invalidRows.forEach((issue) => {
+    const item = document.createElement('div');
+    item.className = 'import-issue-item issue-error';
+    const title = document.createElement('strong');
+    title.textContent = 'Dòng ' + issue.rowNumber;
+    const detail = document.createElement('span');
+    const reasons = (issue.reasons || []).map(reason => reasonLabels[reason] || reason);
+    detail.textContent = reasons.length ? reasons.join(' • ') : 'Cần kiểm tra';
+
+    const editor = document.createElement('div');
+    editor.className = 'import-issue-editor';
+    const rowIndex = Number(issue.rowNumber) - 1;
+    const rawRow = Array.isArray(meta?.rows?.[rowIndex]) ? meta.rows[rowIndex] : [];
+    const fields = [
+      ['name', 'Tên sản phẩm', 'text'],
+      ['qty', 'Số lượng', 'text'],
+      ['price', 'Đơn giá', 'text']
+    ];
+    const controls = {};
+
+    fields.forEach(([field, labelText, inputType]) => {
+      const sourceIndex = meta?.mapping?.[field];
+      if (sourceIndex == null) return;
+      const label = document.createElement('label');
+      const caption = document.createElement('span');
+      caption.textContent = labelText;
+      const input = document.createElement('input');
+      input.type = inputType;
+      input.value = String(rawRow[sourceIndex] ?? '');
+      input.dataset.issueField = field;
+      label.append(caption, input);
+      editor.appendChild(label);
+      controls[field] = { input, sourceIndex };
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'import-issue-actions';
+    const saveButton = document.createElement('button');
+    saveButton.type = 'button';
+    saveButton.className = 'btn primary';
+    saveButton.textContent = 'Sửa và kiểm tra lại';
+    saveButton.addEventListener('click', () => {
+      if (!meta || !Array.isArray(meta.rows) || rowIndex < 0 || rowIndex >= meta.rows.length) return;
+      const nextRow = Array.isArray(meta.rows[rowIndex]) ? [...meta.rows[rowIndex]] : [];
+      Object.values(controls).forEach(({ input, sourceIndex }) => {
+        nextRow[sourceIndex] = input.value;
+      });
+      meta.rows[rowIndex] = nextRow;
+      rebuildSmartImportProductsFromMapping();
+      renderSmartImportReview();
+      const stillInvalid = (meta.invalidRows || []).some(row => Number(row.rowNumber) === Number(issue.rowNumber));
+      setSmartImportProgress(
+        stillInvalid
+          ? 'Dòng ' + issue.rowNumber + ' vẫn chưa hợp lệ. Kiểm tra lại dữ liệu vừa sửa.'
+          : 'Đã sửa dòng ' + issue.rowNumber + ' và đưa lại vào danh sách nhập.',
+        stillInvalid ? 'error' : 'success'
+      );
+    });
+    actions.appendChild(saveButton);
+
+    const note = document.createElement('small');
+    note.textContent = 'Dòng này chưa được đưa vào báo giá cho tới khi kiểm tra lại thành công.';
+    item.append(title, detail, editor, actions, note);
+    list.appendChild(item);
+  });
+
+  duplicates.forEach((group) => {
+    const item = document.createElement('div');
+    item.className = 'import-issue-item issue-warn';
+    const title = document.createElement('strong');
+    title.textContent = 'Có thể trùng dữ liệu';
+    const detail = document.createElement('span');
+    const rowLabels = (group.rowNumbers || []).map(rowNumber => 'dòng ' + rowNumber);
+    detail.textContent = [
+      (group.names || []).filter(Boolean)[0] || 'Sản phẩm',
+      rowLabels.length ? rowLabels.join(', ') : ''
+    ].filter(Boolean).join(' • ');
+
+    const note = document.createElement('small');
+    note.textContent = 'Mặc định đang giữ tất cả. Chỉ bỏ hoặc gộp khi bạn chọn rõ ràng.';
+    const actions = document.createElement('div');
+    actions.className = 'import-issue-actions import-duplicate-actions';
+
+    (group.rowNumbers || []).slice(1).forEach((rowNumber) => {
+      const skip = document.createElement('button');
+      skip.type = 'button';
+      skip.className = 'btn';
+      skip.textContent = 'Bỏ dòng ' + rowNumber;
+      skip.addEventListener('click', () => {
+        const previousExcluded = [...(meta.excludedRows || [])];
+        meta.excludedRows = [...new Set([...previousExcluded, Number(rowNumber)])];
+        rebuildSmartImportProductsFromMapping();
+        renderSmartImportReview();
+        toast('Đã bỏ dòng ' + rowNumber + ' khỏi lần nhập này', {
+          label: 'Hoàn tác',
+          duration: 6000,
+          onClick: () => {
+            meta.excludedRows = previousExcluded;
+            rebuildSmartImportProductsFromMapping();
+            renderSmartImportReview();
+          }
+        });
+      });
+      actions.appendChild(skip);
+    });
+
+    const samePrice = Array.isArray(group.prices) && group.prices.length > 1 &&
+      group.prices.every(price => Number(price) === Number(group.prices[0]));
+    const canMergeQuantity = samePrice && meta?.mapping?.qty != null &&
+      Array.isArray(group.quantities) && group.quantities.every(qty => Number.isFinite(Number(qty))) &&
+      Array.isArray(group.rowNumbers) && group.rowNumbers.length > 1;
+
+    if (canMergeQuantity) {
+      const mergeButton = document.createElement('button');
+      mergeButton.type = 'button';
+      mergeButton.className = 'btn primary';
+      mergeButton.textContent = 'Gộp số lượng';
+      mergeButton.addEventListener('click', () => {
+        const [firstRowNumber, ...otherRowNumbers] = group.rowNumbers.map(Number);
+        const firstRowIndex = firstRowNumber - 1;
+        if (!Array.isArray(meta.rows?.[firstRowIndex])) return;
+
+        const previousRow = [...meta.rows[firstRowIndex]];
+        const previousExcluded = [...(meta.excludedRows || [])];
+        const qtyIndex = meta.mapping.qty;
+        const totalQty = group.quantities.reduce((sum, qty) => sum + Number(qty || 0), 0);
+        const nextRow = [...meta.rows[firstRowIndex]];
+        nextRow[qtyIndex] = totalQty;
+        meta.rows[firstRowIndex] = nextRow;
+        meta.excludedRows = [...new Set([...previousExcluded, ...otherRowNumbers])];
+
+        rebuildSmartImportProductsFromMapping();
+        renderSmartImportReview();
+        toast('Đã gộp ' + group.rowNumbers.length + ' dòng cùng giá thành một dòng', {
+          label: 'Hoàn tác',
+          duration: 6000,
+          onClick: () => {
+            meta.rows[firstRowIndex] = previousRow;
+            meta.excludedRows = previousExcluded;
+            rebuildSmartImportProductsFromMapping();
+            renderSmartImportReview();
+          }
+        });
+      });
+      actions.appendChild(mergeButton);
+    }
+
+    item.append(title, detail, note, actions);
+    list.appendChild(item);
+  });
+
+  const total = invalidRows.length + duplicates.length;
+  section.hidden = total === 0;
+  if (summary) summary.textContent = total + ' mục';
+}
+
 function renderSmartImportReview() {
   const review = document.getElementById('smartImportReview');
   const apply = document.getElementById('applySmartImport');
@@ -2381,7 +3108,17 @@ function renderSmartImportReview() {
 
   const warnings = document.getElementById('smartImportWarnings');
   warnings.innerHTML = '';
-  const messages = [...new Set([...(smartImportDraft.warnings || []), ...(smartImportDraft.unmatched || []).slice(0, 4)])];
+  const invalidRows = smartImportDraft.spreadsheetMeta?.invalidRows || [];
+  const duplicates = smartImportDraft.spreadsheetMeta?.duplicates || [];
+  const mappingMessages = [
+    ...(invalidRows.length
+      ? ['Có ' + invalidRows.length + ' dòng chưa hợp lệ (thiếu dữ liệu hoặc có số âm); các dòng này chưa được nhập.']
+      : []),
+    ...(duplicates.length
+      ? ['Phát hiện ' + duplicates.length + ' nhóm sản phẩm có khả năng bị trùng. Hệ thống giữ nguyên, không tự xóa.']
+      : [])
+  ];
+  const messages = [...new Set([...(smartImportDraft.warnings || []), ...mappingMessages, ...(smartImportDraft.unmatched || []).slice(0, 4)])];
   messages.forEach((message) => {
     const item = document.createElement('div');
     item.textContent = message;
@@ -2389,8 +3126,35 @@ function renderSmartImportReview() {
   });
   warnings.hidden = !messages.length;
 
+  renderSmartImportMapping();
+  renderSmartImportIssues();
   review.hidden = false;
   apply.disabled = false;
+}
+
+function openSmartPaste(initialText = '') {
+  openSmartImport();
+  const panel = document.getElementById('smartPastePanel');
+  const textarea = document.getElementById('smartPasteText');
+  if (panel) panel.hidden = false;
+  if (textarea) {
+    if (initialText) textarea.value = initialText;
+    requestAnimationFrame(() => textarea.focus());
+  }
+}
+
+function parseSmartPasteText() {
+  const textarea = document.getElementById('smartPasteText');
+  const raw = String(textarea?.value || '');
+  const parsed = parsePastedTable(raw);
+  if (!parsed.products.length) {
+    setSmartImportProgress(parsed.warnings?.[0] || 'Chưa nhận diện được dòng sản phẩm từ dữ liệu dán.', 'error');
+    return false;
+  }
+  smartImportDraft = mergeSmartImportSource(parsed);
+  renderSmartImportReview();
+  setSmartImportProgress('Đã nhận ' + parsed.products.length + ' dòng từ dữ liệu dán. Kiểm tra mapping trước khi áp dụng.', 'success');
+  return true;
 }
 
 function openSmartImport() {
@@ -2424,22 +3188,72 @@ async function parseExcelFile(file) {
   const workbook = XLSX.read(buffer);
   const sheetNames = workbook.SheetNames || [];
   if (!sheetNames.length) throw new Error('Workbook không có sheet.');
+
   const candidates = sheetNames.map((sheetName) => {
     const worksheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
     const parsed = parseSpreadsheetRows(rows);
     const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
     const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
+
+    parsed.sheetName = sheetName;
+    parsed.sheetCount = sheetNames.length;
+    if (parsed.spreadsheetMeta) {
+      parsed.spreadsheetMeta = {
+        ...parsed.spreadsheetMeta,
+        rows: rows.map((row) => Array.isArray(row) ? [...row] : [])
+      };
+      const rebuilt = parseMappedSpreadsheetRows(parsed.spreadsheetMeta.rows, {
+        headerIndex: parsed.spreadsheetMeta.headerIndex,
+        mapping: parsed.spreadsheetMeta.mapping
+      });
+      parsed.products = rebuilt.products;
+      parsed.groups = rebuilt.groups;
+      parsed.spreadsheetMeta.invalidRows = rebuilt.invalidRows;
+      parsed.spreadsheetMeta.duplicates = rebuilt.duplicates;
+    }
+
     return { sheetName, parsed, score };
   }).sort((a, b) => b.score - a.score);
+
   const best = candidates[0];
-  best.parsed.sheetName = best.sheetName;
-  best.parsed.sheetCount = sheetNames.length;
   if (sheetNames.length > 1) {
     best.parsed.warnings = [...(best.parsed.warnings || []),
-      'Workbook có ' + sheetNames.length + ' sheet; hệ thống chọn sheet “' + best.sheetName + '” có cấu trúc phù hợp nhất.'];
+      'Workbook có ' + sheetNames.length + ' sheet; hệ thống đã chọn trước sheet “' + best.sheetName + '”. Bạn có thể đổi sheet ở bước kiểm tra.'];
   }
-  return best.parsed;
+  return { parsed: best.parsed, candidates };
+}
+
+function renderSmartImportSheetPicker() {
+  const picker = document.getElementById('smartImportSheetPicker');
+  const select = document.getElementById('smartImportSheetSelect');
+  const hint = document.getElementById('smartImportSheetHint');
+  if (!picker || !select) return;
+
+  if (smartImportSheetCandidates.length <= 1) {
+    picker.hidden = true;
+    select.innerHTML = '';
+    if (hint) hint.textContent = '—';
+    return;
+  }
+
+  const current = smartImportDraft?.sheetName || smartImportSheetCandidates[0]?.sheetName || '';
+  select.innerHTML = '';
+  smartImportSheetCandidates.forEach((candidate) => {
+    const option = document.createElement('option');
+    option.value = candidate.sheetName;
+    option.textContent = candidate.sheetName + ' • ' + candidate.parsed.products.length + ' dòng nhận dạng';
+    option.selected = candidate.sheetName === current;
+    select.appendChild(option);
+  });
+  picker.hidden = false;
+  if (hint) {
+    const selected = smartImportSheetCandidates.find(candidate => candidate.sheetName === select.value);
+    const invalid = selected?.parsed?.spreadsheetMeta?.invalidRows?.length || 0;
+    hint.textContent = selected
+      ? selected.parsed.products.length + ' dòng hợp lệ' + (invalid ? ' • ' + invalid + ' dòng cần kiểm tra' : '')
+      : 'Chọn sheet để xem trước dữ liệu.';
+  }
 }
 
 async function imageToOcrCanvasUrl(file) {
@@ -2486,10 +3300,34 @@ async function recognizeHandwritingFile(file) {
   }
 }
 
+function undoLastImport() {
+  if (!lastImportUndoSnapshot) return;
+  const undoSnapshot = clone(lastImportUndoSnapshot);
+  state = merge(undoSnapshot);
+  syncLegacyCompanyAddress();
+  const persisted = save();
+  if (persisted) lastImportUndoSnapshot = null;
+  else lastImportUndoSnapshot = undoSnapshot;
+  syncInputs();
+  resetCollapsedProductsForState();
+  renderEditorProducts();
+  render();
+  if (persisted) {
+    toast('Đã hoàn tác lần nhập dữ liệu gần nhất');
+  } else {
+    toast('Đã hoàn tác tạm thời; chưa thể lưu vào trình duyệt', {
+      label: 'Thử lưu lại',
+      onClick: undoLastImport,
+      duration: 6000
+    });
+  }
+}
+
 function applySmartImportDraft() {
   if (!smartImportDraft) return;
   syncDraftFromImportReview();
   const appliedFields = supplementImportFields(smartImportDraft);
+  const previousState = clone(state);
 
   const next = Object.assign({}, state, appliedFields, smartImportDraft.layoutHints || {});
   const shouldReplaceProducts = document.getElementById('replaceImportedProducts')?.checked !== false;
@@ -2499,7 +3337,7 @@ function applySmartImportDraft() {
       name: String(product.name || ''),
       pack: String(product.pack || ''),
       unit: String(product.unit || ''),
-      qty: normalizeNonNegativeNumber(product.qty || 1),
+      qty: normalizeNonNegativeNumber(product.qty ?? 1),
       price: normalizeNonNegativeNumber(product.price),
       note: String(product.note || '')
     }));
@@ -2512,15 +3350,29 @@ function applySmartImportDraft() {
   state = merge(next);
   syncLegacyCompanyAddress();
   const persisted = save();
+  if (!persisted) {
+    state = merge(previousState);
+    syncLegacyCompanyAddress();
+    clearRecoverySnapshot();
+    updateAutosaveIndicator('error');
+    setSmartImportProgress('Không thể lưu dữ liệu vào bộ nhớ chính. Chưa áp dụng import; dữ liệu kiểm tra vẫn được giữ để thử lại.', 'error');
+    toast('Chưa áp dụng dữ liệu nhập vì bộ nhớ trình duyệt chưa ghi được');
+    return false;
+  }
+
   syncInputs();
   resetCollapsedProductsForState();
   renderEditorProducts();
   render();
   closeSmartImport({ discard: true });
   openTab('general');
-  toast(persisted
-    ? 'Đã áp dụng dữ liệu nhập vào báo giá'
-    : 'Đã áp dụng tạm thời; trình duyệt chưa lưu được dữ liệu');
+  lastImportUndoSnapshot = previousState;
+  toast('Đã áp dụng dữ liệu nhập vào báo giá', {
+    label: 'Hoàn tác',
+    onClick: undoLastImport,
+    duration: 6000
+  });
+  return true;
 }
 
 function setupSmartImport() {
@@ -2534,6 +3386,27 @@ function setupSmartImport() {
   document.getElementById('cancelSmartImport')?.addEventListener('click', () => closeSmartImport({ discard: true }));
   document.getElementById('resetSmartImport')?.addEventListener('click', resetSmartImportDraft);
   document.getElementById('applySmartImport')?.addEventListener('click', applySmartImportDraft);
+  document.getElementById('closeSmartPastePanel')?.addEventListener('click', () => {
+    const panel = document.getElementById('smartPastePanel');
+    if (panel) panel.hidden = true;
+  });
+  document.getElementById('parseSmartPaste')?.addEventListener('click', parseSmartPasteText);
+  document.getElementById('smartImportSheetSelect')?.addEventListener('change', (event) => {
+    const selected = smartImportSheetCandidates.find(candidate => candidate.sheetName === event.currentTarget.value);
+    if (!selected) return;
+    syncDraftFromImportReview();
+    const manualValues = collectImportReviewFields();
+    smartImportDraft = mergeImportDraft(null, selected.parsed);
+    smartImportDraft.fields = Object.assign({}, smartImportDraft.fields || {});
+    smartImportDraft.fieldSources = Object.assign({}, smartImportDraft.fieldSources || {});
+    smartImportManualFields.forEach((key) => {
+      smartImportDraft.fields[key] = manualValues[key] || '';
+      smartImportDraft.fieldSources[key] = 'manual';
+    });
+    renderSmartImportSheetPicker();
+    renderSmartImportReview();
+    setSmartImportProgress('Đã chuyển sang sheet “' + selected.sheetName + '”: ' + selected.parsed.products.length + ' sản phẩm.', 'success');
+  });
 
   document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
     if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
@@ -2550,10 +3423,12 @@ function setupSmartImport() {
     try {
       setSmartImportBusy(true);
       syncDraftFromImportReview();
-      const parsed = await parseExcelFile(file);
-      smartImportDraft = mergeSmartImportSource(parsed);
+      const result = await parseExcelFile(file);
+      smartImportSheetCandidates = result.candidates;
+      smartImportDraft = mergeSmartImportSource(result.parsed);
+      renderSmartImportSheetPicker();
       renderSmartImportReview();
-      setSmartImportProgress('Đã đọc sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
+      setSmartImportProgress('Đã đọc sheet “' + result.parsed.sheetName + '”: ' + result.parsed.products.length + ' sản phẩm.', 'success');
     } catch (error) {
       console.error('Excel smart import failed:', error);
       setSmartImportProgress('Không thể đọc file Excel. Hãy kiểm tra định dạng hoặc thử file khác.', 'error');
@@ -2561,6 +3436,22 @@ function setupSmartImport() {
       setSmartImportBusy(false);
       event.target.value = '';
     }
+  });
+
+  document.getElementById('pasteProducts')?.addEventListener('click', () => openSmartPaste());
+  document.getElementById('importProductsExcel')?.addEventListener('click', () => {
+    openSmartImport();
+    document.getElementById('excelSmartImportInput')?.click();
+  });
+  document.getElementById('addProductTop')?.addEventListener('click', () => {
+    document.getElementById('addProduct')?.click();
+  });
+  document.getElementById('pane-products')?.addEventListener('paste', (event) => {
+    const text = String(event.clipboardData?.getData('text/plain') || '');
+    if (!text.includes('\t') || !text.includes('\n')) return;
+    event.preventDefault();
+    openSmartPaste(text);
+    parseSmartPasteText();
   });
 
   document.getElementById('handwritingSmartImportInput')?.addEventListener('change', async (event) => {
@@ -2743,22 +3634,20 @@ function enhanceCollapsibleCards() {
 }
 
 bindInputs();
+setupCustomerEntryAutocomplete();
+setupProductBulkActions();
 setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
 render();
+offerDraftRecovery();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
   applyTungGiaBaoToCurrentQuote();
 });
 
 document.getElementById('addProduct').addEventListener('click', () => {
-  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
-  const nextIndex = state.products.length - 1;
-  save();
-  renderEditorProducts();
-  render();
-  focusProductName(nextIndex);
+  appendBlankProduct({ focusKey: 'name' });
 });
 
 document.getElementById('productFocusToggle').addEventListener('click', () => {
@@ -2977,6 +3866,7 @@ document.getElementById('preflightCheck')?.addEventListener('click', () => {
 });
 
 document.getElementById('exportExcel')?.addEventListener('click', exportCurrentQuoteExcel);
+document.getElementById('exportCsv')?.addEventListener('click', exportCurrentQuoteCsv);
 document.getElementById('importExcelQuick')?.addEventListener('click', () => {
   openSmartImport();
   document.getElementById('excelSmartImportInput')?.click();
@@ -3143,6 +4033,7 @@ document.getElementById('quoteStatusFilter').addEventListener('change', renderHi
 
 document.getElementById('saveCurrentCustomer').addEventListener('click', saveCurrentCustomerToLibrary);
 document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
+document.getElementById('saveProductsToCatalogTop')?.addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('customerLibrarySearch').addEventListener('input', renderMasterData);
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
 
@@ -3188,8 +4079,10 @@ function validateQuote(data = state) {
       errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
       return;
     }
-    if (name && (data.showQty || data.showAmount || data.showTotals) && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
-    if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
+    if (name && qty < 0) warnings.push('Sản phẩm "' + name + '" có số lượng âm.');
+    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
+    if (name && price < 0) warnings.push('Sản phẩm "' + name + '" có đơn giá âm.');
+    else if (name && data.showPrice && price === 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
   });
 
   if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
@@ -3660,10 +4553,25 @@ function setCustomerLibrary(items) {
   return safeStore(CUSTOMERS, JSON.stringify(normalizeCustomerLibrary(items)));
 }
 
+function canonicalLibraryText(value) {
+  return String(value || '')
+    .normalize('NFC')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('vi-VN');
+}
+
+function canonicalLibraryPhone(value) {
+  let phone = normalizePhone(value);
+  if (phone.startsWith('0084') && phone.length >= 12) phone = '0' + phone.slice(4);
+  else if (phone.startsWith('84') && phone.length >= 11) phone = '0' + phone.slice(2);
+  return phone;
+}
+
 function customerKey(customer) {
-  const phone = normalizePhone(customer.phone);
+  const phone = canonicalLibraryPhone(customer.phone);
   if (phone) return 'phone:' + phone;
-  return 'name:' + [customer.name, customer.company].filter(Boolean).join('|').trim().toLowerCase();
+  return 'name:' + [customer.name, customer.company].map(canonicalLibraryText).filter(Boolean).join('|');
 }
 
 function saveCurrentCustomerToLibrary() {
@@ -3687,11 +4595,12 @@ function saveCurrentCustomerToLibrary() {
   if (index >= 0) items[index] = customer;
   else items.unshift(customer);
   if (!setCustomerLibrary(items)) return;
+  refreshCustomerEntrySuggestions();
   renderMasterData();
   toast(index >= 0 ? 'Đã cập nhật khách hàng' : 'Đã lưu khách hàng');
 }
 
-function useCustomer(customer) {
+function useCustomer(customer, options = {}) {
   state.customerName = customer.name || '';
   state.customerCompany = customer.company || '';
   state.customerAddress = customer.address || '';
@@ -3702,9 +4611,11 @@ function useCustomer(customer) {
   const persisted = save();
   syncInputs();
   render();
-  openTab('general');
-  requestAnimationFrame(() => document.getElementById('quickCustomerName')?.focus());
-  toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
+  if (options.navigate !== false) openTab('general');
+  if (options.focus !== false) requestAnimationFrame(() => document.getElementById('quickCustomerName')?.focus());
+  if (options.notify !== false) {
+    toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
+  }
 }
 
 function normalizeProductCatalog(items) {
@@ -3737,22 +4648,20 @@ function setProductCatalog(items) {
 }
 
 function productKey(product) {
-  return [product.group, product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
+  return [product.group, product.name, product.pack, product.unit].map(canonicalLibraryText).join('|');
 }
 
 function catalogKey(product) {
   return productKey(product) + '|' + normalizeCatalogCurrency(product?.currency || 'VND');
 }
 
-function saveCurrentProductsToCatalog() {
-  const products = state.products.filter(product => String(product.name || '').trim());
-  if (!products.length) {
-    alert('Báo giá hiện tại chưa có sản phẩm để lưu.');
-    return;
-  }
+function saveProductsToCatalog(products, { notify = true } = {}) {
+  const validProducts = (Array.isArray(products) ? products : [])
+    .filter(product => String(product?.name || '').trim());
+  if (!validProducts.length) return 0;
   const items = getProductCatalog();
   let changed = 0;
-  products.forEach(product => {
+  validProducts.forEach(product => {
     const item = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
       group: product.group || '',
@@ -3773,9 +4682,73 @@ function saveCurrentProductsToCatalog() {
     }
     changed += 1;
   });
-  if (!setProductCatalog(items)) return;
+  if (!setProductCatalog(items)) return 0;
+  refreshProductEntrySuggestions();
   renderMasterData();
-  toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
+  if (notify) toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
+  return changed;
+}
+
+function saveCurrentProductsToCatalog() {
+  const products = state.products.filter(product => String(product.name || '').trim());
+  if (!products.length) {
+    toast('Báo giá hiện tại chưa có sản phẩm để lưu.');
+    return;
+  }
+  saveProductsToCatalog(products);
+}
+
+function applyProductBulkAction() {
+  const indices = selectedProductIndices();
+  if (!indices.length) return;
+  const action = document.getElementById('productBulkAction')?.value || '';
+  const input = document.getElementById('productBulkValue');
+  const rawValue = String(input?.value || '').trim();
+
+  if (['group','unit'].includes(action) && !rawValue) {
+    toast(action === 'group' ? 'Hãy nhập nhóm hàng cần áp dụng.' : 'Hãy nhập đơn vị tính cần áp dụng.');
+    input?.focus();
+    return;
+  }
+
+  if (action === 'price') {
+    const percent = Number(rawValue);
+    if (!Number.isFinite(percent) || percent < -100) {
+      toast('Phần trăm điều chỉnh giá phải là số và không nhỏ hơn -100%.');
+      input?.focus();
+      return;
+    }
+    indices.forEach(index => {
+      const current = Number(state.products[index]?.price || 0);
+      state.products[index].price = Math.max(0, Math.round((current * (1 + percent / 100)) * 100) / 100);
+    });
+  } else if (action === 'group') {
+    indices.forEach(index => { state.products[index].group = rawValue; });
+  } else if (action === 'unit') {
+    indices.forEach(index => { state.products[index].unit = rawValue; });
+  } else if (action === 'duplicate') {
+    const copies = indices.map(index => clone(state.products[index]));
+    state.products.push(...copies);
+  } else if (action === 'catalog') {
+    const changed = saveProductsToCatalog(indices.map(index => state.products[index]), { notify: false });
+    toast(changed ? 'Đã lưu ' + changed + ' sản phẩm đã chọn vào danh mục' : 'Các dòng đã chọn chưa có tên sản phẩm.');
+    return;
+  } else if (action === 'delete') {
+    if (!confirm('Xóa ' + indices.length + ' dòng sản phẩm đã chọn?')) return;
+    const selected = new Set(indices);
+    state.products = state.products.filter((_, index) => !selected.has(index));
+    if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  } else {
+    return;
+  }
+
+  selectedProductRows.clear();
+  collapsedProducts = new Set();
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  if (input) input.value = '';
+  toast(persisted ? 'Đã áp dụng thao tác cho ' + indices.length + ' dòng' : 'Đã thay đổi tạm thời; chưa autosave được');
 }
 
 function addCatalogProduct(product) {

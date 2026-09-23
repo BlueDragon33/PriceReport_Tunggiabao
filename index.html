@@ -77,6 +77,7 @@
           <div class="studio-context-badges">
             <span class="studio-status-badge" id="studioQuoteStatus">Bản nháp</span>
             <span class="studio-history-state" id="studioHistoryState">Chưa lưu lịch sử</span>
+            <span class="studio-autosave-state" id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
           </div>
         </div>
         <div class="studio-pane-title">
@@ -103,6 +104,16 @@
             <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
           </div>
           <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
+        </div>
+        <div class="draft-recovery-banner" id="draftRecoveryBanner" role="status" hidden>
+          <div>
+            <strong>Có bản đang soạn chưa lưu hoàn chỉnh</strong>
+            <span id="draftRecoveryDetail">Có thể khôi phục dữ liệu gần nhất trên tab này.</span>
+          </div>
+          <div class="draft-recovery-actions">
+            <button class="btn primary" id="restoreDraftRecovery" type="button">Khôi phục</button>
+            <button class="btn" id="discardDraftRecovery" type="button">Bỏ qua</button>
+          </div>
         </div>
       </div>
       <div class="panel-body">
@@ -228,10 +239,10 @@
               </div>
               <button class="btn" type="button" data-open-master="customers">Chọn từ danh bạ</button>
             </div>
-            <div class="row required"><label>Tên khách hàng</label><input id="quickCustomerName" data-bind="customerName"></div>
-            <div class="row"><label>Công ty</label><input id="quickCustomerCompany" data-bind="customerCompany" placeholder="Nhập tên công ty (nếu có)"></div>
+            <div class="row required"><label>Tên khách hàng</label><input id="quickCustomerName" data-bind="customerName" data-customer-autocomplete="name" list="customerNameSuggestions" autocomplete="off"></div>
+            <div class="row"><label>Công ty</label><input id="quickCustomerCompany" data-bind="customerCompany" data-customer-autocomplete="company" list="customerCompanySuggestions" autocomplete="off" placeholder="Nhập tên công ty (nếu có)"></div>
             <div class="row"><label>Địa chỉ</label><input id="quickCustomerAddress" data-bind="customerAddress" placeholder="Nhập địa chỉ"></div>
-            <div class="row"><label>SĐT</label><input id="quickCustomerPhone" data-bind="customerPhone" placeholder="Nhập số điện thoại"></div>
+            <div class="row"><label>SĐT</label><input id="quickCustomerPhone" data-bind="customerPhone" data-customer-autocomplete="phone" list="customerPhoneSuggestions" autocomplete="off" placeholder="Nhập số điện thoại"></div>
             <div class="row"><label>Email</label><input id="quickCustomerEmail" data-bind="customerEmail" type="email" placeholder="Nhập email"></div>
             <div class="row"><label>Người liên hệ</label><input id="quickCustomerContact" data-bind="customerContact" placeholder="Nhập người liên hệ"></div>
             <label class="check quick-customer-print"><input id="quickShowCustomer" data-bind="showCustomer" type="checkbox"> Hiện khối thông tin khách hàng trên bản in</label>
@@ -527,11 +538,11 @@
         <div class="pane studio-pane studio-pane-customer" id="pane-customer">
           <div class="card">
             <h3>Thông tin khách hàng</h3>
-            <div class="row"><label>Tên khách hàng</label><input id="customerName" data-bind="customerName"></div>
-            <div class="row"><label>Công ty / đơn vị</label><input id="customerCompany" data-bind="customerCompany"></div>
+            <div class="row"><label>Tên khách hàng</label><input id="customerName" data-bind="customerName" data-customer-autocomplete="name" list="customerNameSuggestions" autocomplete="off"></div>
+            <div class="row"><label>Công ty / đơn vị</label><input id="customerCompany" data-bind="customerCompany" data-customer-autocomplete="company" list="customerCompanySuggestions" autocomplete="off"></div>
             <div class="row"><label>Địa chỉ</label><input id="customerAddress" data-bind="customerAddress"></div>
             <div class="grid2">
-              <div class="row"><label>SĐT</label><input id="customerPhone" data-bind="customerPhone"></div>
+              <div class="row"><label>SĐT</label><input id="customerPhone" data-bind="customerPhone" data-customer-autocomplete="phone" list="customerPhoneSuggestions" autocomplete="off"></div>
               <div class="row"><label>Email</label><input id="customerEmail" data-bind="customerEmail" type="email"></div>
             </div>
             <div class="row"><label>Người liên hệ</label><input id="customerContact" data-bind="customerContact"></div>
@@ -544,15 +555,46 @@
             <div class="product-workspace-head">
               <div>
                 <h3>Danh sách sản phẩm</h3>
-                <p>Nhập theo từng thẻ, có thể mở rộng vùng làm việc để thao tác thoải mái.</p>
+                <p>Nhập trực tiếp như bảng tính: Tab để sang ô, Enter để xuống dòng, có thể dán nguyên vùng từ Excel.</p>
               </div>
               <div class="btns product-workspace-actions">
+                <button class="btn primary" id="addProductTop" type="button">＋ Thêm dòng</button>
+                <button class="btn" id="pasteProducts" type="button">▤ Dán dữ liệu</button>
+                <button class="btn" id="importProductsExcel" type="button">XL Nhập từ Excel</button>
                 <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
-                <button class="btn" id="productFocusToggle">⛶ Mở rộng vùng nhập</button>
-                <button class="btn" id="collapseAllProducts">Thu gọn tất cả</button>
+                <button class="btn product-secondary-action" id="saveProductsToCatalogTop" type="button">★ Lưu danh mục</button>
+                <button class="btn product-secondary-action" id="productFocusToggle">⛶ Mở rộng</button>
+                <button class="btn product-secondary-action" id="collapseAllProducts">Thu gọn</button>
               </div>
             </div>
-            <div id="productEditor" class="product-editor-list"></div>
+            <div class="product-data-grid-shell" role="region" aria-label="Bảng nhập sản phẩm" tabindex="0">
+              <div class="product-data-grid-head">
+                <label class="product-select-all"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả sản phẩm"><span>STT</span></label>
+                <span>Nhóm hàng</span>
+                <span>Tên sản phẩm</span>
+                <span>Quy cách</span>
+                <span>ĐVT</span>
+                <span>SL</span>
+                <span>Đơn giá</span>
+                <span>Ghi chú</span>
+                <span>Thao tác</span>
+              </div>
+              <div class="product-bulk-bar" id="productBulkBar" hidden>
+                <strong id="productBulkCount">0 dòng đã chọn</strong>
+                <select id="productBulkAction" aria-label="Thao tác hàng loạt">
+                  <option value="group">Đổi nhóm hàng</option>
+                  <option value="unit">Đổi ĐVT</option>
+                  <option value="price">Điều chỉnh giá %</option>
+                  <option value="duplicate">Nhân bản</option>
+                  <option value="catalog">Lưu vào danh mục</option>
+                  <option value="delete">Xóa dòng</option>
+                </select>
+                <input id="productBulkValue" placeholder="Giá trị áp dụng" aria-label="Giá trị thao tác hàng loạt">
+                <button class="btn primary" id="applyProductBulk" type="button">Áp dụng</button>
+                <button class="btn" id="clearProductSelection" type="button">Bỏ chọn</button>
+              </div>
+              <div id="productEditor" class="product-editor-list product-data-grid"></div>
+            </div>
             <button class="btn primary block add-product-btn" id="addProduct">+ Thêm sản phẩm</button>
           </div>
           <div class="card">
@@ -683,7 +725,10 @@
                   <span>▣</span><b>In / Lưu PDF</b><small>Bản A4 để gửi hoặc in giấy</small>
                 </button>
                 <button class="export-action-card" id="exportExcel" type="button">
-                  <span>▦</span><b>Xuất Excel</b><small>File bảng tính có thể nhập lại</small>
+                  <span>▦</span><b>Xuất Excel</b><small>Đủ nhóm, quy cách, SL, giá và ghi chú</small>
+                </button>
+                <button class="export-action-card" id="exportCsv" type="button">
+                  <span>CSV</span><b>Xuất CSV</b><small>Bảng sản phẩm sạch để trao đổi dữ liệu</small>
                 </button>
                 <button class="export-action-card" id="exportJson" type="button">
                   <span>{ }</span><b>Xuất JSON báo giá</b><small>Dữ liệu báo giá đang mở</small>
@@ -1116,7 +1161,31 @@
           </label>
         </div>
 
+        <section class="smart-paste-panel" id="smartPastePanel" hidden>
+          <div class="smart-paste-head">
+            <div>
+              <strong>DÁN BẢNG TỪ EXCEL</strong>
+              <span>Copy vùng dữ liệu trong Excel rồi Ctrl+V vào ô dưới đây.</span>
+            </div>
+            <button class="mini-action" id="closeSmartPastePanel" type="button" aria-label="Đóng vùng dán">×</button>
+          </div>
+          <textarea id="smartPasteText" rows="7" placeholder="Ví dụ:&#10;Tên sản phẩm[TAB]ĐVT[TAB]Số lượng[TAB]Đơn giá&#10;Trứng gà[TAB]Hộp[TAB]2[TAB]28000"></textarea>
+          <div class="smart-paste-actions">
+            <small>Không cần chỉnh cột trước. Hệ thống sẽ đoán và cho kiểm tra ở bước kế tiếp.</small>
+            <button class="btn primary" id="parseSmartPaste" type="button">Kiểm tra dữ liệu dán</button>
+          </div>
+        </section>
+
         <div class="import-progress" id="smartImportProgress" role="status" aria-live="polite">Chưa chọn nguồn dữ liệu.</div>
+
+        <section class="import-sheet-picker" id="smartImportSheetPicker" hidden>
+          <label for="smartImportSheetSelect">
+            <strong>Bạn muốn lấy sheet nào?</strong>
+            <span>Hệ thống đã chọn trước sheet phù hợp nhất. Có thể đổi nếu cần.</span>
+          </label>
+          <select id="smartImportSheetSelect" aria-label="Chọn sheet Excel để nhập"></select>
+          <small id="smartImportSheetHint">—</small>
+        </section>
 
         <div class="import-image-preview" id="handwritingPreviewWrap" hidden>
           <img id="handwritingPreview" alt="Ảnh chữ viết tay đang nhận diện">
@@ -1152,7 +1221,39 @@
             <span id="smartImportGroupCount">0 nhóm</span>
           </div>
 
+          <section class="import-mapping" id="smartImportMapping" hidden>
+            <div class="import-mapping-head">
+              <div>
+                <strong>KIỂM TRA CỘT EXCEL</strong>
+                <span>Hệ thống đã đoán trước. Chỉ đổi những cột bị nhận sai.</span>
+              </div>
+              <span class="import-mapping-status" id="smartImportMappingStatus">—</span>
+            </div>
+            <div class="import-mapping-labels" aria-hidden="true">
+              <span>Cột Excel</span><span></span><span>Cột PriceReport</span>
+            </div>
+            <div class="import-mapping-rows" id="smartImportMappingRows"></div>
+
+            <div class="import-product-preview">
+              <div class="import-product-preview-head">
+                <span>STT</span><span>Tên sản phẩm</span><span>ĐVT</span><span>SL</span><span>Đơn giá</span>
+              </div>
+              <div id="smartImportProductPreview"></div>
+            </div>
+          </section>
+
           <div class="import-warning-list" id="smartImportWarnings"></div>
+
+          <section class="import-issue-review" id="smartImportIssues" hidden>
+            <div class="import-issue-review-head">
+              <div>
+                <strong>DÒNG CẦN KIỂM TRA</strong>
+                <span>Hệ thống không tự xóa hoặc tự gộp dữ liệu đáng ngờ.</span>
+              </div>
+              <span id="smartImportIssueSummary">0 mục</span>
+            </div>
+            <div id="smartImportIssueList" class="import-issue-list"></div>
+          </section>
 
           <details class="ocr-raw-box" id="ocrRawBox" hidden>
             <summary>Văn bản OCR thô / chỉnh lại nội dung</summary>

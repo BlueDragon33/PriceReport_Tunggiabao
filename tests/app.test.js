@@ -203,6 +203,27 @@ test('V4.9 settings persist application preferences without touching business da
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5.2 smart import includes a row-level issue review surface', () => {
+  const section = document.getElementById('smartImportIssues');
+  const list = document.getElementById('smartImportIssueList');
+  const summary = document.getElementById('smartImportIssueSummary');
+  expect(section).toBeTruthy();
+  expect(list).toBeTruthy();
+  expect(summary).toBeTruthy();
+  expect(section.hidden).toBe(true);
+});
+
+test('V5.2 smart import exposes a dedicated multi-sheet chooser without cluttering the default flow', () => {
+  const picker = document.getElementById('smartImportSheetPicker');
+  const select = document.getElementById('smartImportSheetSelect');
+  const hint = document.getElementById('smartImportSheetHint');
+  expect(picker).toBeTruthy();
+  expect(select).toBeTruthy();
+  expect(hint).toBeTruthy();
+  expect(picker.hidden).toBe(true);
+  expect(select.getAttribute('aria-label')).toContain('sheet Excel');
+});
+
 test('V5 dynamic feedback exposes live, busy and empty-state semantics', async () => {
   const toast = document.getElementById('toast');
   expect(toast.getAttribute('role')).toBe('status');
@@ -237,6 +258,144 @@ test('V5 Pass 18 applies one Studio surface language across all editor panes', (
   expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
 });
 
+test('V5.2 product entry uses one spreadsheet-style grid surface', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const shell = document.querySelector('.product-data-grid-shell');
+  const header = document.querySelector('.product-data-grid-head');
+  const editor = document.getElementById('productEditor');
+  expect(shell).toBeTruthy();
+  expect(header.children.length).toBe(9);
+  expect(header.textContent).toContain('Tên sản phẩm');
+  expect(header.textContent).toContain('Đơn giá');
+  expect(editor.classList.contains('product-data-grid')).toBe(true);
+  const first = editor.querySelector('.product-card');
+  expect(first.dataset.productIndex).toBe('0');
+  expect(first.querySelector('[data-product-field="name"]')).toBeTruthy();
+});
+
+test('Enter on the last product cell creates a new row for continuous data entry', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const before = document.querySelectorAll('#productEditor .product-card').length;
+  const lastName = document.querySelector('#productEditor .product-card:last-child [data-product-key="name"]');
+  lastName.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before + 1);
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before);
+});
+
+test('customer entry fields share autocomplete sources without a second customer engine', () => {
+  expect(document.getElementById('quickCustomerName').getAttribute('list')).toBe('customerNameSuggestions');
+  expect(document.getElementById('customerName').getAttribute('list')).toBe('customerNameSuggestions');
+  expect(document.getElementById('quickCustomerCompany').getAttribute('list')).toBe('customerCompanySuggestions');
+  expect(document.getElementById('quickCustomerPhone').getAttribute('list')).toBe('customerPhoneSuggestions');
+  expect(document.getElementById('customerNameSuggestions')).toBeTruthy();
+  expect(document.getElementById('customerCompanySuggestions')).toBeTruthy();
+  expect(document.getElementById('customerPhoneSuggestions')).toBeTruthy();
+});
+
+test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const quickSave = document.getElementById('saveProductsToCatalogTop');
+  expect(quickSave).toBeTruthy();
+  expect(quickSave.textContent).toContain('Lưu danh mục');
+});
+
+test('customer library treats +84 and local-format phones as the same reusable customer', () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const beforeRaw = localStorage.getItem(key);
+  const beforeItems = beforeRaw ? JSON.parse(beforeRaw) : [];
+  const fields = {
+    customerName: document.getElementById('customerName').value,
+    customerCompany: document.getElementById('customerCompany').value,
+    customerPhone: document.getElementById('customerPhone').value
+  };
+
+  const setField = (id, value) => {
+    const input = document.getElementById(id);
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  setField('customerName', 'Khách chuẩn hóa V52');
+  setField('customerCompany', 'Đơn vị V52');
+  setField('customerPhone', '+84 912 345 679');
+  document.getElementById('saveCurrentCustomer').click();
+  const firstCount = JSON.parse(localStorage.getItem(key) || '[]').length;
+  expect(firstCount).toBe(beforeItems.length + 1);
+
+  setField('customerName', 'Khách chuẩn hóa V52 cập nhật');
+  setField('customerPhone', '0912.345.679');
+  document.getElementById('saveCurrentCustomer').click();
+  const secondItems = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(secondItems.length).toBe(firstCount);
+  expect(secondItems.some(item => item.name === 'Khách chuẩn hóa V52 cập nhật')).toBe(true);
+
+  setField('customerName', 'Tên tạm không khớp');
+  setField('customerPhone', '+84 912 345 679');
+  document.getElementById('customerPhone').dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('customerName').value).toBe('Khách chuẩn hóa V52 cập nhật');
+
+  if (beforeRaw == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, beforeRaw);
+  Object.entries(fields).forEach(([id, value]) => setField(id, value));
+});
+
+test('product grid exposes autocomplete sources for name group and unit', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const first = document.querySelector('#productEditor .product-card');
+  expect(first.querySelector('[data-product-key="name"]').getAttribute('list')).toBe('productNameSuggestions');
+  expect(first.querySelector('[data-product-key="group"]').getAttribute('list')).toBe('productGroupSuggestions');
+  expect(first.querySelector('[data-product-key="unit"]').getAttribute('list')).toBe('productUnitSuggestions');
+  expect(document.getElementById('productNameSuggestions')).toBeTruthy();
+  expect(document.getElementById('productGroupSuggestions')).toBeTruthy();
+  expect(Array.from(document.getElementById('productUnitSuggestions').options).map(option => option.value)).toContain('Hộp');
+});
+
+test('product autocomplete matches catalog names canonically and fills reusable fields', () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const beforeRaw = localStorage.getItem(key);
+  const catalog = [{
+    id: 'canonical-product-v52',
+    group: 'Nhóm thử',
+    name: 'Trứng Gà Chuẩn',
+    pack: 'Hộp 10',
+    unit: 'Hộp',
+    price: 28000,
+    currency: 'VND',
+    note: 'Từ danh mục'
+  }];
+  localStorage.setItem(key, JSON.stringify(catalog));
+
+  document.querySelector('[data-tab="products"]').click();
+  const first = document.querySelector('#productEditor .product-card:first-child');
+  const original = Object.fromEntries(
+    ['group','name','pack','unit','qty','price','note'].map(field => [
+      field,
+      first.querySelector('[data-product-key="' + field + '"]')?.value ?? ''
+    ])
+  );
+  const name = first.querySelector('[data-product-key="name"]');
+  name.value = '  trứng   gà chuẩn  ';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  name.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const refreshed = document.querySelector('#productEditor .product-card:first-child');
+  expect(refreshed.querySelector('[data-product-key="name"]').value).toBe('Trứng Gà Chuẩn');
+  expect(refreshed.querySelector('[data-product-key="pack"]').value).toBe('Hộp 10');
+  expect(refreshed.querySelector('[data-product-key="unit"]').value).toBe('Hộp');
+  expect(Number(refreshed.querySelector('[data-product-key="price"]').value)).toBe(28000);
+
+  if (beforeRaw == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, beforeRaw);
+  const restoreCard = document.querySelector('#productEditor .product-card:first-child');
+  Object.entries(original).forEach(([field, value]) => {
+    const input = restoreCard.querySelector('[data-product-key="' + field + '"]');
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+});
+
 test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
@@ -250,6 +409,62 @@ test('product editor adds a blank draft row without polluting A4 until content i
   lastName.dispatchEvent(new Event('input', { bubbles: true }));
   expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows + 1);
   expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
+});
+
+test('bulk product toolbar applies one change to multiple selected grid rows', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const initialCount = document.querySelectorAll('#productEditor .product-card').length;
+  document.getElementById('addProduct').click();
+  document.getElementById('addProduct').click();
+
+  const cards = Array.from(document.querySelectorAll('#productEditor .product-card'));
+  cards.slice(-2).forEach(card => {
+    const checkbox = card.querySelector('.product-row-select');
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  expect(document.getElementById('productBulkBar').hidden).toBe(false);
+  expect(document.getElementById('productBulkCount').textContent).toContain('2 dòng');
+
+  document.getElementById('productBulkAction').value = 'group';
+  document.getElementById('productBulkAction').dispatchEvent(new Event('change', { bubbles: true }));
+  document.getElementById('productBulkValue').value = 'NHÓM BULK TEST';
+  document.getElementById('applyProductBulk').click();
+
+  const updatedCards = Array.from(document.querySelectorAll('#productEditor .product-card'));
+  expect(updatedCards.at(-1).querySelector('[data-product-key="group"]').value).toBe('NHÓM BULK TEST');
+  expect(updatedCards.at(-2).querySelector('[data-product-key="group"]').value).toBe('NHÓM BULK TEST');
+  expect(document.getElementById('productBulkBar').hidden).toBe(true);
+
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(initialCount);
+});
+
+test('product grid preserves negative input and shows inline validation instead of silently clamping', () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+  const card = document.querySelector('#productEditor .product-card:last-child');
+  const name = card.querySelector('[data-product-key="name"]');
+  const qty = card.querySelector('[data-product-key="qty"]');
+  const price = card.querySelector('[data-product-key="price"]');
+
+  name.value = 'Dòng kiểm tra số âm';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  qty.value = '-2';
+  qty.dispatchEvent(new Event('input', { bubbles: true }));
+  price.value = '-15000';
+  price.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(qty.value).toBe('-2');
+  expect(price.value).toBe('-15000');
+  expect(qty.getAttribute('aria-invalid')).toBe('true');
+  expect(price.getAttribute('aria-invalid')).toBe('true');
+  expect(card.querySelector('[data-product-field="qty"] .product-cell-validation').textContent).toContain('không được âm');
+  expect(card.querySelector('[data-product-field="price"] .product-cell-validation').textContent).toContain('không được âm');
+
+  card.querySelector('.danger-icon').click();
 });
 
 test('meaningful unnamed product is visibly flagged and blocks print preflight', () => {
@@ -546,6 +761,128 @@ test('smart import dialog can parse corrected handwriting text for review withou
   expect(document.getElementById('smartImportModal').hidden).toBe(true);
 });
 
+
+test('smart import exposes one editable Excel mapping review surface', () => {
+  document.getElementById('openSmartImport').click();
+  expect(document.getElementById('smartImportMapping')).toBeTruthy();
+  expect(document.getElementById('smartImportMappingRows')).toBeTruthy();
+  expect(document.getElementById('smartImportMappingStatus')).toBeTruthy();
+  expect(document.getElementById('smartImportProductPreview')).toBeTruthy();
+  expect(document.querySelector('.import-product-preview-head').textContent).toContain('Tên sản phẩm');
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('smart paste opens a guided review and infers ordinary Excel clipboard columns', () => {
+  document.getElementById('pasteProducts').click();
+  expect(document.getElementById('smartImportModal').hidden).toBe(false);
+  expect(document.getElementById('smartPastePanel').hidden).toBe(false);
+
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nTrứng gà\tHộp\t2\t28000\nTrứng vịt\tKhay\t3\t85000';
+  document.getElementById('parseSmartPaste').click();
+
+  expect(document.getElementById('smartImportMapping').hidden).toBe(false);
+  expect(document.getElementById('smartImportMappingRows').children.length).toBeGreaterThanOrEqual(4);
+  expect(document.getElementById('smartImportProductCount').textContent).toContain('2 sản phẩm');
+  expect(document.getElementById('smartImportProductPreview').textContent).toContain('Trứng gà');
+
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('applied smart import exposes a working one-step undo action', () => {
+  const before = document.getElementById('companyName').value;
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - KIỂM THỬ UNDO\nĐT. 0962944688';
+  document.getElementById('reparseOcrText').click();
+  document.getElementById('applySmartImport').click();
+
+  expect(document.getElementById('companyName').value).toContain('KIỂM THỬ UNDO');
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo).toBeTruthy();
+  expect(undo.textContent).toBe('Hoàn tác');
+  undo.click();
+  expect(document.getElementById('companyName').value).toBe(before);
+});
+
+test('smart import preserves an explicit zero quantity through apply and undo', () => {
+  document.getElementById('pasteProducts').click();
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nSản phẩm SL 0\tHộp\t0\t28000';
+  document.getElementById('parseSmartPaste').click();
+  document.getElementById('applySmartImport').click();
+
+  const qty = document.querySelector('#productEditor .product-card:first-child [data-product-key="qty"]');
+  expect(qty).toBeTruthy();
+  expect(Number(qty.value)).toBe(0);
+
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo?.textContent).toBe('Hoàn tác');
+  undo.click();
+});
+
+test('smart import rolls back and keeps review open when primary autosave fails', () => {
+  const primaryKey = 'tunggiabao-price-report-v1';
+  const recoveryKey = 'tunggiabao-price-report-recovery-v1';
+  const before = document.getElementById('companyName').value;
+
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - IMPORT TRANSACTION TEST\nĐT. 0962944688';
+  document.getElementById('reparseOcrText').click();
+
+  const nativeSetItem = Storage.prototype.setItem;
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (this === localStorage && storageKey === primaryKey) {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    }
+    return nativeSetItem.call(this, storageKey, value);
+  });
+
+  document.getElementById('applySmartImport').click();
+  spy.mockRestore();
+
+  expect(document.getElementById('smartImportModal').hidden).toBe(false);
+  expect(document.getElementById('companyName').value).toBe(before);
+  expect(document.getElementById('smartImportProgress').textContent).toContain('Chưa áp dụng import');
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('autosave reports real persistence state and retains a recovery snapshot on failure', () => {
+  const primaryKey = 'tunggiabao-price-report-v1';
+  const recoveryKey = 'tunggiabao-price-report-recovery-v1';
+  sessionStorage.removeItem(recoveryKey);
+
+  const field = document.getElementById('companyName');
+  const before = field.value;
+  field.value = 'AUTOSAVE SUCCESS TEST';
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioAutosaveState').dataset.state).toBe('saved');
+  expect(document.getElementById('studioAutosaveState').textContent).toContain('Đã lưu lúc');
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+
+  const nativeSetItem = Storage.prototype.setItem;
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (this === localStorage && storageKey === primaryKey) {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    }
+    return nativeSetItem.call(this, storageKey, value);
+  });
+
+  field.value = 'AUTOSAVE FAILURE RECOVERY TEST';
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  spy.mockRestore();
+
+  expect(document.getElementById('studioAutosaveState').dataset.state).toBe('error');
+  expect(document.getElementById('studioAutosaveState').textContent).toContain('Không thể lưu');
+  expect(sessionStorage.getItem(recoveryKey)).toContain('AUTOSAVE FAILURE RECOVERY TEST');
+
+  field.value = before;
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioAutosaveState').dataset.state).toBe('saved');
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+});
 
 test('collection writes do not show false success when localStorage rejects a customer save', () => {
   const nativeSetItem = Storage.prototype.setItem;

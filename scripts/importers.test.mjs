@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mergeImportDraft, parseHandwritingText, parseSpreadsheetRows } from '../src/importers.js';
+import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedPhone, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -121,3 +121,227 @@ assert.equal(mixedReparse.fields.companyAddressDetail, 'Địa chỉ Excel');
 assert.equal(mixedReparse.fields.companyWard, 'Nam Nha Trang');
 assert.equal(mixedReparse.fields.companyProvince, 'Khánh Hòa');
 assert.equal(mixedReparse.fields.phone, '0962944688');
+
+
+const inferredColumns = inferSpreadsheetColumns([
+  'Tên SP', 'Nhóm hàng', 'Quy cách', 'Đơn vị tính', 'SL', 'Giá', 'Ghi chú'
+]);
+assert.deepEqual(inferredColumns.mapping, {
+  name: 0,
+  group: 1,
+  pack: 2,
+  unit: 3,
+  qty: 4,
+  price: 5,
+  note: 6
+});
+assert.ok(inferredColumns.confidence.name >= 0.8);
+assert.ok(inferredColumns.confidence.price >= 0.8);
+
+const genericImport = parseSpreadsheetRows([
+  ['Tên SP', 'Nhóm hàng', 'Quy cách', 'Đơn vị tính', 'SL', 'Giá', 'Ghi chú'],
+  [' Trứng gà tươi ', 'Trứng', 'Hộp 10', 'Hộp', '2', '28.000', ' Giao sáng '],
+  ['Ức gà phi lê', 'Thịt gia cầm', '', 'kg', '3', '76,000', '']
+]);
+assert.equal(genericImport.products.length, 2);
+assert.deepEqual(genericImport.products[0], {
+  group: 'Trứng',
+  name: 'Trứng gà tươi',
+  pack: 'Hộp 10',
+  unit: 'Hộp',
+  qty: 2,
+  price: 28000,
+  note: 'Giao sáng'
+});
+assert.equal(genericImport.products[1].price, 76000);
+assert.equal(genericImport.products[1].qty, 3);
+
+const englishImport = parseSpreadsheetRows([
+  ['Product', 'Unit', 'Qty', 'Unit Price', 'Notes'],
+  ['Eggs', 'box', '4', '28 000', '']
+]);
+assert.equal(englishImport.products.length, 1);
+assert.equal(englishImport.products[0].name, 'Eggs');
+assert.equal(englishImport.products[0].unit, 'box');
+assert.equal(englishImport.products[0].qty, 4);
+assert.equal(englishImport.products[0].price, 28000);
+
+const normalizedDirty = normalizeImportedProduct({
+  name: '  Trứng   gà  ',
+  unit: ' Hộp ',
+  qty: '',
+  price: '28 000',
+  note: '  mới  '
+});
+assert.equal(normalizedDirty.name, 'Trứng gà');
+assert.equal(normalizedDirty.unit, 'Hộp');
+assert.equal(normalizedDirty.qty, 1);
+assert.equal(normalizedDirty.price, 28000);
+assert.equal(normalizedDirty.note, 'mới');
+
+
+const mappingRows = [
+  ['Bảng giá tháng 9'],
+  ['Tên hàng', 'ĐVT', 'Số lượng', 'Đơn giá', 'Ghi chú'],
+  ['Trứng gà', 'Hộp', 2, '28 000', 'Giao sáng'],
+  ['Trứng vịt', 'Khay', 3, '85.000', '']
+];
+const detectedHeader = detectSpreadsheetHeader(mappingRows);
+assert.equal(detectedHeader.headerIndex, 1);
+assert.equal(detectedHeader.mapping.name, 0);
+assert.equal(detectedHeader.mapping.unit, 1);
+assert.equal(detectedHeader.mapping.qty, 2);
+assert.equal(detectedHeader.mapping.price, 3);
+
+const remapped = parseMappedSpreadsheetRows(mappingRows, {
+  headerIndex: 1,
+  mapping: { name: 0, unit: 1, qty: 2, price: 3, note: 4 }
+});
+assert.equal(remapped.products.length, 2);
+assert.equal(remapped.products[0].price, 28000);
+assert.equal(remapped.products[1].qty, 3);
+assert.deepEqual(remapped.invalidRows, []);
+
+const dirtyMapped = parseMappedSpreadsheetRows([
+  ['Product', 'Qty', 'Price'],
+  ['Valid', 1, 12000],
+  ['Missing price', 2, ''],
+  ['', '', 30000],
+  ['TOTAL', '', 42000]
+], {
+  headerIndex: 0,
+  mapping: { name: 0, qty: 1, price: 2 }
+});
+assert.equal(dirtyMapped.products.length, 1);
+assert.equal(dirtyMapped.invalidRows.length, 2);
+assert.equal(dirtyMapped.invalidRows[0].rowNumber, 3);
+
+
+const pastedWithHeader = parsePastedTable(
+  'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nTrứng gà\tHộp\t2\t28 000\nTrứng vịt\tKhay\t3\t85.000'
+);
+assert.equal(pastedWithHeader.source, 'paste');
+assert.equal(pastedWithHeader.products.length, 2);
+assert.equal(pastedWithHeader.products[0].name, 'Trứng gà');
+assert.equal(pastedWithHeader.products[0].qty, 2);
+assert.equal(pastedWithHeader.products[0].price, 28000);
+assert.equal(pastedWithHeader.spreadsheetMeta.mapping.price, 3);
+
+const pastedNoHeader = parsePastedTable(
+  'Trứng gà\tHộp\t2\t28 000\nTrứng vịt\tKhay\t3\t85.000'
+);
+assert.equal(pastedNoHeader.products.length, 2);
+assert.equal(pastedNoHeader.spreadsheetMeta.headerIndex, -1);
+assert.equal(pastedNoHeader.spreadsheetMeta.headers[0], 'Cột A');
+assert.equal(pastedNoHeader.spreadsheetMeta.mapping.unit, 1);
+assert.equal(pastedNoHeader.spreadsheetMeta.mapping.qty, 2);
+assert.equal(pastedNoHeader.spreadsheetMeta.mapping.price, 3);
+
+
+const invalidNegative = parseMappedSpreadsheetRows([
+  ['Tên sản phẩm', 'Số lượng', 'Đơn giá'],
+  ['Giá âm', 1, -12000],
+  ['SL âm', -2, 15000],
+  ['Hợp lệ', 2, 15000]
+], {
+  headerIndex: 0,
+  mapping: { name: 0, qty: 1, price: 2 }
+});
+assert.equal(invalidNegative.products.length, 1);
+assert.equal(invalidNegative.invalidRows.length, 2);
+assert.ok(invalidNegative.invalidRows[0].reasons.includes('negative-price'));
+assert.ok(invalidNegative.invalidRows[1].reasons.includes('negative-qty'));
+
+const duplicateRows = parseMappedSpreadsheetRows([
+  ['Tên sản phẩm', 'ĐVT', 'Đơn giá'],
+  [' Trứng gà tươi ', 'Hộp', 28000],
+  ['Trứng gà tươi', 'Hộp', 28500],
+  ['Trứng vịt', 'Khay', 85000]
+], {
+  headerIndex: 0,
+  mapping: { name: 0, unit: 1, price: 2 }
+});
+assert.equal(duplicateRows.products.length, 3);
+assert.equal(duplicateRows.duplicates.length, 1);
+assert.deepEqual(duplicateRows.duplicates[0].indexes, [0, 1]);
+
+
+const repairRows = [
+  ['Tên SP', 'SL', 'Giá'],
+  ['', '2', '28 000']
+];
+const repairMapping = detectSpreadsheetHeader(repairRows);
+const beforeRepair = parseMappedSpreadsheetRows(repairRows, {
+  headerIndex: repairMapping.headerIndex,
+  mapping: repairMapping.mapping
+});
+assert.equal(beforeRepair.products.length, 0);
+assert.equal(beforeRepair.invalidRows.length, 1);
+assert.equal(beforeRepair.invalidRows[0].rowNumber, 2);
+assert.ok(beforeRepair.invalidRows[0].reasons.includes('missing-name'));
+
+repairRows[1][repairMapping.mapping.name] = 'Trứng gà sửa lại';
+const afterRepair = parseMappedSpreadsheetRows(repairRows, {
+  headerIndex: repairMapping.headerIndex,
+  mapping: repairMapping.mapping
+});
+assert.equal(afterRepair.invalidRows.length, 0);
+assert.equal(afterRepair.products.length, 1);
+assert.equal(afterRepair.products[0].name, 'Trứng gà sửa lại');
+assert.equal(afterRepair.products[0].qty, 2);
+assert.equal(afterRepair.products[0].price, 28000);
+
+
+const duplicateResolutionRows = [
+  ['Tên SP', 'ĐVT', 'SL', 'Giá'],
+  ['Trứng gà', 'Hộp', '2', '28000'],
+  ['Trứng gà', 'Hộp', '3', '28000'],
+  ['Trứng vịt', 'Hộp', '1', '32000']
+];
+const duplicateHeader = detectSpreadsheetHeader(duplicateResolutionRows);
+const duplicateParsed = parseMappedSpreadsheetRows(duplicateResolutionRows, {
+  headerIndex: duplicateHeader.headerIndex,
+  mapping: duplicateHeader.mapping
+});
+assert.equal(duplicateParsed.duplicates.length, 1);
+assert.deepEqual(duplicateParsed.duplicates[0].rowNumbers, [2, 3]);
+assert.deepEqual(duplicateParsed.duplicates[0].quantities, [2, 3]);
+assert.deepEqual(duplicateParsed.duplicates[0].prices, [28000, 28000]);
+
+const duplicateSkipped = parseMappedSpreadsheetRows(duplicateResolutionRows, {
+  headerIndex: duplicateHeader.headerIndex,
+  mapping: duplicateHeader.mapping,
+  excludedRows: [3]
+});
+assert.equal(duplicateSkipped.duplicates.length, 0);
+assert.equal(duplicateSkipped.products.length, 2);
+assert.equal(duplicateSkipped.products.some(product => product.name === 'Trứng vịt'), true);
+
+
+assert.equal(normalizeImportedPhone('+84 962 944 688'), '0962944688');
+assert.equal(normalizeImportedPhone('0084 962 944 688'), '0962944688');
+assert.equal(normalizeImportedPhone('0962.944.688'), '0962944688');
+
+const currencyNormalized = normalizeImportedProduct({
+  name: '\u200B Trứng gà ',
+  qty: '2',
+  price: '28.000 đ'
+});
+assert.equal(currencyNormalized.name, 'Trứng gà');
+assert.equal(currencyNormalized.price, 28000);
+
+const currencyCodeNormalized = normalizeImportedProduct({
+  name: 'Trứng vịt',
+  qty: '1',
+  price: '32,000 VND'
+});
+assert.equal(currencyCodeNormalized.price, 32000);
+
+const internationalPhoneSheet = parseSpreadsheetRows([
+  ['HKD Test'],
+  ['SĐT:', '+84 962 944 688'],
+  ['STT', 'Mặt hàng', 'ĐVT', 'Đơn giá'],
+  [1, 'Trứng gà', 'Hộp', '28.000 đ']
+]);
+assert.equal(internationalPhoneSheet.fields.phone, '0962944688');
+assert.equal(internationalPhoneSheet.products[0].price, 28000);
