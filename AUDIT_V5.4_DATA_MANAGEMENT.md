@@ -48,3 +48,32 @@ Before continuing:
 ## Next pass
 
 After the gate is green, add Data Management filters, duplicate review and bulk selection using the existing storage model. Import/export UI will be added only in the pass that wires its complete parse → review → apply/export behavior.
+
+## Pass 2 — Filters, duplicate review and bulk selection
+
+### Corrections
+- Customer filters: all / has phone / missing phone / has email / missing email.
+- Product filters: dynamic group, currency and duplicate-only.
+- Customer and product rows support explicit selection with persistent bulk bars.
+- Bulk customer/product deletion uses confirmation and the existing storage collections.
+- Selected products can be added to the quotation in one state/save/render cycle.
+- Duplicate review is non-destructive; it only highlights and filters possible duplicates.
+
+### Defect found during port
+The old stacked implementation grouped duplicates by product identity **without currency**, even though the catalog intentionally allows the same reusable product in VND/USD/RUB. That produced false duplicate warnings for legitimate currency variants.
+
+### Fix
+Duplicate review now uses the existing canonical catalog identity: group + name + pack + unit + currency. A VND row and a USD row are distinct; two VND rows with the same canonical identity are still flagged.
+
+### Regression coverage
+- Same identity + same currency is detected as a duplicate group.
+- Same identity + different currency is not included in that duplicate group.
+- Duplicate-only, group and currency filters are exercised together.
+- Customer missing-phone filter is verified.
+- Product selection and bulk-bar clear behavior are verified.
+- Smoke requires every new Data Management control ID.
+
+## Next pass
+
+After the full gate is green, implement Data Library Excel/CSV import/export as one complete flow. Do not expose import/export buttons before their handlers, review state, validation and persistence transaction are ready.
+
