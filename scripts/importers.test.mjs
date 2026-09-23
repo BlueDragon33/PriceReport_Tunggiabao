@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mergeImportDraft, parseHandwritingText, parseSpreadsheetRows } from '../src/importers.js';
+import { inferSpreadsheetColumns, mergeImportDraft, normalizeImportedProduct, parseHandwritingText, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -121,3 +121,60 @@ assert.equal(mixedReparse.fields.companyAddressDetail, 'Địa chỉ Excel');
 assert.equal(mixedReparse.fields.companyWard, 'Nam Nha Trang');
 assert.equal(mixedReparse.fields.companyProvince, 'Khánh Hòa');
 assert.equal(mixedReparse.fields.phone, '0962944688');
+
+
+const inferredColumns = inferSpreadsheetColumns([
+  'Tên SP', 'Nhóm hàng', 'Quy cách', 'Đơn vị tính', 'SL', 'Giá', 'Ghi chú'
+]);
+assert.deepEqual(inferredColumns.mapping, {
+  name: 0,
+  group: 1,
+  pack: 2,
+  unit: 3,
+  qty: 4,
+  price: 5,
+  note: 6
+});
+assert.ok(inferredColumns.confidence.name >= 0.8);
+assert.ok(inferredColumns.confidence.price >= 0.8);
+
+const genericImport = parseSpreadsheetRows([
+  ['Tên SP', 'Nhóm hàng', 'Quy cách', 'Đơn vị tính', 'SL', 'Giá', 'Ghi chú'],
+  [' Trứng gà tươi ', 'Trứng', 'Hộp 10', 'Hộp', '2', '28.000', ' Giao sáng '],
+  ['Ức gà phi lê', 'Thịt gia cầm', '', 'kg', '3', '76,000', '']
+]);
+assert.equal(genericImport.products.length, 2);
+assert.deepEqual(genericImport.products[0], {
+  group: 'Trứng',
+  name: 'Trứng gà tươi',
+  pack: 'Hộp 10',
+  unit: 'Hộp',
+  qty: 2,
+  price: 28000,
+  note: 'Giao sáng'
+});
+assert.equal(genericImport.products[1].price, 76000);
+assert.equal(genericImport.products[1].qty, 3);
+
+const englishImport = parseSpreadsheetRows([
+  ['Product', 'Unit', 'Qty', 'Unit Price', 'Notes'],
+  ['Eggs', 'box', '4', '28 000', '']
+]);
+assert.equal(englishImport.products.length, 1);
+assert.equal(englishImport.products[0].name, 'Eggs');
+assert.equal(englishImport.products[0].unit, 'box');
+assert.equal(englishImport.products[0].qty, 4);
+assert.equal(englishImport.products[0].price, 28000);
+
+const normalizedDirty = normalizeImportedProduct({
+  name: '  Trứng   gà  ',
+  unit: ' Hộp ',
+  qty: '',
+  price: '28 000',
+  note: '  mới  '
+});
+assert.equal(normalizedDirty.name, 'Trứng gà');
+assert.equal(normalizedDirty.unit, 'Hộp');
+assert.equal(normalizedDirty.qty, 1);
+assert.equal(normalizedDirty.price, 28000);
+assert.equal(normalizedDirty.note, 'mới');
