@@ -914,3 +914,90 @@ test('KT Device Gate starts in rollout-safe classification-only mode before prod
   expect(['classification-only', undefined]).toContain(accessState);
   expect(document.getElementById('deviceProfileChip')).toBeTruthy();
 });
+
+
+test('failed history persistence keeps a changed quotation visibly unsaved', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const stateKey = 'tunggiabao-price-report-v1';
+  const previousHistory = localStorage.getItem(historyKey);
+  const base = JSON.parse(localStorage.getItem(stateKey));
+  const seeded = [{
+    id: 'v51-save-failure',
+    savedAt: new Date().toISOString(),
+    status: 'draft',
+    currency: base.currency || 'VND',
+    total: 1000,
+    data: { ...base, quoteNo: 'BG-V51-SAVE-FAIL', quoteStatus: 'draft', historyRecordId: '' }
+  }];
+  localStorage.setItem(historyKey, JSON.stringify(seeded));
+
+  document.querySelector('[data-tab="history"]').click();
+  const row = Array.from(document.querySelectorAll('#quoteHistoryList .history-table-row'))
+    .find(item => item.querySelector('.history-quote-cell strong')?.textContent === 'BG-V51-SAVE-FAIL');
+  expect(row).toBeTruthy();
+  row.querySelector('.history-actions .btn.primary').click();
+  expect(document.getElementById('studioHistoryState').textContent).toBe('Đã lưu lịch sử');
+
+  const title = document.getElementById('quoteTitle');
+  title.value = (title.value || 'BẢNG BÁO GIÁ') + ' · chỉnh sửa';
+  title.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+
+  const nativeSetItem = Storage.prototype.setItem;
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+    if (key === historyKey) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    return nativeSetItem.call(this, key, value);
+  });
+  document.getElementById('studioSaveQuote').click();
+  spy.mockRestore();
+
+  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+  expect(JSON.parse(localStorage.getItem(historyKey))[0].data.quoteTitle).not.toContain('· chỉnh sửa');
+
+  if (previousHistory == null) localStorage.removeItem(historyKey);
+  else localStorage.setItem(historyKey, previousHistory);
+});
+
+test('updating a saved quotation cannot reuse another quotation number', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const stateKey = 'tunggiabao-price-report-v1';
+  const previousHistory = localStorage.getItem(historyKey);
+  const base = JSON.parse(localStorage.getItem(stateKey));
+  const makeRecord = (id, quoteNo) => ({
+    id,
+    savedAt: new Date().toISOString(),
+    status: 'draft',
+    currency: base.currency || 'VND',
+    total: 1000,
+    data: {
+      ...base,
+      quoteNo,
+      quoteStatus: 'draft',
+      historyRecordId: '',
+      products: [{ group: '', name: 'Sản phẩm ' + id, pack: '', unit: 'cái', qty: 1, price: 1000, note: '' }]
+    }
+  });
+  localStorage.setItem(historyKey, JSON.stringify([
+    makeRecord('v51-collision-a', 'BG-V51-A'),
+    makeRecord('v51-collision-b', 'BG-V51-B')
+  ]));
+
+  document.querySelector('[data-tab="history"]').click();
+  const rowA = Array.from(document.querySelectorAll('#quoteHistoryList .history-table-row'))
+    .find(item => item.querySelector('.history-quote-cell strong')?.textContent === 'BG-V51-A');
+  expect(rowA).toBeTruthy();
+  rowA.querySelector('.history-actions .btn.primary').click();
+
+  const quoteNo = document.getElementById('quoteNo');
+  quoteNo.value = 'BG-V51-B';
+  quoteNo.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioSaveQuote').click();
+
+  expect(document.getElementById('quoteNo').value).not.toBe('BG-V51-B');
+  const stored = JSON.parse(localStorage.getItem(historyKey));
+  const numbers = stored.map(record => record.data.quoteNo);
+  expect(new Set(numbers).size).toBe(numbers.length);
+
+  if (previousHistory == null) localStorage.removeItem(historyKey);
+  else localStorage.setItem(historyKey, previousHistory);
+});
