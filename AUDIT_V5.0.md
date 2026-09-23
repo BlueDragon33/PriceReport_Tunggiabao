@@ -113,3 +113,30 @@ Activation also deleted every origin cache, including sibling GitHub Pages apps.
 - Existing CI for RC1 passed at `cfcb029`; RC2 requires a fresh CI run.
 - This session's cloud browser can reach production, but cannot open localhost (`ERR_BLOCKED_BY_CLIENT`). Local responsive screenshots and a rendered print/PDF check have not been completed; source/DOM validation is not reported as visual QA. Production interaction checks follow successful deployment.
 - No new business feature, data migration, authentication change, or management rollout is introduced by these corrections.
+
+
+## Pass 23 — Service Worker lifetime correctness
+
+Release-candidate audit found that cached non-navigation requests started a network refresh but returned the cached response without attaching that refresh to the fetch event lifetime. A browser could therefore terminate the worker before the refreshed response was committed. Successful navigation responses had the same risk while updating the cached `index.html`.
+
+Corrections:
+- Cached stale-while-revalidate requests now attach the background network/cache write to `event.waitUntil(...)`.
+- Cache writes are awaited before the revalidation promise completes.
+- Successful navigation cache writes are attached to the fetch-event lifetime.
+- Install and activation now await `skipWaiting()` and `clients.claim()` together with their lifecycle work.
+- The executable worker regression test now guards cache ownership and these lifetime invariants.
+
+CI runs #409 and #410 exposed weaknesses in the first regression harness; those test-only failures were corrected. Webapp CI #411 then passed all audit, logic, DOM, smoke and build gates.
+
+## Pass 24 — GitHub Actions runtime maintenance
+
+CI logs showed that `actions/checkout@v4` and `actions/setup-node@v4` target the retired Node 20 action runtime and were being forced onto Node 24 by the runner. All PriceReport workflows now use `actions/checkout@v6` and `actions/setup-node@v7`, while retaining the project's explicit Node 22 application runtime.
+
+Validation:
+- PriceReport Control Service CI #9: PASS.
+- Webapp CI #414: PASS, including npm audit, full test suite and production build.
+- No application behavior, report layout, data schema, authentication or production rollout policy changed in this maintenance pass.
+
+### Current gate
+
+PR #37 is green after Passes 23–24. No additional pass is opened without a reproducible defect, release requirement or concrete usability gap.
