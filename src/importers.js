@@ -114,6 +114,134 @@ export function parseProductClipboardText(rawText) {
   return { products, warnings: [...new Set(warnings)], mapping: positional, hasHeader };
 }
 
+
+const PRODUCT_HEADER_ALIASES = {
+  group: ['nhom', 'nhom hang', 'loai hang', 'category'],
+  name: ['ten san pham', 'ten hang', 'san pham', 'hang hoa', 'ten sp', 'product', 'item'],
+  pack: ['quy cach', 'dong goi', 'packaging', 'pack'],
+  unit: ['dvt', 'don vi', 'don vi tinh', 'unit'],
+  qty: ['sl', 'so luong', 'quantity', 'qty'],
+  price: ['gia', 'don gia', 'gia ban', 'price', 'unit price'],
+  note: ['ghi chu', 'dien giai', 'note', 'notes']
+};
+
+function editDistance(a, b) {
+  const left = fold(clean(a));
+  const right = fold(clean(b));
+  const prev = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let diagonal = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const above = prev[j];
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diagonal + cost);
+      diagonal = above;
+    }
+  }
+  return prev[right.length];
+}
+
+function productHeaderKey(value) {
+  const cell = fold(clean(value)).replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!cell) return '';
+  let best = { key: '', distance: Infinity };
+  for (const [key, aliases] of Object.entries(PRODUCT_HEADER_ALIASES)) {
+    for (const alias of aliases) {
+      if (cell === alias || cell.includes(alias) || alias.includes(cell) && cell.length >= 3) return key;
+      const distance = editDistance(cell, alias);
+      if (distance < best.distance) best = { key, distance };
+    }
+  }
+  const threshold = cell.length <= 4 ? 1 : 2;
+  return best.distance <= threshold ? best.key : '';
+}
+
+export function parseGenericProductRows(rows) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  let headerIndex = -1;
+  let mapping = [];
+
+  for (let index = 0; index < Math.min(safeRows.length, 40); index += 1) {
+    const candidate = (Array.isArray(safeRows[index]) ? safeRows[index] : []).map(productHeaderKey);
+    const recognized = candidate.filter(Boolean);
+    if (recognized.includes('name') && recognized.length >= 2) {
+      headerIndex = index;
+      mapping = candidate;
+      break;
+    }
+  }
+
+  if (headerIndex < 0) {
+    return {
+      source: 'excel-table',
+      fields: {},
+      products: [],
+      groups: [],
+      layoutHints: {},
+      warnings: ['Chưa nhận diện được hàng tiêu đề của bảng sản phẩm.'],
+      unmatched: [],
+      columnMapping: []
+    };
+  }
+
+  const warnings = [];
+  const products = [];
+  const dataRows = safeRows.slice(headerIndex + 1);
+  dataRows.forEach((row, offset) => {
+    const cells = Array.isArray(row) ? row : [];
+    if (!cells.some(value => clean(value))) return;
+    const product = { group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' };
+    let meaningful = false;
+
+    mapping.forEach((key, columnIndex) => {
+      if (!key) return;
+      const raw = cells[columnIndex];
+      const value = clean(raw);
+      if (value) meaningful = true;
+      if (key === 'qty' || key === 'price') {
+        const parsed = parseNumber(raw);
+        if (value && !parsed.valid) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': ' + (key === 'qty' ? 'Số lượng' : 'Đơn giá') + ' không hợp lệ.');
+        if (/^-/.test(value)) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': ' + (key === 'qty' ? 'Số lượng' : 'Đơn giá') + ' đang là số âm.');
+        product[key] = key === 'qty' && !value ? 1 : parsed.value;
+      } else {
+        product[key] = value;
+      }
+    });
+
+    if (!meaningful) return;
+    if (!product.name) {
+      warnings.push('Dòng ' + (headerIndex + offset + 2) + ': có dữ liệu nhưng chưa có tên sản phẩm.');
+    }
+    products.push(product);
+  });
+
+  const groups = [...new Set(products.map(product => clean(product.group)).filter(Boolean))];
+  const mappedKeys = new Set(mapping.filter(Boolean));
+  const hasNoteValues = products.some(product => clean(product.note));
+  return {
+    source: 'excel-table',
+    fields: {},
+    products,
+    groups,
+    layoutHints: {
+      showPack: mappedKeys.has('pack') && products.some(product => clean(product.pack)),
+      showQty: mappedKeys.has('qty'),
+      showPrice: mappedKeys.has('price'),
+      showAmount: mappedKeys.has('qty') && mappedKeys.has('price'),
+      showNote: mappedKeys.has('note') && hasNoteValues,
+      showTotals: mappedKeys.has('qty') && mappedKeys.has('price')
+    },
+    warnings: [...new Set(warnings)],
+    unmatched: [],
+    columnMapping: mapping.map((key, index) => ({
+      index,
+      source: clean(safeRows[headerIndex]?.[index]),
+      target: key
+    })).filter(item => item.target)
+  };
+}
+
 export function parseSpreadsheetRows(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
   const fields = {};
