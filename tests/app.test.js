@@ -130,6 +130,12 @@ test('malformed local collections are normalized instead of crashing management 
   expect(() => document.querySelector('[data-tab="history"]').click()).not.toThrow();
   expect(document.getElementById('historyCount').textContent).toBe('1');
   expect(() => document.querySelector('[data-tab="master"]').click()).not.toThrow();
+  expect(document.getElementById('customerLibraryCount').textContent).toBe('1');
+  expect(document.getElementById('productCatalogCount').textContent).toBe('1');
+  expect(document.getElementById('customerLibraryResultCount').textContent).toBe('1');
+  expect(document.getElementById('productCatalogResultCount').textContent).toBe('1');
+  expect(document.querySelectorAll('#customerLibraryList .master-table-row').length).toBe(1);
+  expect(document.querySelectorAll('#productCatalogList .master-table-row').length).toBe(1);
   expect(document.getElementById('productCatalogList').textContent).toContain('SP');
   expect(document.getElementById('productCatalogList').textContent).toContain('0 VND');
 
