@@ -95,6 +95,73 @@ function extractSelectors(source) {
   return selectors;
 }
 
+function parseDeclarationMap(body) {
+  const values = {};
+  body.split(';').forEach((entry) => {
+    const colon = entry.indexOf(':');
+    if (colon <= 0) return;
+    const property = entry.slice(0, colon).trim();
+    const value = entry.slice(colon + 1).trim();
+    if (property && value) values[property] = value;
+  });
+  return values;
+}
+
+function extractRootRules(source) {
+  const rules = [];
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const open = source.indexOf('{', cursor);
+    if (open < 0) break;
+
+    const prelude = source.slice(cursor, open).trim();
+    let depth = 1;
+    let close = open + 1;
+    for (; close < source.length && depth > 0; close += 1) {
+      if (source[close] === '{') depth += 1;
+      else if (source[close] === '}') depth -= 1;
+    }
+
+    const body = source.slice(open + 1, Math.max(open + 1, close - 1));
+    if (prelude && !prelude.startsWith('@')) {
+      const declarations = parseDeclarationMap(body);
+      splitSelectorList(prelude).forEach((selector) => rules.push({ selector, declarations }));
+    }
+    cursor = close;
+  }
+
+  return rules;
+}
+
+const rootRuleMap = new Map();
+extractRootRules(withoutComments).forEach((rule) => {
+  const items = rootRuleMap.get(rule.selector) || [];
+  items.push(rule.declarations);
+  rootRuleMap.set(rule.selector, items);
+});
+
+const rootConflicts = [];
+for (const [selector, ruleSets] of rootRuleMap.entries()) {
+  const properties = new Map();
+  ruleSets.forEach((declarations) => {
+    Object.entries(declarations).forEach(([property, value]) => {
+      const values = properties.get(property) || new Set();
+      values.add(value);
+      properties.set(property, values);
+    });
+  });
+  for (const [property, values] of properties.entries()) {
+    if (values.size > 1) {
+      rootConflicts.push(selector + ' :: ' + property + ' => ' + [...values].join(' | '));
+    }
+  }
+}
+
+if (rootConflicts.length) {
+  fail('V5 root cascade conflicts detected: ' + rootConflicts.slice(0, 8).join(' || '));
+}
+
 const selectorRules = extractSelectors(withoutComments);
 const unscoped = selectorRules.filter(selector =>
   selector !== ':root' &&
