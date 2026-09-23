@@ -4,7 +4,10 @@ const fold = (value) => String(value ?? '')
   .toLowerCase()
   .replace(/đ/g, 'd');
 
-const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+const clean = (value) => String(value ?? '')
+  .replace(/[\u200B-\u200D\uFEFF]/g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
 
 const nonEmptyCells = (row) => (Array.isArray(row) ? row : []).map(clean).filter(Boolean);
 
@@ -49,6 +52,8 @@ const parseNumber = (value) => {
   const raw = clean(value);
   if (!raw) return { valid: false, value: 0 };
   const text = raw
+    .replace(/(?:₫|đ)/gi, '')
+    .replace(/\b(?:vnd|vnđ|usd|rub)\b/gi, '')
     .replace(/\s+/g, '')
     .replace(/[.,](?=\d{3}(?:\D|$))/g, '')
     .replace(',', '.');
@@ -57,6 +62,14 @@ const parseNumber = (value) => {
 };
 
 const numberValue = (value) => parseNumber(value).value;
+
+export function normalizeImportedPhone(value) {
+  const raw = clean(value);
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('0084') && digits.length >= 12) digits = '0' + digits.slice(4);
+  else if (digits.startsWith('84') && digits.length >= 11) digits = '0' + digits.slice(2);
+  return digits;
+}
 
 const HEADER_ALIASES = {
   name: ['ten san pham','ten sp','san pham','ten hang','hang hoa','mat hang','product','product name'],
@@ -433,8 +446,8 @@ export function parseSpreadsheetRows(rows) {
     }
 
     if (!fields.phone && /(sdt|dien thoai|dt)\s*[:.\-]?/.test(folded)) {
-      const match = text.match(/(?:SĐT|SDT|ĐT|DT|Điện thoại)\s*[:.\-]?\s*([0-9 .\-]{9,16})/i);
-      if (match) fields.phone = match[1].replace(/\D/g, '');
+      const match = text.match(/(?:SĐT|SDT|ĐT|DT|Điện thoại)\s*[:.\-]?\s*([+0-9 ().\-]{9,24})/i);
+      if (match) fields.phone = normalizeImportedPhone(match[1]);
       return;
     }
 
@@ -515,10 +528,10 @@ export function parseSpreadsheetRows(rows) {
 }
 
 const extractPhone = (text) => {
-  const direct = String(text || '').match(/(?:SĐT|SDT|ĐT|DT|Đ\.T|Điện thoại)\s*[:.\-]?\s*([0-9 .\-]{9,16})/i);
-  if (direct) return direct[1].replace(/\D/g, '');
-  const loose = String(text || '').match(/\b0[0-9 .\-]{8,13}\b/);
-  return loose ? loose[0].replace(/\D/g, '') : '';
+  const direct = String(text || '').match(/(?:SĐT|SDT|ĐT|DT|Đ\.T|Điện thoại)\s*[:.\-]?\s*([+0-9 ().\-]{9,24})/i);
+  if (direct) return normalizeImportedPhone(direct[1]);
+  const loose = String(text || '').match(/(?:\+?84|0)[0-9 .()\-]{8,16}/);
+  return loose ? normalizeImportedPhone(loose[0]) : '';
 };
 
 export function parseHandwritingText(rawText) {
