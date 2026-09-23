@@ -81,6 +81,13 @@ test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunti
   document.getElementById('mobileMoreClose').click();
   expect(menu.hidden).toBe(true);
   expect(document.activeElement).toBe(toggle);
+
+  toggle.click();
+  const customerAction = menu.querySelector('[data-open-tab="customer"]');
+  customerAction.click();
+  expect(menu.hidden).toBe(true);
+  expect(document.getElementById('pane-customer').contains(document.activeElement)).toBe(true);
+  document.querySelector('[data-tab="dashboard"]').click();
 });
 
 test('V4.1 dashboard recent quotation opens the selected record directly', () => {
@@ -171,6 +178,25 @@ test('V4.9 settings persist application preferences without touching business da
   const previousPrefs = beforeUi ? (JSON.parse(beforeUi).appPreferences || {}) : {};
   document.body.classList.toggle('dashboard-hero-hidden', previousPrefs.showDashboardHero === false);
   document.body.classList.toggle('management-compact', Boolean(previousPrefs.compactManagement));
+  document.querySelector('[data-tab="general"]').click();
+});
+
+test('V5 dynamic feedback exposes live, busy and empty-state semantics', async () => {
+  const toast = document.getElementById('toast');
+  expect(toast.getAttribute('role')).toBe('status');
+  expect(toast.getAttribute('aria-live')).toBe('polite');
+
+  const dialog = document.getElementById('smartImportDialog');
+  expect(dialog.getAttribute('aria-busy')).toBe('false');
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  const recent = document.getElementById('dashRecentQuotes');
+  if (recent.querySelector('.dashboard-empty')) {
+    expect(recent.querySelector('.dashboard-empty').getAttribute('role')).toBe('status');
+  }
+
+  document.querySelector('[data-tab="system"]').click();
+  expect(document.getElementById('pane-system').hasAttribute('aria-busy')).toBe(true);
   document.querySelector('[data-tab="general"]').click();
 });
 
