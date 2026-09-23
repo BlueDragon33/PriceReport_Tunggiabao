@@ -1294,6 +1294,17 @@ function bindInputs() {
     if (el.type === 'checkbox') el.checked = Boolean(state[key]);
     else el.value = state[key] == null ? '' : state[key];
 
+    let undoBaseline = '';
+    const captureUndoBaseline = () => {
+      if (!undoBaseline && typeof quoteSnapshotString === 'function') undoBaseline = quoteSnapshotString();
+    };
+    el.addEventListener('focus', captureUndoBaseline);
+    el.addEventListener('pointerdown', captureUndoBaseline);
+    el.addEventListener('blur', () => {
+      if (undoBaseline && undoBaseline !== quoteSnapshotString()) pushQuoteUndoSnapshot(undoBaseline);
+      undoBaseline = '';
+    });
+
     const onChange = () => {
       if (el.type === 'checkbox') {
         state[key] = el.checked;
@@ -3812,6 +3823,7 @@ $$('.tpl').forEach((el) => {
     if (description && active) description.textContent = active.dataset.description || '';
   });
   el.addEventListener('click', () => {
+    pushQuoteUndoSnapshot();
     state.theme = el.dataset.theme;
     if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
     if (THEME_FONTS[state.theme]) state.docFont = THEME_FONTS[state.theme];
@@ -3823,8 +3835,9 @@ $$('.tpl').forEach((el) => {
   });
 });
 
-$$('.color').forEach((el) => {
+$('.color').forEach((el) => {
   el.addEventListener('click', () => {
+    pushQuoteUndoSnapshot();
     state.accent = el.dataset.color;
     save();
     render();
@@ -5050,10 +5063,14 @@ function setupLayoutEditor() {
   });
 
   ['autoArrangeLayoutToolbar','autoArrangeLayoutPanel'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('click', autoArrangePreview);
+    document.getElementById(id)?.addEventListener('click', () => {
+      pushQuoteUndoSnapshot();
+      autoArrangePreview();
+    });
   });
 
   document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
+    pushQuoteUndoSnapshot();
     state.layoutOffsets = {};
     applyLayoutOffsets();
     const persisted = save();
@@ -5062,6 +5079,7 @@ function setupLayoutEditor() {
   });
 
   const resizeLogo = (delta) => {
+    pushQuoteUndoSnapshot();
     state.logoWidth = Math.min(90, Math.max(18, Number(state.logoWidth || 58) + delta));
     save();
     syncInputs();
@@ -5083,6 +5101,7 @@ function setupLayoutEditor() {
     selectLayoutBlock(key);
     layoutDrag = {
       key,
+      undoSnapshot: quoteSnapshotString(),
       pointerId: event.pointerId,
       element: block,
       startX: event.clientX,
@@ -5124,6 +5143,7 @@ function setupLayoutEditor() {
     } catch {}
     layoutDrag = null;
     save();
+    if (active.undoSnapshot && active.undoSnapshot !== quoteSnapshotString()) pushQuoteUndoSnapshot(active.undoSnapshot);
     syncLayoutEditModeUI();
     updateLayoutSelection();
   };
