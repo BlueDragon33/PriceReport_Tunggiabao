@@ -603,6 +603,30 @@ test('report view tab enters a dedicated responsive preview mode and exits clean
   expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 });
 
+test('V4.8 device and system center shows real runtime state and separates local from registry code', () => {
+  document.querySelector('[data-tab="system"]').click();
+  expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
+  expect(document.getElementById('pane-system').classList.contains('active')).toBe(true);
+  expect(document.getElementById('systemLocalDeviceCode').textContent).toMatch(/^KT-/);
+  expect(document.getElementById('systemDetailDeviceClass').textContent.length).toBeGreaterThan(0);
+
+  window.dispatchEvent(new CustomEvent('pricereport:device-access', {
+    detail: {
+      state: 'pending',
+      identity: { deviceCode: 'KT-TEST-0001', lastKnownStatus: 'pending' },
+      message: 'Đang chờ duyệt thử nghiệm'
+    }
+  }));
+  expect(document.getElementById('systemAccessState').textContent).toContain('Chờ duyệt');
+  expect(document.getElementById('systemRegistryDeviceCode').textContent).toBe('KT-TEST-0001');
+
+  window.dispatchEvent(new CustomEvent('pricereport:device-access', {
+    detail: { state: 'classification-only', identity: null, message: 'Remote Device Gate chưa bật.' }
+  }));
+  expect(document.getElementById('systemAccessState').textContent).toContain('Phân loại cục bộ');
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('V4.7 publishing center exposes export, import, PC and backup controls in app workspace', () => {
   document.querySelector('[data-tab="export"]').click();
   expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
