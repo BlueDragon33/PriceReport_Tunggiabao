@@ -1108,8 +1108,8 @@ body.v5-ui .master-panel-icon{
 body.v5-ui .master-panel-icon.product-icon{background:var(--v5-warning-soft);color:#db7d1e}
 body.v5-ui .master-panel-head>.btn{min-height:36px;padding:7px 11px;font-size:9px}
 body.v5-ui .master-toolbar{
-  display:grid;
-  grid-template-columns:minmax(240px,1fr) auto;
+  display:flex;
+  flex-wrap:wrap;
   gap:10px;
   align-items:center;
 }
@@ -4333,12 +4333,6 @@ body.v5-ui .import-duplicate-actions {
 
 
 /* V5.3 Data Management controls */
-body.v5-ui .master-toolbar{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  align-items:center;
-}
 body.v5-ui .master-toolbar .master-search-box{
   flex:1 1 260px;
   min-width:min(100%,220px);
