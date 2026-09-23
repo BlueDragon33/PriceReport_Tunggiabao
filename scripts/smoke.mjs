@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v31-history-app")) fail('Service-worker cache version was not upgraded for V4.3 quotation management');
+if (!sw.includes("pricereport-shell-v32-master-data")) fail('Service-worker cache version was not upgraded for V4.4 master data workspace');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -270,3 +270,10 @@ if (!html.includes('id="historyPendingCount"') || !html.includes('id="historyRes
 if (!html.includes('class="history-table-head"')) fail('V4.3 quotation management table header is missing');
 if (!js.includes("row.className = 'history-item history-table-row'")) fail('V4.3 quotation management row renderer is missing');
 if (!css.includes('.history-workspace-header') || !css.includes('.history-table-row')) fail('V4.3 quotation management workspace styles are missing');
+
+if (!html.includes('id="customerLibraryCount"') || !html.includes('id="productCatalogCount"')) fail('V4.4 master-data totals are missing');
+if (!html.includes('id="customerLibraryResultCount"') || !html.includes('id="productCatalogResultCount"')) fail('V4.4 master-data filter counters are missing');
+if (!html.includes('class="master-table-head customer-table-grid"') || !html.includes('class="master-table-head product-table-grid"')) fail('V4.4 master-data table headers are missing');
+if (!js.includes("row.className = 'master-item master-table-row customer-table-grid'")) fail('V4.4 customer table renderer is missing');
+if (!js.includes("row.className = 'master-item master-table-row product-table-grid'")) fail('V4.4 product table renderer is missing');
+if (!css.includes('.master-workspace-header') || !css.includes('.master-table-row')) fail('V4.4 master-data workspace styles are missing');
