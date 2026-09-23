@@ -4084,6 +4084,7 @@ document.getElementById('quoteStatusFilter').addEventListener('change', renderHi
 
 let dataLibraryImportDraft = null;
 let dataLibraryImportLastFocus = null;
+let dataLibraryImportReadToken = 0;
 
 function refreshDataLibraryAfterMutation(mode) {
   if (mode === 'customer') {
@@ -4164,7 +4165,11 @@ function writeDataLibraryImportRecovery() {
 function readDataLibraryImportRecovery() {
   try {
     const parsed = JSON.parse(sessionStorage.getItem(DATA_LIBRARY_IMPORT_RECOVERY) || 'null');
-    if (!parsed || parsed.schemaVersion !== 1 || !['customer','product'].includes(parsed.mode)) return null;
+    if (!parsed) return null;
+    if (parsed.schemaVersion !== 1 || !['customer','product'].includes(parsed.mode)) {
+      clearDataLibraryImportRecovery();
+      return null;
+    }
     const candidates = (Array.isArray(parsed.candidates) ? parsed.candidates : [])
       .flatMap(candidate => {
         if (!candidate || !Array.isArray(candidate.rows)) return [];
@@ -4341,6 +4346,7 @@ function currentDataLibraryImportCandidate() {
 }
 
 function closeDataLibraryImport({ restoreFocus = true, discardRecovery = false } = {}) {
+  dataLibraryImportReadToken += 1;
   const modal = document.getElementById('dataLibraryImportModal');
   if (modal) modal.hidden = true;
   document.body.classList.remove('data-library-import-open');
@@ -4472,6 +4478,7 @@ function resetDataLibraryImportReviewForLoading(fileName) {
 
 async function openDataLibraryImport(file, mode, trigger) {
   if (!file) return;
+  const readToken = ++dataLibraryImportReadToken;
   dataLibraryImportLastFocus = trigger || document.activeElement;
   const modal = document.getElementById('dataLibraryImportModal');
   if (!modal) return;
@@ -4481,6 +4488,7 @@ async function openDataLibraryImport(file, mode, trigger) {
   resetDataLibraryImportReviewForLoading(file.name);
   try {
     const candidates = await readDataLibraryWorkbook(file, mode);
+    if (readToken !== dataLibraryImportReadToken) return;
     dataLibraryImportDraft = {
       mode,
       fileName: file.name,
@@ -4494,6 +4502,7 @@ async function openDataLibraryImport(file, mode, trigger) {
     renderDataLibraryImport();
     document.getElementById('dataLibraryImportSheetSelect')?.focus?.();
   } catch (error) {
+    if (readToken !== dataLibraryImportReadToken) return;
     console.error('Data Library import failed:', error);
     closeDataLibraryImport({ restoreFocus: false });
     alert('Không thể đọc dữ liệu thư viện từ file này. Hãy kiểm tra tiêu đề cột và định dạng Excel/CSV.');
