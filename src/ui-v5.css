@@ -235,6 +235,39 @@ body.v5-ui .shell:not(.app-workspace) .tip{
 }
 body.v5-ui .shell:not(.app-workspace) .tip b{color:#fff}
 
+/* ---------- Shared workspace primitives ---------- */
+body.v5-ui .app-workspace-pane{
+  width:min(100%,var(--v5-content-max));
+  max-width:var(--v5-content-max);
+  margin:0 auto;
+  padding:26px 28px 42px;
+}
+body.v5-ui .app-workspace-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  margin:0 0 18px;
+}
+body.v5-ui .app-surface-panel{
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-md);
+  background:var(--v5-surface);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui .app-status-card{
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-md);
+  background:var(--v5-surface);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui .app-data-table{
+  border:1px solid var(--v5-border);
+  border-radius:12px;
+  background:var(--v5-surface);
+  overflow:hidden;
+}
+
 /* ---------- Shared workspace canvas ---------- */
 body.v5-ui .app-dashboard,
 body.v5-ui .history-workspace,
