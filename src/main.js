@@ -5650,10 +5650,10 @@ function renderMasterData() {
       del.textContent = 'Xóa';
       del.addEventListener('click', () => {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
-        if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
-        selectedCustomerLibraryIds.delete(customer.id);
-        renderMasterData();
-        renderDashboard();
+        const before = getCustomerLibrary();
+        if (!setCustomerLibrary(before.filter(item => item.id !== customer.id))) return;
+        refreshDataLibraryAfterMutation('customer');
+        offerDataLibraryUndo('customer', before, 'Đã xóa khách hàng khỏi danh bạ');
       });
       actions.append(use, del);
       row.append(nameCell, companyCell, contactCell, addressCell, actions);
@@ -5721,10 +5721,10 @@ function renderMasterData() {
       del.textContent = 'Xóa';
       del.addEventListener('click', () => {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
-        if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
-        selectedProductCatalogIds.delete(product.id);
-        renderMasterData();
-        renderDashboard();
+        const before = getProductCatalog();
+        if (!setProductCatalog(before.filter(item => item.id !== product.id))) return;
+        refreshDataLibraryAfterMutation('product');
+        offerDataLibraryUndo('product', before, 'Đã xóa sản phẩm khỏi danh mục');
       });
       actions.append(add, del);
       row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
