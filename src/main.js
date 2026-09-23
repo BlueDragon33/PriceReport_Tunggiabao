@@ -1832,6 +1832,7 @@ function productField(label, key, value, type, onInput, className = '') {
 function renderEditorProducts() {
   const list = document.getElementById('productEditor');
   list.innerHTML = '';
+  const fragment = document.createDocumentFragment();
   refreshProductEntrySuggestions();
 
   state.products.forEach((product, index) => {
@@ -2004,8 +2005,9 @@ function renderEditorProducts() {
 
     card.append(head, body);
     syncProductRowValidation(card, product);
-    list.appendChild(card);
+    fragment.appendChild(card);
   });
+  list.appendChild(fragment);
 
   const collapseButton = document.getElementById('collapseAllProducts');
   if (collapseButton) {
@@ -4766,6 +4768,13 @@ function canonicalLibraryText(value) {
     .toLocaleLowerCase('vi-VN');
 }
 
+function canonicalSearchText(value) {
+  return canonicalLibraryText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
 function canonicalLibraryPhone(value) {
   let phone = normalizePhone(value);
   if (phone.startsWith('0084') && phone.length >= 12) phone = '0' + phone.slice(4);
@@ -4990,19 +4999,19 @@ function renderMasterData() {
   const productList = document.getElementById('productCatalogList');
   if (!customerList || !productList) return;
 
-  const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
-  const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
+  const customerQuery = canonicalSearchText(document.getElementById('customerLibrarySearch')?.value || '');
+  const productQuery = canonicalSearchText(document.getElementById('productCatalogSearch')?.value || '');
 
   const allCustomers = getCustomerLibrary();
   const allProducts = getProductCatalog();
   const customers = allCustomers.filter(item => {
-    const haystack = [item.name, item.company, item.phone, item.email, item.address, item.contact]
-      .filter(Boolean).join(' ').toLowerCase();
+    const haystack = canonicalSearchText([item.name, item.company, item.phone, item.email, item.address, item.contact]
+      .filter(Boolean).join(' '));
     return !customerQuery || haystack.includes(customerQuery);
   });
   const products = allProducts.filter(item => {
-    const haystack = [item.group, item.name, item.pack, item.unit, item.note, item.currency]
-      .filter(Boolean).join(' ').toLowerCase();
+    const haystack = canonicalSearchText([item.group, item.name, item.pack, item.unit, item.note, item.currency]
+      .filter(Boolean).join(' '));
     return !productQuery || haystack.includes(productQuery);
   });
 
@@ -5012,6 +5021,7 @@ function renderMasterData() {
   setText('productCatalogResultCount', products.length);
 
   customerList.innerHTML = '';
+  const customerFragment = document.createDocumentFragment();
   if (!customers.length) {
     customerList.innerHTML = '<div class="history-empty" role="status">Chưa có khách hàng phù hợp.</div>';
   } else {
@@ -5060,11 +5070,13 @@ function renderMasterData() {
       });
       actions.append(use, del);
       row.append(nameCell, companyCell, contactCell, addressCell, actions);
-      customerList.appendChild(row);
+      customerFragment.appendChild(row);
     });
+    customerList.appendChild(customerFragment);
   }
 
   productList.innerHTML = '';
+  const productFragment = document.createDocumentFragment();
   if (!products.length) {
     productList.innerHTML = '<div class="history-empty" role="status">Chưa có sản phẩm phù hợp.</div>';
   } else {
@@ -5114,8 +5126,9 @@ function renderMasterData() {
       });
       actions.append(add, del);
       row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
-      productList.appendChild(row);
+      productFragment.appendChild(row);
     });
+    productList.appendChild(productFragment);
   }
 }
 
