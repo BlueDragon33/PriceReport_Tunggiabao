@@ -1053,3 +1053,43 @@ test('professional report suppresses empty terms and empty payment rows', () => 
   terms.dispatchEvent(new Event('input', { bubbles: true }));
   expect(document.getElementById('termsBox').style.display).toBe('none');
 });
+
+
+test('V6 data entry undo restores a whole product-row mutation', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const before = document.querySelectorAll('#productEditor .product-card').length;
+  document.getElementById('addProduct').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before + 1);
+  expect(document.getElementById('studioUndo').disabled).toBe(false);
+
+  document.getElementById('studioUndo').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before);
+  expect(document.getElementById('studioRedo').disabled).toBe(false);
+
+  document.getElementById('studioRedo').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before + 1);
+  document.getElementById('studioUndo').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before);
+  expect(document.getElementById('studioAutosaveStatus').textContent).toContain('Đã lưu');
+});
+
+test('V6 preflight exposes actionable issues in Inspector instead of a routine alert', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+  window.alert.mockClear();
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('preflightCheck').click();
+  expect(document.querySelector('[data-inspector-tab="check"]').getAttribute('aria-selected')).toBe('true');
+  expect(document.getElementById('inspectorErrorList').textContent).toContain('Thiếu tên công ty');
+  expect(window.alert).not.toHaveBeenCalled();
+
+  const issue = document.querySelector('#inspectorErrorList .inspector-issue');
+  issue.click();
+  expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
+
+  company.value = previous;
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+});
