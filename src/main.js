@@ -1455,6 +1455,36 @@ function appendBlankProduct({ focusKey = 'name' } = {}) {
   return nextIndex;
 }
 
+function refreshCustomerEntrySuggestions() {
+  const customers = getCustomerLibrary();
+  ensureSuggestionList('customerNameSuggestions', customers.map(item => item.name));
+  ensureSuggestionList('customerCompanySuggestions', customers.map(item => item.company));
+  ensureSuggestionList('customerPhoneSuggestions', customers.map(item => item.phone));
+}
+
+function matchCustomerSuggestion(field, rawValue) {
+  const value = String(rawValue || '').trim();
+  if (!value) return null;
+  const customers = getCustomerLibrary();
+  if (field === 'phone') {
+    const normalized = normalizePhone(value);
+    return customers.find(item => normalizePhone(item.phone) === normalized) || null;
+  }
+  const folded = value.toLowerCase();
+  return customers.find(item => String(item?.[field] || '').trim().toLowerCase() === folded) || null;
+}
+
+function setupCustomerEntryAutocomplete() {
+  refreshCustomerEntrySuggestions();
+  document.querySelectorAll('[data-customer-autocomplete]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const customer = matchCustomerSuggestion(input.dataset.customerAutocomplete, input.value);
+      if (!customer) return;
+      useCustomer(customer, { navigate: false, focus: false, notify: true });
+    });
+  });
+}
+
 function ensureSuggestionList(id, values) {
   let list = document.getElementById(id);
   if (!list) {
@@ -3106,6 +3136,7 @@ function enhanceCollapsibleCards() {
 }
 
 bindInputs();
+setupCustomerEntryAutocomplete();
 setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
@@ -4045,11 +4076,12 @@ function saveCurrentCustomerToLibrary() {
   if (index >= 0) items[index] = customer;
   else items.unshift(customer);
   if (!setCustomerLibrary(items)) return;
+  refreshCustomerEntrySuggestions();
   renderMasterData();
   toast(index >= 0 ? 'Đã cập nhật khách hàng' : 'Đã lưu khách hàng');
 }
 
-function useCustomer(customer) {
+function useCustomer(customer, options = {}) {
   state.customerName = customer.name || '';
   state.customerCompany = customer.company || '';
   state.customerAddress = customer.address || '';
@@ -4060,9 +4092,11 @@ function useCustomer(customer) {
   const persisted = save();
   syncInputs();
   render();
-  openTab('general');
-  requestAnimationFrame(() => document.getElementById('quickCustomerName')?.focus());
-  toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
+  if (options.navigate !== false) openTab('general');
+  if (options.focus !== false) requestAnimationFrame(() => document.getElementById('quickCustomerName')?.focus());
+  if (options.notify !== false) {
+    toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
+  }
 }
 
 function normalizeProductCatalog(items) {
