@@ -200,6 +200,13 @@ test('V5 dynamic feedback exposes live, busy and empty-state semantics', async (
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5 Pass 18 removes static inline presentation from application controls', () => {
+  const inline = Array.from(document.querySelectorAll('[style]'));
+  const appInline = inline.filter((element) => !element.closest('#paper'));
+  expect(appInline.length).toBe(0);
+  expect(document.getElementById('pCustomer').classList.contains('report-customer-meta')).toBe(true);
+});
+
 test('V5 Pass 18 applies one Studio surface language across all editor panes', () => {
   for (const id of ['general','customer','products','payment','terms','design','presets']) {
     const pane = document.getElementById('pane-' + id);
