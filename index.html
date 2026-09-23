@@ -271,6 +271,19 @@
                   <option value="expired">Hết hiệu lực</option>
                 </select>
               </div>
+              <div class="history-filter-field">
+                <label for="quoteCustomerFilter">Khách hàng</label>
+                <select id="quoteCustomerFilter"><option value="">Tất cả khách hàng</option></select>
+              </div>
+              <div class="history-filter-field history-date-filter">
+                <label for="quoteDateFrom">Từ ngày</label>
+                <input id="quoteDateFrom" type="date">
+              </div>
+              <div class="history-filter-field history-date-filter">
+                <label for="quoteDateTo">Đến ngày</label>
+                <input id="quoteDateTo" type="date">
+              </div>
+              <button class="btn history-clear-filters" id="quoteClearFilters" type="button">Xóa bộ lọc</button>
               <div class="history-result-summary"><span id="historyResultCount">0</span><small>kết quả</small></div>
             </div>
 
