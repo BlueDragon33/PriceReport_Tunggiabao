@@ -4033,6 +4033,7 @@ document.getElementById('quoteStatusFilter').addEventListener('change', renderHi
 
 document.getElementById('saveCurrentCustomer').addEventListener('click', saveCurrentCustomerToLibrary);
 document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
+document.getElementById('saveProductsToCatalogTop')?.addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('customerLibrarySearch').addEventListener('input', renderMasterData);
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
 
@@ -4552,10 +4553,25 @@ function setCustomerLibrary(items) {
   return safeStore(CUSTOMERS, JSON.stringify(normalizeCustomerLibrary(items)));
 }
 
+function canonicalLibraryText(value) {
+  return String(value || '')
+    .normalize('NFC')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('vi-VN');
+}
+
+function canonicalLibraryPhone(value) {
+  let phone = normalizePhone(value);
+  if (phone.startsWith('0084') && phone.length >= 12) phone = '0' + phone.slice(4);
+  else if (phone.startsWith('84') && phone.length >= 11) phone = '0' + phone.slice(2);
+  return phone;
+}
+
 function customerKey(customer) {
-  const phone = normalizePhone(customer.phone);
+  const phone = canonicalLibraryPhone(customer.phone);
   if (phone) return 'phone:' + phone;
-  return 'name:' + [customer.name, customer.company].filter(Boolean).join('|').trim().toLowerCase();
+  return 'name:' + [customer.name, customer.company].map(canonicalLibraryText).filter(Boolean).join('|');
 }
 
 function saveCurrentCustomerToLibrary() {
@@ -4632,7 +4648,7 @@ function setProductCatalog(items) {
 }
 
 function productKey(product) {
-  return [product.group, product.name, product.pack, product.unit].map(value => String(value || '').trim().toLowerCase()).join('|');
+  return [product.group, product.name, product.pack, product.unit].map(canonicalLibraryText).join('|');
 }
 
 function catalogKey(product) {
