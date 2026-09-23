@@ -228,3 +228,41 @@ DOM tests verify:
 
 ### Next pass
 Run a full V5.2 gate and inspect any remaining failures. If green, perform release-candidate cleanup: audit file debt, service-worker cache generation and final UX smoke before merge.
+
+
+## Pass 10 — V5.2 Release Candidate packaging
+
+### Release identity
+- Package version: `5.2.0-rc.1`.
+- Service Worker generation: `pricereport-shell-v52-smart-entry-rc1`.
+- The production materializer continues to append only its managed/local deployment suffix, preserving the V5.2 release generation.
+
+### RC scope completed
+- Smart spreadsheet header/column inference.
+- Smart Paste and mapping review.
+- Multi-sheet workbook selection.
+- Row-level invalid-data review and repair.
+- Controlled duplicate skip/merge with Undo.
+- Real-world currency/phone/copied-text normalization.
+- Transactional import apply/Undo/recovery behavior.
+- Data Library canonical identity and direct product-library save.
+- Canonical customer/product autocomplete in Studio.
+
+### Locked safeguards retained
+- V5 application CSS: zero `!important`.
+- V5 responsive layer: maximum four media-query blocks.
+- Report CSS remains isolated under its existing debt ceiling.
+- No second customer/product persistence engine.
+- No silent duplicate deletion or merge.
+- No merge to `main` until the final RC CI head is green.
+
+### Final RC gate
+Required:
+1. syntax and UI/debt guards;
+2. importer/core/exporter/service-worker logic tests;
+3. DOM regression tests;
+4. smoke tests;
+5. production build;
+6. GitHub Actions green on the final RC commit.
+
+Visual/browser interaction validation remains distinct from source/DOM CI and must not be falsely reported as completed when no browser render was performed.
