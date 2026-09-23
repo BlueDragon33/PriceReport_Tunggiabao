@@ -92,8 +92,8 @@
         </div>
       </div>
       <div class="panel-body">
-        <div class="pane active app-dashboard" id="pane-dashboard">
-          <header class="dashboard-topbar">
+        <div class="pane active app-dashboard app-workspace-pane" id="pane-dashboard">
+          <header class="dashboard-topbar app-workspace-header">
             <div>
               <span class="eyebrow">TUNGGIABAO WORKSPACE</span>
               <h1>Quản lý báo giá dễ dàng hơn mỗi ngày</h1>
@@ -134,16 +134,16 @@
           </section>
 
           <section class="dashboard-kpis">
-            <article class="kpi-card"><span class="kpi-icon kpi-blue">▤</span><div><small>Tổng báo giá</small><strong id="dashQuoteCount">0</strong><em>Tất cả trạng thái</em></div></article>
-            <article class="kpi-card"><span class="kpi-icon kpi-cyan">●</span><div><small>Khách hàng</small><strong id="dashCustomerCount">0</strong><em>Trong danh bạ</em></div></article>
-            <article class="kpi-card"><span class="kpi-icon kpi-orange">◆</span><div><small>Sản phẩm</small><strong id="dashProductCount">0</strong><em>Trong danh mục</em></div></article>
-            <article class="kpi-card"><span class="kpi-icon kpi-green">₫</span><div><small>Giá trị báo giá</small><strong id="dashRevenue">0 VND</strong><em>Tổng dữ liệu đã lưu</em></div></article>
-            <article class="kpi-card"><span class="kpi-icon kpi-yellow">◷</span><div><small>Đang xử lý</small><strong id="dashPendingCount">0</strong><em>Nháp hoặc đã gửi</em></div></article>
-            <article class="kpi-card"><span class="kpi-icon kpi-emerald">✓</span><div><small>Đã chấp nhận</small><strong id="dashAcceptedCount">0</strong><em>Báo giá thành công</em></div></article>
+            <article class="kpi-card app-status-card"><span class="kpi-icon kpi-blue">▤</span><div><small>Tổng báo giá</small><strong id="dashQuoteCount">0</strong><em>Tất cả trạng thái</em></div></article>
+            <article class="kpi-card app-status-card"><span class="kpi-icon kpi-cyan">●</span><div><small>Khách hàng</small><strong id="dashCustomerCount">0</strong><em>Trong danh bạ</em></div></article>
+            <article class="kpi-card app-status-card"><span class="kpi-icon kpi-orange">◆</span><div><small>Sản phẩm</small><strong id="dashProductCount">0</strong><em>Trong danh mục</em></div></article>
+            <article class="kpi-card app-status-card"><span class="kpi-icon kpi-green">₫</span><div><small>Giá trị báo giá</small><strong id="dashRevenue">0 VND</strong><em>Tổng dữ liệu đã lưu</em></div></article>
+            <article class="kpi-card app-status-card"><span class="kpi-icon kpi-yellow">◷</span><div><small>Đang xử lý</small><strong id="dashPendingCount">0</strong><em>Nháp hoặc đã gửi</em></div></article>
+            <article class="kpi-card app-status-card"><span class="kpi-icon kpi-emerald">✓</span><div><small>Đã chấp nhận</small><strong id="dashAcceptedCount">0</strong><em>Báo giá thành công</em></div></article>
           </section>
 
           <section class="dashboard-main-grid">
-            <article class="dashboard-panel dashboard-recent">
+            <article class="dashboard-panel dashboard-recent app-surface-panel">
               <div class="dashboard-panel-head">
                 <div><h3>Báo giá gần đây</h3><p>Tiếp tục từ những báo giá vừa lưu.</p></div>
                 <button class="link-button" type="button" data-open-tab="history">Xem tất cả →</button>
@@ -155,7 +155,7 @@
             </article>
 
             <aside class="dashboard-side-stack">
-              <article class="dashboard-panel">
+              <article class="dashboard-panel app-surface-panel">
                 <div class="dashboard-panel-head"><div><h3>Thao tác nhanh</h3><p>Công việc thường dùng.</p></div></div>
                 <div class="side-actions">
                   <button type="button" data-create-quote><span>＋</span><b>Tạo báo giá mới</b><small>Khởi tạo báo giá trống</small></button>
@@ -164,7 +164,7 @@
                   <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất / sao lưu</b><small>PDF, Excel và backup</small></button>
                 </div>
               </article>
-              <article class="dashboard-panel system-card">
+              <article class="dashboard-panel system-card app-surface-panel">
                 <div class="system-indicator" aria-hidden="true">✓</div>
                 <div class="system-card-copy"><small>Trạng thái hệ thống</small><strong id="dashSystemState">Đang kiểm tra</strong><p id="dashSystemDetail">Đang đọc trạng thái thiết bị và kết nối quản trị.</p></div>
                 <button class="system-card-open" type="button" data-open-tab="system">Chi tiết →</button>
@@ -246,8 +246,8 @@
           </div>
         </div>
 
-        <div class="pane history-workspace" id="pane-history">
-          <div class="history-workspace-header">
+        <div class="pane history-workspace app-workspace-pane" id="pane-history">
+          <div class="history-workspace-header app-workspace-header">
             <div>
               <span class="workspace-eyebrow">QUẢN TRỊ BÁO GIÁ</span>
               <h2>Quản lý báo giá</h2>
@@ -260,13 +260,13 @@
           </div>
 
           <div class="history-stats history-stats-app">
-            <div class="history-kpi"><span>Tổng báo giá</span><strong id="historyCount">0</strong><small>Đã lưu trong ứng dụng</small></div>
-            <div class="history-kpi"><span>Đang xử lý</span><strong id="historyPendingCount">0</strong><small>Nháp hoặc đã gửi</small></div>
-            <div class="history-kpi"><span>Đã chấp nhận</span><strong id="historyAcceptedCount">0</strong><small>Báo giá thành công</small></div>
-            <div class="history-kpi history-kpi-wide"><span>Tổng giá trị đã lưu</span><strong id="historyRevenue">0 VND</strong><small>Theo từng loại tiền tệ</small></div>
+            <div class="history-kpi app-status-card"><span>Tổng báo giá</span><strong id="historyCount">0</strong><small>Đã lưu trong ứng dụng</small></div>
+            <div class="history-kpi app-status-card"><span>Đang xử lý</span><strong id="historyPendingCount">0</strong><small>Nháp hoặc đã gửi</small></div>
+            <div class="history-kpi app-status-card"><span>Đã chấp nhận</span><strong id="historyAcceptedCount">0</strong><small>Báo giá thành công</small></div>
+            <div class="history-kpi history-kpi-wide app-status-card"><span>Tổng giá trị đã lưu</span><strong id="historyRevenue">0 VND</strong><small>Theo từng loại tiền tệ</small></div>
           </div>
 
-          <div class="history-management-panel">
+          <div class="history-management-panel app-surface-panel">
             <div class="history-toolbar">
               <div class="history-search-field">
                 <label for="quoteSearch">Tìm báo giá</label>
@@ -286,7 +286,7 @@
               <div class="history-result-summary"><span id="historyResultCount">0</span><small>kết quả</small></div>
             </div>
 
-            <div class="history-table-shell">
+            <div class="history-table-shell app-data-table">
               <div class="history-table-head" aria-hidden="true">
                 <span>Mã báo giá</span><span>Khách hàng</span><span>Ngày</span><span>Giá trị</span><span>Trạng thái</span><span>Thao tác</span>
               </div>
@@ -295,8 +295,8 @@
           </div>
         </div>
 
-        <div class="pane master-workspace" id="pane-master">
-          <div class="master-workspace-header">
+        <div class="pane master-workspace app-workspace-pane" id="pane-master">
+          <div class="master-workspace-header app-workspace-header">
             <div>
               <span class="workspace-eyebrow">DỮ LIỆU DÙNG LẠI</span>
               <h2>Khách hàng & danh mục sản phẩm</h2>
@@ -308,7 +308,7 @@
             </div>
           </div>
 
-          <section class="master-management-panel master-section-card" id="customerLibraryCard">
+          <section class="master-management-panel master-section-card app-surface-panel" id="customerLibraryCard">
             <div class="master-panel-head">
               <div>
                 <span class="master-panel-icon">●</span>
@@ -320,7 +320,7 @@
               <div class="master-search-box"><span>⌕</span><input id="customerLibrarySearch" placeholder="Tên, công ty, SĐT, email..."></div>
               <div class="master-result-summary"><span id="customerLibraryResultCount">0</span><small>kết quả</small></div>
             </div>
-            <div class="master-table-shell customer-table-shell">
+            <div class="master-table-shell customer-table-shell app-data-table">
               <div class="master-table-head customer-table-grid" aria-hidden="true">
                 <span>Khách hàng</span><span>Công ty</span><span>Liên hệ</span><span>Địa chỉ</span><span>Thao tác</span>
               </div>
@@ -328,7 +328,7 @@
             </div>
           </section>
 
-          <section class="master-management-panel master-section-card" id="productCatalogCard">
+          <section class="master-management-panel master-section-card app-surface-panel" id="productCatalogCard">
             <div class="master-panel-head">
               <div>
                 <span class="master-panel-icon product-icon">◆</span>
@@ -340,7 +340,7 @@
               <div class="master-search-box"><span>⌕</span><input id="productCatalogSearch" placeholder="Tên sản phẩm, nhóm, quy cách, đơn vị..."></div>
               <div class="master-result-summary"><span id="productCatalogResultCount">0</span><small>kết quả</small></div>
             </div>
-            <div class="master-table-shell product-table-shell">
+            <div class="master-table-shell product-table-shell app-data-table">
               <div class="master-table-head product-table-grid" aria-hidden="true">
                 <span>Sản phẩm</span><span>Nhóm</span><span>Quy cách / ĐVT</span><span>Đơn giá</span><span>Ghi chú</span><span>Thao tác</span>
               </div>
@@ -349,8 +349,8 @@
           </section>
         </div>
 
-        <div class="pane settings-workspace" id="pane-settings">
-          <div class="settings-workspace-header">
+        <div class="pane settings-workspace app-workspace-pane" id="pane-settings">
+          <div class="settings-workspace-header app-workspace-header">
             <div>
               <span class="workspace-eyebrow">CẤU HÌNH ỨNG DỤNG</span>
               <h2>Cài đặt ứng dụng</h2>
@@ -363,14 +363,14 @@
           </div>
 
           <section class="settings-status-grid">
-            <article class="settings-status-card"><span>▤</span><div><small>Báo giá đã lưu</small><strong id="settingsHistoryCount">0</strong></div></article>
-            <article class="settings-status-card"><span>●</span><div><small>Khách hàng</small><strong id="settingsCustomerCount">0</strong></div></article>
-            <article class="settings-status-card"><span>◆</span><div><small>Sản phẩm</small><strong id="settingsProductCount">0</strong></div></article>
-            <article class="settings-status-card"><span>▣</span><div><small>Lưu thư mục PC</small><strong id="settingsPcSupport">Đang kiểm tra</strong></div></article>
+            <article class="settings-status-card app-status-card"><span>▤</span><div><small>Báo giá đã lưu</small><strong id="settingsHistoryCount">0</strong></div></article>
+            <article class="settings-status-card app-status-card"><span>●</span><div><small>Khách hàng</small><strong id="settingsCustomerCount">0</strong></div></article>
+            <article class="settings-status-card app-status-card"><span>◆</span><div><small>Sản phẩm</small><strong id="settingsProductCount">0</strong></div></article>
+            <article class="settings-status-card app-status-card"><span>▣</span><div><small>Lưu thư mục PC</small><strong id="settingsPcSupport">Đang kiểm tra</strong></div></article>
           </section>
 
           <div class="settings-grid">
-            <section class="settings-panel">
+            <section class="settings-panel app-surface-panel">
               <div class="settings-panel-head"><div><h3>Khởi động & điều hướng</h3><p>Chọn nơi ứng dụng mở đầu và mức độ thông tin trên Dashboard.</p></div></div>
 
               <label class="settings-field">
@@ -393,7 +393,7 @@
               </label>
             </section>
 
-            <section class="settings-panel">
+            <section class="settings-panel app-surface-panel">
               <div class="settings-panel-head"><div><h3>Lưu & bảo vệ dữ liệu</h3><p>Các tùy chọn này không gửi nội dung báo giá ra Control Plane.</p></div></div>
 
               <label class="settings-switch-row">
@@ -415,15 +415,15 @@
               </div>
             </section>
 
-            <section class="settings-panel settings-reset-panel">
+            <section class="settings-panel settings-reset-panel app-surface-panel">
               <div class="settings-panel-head"><div><h3>Đặt lại giao diện</h3><p>Chỉ xóa tùy chọn giao diện và trạng thái thu gọn. Không xóa báo giá hay danh bạ.</p></div></div>
               <button class="btn danger" id="settingsResetUi" type="button">Đặt lại cài đặt giao diện</button>
             </section>
           </div>
         </div>
 
-        <div class="pane system-workspace" id="pane-system">
-          <div class="system-workspace-header">
+        <div class="pane system-workspace app-workspace-pane" id="pane-system">
+          <div class="system-workspace-header app-workspace-header">
             <div>
               <span class="workspace-eyebrow">THIẾT BỊ & ỨNG DỤNG</span>
               <h2>Thiết bị & trạng thái hệ thống</h2>
@@ -433,26 +433,26 @@
           </div>
 
           <section class="system-status-grid" aria-label="Trạng thái hệ thống">
-            <article class="system-status-card">
+            <article class="system-status-card app-status-card">
               <span class="system-status-icon">▣</span>
               <div><small>Thiết bị hiện tại</small><strong id="systemDeviceLabel">Đang nhận diện</strong><em id="systemDeviceClass">—</em></div>
             </article>
-            <article class="system-status-card" id="systemAccessCard">
+            <article class="system-status-card app-status-card" id="systemAccessCard">
               <span class="system-status-icon access">✓</span>
               <div><small>Device Gate</small><strong id="systemAccessState">Đang kiểm tra</strong><em id="systemAccessMessage">—</em></div>
             </article>
-            <article class="system-status-card" id="systemManagementCard">
+            <article class="system-status-card app-status-card" id="systemManagementCard">
               <span class="system-status-icon management">⌁</span>
               <div><small>Application Management</small><strong id="systemManagementState">Đang đọc contract</strong><em id="systemManagementDetail">—</em></div>
             </article>
-            <article class="system-status-card">
+            <article class="system-status-card app-status-card">
               <span class="system-status-icon remote">⚙</span>
               <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Chỉ bật khi backend production đã read-back đạt gate.</em></div>
             </article>
           </section>
 
           <div class="system-center-grid">
-            <section class="system-center-panel">
+            <section class="system-center-panel app-surface-panel">
               <div class="system-panel-head"><div><h3>Thiết bị hiện tại</h3><p>Phân loại UI cục bộ và registry Device Gate được hiển thị tách biệt.</p></div></div>
               <div class="system-detail-grid">
                 <div><small>Loại thiết bị</small><strong id="systemDetailDeviceClass">—</strong></div>
@@ -469,7 +469,7 @@
               </div>
             </section>
 
-            <section class="system-center-panel">
+            <section class="system-center-panel app-surface-panel">
               <div class="system-panel-head"><div><h3>Readiness của Control Plane</h3><p>Đọc trực tiếp từ management contract đã tải ở runtime.</p></div></div>
               <div class="system-readiness-list">
                 <div><span>Device registry</span><strong id="systemRegistryReady">Đang đọc</strong></div>
@@ -483,7 +483,7 @@
               </div>
             </section>
 
-            <section class="system-center-panel system-boundary-panel">
+            <section class="system-center-panel system-boundary-panel app-surface-panel">
               <div class="system-panel-head"><div><h3>Ranh giới dữ liệu</h3><p>Những gì Application Management được phép và không được phép đọc.</p></div></div>
               <div class="system-boundary-list">
                 <div><span>Local-first</span><strong id="systemBoundaryLocal">Đang đọc contract</strong></div>
@@ -493,7 +493,7 @@
               </div>
             </section>
 
-            <section class="system-center-panel system-policy-panel">
+            <section class="system-center-panel system-policy-panel app-surface-panel">
               <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Ứng dụng này không giả lập danh sách thiết bị quản trị khi backend chưa sẵn sàng.</p></div></div>
               <div class="system-policy-note">
                 <strong>Quản trị danh sách thiết bị thực hiện tại Application Management.</strong>
@@ -612,8 +612,8 @@
           </div>
         </div>
 
-        <div class="pane export-workspace" id="pane-export">
-          <div class="export-workspace-header">
+        <div class="pane export-workspace app-workspace-pane" id="pane-export">
+          <div class="export-workspace-header app-workspace-header">
             <div>
               <span class="workspace-eyebrow">XUẤT BẢN & DỮ LIỆU</span>
               <h2>Trung tâm xuất bản & dữ liệu</h2>
@@ -626,26 +626,26 @@
           </div>
 
           <section class="export-status-grid" aria-label="Trạng thái xuất bản">
-            <article class="export-status-card">
+            <article class="export-status-card app-status-card">
               <span class="export-status-icon">▤</span>
               <div><small>Báo giá đang mở</small><strong id="exportCenterQuote">Báo giá mới</strong><em id="exportCenterQuoteStatus">Bản nháp</em></div>
             </article>
-            <article class="export-status-card">
+            <article class="export-status-card app-status-card">
               <span class="export-status-icon export-health-icon">✓</span>
               <div><small>Sẵn sàng xuất bản</small><strong id="exportCenterHealth">Đang kiểm tra</strong><em id="exportCenterHealthDetail">Kiểm tra dữ liệu trước khi xuất.</em></div>
             </article>
-            <article class="export-status-card">
+            <article class="export-status-card app-status-card">
               <span class="export-status-icon export-product-icon">◆</span>
               <div><small>Sản phẩm có nội dung</small><strong id="exportCenterProducts">0</strong><em>Trong báo giá hiện tại</em></div>
             </article>
-            <article class="export-status-card">
+            <article class="export-status-card app-status-card">
               <span class="export-status-icon export-data-icon">▦</span>
               <div><small>Dữ liệu ứng dụng</small><strong id="exportCenterStored">0 mục</strong><em>History + khách hàng + sản phẩm</em></div>
             </article>
           </section>
 
           <div class="export-center-grid">
-            <section class="export-center-panel export-publish-panel">
+            <section class="export-center-panel export-publish-panel app-surface-panel">
               <div class="export-panel-head">
                 <span class="export-panel-icon">⇩</span>
                 <div><h3>Xuất bản báo giá</h3><p>Tạo bản gửi khách hoặc dữ liệu làm việc.</p></div>
@@ -666,7 +666,7 @@
               </div>
             </section>
 
-            <section class="export-center-panel export-import-panel">
+            <section class="export-center-panel export-import-panel app-surface-panel">
               <div class="export-panel-head">
                 <span class="export-panel-icon import">⇧</span>
                 <div><h3>Nhập dữ liệu</h3><p>Dữ liệu đều đi qua bước xem lại trước khi áp dụng khi cần.</p></div>
@@ -685,7 +685,7 @@
               </div>
             </section>
 
-            <section class="export-center-panel pc-workspace-card export-pc-panel">
+            <section class="export-center-panel pc-workspace-card export-pc-panel app-surface-panel">
               <div class="export-panel-head">
                 <span class="export-panel-icon pc">▣</span>
                 <div><h3>Lưu trên máy PC</h3><p>Dùng thư mục đã cấp quyền trên Chrome/Edge desktop.</p></div>
@@ -699,7 +699,7 @@
               <div class="export-info-note">Trình duyệt chỉ giữ quyền truy cập thư mục và không hiển thị toàn bộ đường dẫn Windows. Khi quyền hết hiệu lực, ứng dụng sẽ yêu cầu cấp lại trước khi ghi file.</div>
             </section>
 
-            <section class="export-center-panel export-backup-panel">
+            <section class="export-center-panel export-backup-panel app-surface-panel">
               <div class="export-panel-head">
                 <span class="export-panel-icon backup">⛁</span>
                 <div><h3>Sao lưu & khôi phục toàn bộ</h3><p>Bảo vệ lịch sử, mẫu, khách hàng và danh mục sản phẩm.</p></div>
