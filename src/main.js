@@ -653,8 +653,7 @@ function openTab(tab) {
   if (tab === 'system') renderSystemWorkspace();
   if (tab === 'settings') renderSettingsWorkspace();
   if (tab === 'design') {
-    document.getElementById('designPanel').classList.add('open');
-    setMajorPanelState('design', false);
+    setInspectorTab('design');
   }
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
@@ -3090,9 +3089,21 @@ $$('.color').forEach((el) => {
   });
 });
 
+document.querySelectorAll('[data-inspector-tab]').forEach((button) => {
+  button.addEventListener('click', () => setInspectorTab(button.dataset.inspectorTab));
+});
+document.querySelectorAll('[data-inspector-open-tab]').forEach((button) => {
+  button.addEventListener('click', () => openTab(button.dataset.inspectorOpenTab));
+});
+document.getElementById('inspectorRunCheck')?.addEventListener('click', () => {
+  const result = validateQuote();
+  updateDocumentHealth();
+  renderInspectorCheck(result);
+  if (!result.errors.length && !result.warnings.length) toast('Không phát hiện lỗi');
+});
+
 document.getElementById('openDesign').addEventListener('click', () => {
-  document.getElementById('designPanel').classList.add('open');
-  setMajorPanelState('design', false);
+  setInspectorTab('design');
 });
 document.getElementById('closeDesign').addEventListener('click', () => {
   document.getElementById('designPanel').classList.remove('open');
@@ -3106,14 +3117,8 @@ $$('.print-action').forEach((el) => el.addEventListener('click', () => {
 document.getElementById('preflightCheck')?.addEventListener('click', () => {
   const result = validateQuote();
   updateDocumentHealth();
-  if (!result.errors.length && !result.warnings.length) {
-    toast('Báo giá đã sẵn sàng để in');
-    return;
-  }
-  const lines = [];
-  if (result.errors.length) lines.push('LỖI:\n• ' + result.errors.join('\n• '));
-  if (result.warnings.length) lines.push('CẦN KIỂM TRA:\n• ' + result.warnings.join('\n• '));
-  alert(lines.join('\n\n'));
+  setInspectorTab('check');
+  if (!result.errors.length && !result.warnings.length) toast('Báo giá đã sẵn sàng để phát hành');
 });
 
 document.getElementById('exportExcel')?.addEventListener('click', exportCurrentQuoteExcel);
@@ -3351,6 +3356,97 @@ function validateQuote(data = state) {
   return { errors, warnings };
 }
 
+function setInspectorTab(tab) {
+  const next = ['design','content','check'].includes(tab) ? tab : 'design';
+  document.querySelectorAll('[data-inspector-tab]').forEach((button) => {
+    const active = button.dataset.inspectorTab === next;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-inspector-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.inspectorPanel !== next;
+  });
+  document.getElementById('designPanel')?.classList.add('open');
+  setMajorPanelState('design', false);
+  if (next === 'check') renderInspectorCheck();
+}
+
+function issueTarget(message) {
+  const text = String(message || '');
+  const productLine = text.match(/Dòng sản phẩm\s+(\d+)/i);
+  if (productLine) return { tab: 'products', productIndex: Math.max(0, Number(productLine[1]) - 1), key: 'name' };
+  if (/sản phẩm/i.test(text)) return { tab: 'products' };
+  if (/email khách hàng/i.test(text)) return { tab: 'customer', id: 'customerEmail' };
+  if (/email công ty/i.test(text)) return { tab: 'general', id: 'companyEmail' };
+  if (/tên công ty/i.test(text)) return { tab: 'general', id: 'companyName' };
+  if (/tiêu đề báo giá/i.test(text)) return { tab: 'general', id: 'quoteTitle' };
+  if (/Kính gửi/i.test(text)) return { tab: 'general', id: 'recipientLine' };
+  if (/số báo giá/i.test(text)) return { tab: 'general', id: 'quoteNo' };
+  if (/ngày báo giá/i.test(text)) return { tab: 'general', id: 'quoteDate' };
+  if (/logo/i.test(text)) return { inspector: 'design' };
+  if (/VAT|giảm giá|phí khác|tổng cộng|ngân hàng|tài khoản/i.test(text)) return { tab: 'payment' };
+  if (/điều khoản|chữ ký|đại diện công ty/i.test(text)) return { tab: 'terms' };
+  return { tab: 'general' };
+}
+
+function focusIssueTarget(target) {
+  if (!target) return;
+  if (target.inspector) {
+    setInspectorTab(target.inspector);
+    return;
+  }
+  if (target.tab) openTab(target.tab);
+  requestAnimationFrame(() => {
+    if (Number.isInteger(target.productIndex)) {
+      const row = document.querySelector('#productEditor .product-card[data-product-index="' + target.productIndex + '"]');
+      const input = target.key ? row?.querySelector('[data-product-key="' + target.key + '"]') : row?.querySelector('[data-product-key]');
+      input?.focus();
+      input?.select?.();
+      row?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      return;
+    }
+    const field = target.id ? document.getElementById(target.id) : null;
+    field?.focus?.();
+    field?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  });
+}
+
+function renderIssueList(containerId, messages, emptyText) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  if (!messages.length) {
+    const empty = document.createElement('div');
+    empty.className = 'inspector-issue-empty';
+    empty.textContent = emptyText;
+    container.appendChild(empty);
+    return;
+  }
+  messages.forEach((message) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'inspector-issue';
+    button.textContent = message;
+    button.addEventListener('click', () => focusIssueTarget(issueTarget(message)));
+    container.appendChild(button);
+  });
+}
+
+function renderInspectorCheck(result = validateQuote()) {
+  const summary = document.getElementById('inspectorCheckSummary');
+  if (!summary) return;
+  const total = result.errors.length + result.warnings.length;
+  if (result.errors.length) summary.textContent = result.errors.length + ' lỗi · ' + result.warnings.length + ' mục cần kiểm tra';
+  else if (result.warnings.length) summary.textContent = result.warnings.length + ' mục cần kiểm tra';
+  else summary.textContent = 'Sẵn sàng phát hành · không phát hiện lỗi';
+  summary.dataset.tone = result.errors.length ? 'error' : (result.warnings.length ? 'warning' : 'ok');
+  renderIssueList('inspectorErrorList', result.errors, 'Không có lỗi bắt buộc.');
+  renderIssueList('inspectorWarningList', result.warnings, 'Không có cảnh báo.');
+  document.getElementById('inspectorErrors')?.toggleAttribute('data-empty', !result.errors.length);
+  document.getElementById('inspectorWarnings')?.toggleAttribute('data-empty', !result.warnings.length);
+  return total;
+}
+
 function updateDocumentHealth() {
   const result = validateQuote();
   const badges = [
@@ -3373,6 +3469,7 @@ function updateDocumentHealth() {
     badge.classList.add(tone);
     badge.textContent = label;
   });
+  renderInspectorCheck(result);
 }
 
 function runPreflight({ forPrint = false } = {}) {
