@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const css = fs.readFileSync(new URL('../src/ui-v5.css', import.meta.url), 'utf8');
+const legacyCss = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
 
 function fail(message) {
   console.error('V5 UI FAIL:', message);
@@ -13,6 +14,30 @@ if (css.includes('!important')) fail('V5 stylesheet must not introduce !importan
 if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(css)) fail('V5 application stylesheet must not target the report document');
 if (/@media\s+print/i.test(css)) fail('V5 application stylesheet must not contain print rules');
 if (/V[1-4](?:\.|\b)/.test(css)) fail('V5 stylesheet must not carry legacy version blocks');
+
+const forbiddenLegacyApplicationFamilies = [
+  'dashboard-',
+  'history-',
+  'master-',
+  'settings-',
+  'system-',
+  'export-',
+  'studio-',
+  'mobile-more',
+  'app-brand',
+  'device-profile-chip',
+  'price-report-device',
+  'product-workspace',
+  'product-card',
+  'panel-edge-toggle',
+  'card-collapse-handle'
+];
+
+for (const family of forbiddenLegacyApplicationFamilies) {
+  if (legacyCss.includes(family)) {
+    fail('Migrated application selector leaked back into report CSS: ' + family);
+  }
+}
 
 const mediaCount = (css.match(/@media/g) || []).length;
 if (mediaCount > 4) fail('V5 responsive layer has too many media-query blocks: ' + mediaCount);
