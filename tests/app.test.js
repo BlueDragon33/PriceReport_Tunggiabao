@@ -776,6 +776,53 @@ test('V5.5 interrupted Data Library review can be recovered and explicit cancel 
   document.querySelector('[data-tab="master"]').click();
 });
 
+
+test('V5.5 starting a new import clears stale review while the new file is parsing', async () => {
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  const customerKey = 'tunggiabao-price-report-customers-v1';
+  const beforeCustomers = localStorage.getItem(customerKey);
+  sessionStorage.removeItem(recoveryKey);
+  localStorage.setItem(customerKey, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  document.getElementById('dataLibraryImportValidCount').textContent = '99';
+  document.getElementById('dataLibraryImportPreviewBody').textContent = 'DỮ LIỆU CŨ';
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Khách Loading,Công ty Loading,0955555555,loading@example.com,Hà Nội,Anh L'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  let releaseRead;
+  const file = {
+    name: 'loading-khach.csv',
+    arrayBuffer: () => new Promise(resolve => {
+      releaseRead = () => resolve(bytes.buffer);
+    })
+  };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('0');
+  expect(document.getElementById('dataLibraryImportPreviewBody').textContent).toBe('');
+  expect(document.getElementById('applyDataLibraryImport').disabled).toBe(true);
+
+  releaseRead();
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+    expect(sessionStorage.getItem(recoveryKey)).toBeTruthy();
+  });
+
+  document.getElementById('cancelDataLibraryImport').click();
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+
+  if (beforeCustomers == null) localStorage.removeItem(customerKey);
+  else localStorage.setItem(customerKey, beforeCustomers);
+  document.querySelector('[data-tab="master"]').click();
+});
+
 test('V5.4 customer library CSV import reviews and applies valid rows transactionally', async () => {
   const key = 'tunggiabao-price-report-customers-v1';
   const before = localStorage.getItem(key);
