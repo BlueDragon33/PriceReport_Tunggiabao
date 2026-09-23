@@ -1,0 +1,620 @@
+/*
+ * V5 Application UI
+ * Scope: application chrome and management workspaces only.
+ * Deliberately does not target the A4/report document.
+ */
+:root{
+  --v5-bg:#f4f7fb;
+  --v5-surface:#ffffff;
+  --v5-surface-soft:#f8fafc;
+  --v5-border:#e2e8f0;
+  --v5-border-strong:#cbd5e1;
+  --v5-text:#172a46;
+  --v5-muted:#708198;
+  --v5-subtle:#94a3b8;
+  --v5-primary:#2477e8;
+  --v5-primary-hover:#1767d4;
+  --v5-primary-soft:#eef5ff;
+  --v5-success:#15805f;
+  --v5-success-soft:#e9f8f2;
+  --v5-warning:#a46617;
+  --v5-warning-soft:#fff7e8;
+  --v5-danger:#be4141;
+  --v5-danger-soft:#fff2f2;
+  --v5-sidebar:#102a4d;
+  --v5-sidebar-hover:#18385f;
+  --v5-sidebar-active:#2477e8;
+  --v5-radius-xs:7px;
+  --v5-radius-sm:10px;
+  --v5-radius-md:14px;
+  --v5-radius-lg:18px;
+  --v5-shadow-sm:0 1px 2px rgba(23,42,70,.04);
+  --v5-shadow-md:0 10px 28px rgba(23,42,70,.07);
+  --v5-space-1:4px;
+  --v5-space-2:8px;
+  --v5-space-3:12px;
+  --v5-space-4:16px;
+  --v5-space-5:20px;
+  --v5-space-6:24px;
+  --v5-space-8:32px;
+  --v5-control:38px;
+  --v5-sidebar-width:224px;
+  --v5-content-max:1440px;
+}
+
+body.v5-ui{
+  background:var(--v5-bg);
+  color:var(--v5-text);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+
+/* ---------- Base application controls ---------- */
+body.v5-ui .btn{
+  min-height:var(--v5-control);
+  padding:8px 13px;
+  border:1px solid var(--v5-border-strong);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-surface);
+  color:#324a69;
+  font-size:11px;
+  font-weight:750;
+  box-shadow:var(--v5-shadow-sm);
+  transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+body.v5-ui .btn:hover{
+  background:var(--v5-surface-soft);
+  border-color:#afbed0;
+}
+body.v5-ui .btn:active{transform:translateY(1px)}
+body.v5-ui .btn.primary{
+  background:var(--v5-primary);
+  border-color:var(--v5-primary);
+  color:#fff;
+  box-shadow:0 5px 14px rgba(36,119,232,.17);
+}
+body.v5-ui .btn.primary:hover{background:var(--v5-primary-hover);border-color:var(--v5-primary-hover)}
+body.v5-ui .btn.danger{
+  background:var(--v5-danger-soft);
+  border-color:#efcece;
+  color:var(--v5-danger);
+}
+body.v5-ui .link-button{
+  border:0;
+  background:transparent;
+  color:var(--v5-primary);
+  font-size:10px;
+  font-weight:800;
+  padding:4px 0;
+}
+body.v5-ui input,
+body.v5-ui textarea,
+body.v5-ui select{
+  border:1px solid var(--v5-border-strong);
+  border-radius:var(--v5-radius-xs);
+  background:var(--v5-surface);
+  color:var(--v5-text);
+}
+body.v5-ui input:hover,
+body.v5-ui textarea:hover,
+body.v5-ui select:hover{border-color:#aebdd0}
+body.v5-ui input:focus,
+body.v5-ui textarea:focus,
+body.v5-ui select:focus{
+  border-color:#77a9e9;
+  box-shadow:0 0 0 3px rgba(36,119,232,.09);
+}
+
+/* ---------- One shell language ---------- */
+body.v5-ui .shell{background:var(--v5-bg)}
+body.v5-ui .shell.app-workspace{
+  grid-template-columns:var(--v5-sidebar-width) minmax(0,1fr);
+  background:var(--v5-bg);
+}
+body.v5-ui .nav{
+  background:var(--v5-sidebar);
+  border-right:0;
+  color:#dbe8f7;
+}
+body.v5-ui .shell.app-workspace .nav{
+  padding:14px 11px;
+  background:var(--v5-sidebar);
+  gap:3px;
+}
+body.v5-ui .app-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+body.v5-ui .shell.app-workspace .app-brand{
+  padding:2px 6px 13px;
+  margin-bottom:7px;
+  border-bottom:1px solid rgba(255,255,255,.09);
+}
+body.v5-ui .brand{
+  background:var(--v5-primary);
+  box-shadow:none;
+}
+body.v5-ui .shell.app-workspace .brand{
+  width:38px;
+  min-width:38px;
+  height:38px;
+  border-radius:10px;
+  background:var(--v5-primary);
+  box-shadow:none;
+}
+body.v5-ui .shell.app-workspace .brand-copy strong{
+  color:#fff;
+  font-size:14px;
+  letter-spacing:.01em;
+}
+body.v5-ui .shell.app-workspace .brand-copy small{
+  color:#9fb5cf;
+  font-size:8.5px;
+}
+body.v5-ui .shell.app-workspace .nav-section-label{
+  margin:12px 9px 4px;
+  color:#7894b4;
+  font-size:8px;
+  font-weight:850;
+  letter-spacing:.14em;
+}
+body.v5-ui .shell.app-workspace .nav button,
+body.v5-ui .shell.app-workspace .nav button.nav-secondary{
+  width:100%;
+  min-height:39px;
+  margin:0;
+  padding:8px 9px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:#b8cbe1;
+  box-shadow:none;
+  flex-direction:row;
+  justify-content:flex-start;
+  gap:9px;
+  text-align:left;
+  font-size:10.5px;
+  font-weight:650;
+}
+body.v5-ui .shell.app-workspace .nav button:hover{
+  background:var(--v5-sidebar-hover);
+  color:#fff;
+}
+body.v5-ui .shell.app-workspace .nav button.active{
+  background:var(--v5-sidebar-active);
+  border-color:rgba(255,255,255,.05);
+  color:#fff;
+  box-shadow:none;
+}
+body.v5-ui .shell.app-workspace .nav-glyph{
+  width:20px;
+  min-width:20px;
+  font-size:16px;
+  opacity:.95;
+}
+body.v5-ui .shell.app-workspace .device-profile-chip{
+  margin-top:8px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  color:#e3edf8;
+}
+body.v5-ui .shell.app-workspace .device-profile-chip small{color:#88a5c5}
+body.v5-ui .shell.app-workspace .tip{display:none}
+body.v5-ui .shell.app-workspace .editor{
+  background:var(--v5-bg);
+  border-right:0;
+}
+body.v5-ui .shell.app-workspace .panel-body{
+  height:100%;
+  padding:0;
+  overflow:auto;
+}
+
+/* Studio uses the same sidebar palette while staying compact. */
+body.v5-ui .shell:not(.app-workspace) .nav{
+  background:var(--v5-sidebar);
+  border-right:0;
+}
+body.v5-ui .shell:not(.app-workspace) .nav button{
+  color:#afc2da;
+}
+body.v5-ui .shell:not(.app-workspace) .nav button:hover{
+  background:var(--v5-sidebar-hover);
+  color:#fff;
+}
+body.v5-ui .shell:not(.app-workspace) .nav button.active{
+  background:var(--v5-primary);
+  color:#fff;
+  box-shadow:none;
+}
+body.v5-ui .shell:not(.app-workspace) .tip{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.08);
+  color:#a9bfd8;
+}
+body.v5-ui .shell:not(.app-workspace) .tip b{color:#fff}
+
+/* ---------- Shared workspace canvas ---------- */
+body.v5-ui .app-dashboard,
+body.v5-ui .history-workspace,
+body.v5-ui .master-workspace,
+body.v5-ui .export-workspace,
+body.v5-ui .settings-workspace,
+body.v5-ui .system-workspace{
+  width:min(100%,var(--v5-content-max));
+  max-width:var(--v5-content-max);
+  margin:0 auto;
+  padding:26px 28px 42px;
+}
+body.v5-ui .dashboard-topbar,
+body.v5-ui .history-workspace-header,
+body.v5-ui .master-workspace-header,
+body.v5-ui .export-workspace-header,
+body.v5-ui .settings-workspace-header,
+body.v5-ui .system-workspace-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  margin:0 0 18px;
+}
+body.v5-ui .dashboard-topbar h1,
+body.v5-ui .history-workspace-header h2,
+body.v5-ui .master-workspace-header h2,
+body.v5-ui .export-workspace-header h2,
+body.v5-ui .settings-workspace-header h2,
+body.v5-ui .system-workspace-header h2{
+  margin:0;
+  color:var(--v5-text);
+  font-size:24px;
+  line-height:1.22;
+  font-weight:800;
+  letter-spacing:-.015em;
+}
+body.v5-ui .dashboard-topbar p,
+body.v5-ui .history-workspace-header p,
+body.v5-ui .master-workspace-header p,
+body.v5-ui .export-workspace-header p,
+body.v5-ui .settings-workspace-header p,
+body.v5-ui .system-workspace-header p{
+  margin:6px 0 0;
+  color:var(--v5-muted);
+  font-size:10.5px;
+  line-height:1.5;
+}
+body.v5-ui .eyebrow,
+body.v5-ui .workspace-eyebrow{
+  display:block;
+  margin-bottom:6px;
+  color:var(--v5-primary);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+
+/* ---------- Shared surfaces ---------- */
+body.v5-ui :where(
+  .dashboard-panel,
+  .history-management-panel,
+  .master-management-panel,
+  .export-center-panel,
+  .settings-panel,
+  .system-center-panel
+){
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-md);
+  background:var(--v5-surface);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui :where(
+  .dashboard-panel-head,
+  .master-panel-head,
+  .export-panel-head,
+  .settings-panel-head,
+  .system-panel-head
+) h3{
+  color:var(--v5-text);
+  font-size:12.5px;
+  font-weight:800;
+  letter-spacing:0;
+}
+body.v5-ui :where(
+  .dashboard-panel-head,
+  .master-panel-head,
+  .export-panel-head,
+  .settings-panel-head,
+  .system-panel-head
+) p{
+  color:var(--v5-muted);
+  font-size:9px;
+  line-height:1.5;
+}
+
+/* ---------- Dashboard ---------- */
+body.v5-ui .dashboard-hero{
+  border:1px solid #dbe7f6;
+  border-radius:var(--v5-radius-lg);
+  background:linear-gradient(135deg,#f5f9ff 0%,#eef6ff 54%,#f8fbff 100%);
+  box-shadow:none;
+}
+body.v5-ui .dashboard-hero-copy h2{color:#18385f}
+body.v5-ui .hero-kicker{color:var(--v5-primary)}
+body.v5-ui .hero-progress-card{
+  border:1px solid var(--v5-border);
+  background:rgba(255,255,255,.86);
+  box-shadow:none;
+}
+body.v5-ui .hero-progress-track{background:#e5edf7}
+body.v5-ui .hero-progress-track span{background:var(--v5-primary)}
+body.v5-ui .dashboard-quick-grid{gap:10px}
+body.v5-ui .quick-app-card{
+  min-height:92px;
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-md);
+  background:var(--v5-surface);
+  box-shadow:var(--v5-shadow-sm);
+  color:var(--v5-text);
+}
+body.v5-ui .quick-app-card:hover{
+  border-color:#bfd2e9;
+  background:#fbfdff;
+  box-shadow:var(--v5-shadow-md);
+}
+body.v5-ui .quick-app-card .quick-icon{
+  box-shadow:none;
+}
+body.v5-ui .dashboard-kpis{gap:10px}
+body.v5-ui .kpi-card,
+body.v5-ui .history-kpi,
+body.v5-ui .settings-status-card,
+body.v5-ui .system-status-card,
+body.v5-ui .export-status-card{
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-md);
+  background:var(--v5-surface);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui .kpi-card strong,
+body.v5-ui .history-kpi strong,
+body.v5-ui .settings-status-card strong,
+body.v5-ui .system-status-card strong,
+body.v5-ui .export-status-card strong{
+  color:var(--v5-text);
+}
+body.v5-ui .kpi-card small,
+body.v5-ui .history-kpi span,
+body.v5-ui .settings-status-card small,
+body.v5-ui .system-status-card small,
+body.v5-ui .export-status-card small{
+  color:var(--v5-muted);
+}
+body.v5-ui .recent-quote-table{
+  border:1px solid var(--v5-border);
+  border-radius:12px;
+  overflow:hidden;
+}
+body.v5-ui .recent-quote-head{background:var(--v5-surface-soft);color:var(--v5-muted)}
+body.v5-ui .recent-quote-row{
+  border-top:1px solid #edf1f5;
+  background:var(--v5-surface);
+}
+body.v5-ui .recent-quote-row:hover{background:#f8fbff}
+
+/* ---------- Management toolbars & tables ---------- */
+body.v5-ui .history-management-panel,
+body.v5-ui .master-management-panel{padding:15px}
+body.v5-ui .history-toolbar,
+body.v5-ui .master-toolbar{margin-bottom:12px}
+body.v5-ui .history-search-box,
+body.v5-ui .master-search-box,
+body.v5-ui .dashboard-search{
+  border:1px solid var(--v5-border-strong);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-surface);
+  box-shadow:none;
+}
+body.v5-ui .history-result-summary,
+body.v5-ui .master-result-summary{
+  background:var(--v5-primary-soft);
+  color:#215eaa;
+  border:1px solid #d9e9fc;
+}
+body.v5-ui .history-table-shell,
+body.v5-ui .master-table-shell{
+  border:1px solid var(--v5-border);
+  border-radius:12px;
+  background:var(--v5-surface);
+}
+body.v5-ui .history-table-head,
+body.v5-ui .master-table-head{
+  min-height:38px;
+  padding:0 12px;
+  background:var(--v5-surface-soft);
+  color:#65768c;
+  border-bottom:1px solid var(--v5-border);
+  font-size:8.5px;
+  letter-spacing:.02em;
+}
+body.v5-ui .history-table-row,
+body.v5-ui .master-table-row{
+  min-height:58px;
+  border-top:1px solid #edf1f5;
+  background:var(--v5-surface);
+  box-shadow:none;
+}
+body.v5-ui .history-table-row:hover,
+body.v5-ui .master-table-row:hover{background:#f9fbfe}
+body.v5-ui .history-cell strong,
+body.v5-ui .master-cell strong{color:#29415f}
+body.v5-ui .history-quote-cell strong,
+body.v5-ui .master-name-cell strong{color:#1769c8}
+
+/* ---------- Publishing / Settings / System ---------- */
+body.v5-ui .export-status-grid,
+body.v5-ui .settings-status-grid,
+body.v5-ui .system-status-grid{gap:10px}
+body.v5-ui .export-center-grid,
+body.v5-ui .settings-grid,
+body.v5-ui .system-center-grid{gap:14px}
+body.v5-ui .export-action-card{
+  border:1px solid var(--v5-border);
+  border-radius:12px;
+  background:var(--v5-surface-soft);
+  box-shadow:none;
+}
+body.v5-ui .export-action-card:hover{
+  border-color:#bad0ea;
+  background:#f2f7fd;
+}
+body.v5-ui .export-action-primary{
+  border-color:#b9d4f5;
+  background:var(--v5-primary-soft);
+}
+body.v5-ui .settings-field,
+body.v5-ui .settings-switch-row,
+body.v5-ui .settings-info-row{
+  border-bottom:1px solid #edf1f5;
+}
+body.v5-ui .system-detail-grid>div,
+body.v5-ui .system-readiness-list>div,
+body.v5-ui .system-boundary-list>div{
+  border-color:var(--v5-border);
+  background:var(--v5-surface-soft);
+}
+
+/* ---------- Search popover ---------- */
+body.v5-ui .dashboard-search-results{
+  border:1px solid var(--v5-border);
+  border-radius:12px;
+  background:var(--v5-surface);
+  box-shadow:0 18px 46px rgba(23,42,70,.16);
+}
+body.v5-ui .dashboard-search-result{border-radius:9px}
+body.v5-ui .dashboard-search-result:hover,
+body.v5-ui .dashboard-search-result:focus-visible{background:var(--v5-primary-soft)}
+
+/* ---------- Studio chrome, not document ---------- */
+body.v5-ui .editor,
+body.v5-ui .design{border-color:var(--v5-border)}
+body.v5-ui .panel-head{
+  border-bottom:1px solid var(--v5-border);
+  background:rgba(255,255,255,.98);
+}
+body.v5-ui .panel-body{background:var(--v5-surface)}
+body.v5-ui .card{
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-sm);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui .product-card{
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-sm);
+  box-shadow:none;
+}
+body.v5-ui .product-card-head{
+  background:var(--v5-surface-soft);
+  border-bottom-color:var(--v5-border);
+}
+body.v5-ui .studio-stepper button{
+  border-color:var(--v5-border);
+  background:var(--v5-surface-soft);
+}
+body.v5-ui .studio-stepper button.active{
+  border-color:#b8d3f3;
+  background:var(--v5-primary-soft);
+  color:#1767c5;
+}
+
+/* ---------- Responsive V5: application only ---------- */
+@media(max-width:1180px){
+  body.v5-ui .shell.app-workspace{grid-template-columns:200px minmax(0,1fr)}
+  body.v5-ui .app-dashboard,
+  body.v5-ui .history-workspace,
+  body.v5-ui .master-workspace,
+  body.v5-ui .export-workspace,
+  body.v5-ui .settings-workspace,
+  body.v5-ui .system-workspace{padding:22px 20px 36px}
+}
+
+@media(max-width:980px){
+  body.v5-ui .shell.app-workspace{display:block}
+  body.v5-ui .shell.app-workspace .nav{
+    position:sticky;
+    top:0;
+    z-index:120;
+    min-height:60px;
+    padding:7px 8px;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    gap:4px;
+    background:var(--v5-sidebar);
+    overflow:visible;
+  }
+  body.v5-ui .shell.app-workspace .app-brand{
+    width:44px;
+    min-width:44px;
+    padding:0;
+    margin:0 4px 0 0;
+    border:0;
+  }
+  body.v5-ui .shell.app-workspace .brand{
+    width:38px;
+    min-width:38px;
+    height:38px;
+  }
+  body.v5-ui .shell.app-workspace .brand-copy,
+  body.v5-ui .shell.app-workspace .nav-section-label,
+  body.v5-ui .shell.app-workspace .device-profile-chip,
+  body.v5-ui .shell.app-workspace .tip{display:none}
+  body.v5-ui .shell.app-workspace .nav button,
+  body.v5-ui .shell.app-workspace .nav button.nav-secondary{
+    min-width:76px;
+    width:auto;
+    min-height:44px;
+    padding:5px 7px;
+    flex-direction:column;
+    justify-content:center;
+    gap:3px;
+    text-align:center;
+    font-size:8.5px;
+  }
+  body.v5-ui .shell.app-workspace .nav-glyph{
+    width:auto;
+    min-width:0;
+    font-size:15px;
+  }
+  body.v5-ui .dashboard-topbar,
+  body.v5-ui .history-workspace-header,
+  body.v5-ui .master-workspace-header,
+  body.v5-ui .export-workspace-header,
+  body.v5-ui .settings-workspace-header,
+  body.v5-ui .system-workspace-header{gap:14px}
+  body.v5-ui .app-dashboard,
+  body.v5-ui .history-workspace,
+  body.v5-ui .master-workspace,
+  body.v5-ui .export-workspace,
+  body.v5-ui .settings-workspace,
+  body.v5-ui .system-workspace{padding:18px 14px 30px}
+}
+
+@media(max-width:620px){
+  body.v5-ui .dashboard-topbar,
+  body.v5-ui .history-workspace-header,
+  body.v5-ui .master-workspace-header,
+  body.v5-ui .export-workspace-header,
+  body.v5-ui .settings-workspace-header,
+  body.v5-ui .system-workspace-header{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  body.v5-ui .dashboard-topbar h1,
+  body.v5-ui .history-workspace-header h2,
+  body.v5-ui .master-workspace-header h2,
+  body.v5-ui .export-workspace-header h2,
+  body.v5-ui .settings-workspace-header h2,
+  body.v5-ui .system-workspace-header h2{font-size:20px}
+  body.v5-ui .dashboard-hero{border-radius:14px}
+  body.v5-ui .quick-app-card{min-height:82px}
+}
