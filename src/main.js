@@ -2437,7 +2437,7 @@ function applyClipboardProducts(rawText) {
   if (hint) {
     hint.textContent = parsed.warnings.length
       ? 'Đã nhập ' + parsed.products.length + ' dòng • ' + parsed.warnings.length + ' ô cần kiểm tra.'
-      : 'Đã nhập ' + parsed.products.length + ' dòng từ dữ liệu dán. Có thể Ctrl+Z trong phiên chỉnh sửa tiếp theo khi History được mở rộng.';
+      : 'Đã nhập ' + parsed.products.length + ' dòng từ dữ liệu dán. Hãy kiểm tra nhanh tên, số lượng và đơn giá trước khi xuất.';
     hint.dataset.tone = parsed.warnings.length ? 'warning' : 'success';
   }
   focusProductName(insertionIndex);
@@ -2629,7 +2629,11 @@ function setupSmartImport() {
     if (!candidate) return;
     syncDraftFromImportReview();
     const parsed = prepareExcelCandidate(candidate, smartImportExcelCandidates.length);
-    smartImportDraft = mergeSmartImportSource(parsed, { replaceSourceFields: true, preferNext: true });
+    const merged = mergeSmartImportSource(parsed, { replaceSourceFields: true, preferNext: true });
+    merged.products = (parsed.products || []).map(item => ({ ...item }));
+    merged.groups = [...(parsed.groups || [])];
+    merged.layoutHints = Object.assign({}, merged.layoutHints || {}, parsed.layoutHints || {});
+    smartImportDraft = merged;
     renderSmartImportReview();
     syncExcelSheetSummary();
     setSmartImportProgress('Đang xem sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
