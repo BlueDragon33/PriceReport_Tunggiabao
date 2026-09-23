@@ -262,6 +262,16 @@ test('Enter on the last product cell creates a new row for continuous data entry
   expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before);
 });
 
+test('customer entry fields share autocomplete sources without a second customer engine', () => {
+  expect(document.getElementById('quickCustomerName').getAttribute('list')).toBe('customerNameSuggestions');
+  expect(document.getElementById('customerName').getAttribute('list')).toBe('customerNameSuggestions');
+  expect(document.getElementById('quickCustomerCompany').getAttribute('list')).toBe('customerCompanySuggestions');
+  expect(document.getElementById('quickCustomerPhone').getAttribute('list')).toBe('customerPhoneSuggestions');
+  expect(document.getElementById('customerNameSuggestions')).toBeTruthy();
+  expect(document.getElementById('customerCompanySuggestions')).toBeTruthy();
+  expect(document.getElementById('customerPhoneSuggestions')).toBeTruthy();
+});
+
 test('product grid exposes autocomplete sources for name group and unit', () => {
   document.querySelector('[data-tab="products"]').click();
   const first = document.querySelector('#productEditor .product-card');
