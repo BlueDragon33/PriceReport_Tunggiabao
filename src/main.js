@@ -1414,6 +1414,70 @@ function numberToWords(value) {
 }
 
 let collapsedProducts = new Set();
+let selectedProductRows = new Set();
+
+function selectedProductIndices() {
+  selectedProductRows = new Set(
+    [...selectedProductRows].filter(index => Number.isInteger(index) && index >= 0 && index < state.products.length)
+  );
+  return [...selectedProductRows].sort((a, b) => a - b);
+}
+
+function syncProductBulkActionInput() {
+  const action = document.getElementById('productBulkAction');
+  const value = document.getElementById('productBulkValue');
+  if (!action || !value) return;
+  const needsValue = ['group','unit','price'].includes(action.value);
+  value.disabled = !needsValue;
+  value.hidden = !needsValue;
+  value.type = action.value === 'price' ? 'number' : 'text';
+  value.placeholder = action.value === 'group'
+    ? 'Nhập nhóm hàng'
+    : action.value === 'unit'
+      ? 'Nhập ĐVT'
+      : action.value === 'price'
+        ? 'VD: 5 hoặc -10'
+        : '';
+  if (action.value === 'price') {
+    value.step = '0.1';
+    value.min = '-100';
+  } else {
+    value.removeAttribute('step');
+    value.removeAttribute('min');
+  }
+}
+
+function syncProductBulkBar() {
+  const indices = selectedProductIndices();
+  const bar = document.getElementById('productBulkBar');
+  const count = document.getElementById('productBulkCount');
+  const selectAll = document.getElementById('selectAllProducts');
+  if (bar) bar.hidden = indices.length === 0;
+  if (count) count.textContent = indices.length + ' dòng đã chọn';
+  if (selectAll) {
+    selectAll.checked = state.products.length > 0 && indices.length === state.products.length;
+    selectAll.indeterminate = indices.length > 0 && indices.length < state.products.length;
+  }
+  syncProductBulkActionInput();
+}
+
+function clearProductSelection({ rerender = true } = {}) {
+  selectedProductRows.clear();
+  if (rerender) renderEditorProducts();
+  else syncProductBulkBar();
+}
+
+function setupProductBulkActions() {
+  document.getElementById('selectAllProducts')?.addEventListener('change', (event) => {
+    selectedProductRows = event.currentTarget.checked
+      ? new Set(state.products.map((_, index) => index))
+      : new Set();
+    renderEditorProducts();
+  });
+  document.getElementById('clearProductSelection')?.addEventListener('click', () => clearProductSelection());
+  document.getElementById('productBulkAction')?.addEventListener('change', syncProductBulkActionInput);
+  document.getElementById('applyProductBulk')?.addEventListener('click', applyProductBulkAction);
+}
 
 function resetCollapsedProductsForState() {
   collapsedProducts = state.products.length >= 24
@@ -1641,6 +1705,20 @@ function renderEditorProducts() {
 
     const identity = document.createElement('div');
     identity.className = 'product-card-identity';
+    const selectWrap = document.createElement('label');
+    selectWrap.className = 'product-row-select-wrap';
+    const selectRow = document.createElement('input');
+    selectRow.type = 'checkbox';
+    selectRow.className = 'product-row-select';
+    selectRow.checked = selectedProductRows.has(index);
+    selectRow.setAttribute('aria-label', 'Chọn sản phẩm ' + (index + 1));
+    selectRow.addEventListener('change', () => {
+      if (selectRow.checked) selectedProductRows.add(index);
+      else selectedProductRows.delete(index);
+      syncProductBulkBar();
+      card.classList.toggle('bulk-selected', selectRow.checked);
+    });
+    selectWrap.appendChild(selectRow);
     const badge = document.createElement('span');
     badge.className = 'product-index';
     badge.textContent = String(index + 1);
@@ -1651,7 +1729,8 @@ function renderEditorProducts() {
     amount.className = 'product-live-total';
     amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
     titleWrap.append(title, amount);
-    identity.append(badge, titleWrap);
+    identity.append(selectWrap, badge, titleWrap);
+    card.classList.toggle('bulk-selected', selectRow.checked);
 
     const actions = document.createElement('div');
     actions.className = 'product-card-actions';
@@ -1678,6 +1757,7 @@ function renderEditorProducts() {
     up.addEventListener('click', () => {
       if (index === 0) return;
       [state.products[index - 1], state.products[index]] = [state.products[index], state.products[index - 1]];
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1691,6 +1771,7 @@ function renderEditorProducts() {
     down.addEventListener('click', () => {
       if (index >= state.products.length - 1) return;
       [state.products[index + 1], state.products[index]] = [state.products[index], state.products[index + 1]];
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1702,6 +1783,7 @@ function renderEditorProducts() {
     duplicate.textContent = '⧉';
     duplicate.addEventListener('click', () => {
       state.products.splice(index + 1, 0, clone(product));
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1716,6 +1798,7 @@ function renderEditorProducts() {
       state.products.splice(index, 1);
       if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
+      selectedProductRows.clear();
       save(); renderEditorProducts(); render();
     });
 
@@ -1788,6 +1871,7 @@ function renderEditorProducts() {
   if (collapseButton) {
     collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
   }
+  syncProductBulkBar();
 }
 
 function renderPreviewProducts() {
@@ -3187,6 +3271,7 @@ function enhanceCollapsibleCards() {
 
 bindInputs();
 setupCustomerEntryAutocomplete();
+setupProductBulkActions();
 setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
@@ -4188,15 +4273,13 @@ function catalogKey(product) {
   return productKey(product) + '|' + normalizeCatalogCurrency(product?.currency || 'VND');
 }
 
-function saveCurrentProductsToCatalog() {
-  const products = state.products.filter(product => String(product.name || '').trim());
-  if (!products.length) {
-    alert('Báo giá hiện tại chưa có sản phẩm để lưu.');
-    return;
-  }
+function saveProductsToCatalog(products, { notify = true } = {}) {
+  const validProducts = (Array.isArray(products) ? products : [])
+    .filter(product => String(product?.name || '').trim());
+  if (!validProducts.length) return 0;
   const items = getProductCatalog();
   let changed = 0;
-  products.forEach(product => {
+  validProducts.forEach(product => {
     const item = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
       group: product.group || '',
@@ -4217,9 +4300,73 @@ function saveCurrentProductsToCatalog() {
     }
     changed += 1;
   });
-  if (!setProductCatalog(items)) return;
+  if (!setProductCatalog(items)) return 0;
+  refreshProductEntrySuggestions();
   renderMasterData();
-  toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
+  if (notify) toast('Đã lưu ' + changed + ' sản phẩm vào danh mục');
+  return changed;
+}
+
+function saveCurrentProductsToCatalog() {
+  const products = state.products.filter(product => String(product.name || '').trim());
+  if (!products.length) {
+    toast('Báo giá hiện tại chưa có sản phẩm để lưu.');
+    return;
+  }
+  saveProductsToCatalog(products);
+}
+
+function applyProductBulkAction() {
+  const indices = selectedProductIndices();
+  if (!indices.length) return;
+  const action = document.getElementById('productBulkAction')?.value || '';
+  const input = document.getElementById('productBulkValue');
+  const rawValue = String(input?.value || '').trim();
+
+  if (['group','unit'].includes(action) && !rawValue) {
+    toast(action === 'group' ? 'Hãy nhập nhóm hàng cần áp dụng.' : 'Hãy nhập đơn vị tính cần áp dụng.');
+    input?.focus();
+    return;
+  }
+
+  if (action === 'price') {
+    const percent = Number(rawValue);
+    if (!Number.isFinite(percent) || percent < -100) {
+      toast('Phần trăm điều chỉnh giá phải là số và không nhỏ hơn -100%.');
+      input?.focus();
+      return;
+    }
+    indices.forEach(index => {
+      const current = Number(state.products[index]?.price || 0);
+      state.products[index].price = Math.max(0, Math.round((current * (1 + percent / 100)) * 100) / 100);
+    });
+  } else if (action === 'group') {
+    indices.forEach(index => { state.products[index].group = rawValue; });
+  } else if (action === 'unit') {
+    indices.forEach(index => { state.products[index].unit = rawValue; });
+  } else if (action === 'duplicate') {
+    const copies = indices.map(index => clone(state.products[index]));
+    state.products.push(...copies);
+  } else if (action === 'catalog') {
+    const changed = saveProductsToCatalog(indices.map(index => state.products[index]), { notify: false });
+    toast(changed ? 'Đã lưu ' + changed + ' sản phẩm đã chọn vào danh mục' : 'Các dòng đã chọn chưa có tên sản phẩm.');
+    return;
+  } else if (action === 'delete') {
+    if (!confirm('Xóa ' + indices.length + ' dòng sản phẩm đã chọn?')) return;
+    const selected = new Set(indices);
+    state.products = state.products.filter((_, index) => !selected.has(index));
+    if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  } else {
+    return;
+  }
+
+  selectedProductRows.clear();
+  collapsedProducts = new Set();
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  if (input) input.value = '';
+  toast(persisted ? 'Đã áp dụng thao tác cho ' + indices.length + ' dòng' : 'Đã thay đổi tạm thời; chưa autosave được');
 }
 
 function addCatalogProduct(product) {
