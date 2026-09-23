@@ -293,6 +293,48 @@ test('customer entry fields share autocomplete sources without a second customer
   expect(document.getElementById('customerPhoneSuggestions')).toBeTruthy();
 });
 
+test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const quickSave = document.getElementById('saveProductsToCatalogTop');
+  expect(quickSave).toBeTruthy();
+  expect(quickSave.textContent).toContain('Lưu danh mục');
+});
+
+test('customer library treats +84 and local-format phones as the same reusable customer', () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const beforeRaw = localStorage.getItem(key);
+  const beforeItems = beforeRaw ? JSON.parse(beforeRaw) : [];
+  const fields = {
+    customerName: document.getElementById('customerName').value,
+    customerCompany: document.getElementById('customerCompany').value,
+    customerPhone: document.getElementById('customerPhone').value
+  };
+
+  const setField = (id, value) => {
+    const input = document.getElementById(id);
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  setField('customerName', 'Khách chuẩn hóa V52');
+  setField('customerCompany', 'Đơn vị V52');
+  setField('customerPhone', '+84 912 345 679');
+  document.getElementById('saveCurrentCustomer').click();
+  const firstCount = JSON.parse(localStorage.getItem(key) || '[]').length;
+  expect(firstCount).toBe(beforeItems.length + 1);
+
+  setField('customerName', 'Khách chuẩn hóa V52 cập nhật');
+  setField('customerPhone', '0912.345.679');
+  document.getElementById('saveCurrentCustomer').click();
+  const secondItems = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(secondItems.length).toBe(firstCount);
+  expect(secondItems.some(item => item.name === 'Khách chuẩn hóa V52 cập nhật')).toBe(true);
+
+  if (beforeRaw == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, beforeRaw);
+  Object.entries(fields).forEach(([id, value]) => setField(id, value));
+});
+
 test('product grid exposes autocomplete sources for name group and unit', () => {
   document.querySelector('[data-tab="products"]').click();
   const first = document.querySelector('#productEditor .product-card');
