@@ -4168,20 +4168,31 @@ function validationTargetForMessage(message) {
   return { tab: 'general', fieldId: null };
 }
 
-function focusValidationTarget(target) {
+function focusValidationTarget(target, returnTarget = null) {
   if (!target) return;
   openTab(target.tab || 'general');
   requestAnimationFrame(() => {
+    const installReturnKey = (field) => {
+      if (!field || !returnTarget) return;
+      field.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        returnTarget.focus();
+      }, { once: true });
+    };
+
     if (Number.isInteger(target.productIndex)) {
       const card = document.querySelector('#productEditor .product-card[data-product-index="' + target.productIndex + '"]');
       const input = card?.querySelector('[data-product-key="name"], input, select, textarea');
       card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       input?.focus?.();
+      installReturnKey(input);
       return;
     }
     const field = target.fieldId ? document.getElementById(target.fieldId) : null;
     field?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     field?.focus?.();
+    installReturnKey(field);
   });
 }
 
@@ -4230,7 +4241,7 @@ function renderStudioGuidance({ focusFirst = false } = {}) {
 
     button.append(badge, message, action);
     const target = validationTargetForMessage(item.message);
-    button.addEventListener('click', () => focusValidationTarget(target));
+    button.addEventListener('click', () => focusValidationTarget(target, button));
     list.appendChild(button);
   });
 
