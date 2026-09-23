@@ -2397,6 +2397,7 @@ function rebuildSmartImportProductsFromMapping() {
   smartImportDraft.products = rebuilt.products;
   smartImportDraft.groups = rebuilt.groups;
   meta.invalidRows = rebuilt.invalidRows;
+  meta.duplicates = rebuilt.duplicates;
 }
 
 function renderSmartImportProductPreview() {
@@ -2497,11 +2498,14 @@ function renderSmartImportMapping() {
   });
 
   const invalidCount = Array.isArray(meta.invalidRows) ? meta.invalidRows.length : 0;
+  const duplicateCount = Array.isArray(meta.duplicates) ? meta.duplicates.length : 0;
   if (status) {
-    status.textContent = invalidCount
-      ? smartImportDraft.products.length + ' dòng hợp lệ • ' + invalidCount + ' dòng cần kiểm tra'
-      : smartImportDraft.products.length + ' dòng hợp lệ • mapping sẵn sàng';
-    status.dataset.tone = invalidCount ? 'warn' : 'ok';
+    const flags = [];
+    if (invalidCount) flags.push(invalidCount + ' dòng cần kiểm tra');
+    if (duplicateCount) flags.push(duplicateCount + ' nhóm có thể trùng');
+    status.textContent = smartImportDraft.products.length + ' dòng hợp lệ' +
+      (flags.length ? ' • ' + flags.join(' • ') : ' • mapping sẵn sàng');
+    status.dataset.tone = flags.length ? 'warn' : 'ok';
   }
   renderSmartImportProductPreview();
 }
@@ -2539,9 +2543,15 @@ function renderSmartImportReview() {
   const warnings = document.getElementById('smartImportWarnings');
   warnings.innerHTML = '';
   const invalidRows = smartImportDraft.spreadsheetMeta?.invalidRows || [];
-  const mappingMessages = invalidRows.length
-    ? ['Có ' + invalidRows.length + ' dòng chưa đủ Tên sản phẩm / Đơn giá; các dòng này chưa được nhập.']
-    : [];
+  const duplicates = smartImportDraft.spreadsheetMeta?.duplicates || [];
+  const mappingMessages = [
+    ...(invalidRows.length
+      ? ['Có ' + invalidRows.length + ' dòng chưa hợp lệ (thiếu dữ liệu hoặc có số âm); các dòng này chưa được nhập.']
+      : []),
+    ...(duplicates.length
+      ? ['Phát hiện ' + duplicates.length + ' nhóm sản phẩm có khả năng bị trùng. Hệ thống giữ nguyên, không tự xóa.']
+      : [])
+  ];
   const messages = [...new Set([...(smartImportDraft.warnings || []), ...mappingMessages, ...(smartImportDraft.unmatched || []).slice(0, 4)])];
   messages.forEach((message) => {
     const item = document.createElement('div');
@@ -2631,7 +2641,10 @@ async function parseExcelFile(file) {
       headerIndex: best.parsed.spreadsheetMeta.headerIndex,
       mapping: best.parsed.spreadsheetMeta.mapping
     });
+    best.parsed.products = rebuilt.products;
+    best.parsed.groups = rebuilt.groups;
     best.parsed.spreadsheetMeta.invalidRows = rebuilt.invalidRows;
+    best.parsed.spreadsheetMeta.duplicates = rebuilt.duplicates;
   }
   if (sheetNames.length > 1) {
     best.parsed.warnings = [...(best.parsed.warnings || []),
