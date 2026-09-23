@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v34-global-search")) fail('Service-worker cache version was not upgraded for V4.6 global search');
+if (!sw.includes("pricereport-shell-v35-publishing-center")) fail('Service-worker cache version was not upgraded for V4.7 publishing center');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -287,3 +287,9 @@ if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-s
 if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
 if (!js.includes("type: 'quote'") || !js.includes("type: 'customer'") || !js.includes("type: 'product'")) fail('V4.6 global search must cover quotes, customers and products');
 if (!css.includes('.dashboard-search-result') || !css.includes('.dashboard-search-results')) fail('V4.6 global-search styles are missing');
+
+if (!html.includes('class="pane export-workspace"') || !html.includes('id="exportCenterHealth"')) fail('V4.7 publishing center workspace is missing');
+if (!html.includes('id="exportBackupHistoryCount"') || !html.includes('id="exportBackupCustomerCount"') || !html.includes('id="exportBackupProductCount"')) fail('V4.7 backup scope counters are missing');
+if (!js.includes("['dashboard', 'history', 'master', 'export'].includes(tab)")) fail('V4.7 export must use full-width application workspace');
+if (!js.includes('function renderExportCenter()')) fail('V4.7 export-center renderer is missing');
+if (!css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('V4.7 publishing center or print safeguard styles are missing');
