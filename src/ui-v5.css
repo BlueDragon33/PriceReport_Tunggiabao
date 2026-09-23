@@ -4121,3 +4121,38 @@ body.v5-ui .inspector-issue-empty {
   color: #94a3b8;
   font-size: 10px;
 }
+
+
+body.v5-ui .studio-history-button {
+  min-width: 34px;
+  padding-inline: 8px;
+  font-size: 16px;
+}
+
+body.v5-ui .studio-history-button:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+body.v5-ui .studio-autosave-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: rgba(15,23,42,.035);
+  color: #64748b;
+  font-size: 9.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+body.v5-ui .studio-autosave-status[data-state="saving"] {
+  color: #1d4ed8;
+  background: rgba(37,99,235,.07);
+}
+
+body.v5-ui .studio-autosave-status[data-state="error"] {
+  color: #b91c1c;
+  background: rgba(220,38,38,.07);
+}
