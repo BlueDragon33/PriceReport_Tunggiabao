@@ -2773,6 +2773,27 @@ function productGridValidity(product, key) {
   if (key === 'price' && Number(product.price) < 0) return 'Đơn giá không được âm';
   return '';
 }
+function refreshProductGridRow(row, product) {
+  if (!row) return;
+  row.querySelectorAll('[data-product-grid-key]').forEach((field) => {
+    const key = field.dataset.productGridKey;
+    const validity = productGridValidity(product, key);
+    const cell = field.closest('.product-grid-cell');
+    cell?.classList.toggle('invalid', Boolean(validity));
+    if (validity) {
+      field.setAttribute('aria-invalid', 'true');
+      field.title = validity;
+    } else {
+      field.removeAttribute('aria-invalid');
+      field.removeAttribute('title');
+    }
+    if (key !== document.activeElement?.dataset?.productGridKey && key in product) {
+      field.value = product[key] == null ? '' : product[key];
+    }
+  });
+  const amount = row.querySelector('.product-grid-amount');
+  if (amount) amount.textContent = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
+}
 function scheduleProductGridRender() {
   if (productGridRenderQueued) return;
   productGridRenderQueued = true;
@@ -2829,14 +2850,14 @@ function renderProductDataGrid() {
       input.addEventListener('input', () => {
         if (key === 'qty' || key === 'price') product[key] = normalizeGridNumber(input.value);
         else product[key] = input.value;
-        const catalogFilled = key === 'name' ? fillProductFromCatalog(product) : false;
+        if (key === 'name') fillProductFromCatalog(product);
+        refreshProductGridRow(row, product);
         save();
         renderPreviewProducts();
         renderTotals();
         updateDocumentHealth();
         renderStudioCheckPanel();
         syncStudioV6Context('products');
-        if (catalogFilled) scheduleProductGridRender();
       });
       input.addEventListener('blur', () => {
         if (gridEditBaseline && gridEditBaseline !== quoteSnapshotString()) pushQuoteUndoSnapshot(gridEditBaseline);
@@ -2893,7 +2914,32 @@ function renderProductDataGrid() {
     note.addEventListener('focus', () => { gridEditBaseline = quoteSnapshotString(); });
     note.addEventListener('input', () => {
       product.note = note.value;
+      refreshProductGridRow(row, product);
       save(); renderPreviewProducts(); updateDocumentHealth(); renderStudioCheckPanel();
+    });
+    note.addEventListener('keydown', (event) => {
+      const focusNote = (rowIndex) => {
+        const target = document.querySelector('[data-product-grid-index="' + rowIndex + '"][data-product-grid-key="note"]');
+        target?.focus();
+        target?.select?.();
+      };
+      if (event.key === 'Enter' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (index === state.products.length - 1 && event.key === 'Enter') {
+          pushQuoteUndoSnapshot();
+          state.products.push(blankProduct());
+          save(); renderEditorProducts(); focusProductName(index + 1);
+        } else {
+          focusNote(Math.min(state.products.length - 1, index + 1));
+        }
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        focusNote(Math.max(0, index - 1));
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        const target = document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="price"]');
+        target?.focus(); target?.select?.();
+      }
     });
     note.addEventListener('blur', () => {
       if (gridEditBaseline && gridEditBaseline !== quoteSnapshotString()) pushQuoteUndoSnapshot(gridEditBaseline);
