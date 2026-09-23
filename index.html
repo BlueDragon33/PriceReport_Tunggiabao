@@ -61,7 +61,30 @@
 
     <section class="editor">
       <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
-      <div class="panel-head"><h2 id="paneTitle">THÔNG TIN CHUNG</h2><p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p></div>
+      <div class="panel-head studio-panel-head">
+        <div class="studio-context-row">
+          <button class="studio-home-button" id="studioBackHome" type="button" aria-label="Về Trang chủ" title="Về Trang chủ">⌂</button>
+          <div class="studio-current-quote">
+            <small>ĐANG SOẠN</small>
+            <strong id="studioQuoteLabel">Báo giá mới</strong>
+          </div>
+          <div class="studio-context-badges">
+            <span class="studio-status-badge" id="studioQuoteStatus">Bản nháp</span>
+            <span class="studio-history-state" id="studioHistoryState">Chưa lưu lịch sử</span>
+          </div>
+        </div>
+        <div class="studio-pane-title">
+          <h2 id="paneTitle">THÔNG TIN CHUNG</h2>
+          <p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p>
+        </div>
+        <div class="studio-stepper" aria-label="Các bước soạn báo giá">
+          <button type="button" data-studio-step="general"><b>1</b><span>Nội dung</span></button>
+          <button type="button" data-studio-step="products"><b>2</b><span>Sản phẩm</span></button>
+          <button type="button" data-studio-step="payment"><b>3</b><span>Thanh toán</span></button>
+          <button type="button" data-studio-step="design"><b>4</b><span>Thiết kế</span></button>
+          <button type="button" data-studio-step="export"><b>5</b><span>Xuất</span></button>
+        </div>
+      </div>
       <div class="panel-body">
         <div class="pane active app-dashboard" id="pane-dashboard">
           <header class="dashboard-topbar">
