@@ -1093,3 +1093,31 @@ test('V6 preflight exposes actionable issues in Inspector instead of a routine a
   company.value = previous;
   company.dispatchEvent(new Event('input', { bubbles: true }));
 });
+
+
+test('V6 bulk edit applies as one undoable transaction', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const rows = [...document.querySelectorAll('#productEditor .product-grid-row')];
+  expect(rows.length).toBeGreaterThanOrEqual(2);
+  const beforeUnits = rows.slice(0, 2).map(row => row.querySelector('[data-product-key="unit"]').value);
+
+  rows[0].querySelector('.product-row-select').click();
+  rows[1].querySelector('.product-row-select').click();
+  expect(document.getElementById('productBulkBar').hidden).toBe(false);
+  expect(document.getElementById('productBulkCount').textContent).toContain('2');
+
+  const unit = document.getElementById('bulkUnitValue');
+  unit.value = 'Khay test';
+  document.getElementById('bulkApplyUnit').click();
+
+  const changedUnits = [...document.querySelectorAll('#productEditor .product-grid-row')]
+    .slice(0, 2)
+    .map(row => row.querySelector('[data-product-key="unit"]').value);
+  expect(changedUnits).toEqual(['Khay test', 'Khay test']);
+
+  document.getElementById('studioUndo').click();
+  const restoredUnits = [...document.querySelectorAll('#productEditor .product-grid-row')]
+    .slice(0, 2)
+    .map(row => row.querySelector('[data-product-key="unit"]').value);
+  expect(restoredUnits).toEqual(beforeUnits);
+});
