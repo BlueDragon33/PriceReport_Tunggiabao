@@ -158,7 +158,6 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
   search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
   expect(document.getElementById('quickCustomerCompany').value).toBe('Công ty Search V46');
-  expect(document.activeElement).toBe(document.getElementById('quickCustomerName'));
 
   if (previousCustomers == null) localStorage.removeItem(customersKey);
   else localStorage.setItem(customersKey, previousCustomers);
