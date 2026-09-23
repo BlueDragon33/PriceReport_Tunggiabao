@@ -67,7 +67,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v51-studio-rc1")) fail('Service-worker cache version was not upgraded for V5 UI release candidate');
+if (!sw.includes("pricereport-shell-v60-studio-rc1")) fail('Service-worker cache version was not upgraded for V6 Studio release candidate');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -169,7 +169,7 @@ if (!html.includes('id="applyTungGiaBaoProfile"')) fail('Manual Tùng Gia Bảo 
 if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigration))')) fail('Legacy profile migration must persist immediately');
 
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
-if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
+if (!html.includes('id="studioV6Preview"') || !js.includes("openTab('view')")) fail('V6 Studio preview command is missing');
 if (!html.includes('Xuất bản & dữ liệu')) fail('Publishing/Data navigation label is missing');
 if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
 if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
@@ -259,8 +259,13 @@ if (!js.includes("const initialAppPage = getAppPreferences().startPage")) fail('
 if (!css.includes('.shell.app-workspace')) fail('Application workspace shell styles are missing');
 if (!appCss.includes('.dashboard-main-grid')) fail('Dashboard responsive grid is missing');
 
-if (!html.includes('id="mobileMoreToggle"') || !html.includes('id="mobileMoreMenu"')) fail('V4.1 compact mobile navigation is missing');
-if (!js.includes('function setMobileMoreMenu(open, { restoreFocus = false } = {})')) fail('V5 mobile navigation focus controller is missing');
+const primaryNavTabs = [...html.matchAll(/<button[^>]*data-tab="([^"]+)"/g)].map(match => match[1]);
+for (const tab of ['dashboard','general','history','master','export','settings']) {
+  if (!primaryNavTabs.includes(tab)) fail('V6 primary navigation missing module: ' + tab);
+}
+for (const removedTab of ['customer','products','payment','terms','design','view','presets','system']) {
+  if (primaryNavTabs.includes(removedTab)) fail('V6 primary navigation must not expose Studio submodule: ' + removedTab);
+}
 if (!js.includes("row.addEventListener('click', () => loadQuoteRecord(record))")) fail('Recent dashboard quotation must open the selected record directly');
 if (!appCss.includes('.mobile-more-grid')) fail('Mobile action sheet styles are missing');
 
@@ -298,7 +303,7 @@ if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'expo
 if (!js.includes('function renderExportCenter()')) fail('V4.7 export-center renderer is missing');
 if (!v5Css.includes('.export-center-grid') || !css.includes('.shell.app-workspace .preview{display:block!important}')) fail('Publishing center or report-layer print safeguard is missing');
 
-if (!html.includes('data-tab="system"') || !html.includes('id="pane-system"')) fail('V4.8 Device & System workspace is missing');
+if (!html.includes('data-open-tab="system"') || !html.includes('id="pane-system"')) fail('Device & System workspace must remain reachable from settings/system actions');
 if (!html.includes('id="systemLocalDeviceCode"') || !html.includes('id="systemRegistryDeviceCode"')) fail('V4.8 must distinguish local and registry device codes');
 if (!html.includes('id="systemBoundaryQuote"') || !html.includes('id="systemBoundaryCustomer"') || !html.includes('id="systemBoundaryPrivateKey"')) fail('V4.8 data-boundary indicators are missing');
 if (!js.includes('function renderSystemWorkspace()') || !js.includes('function refreshSystemWorkspace()')) fail('V4.8 system runtime renderer/refresh is missing');
@@ -324,8 +329,8 @@ for (const primitive of ['app-workspace-pane','app-workspace-header','app-surfac
 
 if (!html.includes('role="combobox"') || !html.includes('role="listbox"')) fail('V5 global-search accessibility semantics are missing');
 if (!js.includes("event.key === 'ArrowDown' || event.key === 'ArrowUp'")) fail('V5 global-search keyboard navigation is missing');
-if (!html.includes('id="mobileMoreMenu" role="dialog"')) fail('V5 mobile More dialog semantics are missing');
-if (!js.includes('mobileMoreFocusable()')) fail('V5 mobile More focus trap is missing');
+if (!html.includes('id="commandPaletteModal"') || !html.includes('id="commandPaletteInput"')) fail('V6 command palette surface is missing');
+if (!js.includes("event.key.toLowerCase() === 'k'")) fail('V6 Ctrl/Cmd+K command palette shortcut is missing');
 
 for (const studioPane of ['general','customer','products','payment','terms','design','presets']) {
   if (!html.includes('class="pane studio-pane studio-pane-' + studioPane + '" id="pane-' + studioPane + '"')) {
@@ -337,9 +342,21 @@ if (!html.includes('data-studio-step="terms"')) fail('V5.1 quotation workflow mu
 if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
 if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
-if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
+if (!v5Css.includes('V6 Quotation Studio + Data Entry')) fail('V6 quotation studio styles are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
+
+for (const id of ['studioV6Commandbar','studioBlockSearch','productDataGridBody','productExcelInput','studioInspectorContent','studioInspectorCheck','studioUndo','studioRedo']) {
+  if (!html.includes('id="' + id + '"')) fail('V6 Studio required surface missing: #' + id);
+}
+if ((html.match(/data-studio-block=/g) || []).length !== 6) fail('V6 Studio left block library must expose exactly six core content blocks');
+if ((html.match(/data-inspector-tab=/g) || []).length !== 3) fail('V6 Inspector must expose Design / Content / Check');
+for (const logic of ['function renderProductDataGrid()','function rowsToProducts(rows)','function normalizeGridNumber(value)','function chooseWorkbookSheet(sheetNames)','function undoQuoteChange()','function redoQuoteChange()','function renderStudioCheckPanel()']) {
+  if (!js.includes(logic)) fail('V6 Studio logic missing: ' + logic);
+}
+if (js.includes('window.prompt(')) fail('V6 data entry must not use prompt() for ordinary import flow');
+if (!js.includes("clipboardData?.getData('text/plain')")) fail('V6 Smart Paste clipboard path is missing');
+if (!v5Css.includes('.product-grid-row') || !v5Css.includes('.studio-inspector-tabs')) fail('V6 grid/inspector styling is missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
