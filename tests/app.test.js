@@ -156,8 +156,9 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
     search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
   }
   search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-  expect(document.getElementById('pane-customer').classList.contains('active')).toBe(true);
-  expect(document.getElementById('customerCompany').value).toBe('Công ty Search V46');
+  expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
+  expect(document.getElementById('quickCustomerCompany').value).toBe('Công ty Search V46');
+  expect(document.activeElement).toBe(document.getElementById('quickCustomerName'));
 
   if (previousCustomers == null) localStorage.removeItem(customersKey);
   else localStorage.setItem(customersKey, previousCustomers);
@@ -260,7 +261,7 @@ test('meaningful unnamed product is visibly flagged and blocks print preflight',
   price.value = '125000';
   price.dispatchEvent(new Event('input', { bubbles: true }));
 
-  expect(document.querySelector('#qBody tr:last-child')).toHaveClass('draft-missing-name');
+  expect(document.querySelector('#qBody tr:last-child').classList.contains('draft-missing-name')).toBe(true);
   expect(document.getElementById('documentHealth').textContent).toContain('lỗi cần sửa');
   const printsBefore = window.print.mock.calls.length;
   document.querySelector('.print-action').click();
@@ -269,7 +270,7 @@ test('meaningful unnamed product is visibly flagged and blocks print preflight',
   const name = lastCard.querySelector('[data-product-key="name"]');
   name.value = 'Hàng bổ sung';
   name.dispatchEvent(new Event('input', { bubbles: true }));
-  expect(document.querySelector('#qBody tr:last-child')).not.toHaveClass('draft-missing-name');
+  expect(document.querySelector('#qBody tr:last-child').classList.contains('draft-missing-name')).toBe(false);
 });
 
 test('pasted numbered terms are normalized and customer block is structured for report output', () => {
@@ -300,7 +301,16 @@ test('template selection applies real document profile', () => {
   expect(document.querySelector('.quote-top > .qmeta').style.display).toBe('none');
 });
 
-test('history save records one quotation and print preflight reaches print', () => {
+test('history save records one valid quotation and print preflight reaches print', () => {
+  document.querySelectorAll('.product-card').forEach((card, index) => {
+    const name = card.querySelector('[data-product-key="name"]');
+    if (name && !name.value.trim()) {
+      name.value = 'Sản phẩm hợp lệ ' + (index + 1);
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+  window.alert.mockClear();
+  window.print.mockClear();
   document.getElementById('saveQuoteToHistory').click();
   expect(document.getElementById('historyCount').textContent).toBe('1');
   expect(document.getElementById('historyPendingCount').textContent).toBe('1');
