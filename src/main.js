@@ -3210,20 +3210,27 @@ function validateQuote(data = state) {
 }
 
 function updateDocumentHealth() {
-  const badge = document.getElementById('documentHealth');
-  if (!badge) return;
   const result = validateQuote();
-  badge.classList.remove('ok','warn','error');
+  const badges = [
+    document.getElementById('documentHealth'),
+    document.getElementById('studioDocumentHealth')
+  ].filter(Boolean);
+
+  let tone = 'ok';
+  let label = 'Sẵn sàng in';
   if (result.errors.length) {
-    badge.classList.add('error');
-    badge.textContent = result.errors.length + ' lỗi cần sửa';
+    tone = 'error';
+    label = result.errors.length + ' lỗi cần sửa';
   } else if (result.warnings.length) {
-    badge.classList.add('warn');
-    badge.textContent = result.warnings.length + ' mục cần kiểm tra';
-  } else {
-    badge.classList.add('ok');
-    badge.textContent = 'Sẵn sàng in';
+    tone = 'warn';
+    label = result.warnings.length + ' mục cần kiểm tra';
   }
+
+  badges.forEach((badge) => {
+    badge.classList.remove('ok','warn','error');
+    badge.classList.add(tone);
+    badge.textContent = label;
+  });
 }
 
 function runPreflight({ forPrint = false } = {}) {
