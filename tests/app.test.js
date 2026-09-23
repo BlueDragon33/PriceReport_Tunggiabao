@@ -47,69 +47,54 @@ test('V4 boots into application dashboard and exposes separate new-quote and edi
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 });
 
-test('V4.5 quotation studio shows current quote context and navigable workflow steps', () => {
+test('V6 Studio routes content blocks inside one quotation workspace', () => {
   document.querySelector('[data-tab="general"]').click();
-  const quoteNo = document.getElementById('quoteNo').value;
-  expect(document.getElementById('studioQuoteLabel').textContent).toBe(quoteNo || 'Báo giá mới');
-  expect(document.querySelector('[data-studio-step="general"]').classList.contains('active')).toBe(true);
+  const shell = document.querySelector('.shell');
+  expect(shell.classList.contains('app-workspace')).toBe(false);
+  expect(document.getElementById('studioV6Commandbar')).toBeTruthy();
+  expect(document.querySelectorAll('[data-studio-block]').length).toBe(6);
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 
-  document.querySelector('[data-studio-step="products"]').click();
+  document.querySelector('[data-studio-block="products"]').click();
   expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
-  expect(document.querySelector('[data-studio-step="products"]').classList.contains('active')).toBe(true);
+  expect(shell.classList.contains('data-entry-mode')).toBe(true);
+  expect(document.querySelector('[data-studio-block="products"]').classList.contains('active')).toBe(true);
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 
-  document.querySelector('[data-studio-step="design"]').click();
-  expect(document.getElementById('designPanel').classList.contains('open')).toBe(true);
-
-  document.getElementById('studioBackHome').click();
-  expect(document.getElementById('designPanel').classList.contains('open')).toBe(false);
-  expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
-
-  document.querySelector('[data-tab="general"]').click();
-});
-
-test('V5.1 quotation studio exposes six explicit workflow steps and drafting commands', () => {
-  document.querySelector('[data-tab="general"]').click();
-  expect(document.querySelectorAll('[data-studio-step]').length).toBe(6);
-  expect(document.querySelector('[data-studio-step="terms"]')).toBeTruthy();
-  expect(document.getElementById('studioSaveQuote')).toBeTruthy();
-  expect(document.getElementById('studioCheckQuote')).toBeTruthy();
-  expect(document.getElementById('studioPreviewQuote')).toBeTruthy();
-  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 1/6');
-
-  document.getElementById('studioNextStep').click();
-  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
-  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 2/6');
-
-  document.querySelector('[data-studio-step="terms"]').click();
+  document.querySelector('[data-studio-block="terms"]').click();
   expect(document.getElementById('pane-terms').classList.contains('active')).toBe(true);
-  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 4/6');
-
-  document.getElementById('studioPrevStep').click();
-  expect(document.getElementById('pane-payment').classList.contains('active')).toBe(true);
+  expect(shell.classList.contains('data-entry-mode')).toBe(false);
   document.querySelector('[data-tab="general"]').click();
 });
 
-test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
-  const toggle = document.getElementById('mobileMoreToggle');
-  const menu = document.getElementById('mobileMoreMenu');
-  expect(toggle).toBeTruthy();
-  expect(menu.hidden).toBe(true);
-  toggle.focus();
-  toggle.click();
-  expect(menu.hidden).toBe(false);
-  expect(toggle.getAttribute('aria-expanded')).toBe('true');
-  expect(menu.getAttribute('role')).toBe('dialog');
-  expect(menu.contains(document.activeElement)).toBe(true);
-  document.getElementById('mobileMoreClose').click();
-  expect(menu.hidden).toBe(true);
-  expect(document.activeElement).toBe(toggle);
+test('V6 Studio exposes command bar, Inspector and command palette', () => {
+  document.querySelector('[data-tab="general"]').click();
+  expect(document.getElementById('studioV6Save')).toBeTruthy();
+  expect(document.getElementById('studioV6Check')).toBeTruthy();
+  expect(document.getElementById('studioV6Preview')).toBeTruthy();
+  expect(document.getElementById('studioUndo')).toBeTruthy();
+  expect(document.getElementById('studioRedo')).toBeTruthy();
+  expect(document.querySelectorAll('[data-inspector-tab]').length).toBe(3);
 
-  toggle.click();
-  const customerAction = menu.querySelector('[data-open-tab="customer"]');
-  customerAction.click();
-  expect(menu.hidden).toBe(true);
-  expect(document.getElementById('pane-customer').contains(document.activeElement)).toBe(true);
-  document.querySelector('[data-tab="dashboard"]').click();
+  document.getElementById('studioV6Check').click();
+  expect(document.querySelector('[data-inspector-tab="check"]').classList.contains('active')).toBe(true);
+  expect(document.getElementById('studioInspectorCheck').hidden).toBe(false);
+
+  document.getElementById('studioCommandPalette').click();
+  expect(document.getElementById('commandPaletteModal').hidden).toBe(false);
+  expect(document.activeElement).toBe(document.getElementById('commandPaletteInput'));
+  document.getElementById('commandPaletteClose').click();
+  expect(document.getElementById('commandPaletteModal').hidden).toBe(true);
+});
+
+test('V6 primary navigation contains application modules only', () => {
+  const tabs = Array.from(document.querySelectorAll('.nav button[data-tab]')).map(button => button.dataset.tab);
+  expect(tabs).toEqual(['dashboard','general','history','master','export','settings']);
+  for (const hiddenStudioModule of ['customer','products','payment','terms','design','view','presets','system']) {
+    expect(tabs).not.toContain(hiddenStudioModule);
+  }
+  document.querySelector('[data-tab="general"]').click();
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 });
 
 test('V4.1 dashboard recent quotation opens the selected record directly', () => {
@@ -217,7 +202,8 @@ test('V5 dynamic feedback exposes live, busy and empty-state semantics', async (
     expect(recent.querySelector('.dashboard-empty').getAttribute('role')).toBe('status');
   }
 
-  document.querySelector('[data-tab="system"]').click();
+  document.querySelector('[data-tab="settings"]').click();
+  document.querySelector('#pane-settings [data-open-tab="system"]').click();
   expect(document.getElementById('pane-system').getAttribute('aria-busy')).toBe('false');
   document.querySelector('[data-tab="general"]').click();
 });
@@ -237,14 +223,16 @@ test('V5 Pass 18 applies one Studio surface language across all editor panes', (
   expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
 });
 
-test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
-  const beforeCards = document.querySelectorAll('.product-card').length;
+test('V6 product grid adds a blank row without polluting A4 until content is entered', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  const beforeGridRows = document.querySelectorAll('.product-grid-row').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
-  document.getElementById('addProduct').click();
-  expect(document.querySelectorAll('.product-card').length).toBe(beforeCards + 1);
+  document.getElementById('addProductGrid').click();
+  expect(document.querySelectorAll('.product-grid-row').length).toBe(beforeGridRows + 1);
   expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows);
 
-  const lastName = document.querySelector('.product-card:last-child [data-product-key="name"]');
+  const lastIndex = document.querySelectorAll('.product-grid-row').length - 1;
+  const lastName = document.querySelector('[data-product-grid-index="' + lastIndex + '"][data-product-grid-key="name"]');
   expect(lastName).toBeTruthy();
   lastName.value = 'Sản phẩm kiểm thử UX';
   lastName.dispatchEvent(new Event('input', { bubbles: true }));
@@ -252,21 +240,24 @@ test('product editor adds a blank draft row without polluting A4 until content i
   expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
 });
 
-test('meaningful unnamed product is visibly flagged and blocks print preflight', () => {
-  document.querySelector('[data-tab="products"]').click();
-  document.getElementById('addProduct').click();
-  const lastCard = document.querySelector('.product-card:last-child');
-  const price = lastCard.querySelector('[data-product-key="price"]');
+test('V6 meaningful unnamed product is inline-flagged and blocks print preflight', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  document.getElementById('addProductGrid').click();
+  const lastIndex = document.querySelectorAll('.product-grid-row').length - 1;
+  const price = document.querySelector('[data-product-grid-index="' + lastIndex + '"][data-product-grid-key="price"]');
   price.value = '125000';
   price.dispatchEvent(new Event('input', { bubbles: true }));
 
   expect(document.querySelector('#qBody tr:last-child').classList.contains('draft-missing-name')).toBe(true);
   expect(document.getElementById('documentHealth').textContent).toContain('lỗi cần sửa');
+  const nameCell = document.querySelector('[data-product-grid-index="' + lastIndex + '"][data-product-grid-key="name"]').closest('.product-grid-cell');
+  expect(nameCell.classList.contains('invalid')).toBe(true);
+
   const printsBefore = window.print.mock.calls.length;
   document.querySelector('.print-action').click();
   expect(window.print.mock.calls.length).toBe(printsBefore);
 
-  const name = lastCard.querySelector('[data-product-key="name"]');
+  const name = document.querySelector('[data-product-grid-index="' + lastIndex + '"][data-product-grid-key="name"]');
   name.value = 'Hàng bổ sung';
   name.dispatchEvent(new Event('input', { bubbles: true }));
   expect(document.querySelector('#qBody tr:last-child').classList.contains('draft-missing-name')).toBe(false);
@@ -301,9 +292,8 @@ test('template selection applies real document profile', () => {
 });
 
 test('history save records one valid quotation and print preflight reaches print', () => {
-  document.querySelectorAll('.product-card').forEach((card, index) => {
-    const name = card.querySelector('[data-product-key="name"]');
-    if (name && !name.value.trim()) {
+  document.querySelectorAll('[data-product-grid-key="name"]').forEach((name, index) => {
+    if (!name.value.trim()) {
       name.value = 'Sản phẩm hợp lệ ' + (index + 1);
       name.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -361,12 +351,11 @@ test('malformed local collections are normalized instead of crashing management 
 });
 
 
-test('navigation exposes the active pane to assistive technology', () => {
-  document.querySelector('[data-tab="products"]').click();
-  expect(document.querySelector('[data-tab="products"]').getAttribute('aria-current')).toBe('page');
-  expect(document.querySelector('[data-tab="general"]').hasAttribute('aria-current')).toBe(false);
+test('Studio sub-block keeps the primary Soạn báo giá navigation state active', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
+  expect(document.querySelector('[data-studio-block="products"]').classList.contains('active')).toBe(true);
 });
-
 
 test('full-backup restore rolls back when a storage write fails', async () => {
   const historyKey = 'tunggiabao-price-report-history-v1';
@@ -587,15 +576,17 @@ test('title and subtitle preserve professional vertical hierarchy', () => {
 });
 
 
-test('large Tùng Gia Bảo product set starts collapsed for practical editing', () => {
-  const cards = [...document.querySelectorAll('.product-card')];
-  expect(cards.length).toBeGreaterThanOrEqual(72);
-  expect(cards.filter(card => card.classList.contains('collapsed')).length).toBeGreaterThanOrEqual(72);
+test('large Tùng Gia Bảo product set renders in the single V6 grid engine', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  const rows = [...document.querySelectorAll('.product-grid-row')];
+  expect(rows.length).toBeGreaterThanOrEqual(72);
+  expect(document.querySelector('.shell').classList.contains('data-entry-mode')).toBe(true);
+  expect(document.querySelectorAll('.product-card').length).toBe(0);
 });
 
 test('all eight report templates preserve the full grouped price-list content and business data', () => {
   const themes = ['modern','corporate','minimal','classic','emerald','warm','premium','mono'];
-  const expectedProducts = document.querySelectorAll('.product-card').length;
+  const expectedProducts = document.querySelectorAll('#qBody tr:not(.qgroup-row)').length;
   const companyBefore = document.getElementById('pCompanyName').textContent;
   const firstProductBefore = document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent;
   for (const theme of themes) {
@@ -665,7 +656,7 @@ test('corrected OCR raw text replaces prior handwriting recognition instead of k
 });
 
 test('automatic arrangement hides empty optional Pack and Note columns only', () => {
-  document.querySelector('[data-tab="products"]').click();
+  document.querySelector('[data-studio-block="products"]').click();
   const showPack = document.getElementById('showPack');
   const showNote = document.getElementById('showNote');
   showPack.checked = true;
@@ -715,7 +706,7 @@ test('manual Tùng Gia Bảo apply button replaces visible business data and pro
   expect(document.getElementById('companyProvince').value).toBe('Khánh Hòa');
   expect(document.getElementById('companyWard').value).toBe('');
   expect(document.getElementById('pCompanyRegion').textContent).toBe('Tỉnh Khánh Hòa');
-  expect(document.querySelectorAll('.product-card').length).toBe(72);
+  expect(document.querySelectorAll('.product-grid-row').length).toBe(72);
   expect(document.getElementById('pCompanyName').textContent).toContain('Tùng Gia Bảo');
 });
 
@@ -768,7 +759,8 @@ test('report view tab enters a dedicated responsive preview mode and exits clean
 });
 
 test('V4.8 device and system center shows real runtime state and separates local from registry code', () => {
-  document.querySelector('[data-tab="system"]').click();
+  document.querySelector('[data-tab="settings"]').click();
+  document.querySelector('#pane-settings [data-open-tab="system"]').click();
   expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
   expect(document.getElementById('pane-system').classList.contains('active')).toBe(true);
   expect(document.getElementById('systemLocalDeviceCode').textContent).toMatch(/^KT-/);
@@ -1004,12 +996,12 @@ test('updating a saved quotation cannot reuse another quotation number', () => {
 
 
 test('product group heading repeats correctly after an ungrouped break', () => {
-  document.querySelector('[data-tab="products"]').click();
+  document.querySelector('[data-studio-block="products"]').click();
   const addDraft = ({ group = '', name }) => {
-    document.getElementById('addProduct').click();
-    const card = document.querySelector('.product-card:last-child');
-    const nameInput = card.querySelector('[data-product-key="name"]');
-    const groupInput = card.querySelector('[data-product-key="group"]');
+    document.getElementById('addProductGrid').click();
+    const index = document.querySelectorAll('.product-grid-row').length - 1;
+    const nameInput = document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="name"]');
+    const groupInput = document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="group"]');
     groupInput.value = group;
     groupInput.dispatchEvent(new Event('input', { bubbles: true }));
     nameInput.value = name;
@@ -1020,9 +1012,9 @@ test('product group heading repeats correctly after an ungrouped break', () => {
   addDraft({ name: 'Sản phẩm không nhóm' });
   addDraft({ group: 'V51-GROUP-REPEAT', name: 'Sản phẩm nhóm B' });
 
-  const headings = Array.from(document.querySelectorAll('#qBody .qgroup-row'))
-    .filter(row => row.textContent === 'V51-GROUP-REPEAT');
-  expect(headings.length).toBe(2);
+  const groupRows = Array.from(document.querySelectorAll('#qBody .qgroup-row'))
+    .filter(row => row.textContent.includes('V51-GROUP-REPEAT'));
+  expect(groupRows.length).toBe(2);
 });
 
 test('professional report suppresses empty terms and empty payment rows', () => {
