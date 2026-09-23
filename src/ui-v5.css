@@ -4409,3 +4409,23 @@ body.v5-ui .studio-guidance-ready {
   color: var(--v5-success);
   font-weight: 700;
 }
+
+
+body.v5-ui .studio-stepper button.step-ready:not(.active) b{
+  background:var(--v5-success-soft);
+  color:var(--v5-success);
+}
+body.v5-ui .studio-stepper button.step-warn:not(.active) b{
+  background:var(--v5-warning-soft);
+  color:var(--v5-warning);
+}
+body.v5-ui .studio-stepper button.step-error:not(.active) b{
+  background:var(--v5-danger-soft);
+  color:var(--v5-danger);
+}
+body.v5-ui .studio-stepper button.step-warn:not(.active){
+  color:var(--v5-warning);
+}
+body.v5-ui .studio-stepper button.step-error:not(.active){
+  color:var(--v5-danger);
+}
