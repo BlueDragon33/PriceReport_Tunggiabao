@@ -298,6 +298,37 @@ test('product editor adds a blank draft row without polluting A4 until content i
   expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
 });
 
+test('bulk product toolbar applies one change to multiple selected grid rows', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const initialCount = document.querySelectorAll('#productEditor .product-card').length;
+  document.getElementById('addProduct').click();
+  document.getElementById('addProduct').click();
+
+  const cards = Array.from(document.querySelectorAll('#productEditor .product-card'));
+  cards.slice(-2).forEach(card => {
+    const checkbox = card.querySelector('.product-row-select');
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  expect(document.getElementById('productBulkBar').hidden).toBe(false);
+  expect(document.getElementById('productBulkCount').textContent).toContain('2 dòng');
+
+  document.getElementById('productBulkAction').value = 'group';
+  document.getElementById('productBulkAction').dispatchEvent(new Event('change', { bubbles: true }));
+  document.getElementById('productBulkValue').value = 'NHÓM BULK TEST';
+  document.getElementById('applyProductBulk').click();
+
+  const updatedCards = Array.from(document.querySelectorAll('#productEditor .product-card'));
+  expect(updatedCards.at(-1).querySelector('[data-product-key="group"]').value).toBe('NHÓM BULK TEST');
+  expect(updatedCards.at(-2).querySelector('[data-product-key="group"]').value).toBe('NHÓM BULK TEST');
+  expect(document.getElementById('productBulkBar').hidden).toBe(true);
+
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(initialCount);
+});
+
 test('product grid preserves negative input and shows inline validation instead of silently clamping', () => {
   document.querySelector('[data-tab="products"]').click();
   document.getElementById('addProduct').click();
