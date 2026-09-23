@@ -4330,3 +4330,77 @@ body.v5-ui .import-duplicate-actions {
   flex-wrap: wrap;
   gap: var(--v5-space-2);
 }
+
+
+/* V5.3 Data Management controls */
+body.v5-ui .master-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+body.v5-ui .master-toolbar .master-search-box{
+  flex:1 1 260px;
+  min-width:min(100%,220px);
+}
+body.v5-ui .master-filter{
+  flex:0 1 170px;
+  min-height:38px;
+}
+body.v5-ui .master-duplicate-filter{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:0 10px;
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-surface);
+  color:var(--v5-muted);
+  font-size:9px;
+  white-space:nowrap;
+}
+body.v5-ui .master-result-summary{margin-left:auto}
+body.v5-ui .master-bulk-bar,
+body.v5-ui .master-duplicate-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--v5-space-3);
+  margin:0 0 var(--v5-space-3);
+  padding:9px 11px;
+  border:1px solid var(--v5-border);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-surface-soft);
+}
+body.v5-ui .master-bulk-bar[hidden],
+body.v5-ui .master-duplicate-summary[hidden]{display:none}
+body.v5-ui .master-bulk-bar>div{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--v5-space-2);
+}
+body.v5-ui .master-bulk-bar strong,
+body.v5-ui .master-duplicate-summary strong{
+  color:var(--v5-data-heading);
+  font-size:9.5px;
+}
+body.v5-ui .master-duplicate-summary span{
+  color:var(--v5-muted);
+  font-size:8.5px;
+}
+body.v5-ui .master-select-cell{
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  gap:7px;
+  align-items:center;
+}
+body.v5-ui .master-select-cell>div{min-width:0}
+body.v5-ui .master-row-select{
+  width:14px;
+  height:14px;
+  margin:0;
+}
+body.v5-ui .master-table-row.bulk-selected{
+  background:var(--v5-primary-soft);
+}
