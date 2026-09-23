@@ -17,5 +17,30 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm audit --omit=dev --audit-level=high
-      - run: npm test
+      - name: Syntax check
+        run: node --check src/main.js
+      - name: V5 UI guards
+        run: node scripts/ui-v5.test.mjs
+      - name: UI debt guards
+        run: node scripts/ui-debt.test.mjs
+      - name: Core business tests
+        run: node scripts/core.test.mjs
+      - name: Importer tests
+        run: node scripts/importers.test.mjs
+      - name: Exporter tests
+        run: node scripts/exporters.test.mjs
+      - name: PC storage tests
+        run: node scripts/pc-storage.test.mjs
+      - name: Logo processing tests
+        run: node scripts/logo-processing.test.mjs
+      - name: Device profile tests
+        run: node scripts/device-profile.test.mjs
+      - name: Production config tests
+        run: node scripts/production-config.test.mjs
+      - name: Service worker tests
+        run: node scripts/service-worker.test.mjs
+      - name: DOM regression tests
+        run: npm run test:dom
+      - name: Smoke tests
+        run: node scripts/smoke.mjs
       - run: npm run build
