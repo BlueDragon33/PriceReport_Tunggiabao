@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseMappedSpreadsheetRows, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2037,11 +2037,28 @@ function render() {
   });
 }
 
-function toast(message) {
+let toastTimer = null;
+function toast(message, action = null) {
   const el = document.getElementById('toast');
-  el.textContent = message;
+  if (!el) return;
+  if (toastTimer) clearTimeout(toastTimer);
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = message;
+  el.appendChild(text);
+  if (action?.label && typeof action.onClick === 'function') {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toast-action';
+    button.textContent = action.label;
+    button.addEventListener('click', () => {
+      action.onClick();
+      el.classList.remove('show');
+    }, { once: true });
+    el.appendChild(button);
+  }
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 1600);
+  toastTimer = setTimeout(() => el.classList.remove('show'), action?.duration || 1600);
 }
 
 function downloadBlob(name, blob) {
@@ -2246,6 +2263,7 @@ let smartImportImageUrl = '';
 let smartImportBusy = false;
 let smartImportLastFocus = null;
 let smartImportManualFields = new Set();
+let lastImportUndoSnapshot = null;
 
 
 function resetSmartImportDraft() {
@@ -2259,6 +2277,8 @@ function resetSmartImportDraft() {
   const preview = document.getElementById('handwritingPreview');
   const excelInput = document.getElementById('excelSmartImportInput');
   const handwritingInput = document.getElementById('handwritingSmartImportInput');
+  const pastePanel = document.getElementById('smartPastePanel');
+  const pasteText = document.getElementById('smartPasteText');
   if (review) review.hidden = true;
   if (apply) apply.disabled = true;
   if (raw) raw.value = '';
@@ -2267,6 +2287,8 @@ function resetSmartImportDraft() {
   if (preview) preview.removeAttribute('src');
   if (excelInput) excelInput.value = '';
   if (handwritingInput) handwritingInput.value = '';
+  if (pastePanel) pastePanel.hidden = true;
+  if (pasteText) pasteText.value = '';
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
   document.querySelectorAll('[data-import-field]').forEach((input) => { input.value = ''; });
@@ -2533,6 +2555,31 @@ function renderSmartImportReview() {
   apply.disabled = false;
 }
 
+function openSmartPaste(initialText = '') {
+  openSmartImport();
+  const panel = document.getElementById('smartPastePanel');
+  const textarea = document.getElementById('smartPasteText');
+  if (panel) panel.hidden = false;
+  if (textarea) {
+    if (initialText) textarea.value = initialText;
+    requestAnimationFrame(() => textarea.focus());
+  }
+}
+
+function parseSmartPasteText() {
+  const textarea = document.getElementById('smartPasteText');
+  const raw = String(textarea?.value || '');
+  const parsed = parsePastedTable(raw);
+  if (!parsed.products.length) {
+    setSmartImportProgress(parsed.warnings?.[0] || 'Chưa nhận diện được dòng sản phẩm từ dữ liệu dán.', 'error');
+    return false;
+  }
+  smartImportDraft = mergeSmartImportSource(parsed);
+  renderSmartImportReview();
+  setSmartImportProgress('Đã nhận ' + parsed.products.length + ' dòng từ dữ liệu dán. Kiểm tra mapping trước khi áp dụng.', 'success');
+  return true;
+}
+
 function openSmartImport() {
   const modal = document.getElementById('smartImportModal');
   if (!modal) return;
@@ -2637,10 +2684,24 @@ async function recognizeHandwritingFile(file) {
   }
 }
 
+function undoLastImport() {
+  if (!lastImportUndoSnapshot) return;
+  state = merge(clone(lastImportUndoSnapshot));
+  lastImportUndoSnapshot = null;
+  syncLegacyCompanyAddress();
+  const persisted = save();
+  syncInputs();
+  resetCollapsedProductsForState();
+  renderEditorProducts();
+  render();
+  toast(persisted ? 'Đã hoàn tác lần nhập dữ liệu gần nhất' : 'Đã hoàn tác tạm thời; chưa thể lưu vào trình duyệt');
+}
+
 function applySmartImportDraft() {
   if (!smartImportDraft) return;
   syncDraftFromImportReview();
   const appliedFields = supplementImportFields(smartImportDraft);
+  const previousState = clone(state);
 
   const next = Object.assign({}, state, appliedFields, smartImportDraft.layoutHints || {});
   const shouldReplaceProducts = document.getElementById('replaceImportedProducts')?.checked !== false;
@@ -2669,9 +2730,13 @@ function applySmartImportDraft() {
   render();
   closeSmartImport({ discard: true });
   openTab('general');
-  toast(persisted
-    ? 'Đã áp dụng dữ liệu nhập vào báo giá'
-    : 'Đã áp dụng tạm thời; trình duyệt chưa lưu được dữ liệu');
+  lastImportUndoSnapshot = previousState;
+  toast(
+    persisted
+      ? 'Đã áp dụng dữ liệu nhập vào báo giá'
+      : 'Đã áp dụng tạm thời; trình duyệt chưa lưu được dữ liệu',
+    { label: 'Hoàn tác', onClick: undoLastImport, duration: 6000 }
+  );
 }
 
 function setupSmartImport() {
@@ -2685,6 +2750,11 @@ function setupSmartImport() {
   document.getElementById('cancelSmartImport')?.addEventListener('click', () => closeSmartImport({ discard: true }));
   document.getElementById('resetSmartImport')?.addEventListener('click', resetSmartImportDraft);
   document.getElementById('applySmartImport')?.addEventListener('click', applySmartImportDraft);
+  document.getElementById('closeSmartPastePanel')?.addEventListener('click', () => {
+    const panel = document.getElementById('smartPastePanel');
+    if (panel) panel.hidden = true;
+  });
+  document.getElementById('parseSmartPaste')?.addEventListener('click', parseSmartPasteText);
 
   document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
     if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
@@ -2712,6 +2782,22 @@ function setupSmartImport() {
       setSmartImportBusy(false);
       event.target.value = '';
     }
+  });
+
+  document.getElementById('pasteProducts')?.addEventListener('click', () => openSmartPaste());
+  document.getElementById('importProductsExcel')?.addEventListener('click', () => {
+    openSmartImport();
+    document.getElementById('excelSmartImportInput')?.click();
+  });
+  document.getElementById('addProductTop')?.addEventListener('click', () => {
+    document.getElementById('addProduct')?.click();
+  });
+  document.getElementById('pane-products')?.addEventListener('paste', (event) => {
+    const text = String(event.clipboardData?.getData('text/plain') || '');
+    if (!text.includes('\t') || !text.includes('\n')) return;
+    event.preventDefault();
+    openSmartPaste(text);
+    parseSmartPasteText();
   });
 
   document.getElementById('handwritingSmartImportInput')?.addEventListener('change', async (event) => {
