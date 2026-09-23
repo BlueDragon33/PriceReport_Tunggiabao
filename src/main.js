@@ -610,6 +610,36 @@ function currentQuoteHistoryState() {
     : 'dirty';
 }
 
+function updateStudioStepHealth() {
+  const result = validateQuote();
+  const issues = [
+    ...result.errors.map(message => ({ tone: 'error', message })),
+    ...result.warnings.map(message => ({ tone: 'warn', message }))
+  ];
+
+  const stageTone = new Map();
+  issues.forEach((issue) => {
+    const target = validationTargetForMessage(issue.message);
+    const stage = STUDIO_STAGE_BY_TAB[target?.tab] || target?.tab || 'general';
+    const current = stageTone.get(stage);
+    if (issue.tone === 'error' || current !== 'error') stageTone.set(stage, issue.tone);
+  });
+
+  document.querySelectorAll('[data-studio-step]').forEach((button) => {
+    const stage = button.dataset.studioStep;
+    let tone = stageTone.get(stage) || 'ready';
+    if (stage === 'export') {
+      tone = result.errors.length ? 'error' : result.warnings.length ? 'warn' : 'ready';
+    }
+    button.classList.remove('step-ready', 'step-warn', 'step-error');
+    button.classList.add('step-' + tone);
+    const label = STUDIO_WORKFLOW.find(item => item.tab === stage)?.label || stage;
+    const status = tone === 'error' ? 'có lỗi cần sửa' : tone === 'warn' ? 'có mục cần kiểm tra' : 'sẵn sàng';
+    button.title = label + ' · ' + status;
+    button.dataset.health = tone;
+  });
+}
+
 function syncStudioContext(tab = '') {
   const quoteLabel = document.getElementById('studioQuoteLabel');
   const quoteStatus = document.getElementById('studioQuoteStatus');
@@ -637,6 +667,8 @@ function syncStudioContext(tab = '') {
     button.classList.toggle('active', active);
     button.setAttribute('aria-current', active ? 'step' : 'false');
   });
+
+  updateStudioStepHealth();
 
   const workflowIndex = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
   const position = document.getElementById('studioWorkflowPosition');
