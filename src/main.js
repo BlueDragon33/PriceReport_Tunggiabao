@@ -2685,6 +2685,10 @@ function resetSmartImportDraft() {
   if (mappingRows) mappingRows.innerHTML = '';
   const productPreview = document.getElementById('smartImportProductPreview');
   if (productPreview) productPreview.innerHTML = '';
+  const issues = document.getElementById('smartImportIssues');
+  const issueList = document.getElementById('smartImportIssueList');
+  if (issues) issues.hidden = true;
+  if (issueList) issueList.innerHTML = '';
   setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
 }
 
@@ -2897,6 +2901,61 @@ function renderSmartImportMapping() {
   renderSmartImportProductPreview();
 }
 
+function renderSmartImportIssues() {
+  const section = document.getElementById('smartImportIssues');
+  const list = document.getElementById('smartImportIssueList');
+  const summary = document.getElementById('smartImportIssueSummary');
+  if (!section || !list) return;
+
+  const meta = smartImportDraft?.spreadsheetMeta;
+  const invalidRows = Array.isArray(meta?.invalidRows) ? meta.invalidRows : [];
+  const duplicates = Array.isArray(meta?.duplicates) ? meta.duplicates : [];
+  list.innerHTML = '';
+
+  const reasonLabels = {
+    'missing-name': 'Thiếu tên sản phẩm',
+    'invalid-price': 'Đơn giá không hợp lệ',
+    'negative-price': 'Đơn giá âm',
+    'negative-qty': 'Số lượng âm'
+  };
+
+  invalidRows.forEach((issue) => {
+    const item = document.createElement('div');
+    item.className = 'import-issue-item issue-error';
+    const title = document.createElement('strong');
+    title.textContent = 'Dòng ' + issue.rowNumber;
+    const detail = document.createElement('span');
+    const reasons = (issue.reasons || []).map(reason => reasonLabels[reason] || reason);
+    detail.textContent = [
+      issue.name ? 'Tên: ' + issue.name : '',
+      issue.qty ? 'SL: ' + issue.qty : '',
+      issue.price ? 'Giá: ' + issue.price : '',
+      reasons.length ? reasons.join(', ') : 'Cần kiểm tra'
+    ].filter(Boolean).join(' • ');
+    const note = document.createElement('small');
+    note.textContent = 'Dòng này chưa được đưa vào báo giá.';
+    item.append(title, detail, note);
+    list.appendChild(item);
+  });
+
+  duplicates.forEach((group) => {
+    const item = document.createElement('div');
+    item.className = 'import-issue-item issue-warn';
+    const title = document.createElement('strong');
+    title.textContent = 'Có thể trùng dữ liệu';
+    const detail = document.createElement('span');
+    detail.textContent = (group.names || []).join(' ↔ ') || 'Các dòng có tên/đơn vị/quy cách giống nhau';
+    const note = document.createElement('small');
+    note.textContent = 'Hệ thống giữ nguyên tất cả, không tự gộp.';
+    item.append(title, detail, note);
+    list.appendChild(item);
+  });
+
+  const total = invalidRows.length + duplicates.length;
+  section.hidden = total === 0;
+  if (summary) summary.textContent = total + ' mục';
+}
+
 function renderSmartImportReview() {
   const review = document.getElementById('smartImportReview');
   const apply = document.getElementById('applySmartImport');
@@ -2948,6 +3007,7 @@ function renderSmartImportReview() {
   warnings.hidden = !messages.length;
 
   renderSmartImportMapping();
+  renderSmartImportIssues();
   review.hidden = false;
   apply.disabled = false;
 }
