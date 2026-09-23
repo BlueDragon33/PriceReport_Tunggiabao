@@ -521,6 +521,80 @@ test('V5.4 Data Library renders 100, 300 and 500 products and searches Vietnames
   document.querySelector('[data-tab="master"]').click();
 });
 
+test('V5.4 Data Management filters, currency-aware duplicates and bulk selection work together', () => {
+  const catalogKeyName = 'tunggiabao-price-report-catalog-v1';
+  const customerKeyName = 'tunggiabao-price-report-customers-v1';
+  const beforeCatalog = localStorage.getItem(catalogKeyName);
+  const beforeCustomers = localStorage.getItem(customerKeyName);
+
+  localStorage.setItem(catalogKeyName, JSON.stringify([
+    { id:'dm-p1', group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', price:28000, currency:'VND', note:'' },
+    { id:'dm-p2', group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', price:29000, currency:'VND', note:'Giá khác' },
+    { id:'dm-p3', group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', price:1.2, currency:'USD', note:'Biến thể tiền tệ hợp lệ' },
+    { id:'dm-p4', group:'Thịt', name:'Ức gà', pack:'', unit:'kg', price:3.1, currency:'USD', note:'' }
+  ]));
+  localStorage.setItem(customerKeyName, JSON.stringify([
+    { id:'dm-c1', name:'Khách có SĐT', company:'A', phone:'0912345678', email:'', address:'', contact:'' },
+    { id:'dm-c2', name:'Khách thiếu SĐT', company:'B', phone:'', email:'b@example.com', address:'', contact:'' }
+  ]));
+
+  document.getElementById('productCatalogSearch').value = '';
+  document.getElementById('customerLibrarySearch').value = '';
+  document.getElementById('customerLibraryFilter').value = '';
+  document.getElementById('productCatalogCurrencyFilter').value = '';
+  document.getElementById('productCatalogDuplicateOnly').checked = false;
+  document.querySelector('[data-tab="master"]').click();
+
+  expect(document.getElementById('productCatalogDuplicateSummary').hidden).toBe(false);
+  expect(document.getElementById('productCatalogDuplicateCount').textContent).toContain('1 nhóm trùng');
+
+  const duplicateOnly = document.getElementById('productCatalogDuplicateOnly');
+  duplicateOnly.checked = true;
+  duplicateOnly.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(2);
+  expect(document.getElementById('productCatalogList').textContent).not.toContain('Biến thể tiền tệ hợp lệ');
+
+  duplicateOnly.checked = false;
+  duplicateOnly.dispatchEvent(new Event('change', { bubbles: true }));
+  const groupFilter = document.getElementById('productCatalogGroupFilter');
+  groupFilter.value = 'Trứng';
+  groupFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(3);
+
+  groupFilter.value = '';
+  groupFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  const currencyFilter = document.getElementById('productCatalogCurrencyFilter');
+  currencyFilter.value = 'USD';
+  currencyFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#productCatalogList .master-item').length).toBe(2);
+
+  currencyFilter.value = '';
+  currencyFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  const productSelect = document.querySelector('#productCatalogList .master-row-select');
+  productSelect.checked = true;
+  productSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('productCatalogBulkBar').hidden).toBe(false);
+  expect(document.getElementById('productCatalogBulkCount').textContent).toContain('1 sản phẩm');
+  document.getElementById('clearProductCatalogSelection').click();
+  expect(document.getElementById('productCatalogBulkBar').hidden).toBe(true);
+
+  const customerFilter = document.getElementById('customerLibraryFilter');
+  customerFilter.value = 'missing-phone';
+  customerFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#customerLibraryList .master-item').length).toBe(1);
+  expect(document.getElementById('customerLibraryList').textContent).toContain('Khách thiếu SĐT');
+
+  if (beforeCatalog == null) localStorage.removeItem(catalogKeyName);
+  else localStorage.setItem(catalogKeyName, beforeCatalog);
+  if (beforeCustomers == null) localStorage.removeItem(customerKeyName);
+  else localStorage.setItem(customerKeyName, beforeCustomers);
+  customerFilter.value = '';
+  currencyFilter.value = '';
+  duplicateOnly.checked = false;
+  groupFilter.value = '';
+  document.querySelector('[data-tab="master"]').click();
+});
+
 test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
   document.querySelector('[data-tab="products"]').click();
   const quickSave = document.getElementById('saveProductsToCatalogTop');
