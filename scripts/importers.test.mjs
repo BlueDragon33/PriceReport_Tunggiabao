@@ -345,3 +345,24 @@ const internationalPhoneSheet = parseSpreadsheetRows([
 ]);
 assert.equal(internationalPhoneSheet.fields.phone, '0962944688');
 assert.equal(internationalPhoneSheet.products[0].price, 28000);
+
+for (const size of [100, 300, 500]) {
+  const largeRows = [
+    ['Tên SP', 'Nhóm hàng', 'ĐVT', 'SL', 'Giá'],
+    ...Array.from({ length: size }, (_, index) => [
+      'Sản phẩm ' + (index + 1),
+      index % 2 ? 'Nhóm A' : 'Nhóm B',
+      'Hộp',
+      String((index % 5) + 1),
+      String(28000 + index)
+    ])
+  ];
+  const largeHeader = detectSpreadsheetHeader(largeRows);
+  const largeParsed = parseMappedSpreadsheetRows(largeRows, {
+    headerIndex: largeHeader.headerIndex,
+    mapping: largeHeader.mapping
+  });
+  assert.equal(largeParsed.products.length, size);
+  assert.equal(largeParsed.invalidRows.length, 0);
+}
+
