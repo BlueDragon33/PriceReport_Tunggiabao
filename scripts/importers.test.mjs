@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mergeImportDraft, parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows } from '../src/importers.js';
+import { mergeImportDraft, parseGenericProductRows, parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -134,3 +134,18 @@ assert.equal(clipboard.products[1].price, 85000);
 const positionalClipboard = parseProductClipboardText('Trứng gà\tHộp\t100\t28000');
 assert.equal(positionalClipboard.products[0].unit, 'Hộp');
 assert.equal(positionalClipboard.products[0].qty, 100);
+
+
+const genericTable = parseGenericProductRows([
+  ['Danh sách tháng 9'],
+  ['Tên SP', 'Đơn vị tính', 'Số lương', 'Giá bán', 'Ghi chú'],
+  ['Trứng gà Omega', 'Hộp', '12', '28.000', 'giao sáng'],
+  ['Trứng vịt', 'Khay', '3', '85,000', '']
+]);
+assert.equal(genericTable.products.length, 2);
+assert.equal(genericTable.products[0].name, 'Trứng gà Omega');
+assert.equal(genericTable.products[0].qty, 12);
+assert.equal(genericTable.products[0].price, 28000);
+assert.equal(genericTable.products[1].unit, 'Khay');
+assert.ok(genericTable.columnMapping.some(item => item.target === 'name'));
+assert.ok(genericTable.columnMapping.some(item => item.target === 'qty'));
