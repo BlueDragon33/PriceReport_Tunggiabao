@@ -1572,6 +1572,8 @@ function renderEditorProducts() {
       save();
       renderPreviewProducts();
       renderTotals();
+      updateDocumentHealth();
+      syncStudioContext('products');
       requestAnimationFrame(updatePageEstimate);
     };
 
