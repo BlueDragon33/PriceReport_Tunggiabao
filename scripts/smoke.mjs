@@ -313,3 +313,7 @@ if (!css.includes('.nav button[data-tab="settings"]{display:none}') && !css.incl
 
 if (!js.includes("import './ui-v5.css';")) fail('V5 application stylesheet is not loaded after legacy CSS');
 if (!html.includes('<body class="v5-ui">')) fail('V5 UI scope is missing from body');
+
+for (const primitive of ['app-workspace-pane','app-workspace-header','app-surface-panel','app-status-card','app-data-table']) {
+  if (!html.includes(primitive)) fail('V5 shared UI primitive missing from markup: ' + primitive);
+}
