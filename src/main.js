@@ -2387,6 +2387,8 @@ function resetSmartImportDraft() {
   const handwritingInput = document.getElementById('handwritingSmartImportInput');
   const sheetPicker = document.getElementById('excelSheetPicker');
   const sheetSelect = document.getElementById('excelSheetSelect');
+  const columnMapping = document.getElementById('excelColumnMapping');
+  const columnMappingList = document.getElementById('excelColumnMappingList');
   if (review) review.hidden = true;
   if (apply) apply.disabled = true;
   if (raw) raw.value = '';
@@ -2397,6 +2399,8 @@ function resetSmartImportDraft() {
   if (handwritingInput) handwritingInput.value = '';
   if (sheetPicker) sheetPicker.hidden = true;
   if (sheetSelect) sheetSelect.innerHTML = '';
+  if (columnMapping) columnMapping.hidden = true;
+  if (columnMappingList) columnMappingList.innerHTML = '';
   smartImportExcelCandidates = [];
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
