@@ -525,15 +525,49 @@ const tabMeta = {
   settings: ['CÀI ĐẶT ỨNG DỤNG', 'Khởi động, giao diện và hành vi lưu dữ liệu.']
 };
 
-function setMobileMoreMenu(open) {
+let mobileMoreLastFocus = null;
+
+function mobileMoreFocusable() {
+  const menu = document.getElementById('mobileMoreMenu');
+  if (!menu) return [];
+  return Array.from(menu.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+}
+
+function setMobileMoreMenu(open, { restoreFocus = false } = {}) {
   const menu = document.getElementById('mobileMoreMenu');
   const toggle = document.getElementById('mobileMoreToggle');
   if (!menu || !toggle) return;
   const enabled = Boolean(open);
+  if (enabled) mobileMoreLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : toggle;
   menu.hidden = !enabled;
   toggle.setAttribute('aria-expanded', enabled ? 'true' : 'false');
   document.body.classList.toggle('mobile-more-open', enabled);
+  if (enabled) {
+    requestAnimationFrame(() => mobileMoreFocusable()[0]?.focus());
+  } else if (restoreFocus) {
+    requestAnimationFrame(() => (mobileMoreLastFocus || toggle)?.focus?.());
+  }
 }
+
+document.getElementById('mobileMoreMenu')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    setMobileMoreMenu(false, { restoreFocus: true });
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const items = mobileMoreFocusable();
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 
 function openTab(tab) {
   setMobileMoreMenu(false);
@@ -747,14 +781,37 @@ function updateDashboardSystemState() {
   detailEl.textContent = 'Dữ liệu báo giá chạy local-first; quản trị từ xa đang ở chế độ an toàn.';
 }
 
+let dashboardSearchActiveIndex = -1;
+
+function setDashboardSearchActive(index) {
+  const input = document.getElementById('dashboardSearch');
+  const options = Array.from(document.querySelectorAll('#dashboardSearchResults .dashboard-search-result'));
+  if (!options.length) {
+    dashboardSearchActiveIndex = -1;
+    input?.removeAttribute('aria-activedescendant');
+    return;
+  }
+  dashboardSearchActiveIndex = Math.max(0, Math.min(index, options.length - 1));
+  options.forEach((option, optionIndex) => {
+    const active = optionIndex === dashboardSearchActiveIndex;
+    option.classList.toggle('is-active', active);
+    option.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  const active = options[dashboardSearchActiveIndex];
+  if (active?.id) input?.setAttribute('aria-activedescendant', active.id);
+  active?.scrollIntoView?.({ block: 'nearest' });
+}
+
 function closeDashboardSearchResults() {
   const box = document.getElementById('dashboardSearchResults');
   const input = document.getElementById('dashboardSearch');
+  dashboardSearchActiveIndex = -1;
   if (box) {
     box.hidden = true;
     box.innerHTML = '';
   }
   input?.setAttribute('aria-expanded', 'false');
+  input?.removeAttribute('aria-activedescendant');
 }
 
 function appendDashboardSearchResult(box, { type, eyebrow, title, subtitle, onSelect }) {
@@ -762,6 +819,9 @@ function appendDashboardSearchResult(box, { type, eyebrow, title, subtitle, onSe
   button.type = 'button';
   button.className = 'dashboard-search-result';
   button.dataset.resultType = type;
+  button.id = 'dashboardSearchOption-' + box.querySelectorAll('.dashboard-search-result').length;
+  button.setAttribute('role', 'option');
+  button.setAttribute('aria-selected', 'false');
 
   const icon = document.createElement('span');
   icon.className = 'dashboard-search-result-icon';
@@ -811,6 +871,8 @@ function renderDashboardSearchResults(rawQuery) {
   ).slice(0, 4);
 
   box.innerHTML = '';
+  dashboardSearchActiveIndex = -1;
+  input.removeAttribute('aria-activedescendant');
   quotes.forEach(record => {
     const data = record.data || {};
     appendDashboardSearchResult(box, {
@@ -1009,21 +1071,35 @@ document.getElementById('mobileMoreToggle')?.addEventListener('click', () => {
   const menu = document.getElementById('mobileMoreMenu');
   setMobileMoreMenu(Boolean(menu?.hidden));
 });
-document.getElementById('mobileMoreClose')?.addEventListener('click', () => setMobileMoreMenu(false));
+document.getElementById('mobileMoreClose')?.addEventListener('click', () => setMobileMoreMenu(false, { restoreFocus: true }));
 
 
 document.getElementById('dashboardSearch')?.addEventListener('input', (event) => {
   renderDashboardSearchResults(event.currentTarget.value);
 });
 document.getElementById('dashboardSearch')?.addEventListener('keydown', (event) => {
+  const resultBox = document.getElementById('dashboardSearchResults');
+  const results = Array.from(document.querySelectorAll('#dashboardSearchResults .dashboard-search-result'));
+  const resultsOpen = Boolean(resultBox && !resultBox.hidden && results.length);
+
   if (event.key === 'Escape') {
     closeDashboardSearchResults();
     return;
   }
+  if (resultsOpen && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+    event.preventDefault();
+    const delta = event.key === 'ArrowDown' ? 1 : -1;
+    const next = dashboardSearchActiveIndex < 0
+      ? (delta > 0 ? 0 : results.length - 1)
+      : (dashboardSearchActiveIndex + delta + results.length) % results.length;
+    setDashboardSearchActive(next);
+    return;
+  }
   if (event.key !== 'Enter') return;
-  const firstResult = document.querySelector('#dashboardSearchResults .dashboard-search-result');
-  if (firstResult && !document.getElementById('dashboardSearchResults')?.hidden) {
-    firstResult.click();
+  if (resultsOpen) {
+    event.preventDefault();
+    const selected = results[dashboardSearchActiveIndex >= 0 ? dashboardSearchActiveIndex : 0];
+    selected?.click();
     return;
   }
   const value = event.currentTarget.value.trim();
@@ -4213,7 +4289,7 @@ window.addEventListener('resize', () => {
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   if (!document.getElementById('mobileMoreMenu')?.hidden) {
-    setMobileMoreMenu(false);
+    setMobileMoreMenu(false, { restoreFocus: true });
     return;
   }
   if (!document.getElementById('smartImportModal')?.hidden) {
