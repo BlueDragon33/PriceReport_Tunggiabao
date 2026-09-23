@@ -447,6 +447,24 @@ const setText = (id, value) => {
   if (el) el.textContent = value == null ? '' : value;
 };
 
+let latestDeviceAccess = {
+  state: String(document.documentElement?.dataset?.priceReportDeviceAccess || ''),
+  deviceCode: '',
+  lastKnownStatus: '',
+  message: ''
+};
+
+function captureDeviceAccess(detail = {}) {
+  const identity = detail?.identity || {};
+  latestDeviceAccess = {
+    state: String(detail?.state || document.documentElement?.dataset?.priceReportDeviceAccess || ''),
+    deviceCode: typeof identity.deviceCode === 'string' ? identity.deviceCode : '',
+    lastKnownStatus: typeof identity.lastKnownStatus === 'string' ? identity.lastKnownStatus : '',
+    message: typeof detail?.message === 'string' ? detail.message : ''
+  };
+}
+
+
 const STATUS_LABELS = {
   draft: 'Bản nháp',
   sent: 'Đã gửi',
@@ -494,6 +512,7 @@ const tabMeta = {
   general: ['TẠO BÁO GIÁ', 'Thông tin doanh nghiệp, khách hàng và báo giá.'],
   history: ['QUẢN LÝ BÁO GIÁ', 'Lưu, tìm kiếm, mở lại và nhân bản các báo giá.'],
   master: ['DANH MỤC', 'Tái sử dụng khách hàng và sản phẩm thường dùng.'],
+  system: ['THIẾT BỊ & HỆ THỐNG', 'Trạng thái thiết bị, Device Gate và Application Management.'],
   customer: ['KHÁCH HÀNG', 'Thông tin người nhận và đơn vị mua hàng.'],
   products: ['SẢN PHẨM', 'Danh mục, số lượng, đơn giá và cột hiển thị.'],
   payment: ['THANH TOÁN', 'Chiết khấu, VAT, tổng tiền và tài khoản.'],
@@ -518,7 +537,7 @@ function openTab(tab) {
   setMobileMoreMenu(false);
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
-  const appWorkspace = ['dashboard', 'history', 'master', 'export'].includes(tab);
+  const appWorkspace = ['dashboard', 'history', 'master', 'system', 'export'].includes(tab);
 
   document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
@@ -544,6 +563,7 @@ function openTab(tab) {
   if (appWorkspace) setPreviewCustomizer(false);
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'export') renderExportCenter();
+  if (tab === 'system') renderSystemWorkspace();
   if (tab === 'design') {
     document.getElementById('designPanel').classList.add('open');
     setMajorPanelState('design', false);
@@ -579,6 +599,111 @@ function dashboardRevenueLabel(history) {
   const preferred = entries.find(([currency]) => currency === 'VND') || entries[0];
   const suffix = entries.length > 1 ? ' +' + (entries.length - 1) : '';
   return moneyForCurrency(preferred[1], preferred[0]) + suffix;
+}
+
+function systemAccessLabel(value) {
+  return ({
+    'classification-only': 'Phân loại cục bộ',
+    authorized: 'Đã duyệt',
+    pending: 'Chờ duyệt',
+    blocked: 'Đã khóa',
+    offline: 'Không kết nối',
+    checking: 'Đang kiểm tra'
+  })[String(value || '')] || 'Chưa có trạng thái';
+}
+
+function managementStateLabel(value) {
+  return ({
+    ready: 'Sẵn sàng quản trị từ xa',
+    'classification-only': 'Chỉ phân loại cục bộ',
+    unavailable: 'Không đọc được contract',
+    loading: 'Đang đọc contract'
+  })[String(value || '')] || 'Đang đọc contract';
+}
+
+function readinessLabel(value) {
+  const raw = String(value || '');
+  if (raw === 'available') return 'Sẵn sàng';
+  if (raw.startsWith('implemented')) return 'Đã triển khai · chờ hạ tầng';
+  if (!raw) return 'Chưa xác minh';
+  return raw;
+}
+
+function setSystemStateTone(elementId, state) {
+  const card = document.getElementById(elementId);
+  if (!card) return;
+  card.dataset.state = state || 'unknown';
+}
+
+function renderSystemWorkspace() {
+  const runtime = window.PriceReportManagement;
+  const local = runtime?.getLocalDeviceRecord?.() || {};
+  const profile = runtime?.getDeviceProfile?.() || {};
+  const contract = runtime?.managementContract || null;
+  const readiness = contract?.readiness || {};
+  const boundary = contract?.boundary || {};
+  const policy = contract?.policy || {};
+  const accessState = latestDeviceAccess.state || String(document.documentElement?.dataset?.priceReportDeviceAccess || '');
+
+  setText('systemDeviceLabel', local.deviceLabel || profile.label || 'Chưa nhận diện');
+  setText('systemDeviceClass', [local.deviceClass || profile.id, local.uiProfile || profile.shell].filter(Boolean).join(' · ') || '—');
+  setText('systemAccessState', systemAccessLabel(accessState));
+  setText('systemAccessMessage', latestDeviceAccess.message || (accessState === 'classification-only' ? 'Remote Device Gate chưa bật.' : '—'));
+  setText('systemManagementState', managementStateLabel(runtime?.managementReadiness));
+  setText('systemManagementDetail', runtime?.managementError || (runtime?.remoteAdminReady ? 'Contract production đã xác minh readiness.' : 'Remote Admin chưa đạt đầy đủ readiness.'));
+  setText('systemRemoteAdminState', runtime?.remoteAdminReady ? 'Sẵn sàng' : 'Chưa bật');
+
+  setText('systemDetailDeviceClass', local.deviceLabel || profile.label || local.deviceClass || profile.id || '—');
+  setText('systemUiProfile', local.uiProfile || profile.shell || '—');
+  setText('systemLocalDeviceCode', local.deviceCode || '—');
+  setText('systemRegistryDeviceCode', latestDeviceAccess.deviceCode || 'Chưa cấp registry');
+  setText('systemViewport', local.width && local.height ? local.width + ' × ' + local.height + ' px' : '—');
+  setText('systemPlatform', local.platform || '—');
+  setText('systemLastSeen', local.lastSeenAt ? new Date(local.lastSeenAt).toLocaleString('vi-VN') : '—');
+  setText('systemEnvironmentChanged', local.environmentChanged ? 'Có' : 'Không');
+
+  setText('systemRegistryReady', readinessLabel(readiness.deviceRegistry));
+  setText('systemGatewayReady', readinessLabel(readiness.deviceGateway));
+  setText('systemAdminApiReady', readinessLabel(readiness.adminApi));
+  setText('systemAuditReady', readinessLabel(readiness.remoteAuditApi));
+  setText('systemContractApp', contract?.application?.name || 'PriceReport Tùng Gia Bảo');
+  setText('systemContractMeta', [
+    contract?.application?.category || runtime?.category || 'Kế toán',
+    'namespace ' + (contract?.device?.namespace || runtime?.deviceNamespace || 'KT-')
+  ].join(' · '));
+
+  setText('systemBoundaryLocal', boundary.localFirst === true ? 'Có · dữ liệu nghiệp vụ ưu tiên trên thiết bị' : contract ? 'Không' : 'Đang đọc contract');
+  setText('systemBoundaryQuote', boundary.quotationDataInControlPlane === false ? 'Không' : contract ? 'Có / cần kiểm tra' : 'Đang đọc contract');
+  setText('systemBoundaryCustomer', boundary.customerDataInControlPlane === false ? 'Không' : contract ? 'Có / cần kiểm tra' : 'Đang đọc contract');
+  setText('systemBoundaryPrivateKey', policy.privateKeyMayLeaveDevice === false ? 'Không · khóa riêng ở lại thiết bị' : contract ? 'Có / cần kiểm tra' : 'Đang đọc contract');
+
+  setSystemStateTone('systemAccessCard', accessState);
+  setSystemStateTone('systemManagementCard', runtime?.managementReadiness || 'loading');
+}
+
+async function refreshSystemWorkspace() {
+  const button = document.getElementById('systemRefreshRuntime');
+  if (button) {
+    button.disabled = true;
+    button.textContent = '↻ Đang kiểm tra...';
+  }
+  try {
+    deviceProfileRuntime?.refreshDeviceProfile?.();
+    const runtime = window.PriceReportManagement;
+    if (runtime?.refreshDeviceProfile) runtime.refreshDeviceProfile();
+    if (runtime?.refreshManagementReadiness) await runtime.refreshManagementReadiness();
+    if (deviceAccessRuntime?.enabled && typeof deviceAccessRuntime.refresh === 'function') {
+      await deviceAccessRuntime.refresh();
+    }
+  } catch (error) {
+    console.warn('System workspace refresh failed:', error);
+  } finally {
+    renderSystemWorkspace();
+    if (button) {
+      button.disabled = false;
+      button.textContent = '↻ Kiểm tra lại';
+    }
+  }
 }
 
 function updateDashboardSystemState() {
@@ -863,7 +988,37 @@ document.getElementById('dashboardSearch')?.addEventListener('keydown', (event) 
   }
 });
 
-window.addEventListener('pricereport:management-readiness', updateDashboardSystemState);
+window.addEventListener('pricereport:management-readiness', () => {
+  updateDashboardSystemState();
+  renderSystemWorkspace();
+});
+window.addEventListener('pricereport:device-profile', () => {
+  renderSystemWorkspace();
+});
+window.addEventListener('pricereport:device-access', (event) => {
+  captureDeviceAccess(event.detail || {});
+  updateDashboardSystemState();
+  renderSystemWorkspace();
+});
+
+document.getElementById('systemRefreshRuntime')?.addEventListener('click', () => {
+  void refreshSystemWorkspace();
+});
+document.getElementById('systemCopyDeviceCode')?.addEventListener('click', async () => {
+  const runtime = window.PriceReportManagement;
+  const localCode = runtime?.getLocalDeviceRecord?.()?.deviceCode || '';
+  const code = latestDeviceAccess.deviceCode || localCode;
+  if (!code) {
+    toast('Chưa có mã thiết bị để sao chép');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(code);
+    toast('Đã sao chép mã thiết bị');
+  } catch {
+    toast('Không thể sao chép mã thiết bị');
+  }
+});
 
 
 function applyTungGiaBaoToCurrentQuote({ confirmReplace = true } = {}) {
