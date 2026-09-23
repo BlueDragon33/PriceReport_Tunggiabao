@@ -3524,6 +3524,13 @@ body.v5-ui .master-section-card.master-section-highlight{
   body.v5-ui .quick-app-card{min-height:82px}
 }
 
+body.v5-ui .color.color-teal{background:#0b8f83}
+body.v5-ui .color.color-blue{background:#1774db}
+body.v5-ui .color.color-orange{background:#f39c12}
+body.v5-ui .color.color-red{background:#e83e3e}
+body.v5-ui .color.color-purple{background:#7a4ae2}
+body.v5-ui .color.color-charcoal{background:#263444}
+
 /* ---------- Pass 18: unified Studio surfaces ---------- */
 body.v5-ui .studio-pane{
   max-width:100%;
