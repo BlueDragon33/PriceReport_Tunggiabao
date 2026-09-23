@@ -112,7 +112,7 @@ if (!css.includes(".paper[data-title-align=\"center\"] .qtitle")) fail('Centered
 if (!css.includes("--rhythm-md")) fail('Consistent document spacing system is missing');
 if (!css.includes("overflow:visible!important")) fail('Print document must allow multi-page overflow');
 if (!js.includes("aria-current")) fail('Active navigation accessibility state is missing');
-if (!css.includes(".preview-customizer")) fail('Preview customizer styles are missing');
+if (!appCss.includes(".preview-customizer")) fail('Preview customizer styles are missing');
 if (!html.includes("Tùy chỉnh xem trước") && !html.includes("TÙY CHỈNH XEM TRƯỚC")) fail('Preview customizer UI is missing');
 
 if (!process.exitCode) {
