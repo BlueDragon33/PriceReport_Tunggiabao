@@ -203,6 +203,16 @@ test('V4.9 settings persist application preferences without touching business da
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5.2 smart import includes a row-level issue review surface', () => {
+  const section = document.getElementById('smartImportIssues');
+  const list = document.getElementById('smartImportIssueList');
+  const summary = document.getElementById('smartImportIssueSummary');
+  expect(section).toBeTruthy();
+  expect(list).toBeTruthy();
+  expect(summary).toBeTruthy();
+  expect(section.hidden).toBe(true);
+});
+
 test('V5.2 smart import exposes a dedicated multi-sheet chooser without cluttering the default flow', () => {
   const picker = document.getElementById('smartImportSheetPicker');
   const select = document.getElementById('smartImportSheetSelect');
