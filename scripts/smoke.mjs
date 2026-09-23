@@ -33,7 +33,7 @@ const requiredIds = [
   'previewSpacing','previewTableDensity','previewHeaderGap','previewMetaWidth',
   'previewLineHeight','resetPreviewLayout','showQuoteMeta','layoutEditToggle','autoArrangeLayoutToolbar','autoArrangeLayoutPanel','layoutSelection','resetBlockPositions',
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols',
-  'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
+  'openSmartImport','smartImportModal','handwritingSmartImportInput',
   'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
   'studioInspectorContent','studioInspectorCheck','commandPaletteModal',
@@ -139,7 +139,8 @@ if (!js.includes('setPointerCapture')) fail('Pointer capture for repeat dragging
 
 if (!js.includes("import('xlsx')")) fail('Excel parser must be lazy-loaded in the browser');
 if (!js.includes("import('tesseract.js')")) fail('Handwriting OCR engine must be lazy-loaded');
-if (!js.includes('parseSpreadsheetRows')) fail('Spreadsheet semantic mapper is missing');
+if (html.includes('id="excelSmartImportInput"') || js.includes('function parseExcelFile(')) fail('V6 must expose one Excel import system, not the legacy whole-quote Excel path');
+if (!js.includes("openTab('products')") || !js.includes("getElementById('productExcelInput')")) fail('Export-center Excel action must route to the V6 product importer');
 if (!js.includes('parseHandwritingText')) fail('Handwriting semantic mapper is missing');
 if (!js.includes('TUNGGIABAO_PRODUCTS')) fail('Tùng Gia Bảo baseline dataset is missing');
 if (!html.includes('data-import-field="companyName"')) fail('Smart import review field mapping UI is missing');
@@ -171,7 +172,7 @@ if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigratio
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
 if (!html.includes('id="studioV6Preview"') || !js.includes("openTab('view')")) fail('V6 Studio preview command is missing');
 if (!html.includes('Xuất bản & dữ liệu')) fail('Publishing/Data navigation label is missing');
-if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
+if (!html.includes('id="exportExcel"') || !html.includes('id="exportCsv"') || !html.includes('id="importExcelQuick"')) fail('Excel/CSV import-export controls are missing from export pane');
 if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
 if (!js.includes('function fitReportView')) fail('Finite responsive report-view sizing is missing');
 if (!js.includes("wrap.style.height = Math.ceil(paperHeight * scale) + 'px'")) fail('Report view does not clamp wrapper height to scaled document content');
