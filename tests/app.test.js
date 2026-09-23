@@ -676,7 +676,9 @@ test('V5.5 bulk product deletion is reversible and refreshes autocomplete', () =
 
 test('V5.5 Data Library import can undo an update transaction', async () => {
   const key = 'tunggiabao-price-report-customers-v1';
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
   const before = localStorage.getItem(key);
+  sessionStorage.removeItem(recoveryKey);
   localStorage.setItem(key, JSON.stringify([
     { id:'v55-import-c1', name:'Khách Gốc', company:'Công ty Gốc', phone:'0933333333', email:'', address:'Nha Trang', contact:'' }
   ]));
@@ -697,7 +699,9 @@ test('V5.5 Data Library import can undo an update transaction', async () => {
     expect(document.getElementById('dataLibraryImportUpdateCount').textContent).toBe('1');
   });
 
+  expect(sessionStorage.getItem(recoveryKey)).toBeTruthy();
   document.getElementById('applyDataLibraryImport').click();
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
   let items = JSON.parse(localStorage.getItem(key) || '[]');
   expect(items).toHaveLength(1);
   expect(items[0].id).toBe('v55-import-c1');
@@ -715,6 +719,110 @@ test('V5.5 Data Library import can undo an update transaction', async () => {
 
   if (before == null) localStorage.removeItem(key);
   else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+
+test('V5.5 interrupted Data Library review can be recovered and explicit cancel discards it', async () => {
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  const customerKey = 'tunggiabao-price-report-customers-v1';
+  const beforeCustomers = localStorage.getItem(customerKey);
+  sessionStorage.removeItem(recoveryKey);
+  localStorage.setItem(customerKey, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Khách Recovery,Công ty Recovery,0944444444,recovery@example.com,Nha Trang,Anh R'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'recovery-khach.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+    expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+  });
+
+  const stored = JSON.parse(sessionStorage.getItem(recoveryKey) || 'null');
+  expect(stored?.schemaVersion).toBe(1);
+  expect(stored?.fileName).toBe('recovery-khach.csv');
+  expect(stored?.candidates?.[0]?.rows?.length).toBeGreaterThan(1);
+  expect(stored?.file).toBeUndefined();
+  expect(stored?.buffer).toBeUndefined();
+
+  document.getElementById('closeDataLibraryImport').click();
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(true);
+  expect(sessionStorage.getItem(recoveryKey)).toBeTruthy();
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  document.querySelector('[data-tab="master"]').click();
+  const recover = document.querySelector('#toast .toast-action');
+  expect(recover?.textContent).toBe('Khôi phục');
+  recover.click();
+
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+  expect(document.getElementById('dataLibraryImportPreviewBody').textContent).toContain('Khách Recovery');
+
+  document.getElementById('cancelDataLibraryImport').click();
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(true);
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+
+  if (beforeCustomers == null) localStorage.removeItem(customerKey);
+  else localStorage.setItem(customerKey, beforeCustomers);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+
+test('V5.5 starting a new import clears stale review while the new file is parsing', async () => {
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  const customerKey = 'tunggiabao-price-report-customers-v1';
+  const beforeCustomers = localStorage.getItem(customerKey);
+  sessionStorage.removeItem(recoveryKey);
+  localStorage.setItem(customerKey, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  document.getElementById('dataLibraryImportValidCount').textContent = '99';
+  document.getElementById('dataLibraryImportPreviewBody').textContent = 'DỮ LIỆU CŨ';
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Khách Loading,Công ty Loading,0955555555,loading@example.com,Hà Nội,Anh L'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  let releaseRead;
+  const file = {
+    name: 'loading-khach.csv',
+    arrayBuffer: () => new Promise(resolve => {
+      releaseRead = () => resolve(bytes.buffer);
+    })
+  };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('0');
+  expect(document.getElementById('dataLibraryImportPreviewBody').textContent).toBe('');
+  expect(document.getElementById('applyDataLibraryImport').disabled).toBe(true);
+
+  await vi.waitFor(() => {
+    expect(typeof releaseRead).toBe('function');
+  });
+  releaseRead();
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+    expect(sessionStorage.getItem(recoveryKey)).toBeTruthy();
+  });
+
+  document.getElementById('cancelDataLibraryImport').click();
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+
+  if (beforeCustomers == null) localStorage.removeItem(customerKey);
+  else localStorage.setItem(customerKey, beforeCustomers);
   document.querySelector('[data-tab="master"]').click();
 });
 

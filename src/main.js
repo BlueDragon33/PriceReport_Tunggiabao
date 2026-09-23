@@ -45,6 +45,8 @@ const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 const RECOVERY_STORAGE = 'tunggiabao-price-report-recovery-v1';
+const DATA_LIBRARY_IMPORT_RECOVERY = 'tunggiabao-price-report-data-library-import-recovery-v1';
+const DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS = 1000000;
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -790,7 +792,10 @@ function openTab(tab) {
   }
   if (tab === 'presets') renderPresets();
   if (tab === 'history') renderHistory();
-  if (tab === 'master') renderMasterData();
+  if (tab === 'master') {
+    renderMasterData();
+    offerDataLibraryImportRecovery();
+  }
   setTimeout(enhanceCollapsibleCards, 0);
   if (tab !== 'products') {
     document.querySelector('.shell')?.classList.remove('product-focus');
@@ -4079,6 +4084,7 @@ document.getElementById('quoteStatusFilter').addEventListener('change', renderHi
 
 let dataLibraryImportDraft = null;
 let dataLibraryImportLastFocus = null;
+let dataLibraryImportReadToken = 0;
 
 function refreshDataLibraryAfterMutation(mode) {
   if (mode === 'customer') {
@@ -4113,6 +4119,123 @@ function offerDataLibraryUndo(mode, previousItems, message) {
         ? 'Đã hoàn tác thay đổi danh bạ khách hàng'
         : 'Đã hoàn tác thay đổi danh mục sản phẩm');
     }
+  });
+}
+
+let dataLibraryImportRecoveryPromptedAt = 0;
+
+function clearDataLibraryImportRecovery() {
+  try {
+    sessionStorage.removeItem(DATA_LIBRARY_IMPORT_RECOVERY);
+  } catch (error) {
+    console.warn('Data Library import recovery could not be cleared.', error);
+  }
+  dataLibraryImportRecoveryPromptedAt = 0;
+}
+
+function writeDataLibraryImportRecovery() {
+  if (!dataLibraryImportDraft?.candidates?.length) return false;
+  try {
+    const payload = {
+      schemaVersion: 1,
+      savedAt: Date.now(),
+      mode: dataLibraryImportDraft.mode,
+      fileName: String(dataLibraryImportDraft.fileName || ''),
+      sheetName: String(dataLibraryImportDraft.sheetName || ''),
+      candidates: dataLibraryImportDraft.candidates.map(candidate => ({
+        sheetName: String(candidate.sheetName || ''),
+        rows: Array.isArray(candidate.rows) ? candidate.rows : []
+      }))
+    };
+    const serialized = JSON.stringify(payload);
+    if (serialized.length > DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS) {
+      clearDataLibraryImportRecovery();
+      console.warn('Data Library import recovery skipped because the parsed review exceeds the safe session limit.');
+      return false;
+    }
+    sessionStorage.setItem(DATA_LIBRARY_IMPORT_RECOVERY, serialized);
+    dataLibraryImportRecoveryPromptedAt = 0;
+    return true;
+  } catch (error) {
+    console.warn('Data Library import recovery could not be stored.', error);
+    return false;
+  }
+}
+
+function readDataLibraryImportRecovery() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(DATA_LIBRARY_IMPORT_RECOVERY) || 'null');
+    if (!parsed) return null;
+    if (parsed.schemaVersion !== 1 || !['customer','product'].includes(parsed.mode)) {
+      clearDataLibraryImportRecovery();
+      return null;
+    }
+    const candidates = (Array.isArray(parsed.candidates) ? parsed.candidates : [])
+      .flatMap(candidate => {
+        if (!candidate || !Array.isArray(candidate.rows)) return [];
+        const normalized = normalizeLibraryImportCandidate(
+          parsed.mode,
+          String(candidate.sheetName || 'Sheet'),
+          candidate.rows
+        );
+        return normalized.items.length || normalized.invalidRows.length ? [normalized] : [];
+      });
+    if (!candidates.length) {
+      clearDataLibraryImportRecovery();
+      return null;
+    }
+    const requestedSheet = String(parsed.sheetName || '');
+    const sheetName = candidates.some(candidate => candidate.sheetName === requestedSheet)
+      ? requestedSheet
+      : candidates[0].sheetName;
+    return {
+      savedAt: Number(parsed.savedAt) || Date.now(),
+      mode: parsed.mode,
+      fileName: String(parsed.fileName || 'Phiên nhập dữ liệu'),
+      sheetName,
+      candidates
+    };
+  } catch (error) {
+    console.warn('Data Library import recovery is invalid and will be discarded.', error);
+    clearDataLibraryImportRecovery();
+    return null;
+  }
+}
+
+function restoreDataLibraryImportRecovery(recovery) {
+  if (!recovery?.candidates?.length) return false;
+  dataLibraryImportDraft = {
+    mode: recovery.mode,
+    fileName: recovery.fileName,
+    sheetName: recovery.sheetName,
+    candidates: recovery.candidates
+  };
+  dataLibraryImportLastFocus = document.querySelector('[data-tab="master"]');
+  const modal = document.getElementById('dataLibraryImportModal');
+  if (!modal) return false;
+  modal.hidden = false;
+  document.body.classList.add('data-library-import-open');
+  renderDataLibraryImport();
+  const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
+  const apply = document.getElementById('applyDataLibraryImport');
+  if (sheetSelect && !sheetSelect.closest('[hidden]')) sheetSelect.focus();
+  else apply?.focus?.();
+  return true;
+}
+
+function offerDataLibraryImportRecovery() {
+  if (dataLibraryImportDraft) return;
+  const recovery = readDataLibraryImportRecovery();
+  if (!recovery || dataLibraryImportRecoveryPromptedAt === recovery.savedAt) return;
+  dataLibraryImportRecoveryPromptedAt = recovery.savedAt;
+  const savedTime = new Date(recovery.savedAt).toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  toast('Có phiên nhập dữ liệu chưa áp dụng từ ' + savedTime + '.', {
+    label: 'Khôi phục',
+    duration: 12000,
+    onClick: () => restoreDataLibraryImportRecovery(recovery)
   });
 }
 
@@ -4222,12 +4345,14 @@ function currentDataLibraryImportCandidate() {
   ) || dataLibraryImportDraft.candidates[0];
 }
 
-function closeDataLibraryImport({ restoreFocus = true } = {}) {
+function closeDataLibraryImport({ restoreFocus = true, discardRecovery = false } = {}) {
+  dataLibraryImportReadToken += 1;
   const modal = document.getElementById('dataLibraryImportModal');
   if (modal) modal.hidden = true;
   document.body.classList.remove('data-library-import-open');
   document.getElementById('customerLibraryExcelInput')?.setAttribute('value', '');
   document.getElementById('productLibraryExcelInput')?.setAttribute('value', '');
+  if (discardRecovery) clearDataLibraryImportRecovery();
   if (restoreFocus) dataLibraryImportLastFocus?.focus?.();
   dataLibraryImportDraft = null;
 }
@@ -4321,17 +4446,49 @@ function renderDataLibraryImport() {
   }
 }
 
+function resetDataLibraryImportReviewForLoading(fileName) {
+  setText('dataLibraryImportSubtitle', 'Đang đọc ' + String(fileName || 'file dữ liệu') + '...');
+  setText('dataLibraryImportValidCount', '0');
+  setText('dataLibraryImportUpdateCount', '0');
+  setText('dataLibraryImportInvalidCount', '0');
+  setText('dataLibraryImportDuplicateCount', '0');
+
+  const sheetRow = document.getElementById('dataLibraryImportSheetRow');
+  const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
+  if (sheetRow) sheetRow.hidden = true;
+  if (sheetSelect) sheetSelect.innerHTML = '';
+
+  const notice = document.getElementById('dataLibraryImportNotice');
+  if (notice) {
+    notice.textContent = 'Đang đọc và nhận diện dữ liệu mới...';
+    notice.dataset.tone = 'working';
+  }
+
+  const head = document.getElementById('dataLibraryImportPreviewHead');
+  const body = document.getElementById('dataLibraryImportPreviewBody');
+  if (head) head.innerHTML = '';
+  if (body) body.innerHTML = '';
+
+  const apply = document.getElementById('applyDataLibraryImport');
+  if (apply) {
+    apply.disabled = true;
+    apply.textContent = 'Đang đọc dữ liệu...';
+  }
+}
+
 async function openDataLibraryImport(file, mode, trigger) {
   if (!file) return;
+  const readToken = ++dataLibraryImportReadToken;
   dataLibraryImportLastFocus = trigger || document.activeElement;
   const modal = document.getElementById('dataLibraryImportModal');
   if (!modal) return;
+  dataLibraryImportDraft = null;
   modal.hidden = false;
   document.body.classList.add('data-library-import-open');
-  setText('dataLibraryImportSubtitle', 'Đang đọc ' + file.name + '...');
-  document.getElementById('applyDataLibraryImport')?.setAttribute('disabled', '');
+  resetDataLibraryImportReviewForLoading(file.name);
   try {
     const candidates = await readDataLibraryWorkbook(file, mode);
+    if (readToken !== dataLibraryImportReadToken) return;
     dataLibraryImportDraft = {
       mode,
       fileName: file.name,
@@ -4341,9 +4498,11 @@ async function openDataLibraryImport(file, mode, trigger) {
     if (!candidates[0] || (!candidates[0].items.length && !candidates[0].invalidRows.length)) {
       throw new Error('Không nhận diện được dữ liệu phù hợp trong file.');
     }
+    writeDataLibraryImportRecovery();
     renderDataLibraryImport();
     document.getElementById('dataLibraryImportSheetSelect')?.focus?.();
   } catch (error) {
+    if (readToken !== dataLibraryImportReadToken) return;
     console.error('Data Library import failed:', error);
     closeDataLibraryImport({ restoreFocus: false });
     alert('Không thể đọc dữ liệu thư viện từ file này. Hãy kiểm tra tiêu đề cột và định dạng Excel/CSV.');
@@ -4413,6 +4572,7 @@ function applyDataLibraryImport() {
 
   const applied = candidate.accepted.length;
   const updated = candidate.updateCount;
+  clearDataLibraryImportRecovery();
   closeDataLibraryImport({ restoreFocus: false });
   renderMasterData();
   renderDashboard();
@@ -4538,10 +4698,11 @@ document.getElementById('exportProductLibraryCsv')?.addEventListener('click', ()
 document.getElementById('dataLibraryImportSheetSelect')?.addEventListener('change', (event) => {
   if (!dataLibraryImportDraft) return;
   dataLibraryImportDraft.sheetName = event.currentTarget.value;
+  writeDataLibraryImportRecovery();
   renderDataLibraryImport();
 });
 document.getElementById('applyDataLibraryImport')?.addEventListener('click', applyDataLibraryImport);
-document.getElementById('cancelDataLibraryImport')?.addEventListener('click', () => closeDataLibraryImport());
+document.getElementById('cancelDataLibraryImport')?.addEventListener('click', () => closeDataLibraryImport({ discardRecovery: true }));
 document.getElementById('closeDataLibraryImport')?.addEventListener('click', () => closeDataLibraryImport());
 document.getElementById('dataLibraryImportModal')?.addEventListener('click', (event) => {
   if (event.target === event.currentTarget) closeDataLibraryImport();

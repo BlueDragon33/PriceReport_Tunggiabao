@@ -52,3 +52,56 @@ Before continuing:
 ## Next pass
 
 Audit Data Library import-session recovery. If a reviewed import is interrupted by accidental close/reload before Apply, preserve only safe parsed review state in session storage so the operator can resume without persisting raw files or creating a second data store.
+
+## Pass 2 — Interrupted import review recovery
+
+### Findings
+
+V5.4 made Data Library import transactional once Apply is pressed, but the review itself existed only in memory. A page reload or accidental close before Apply forced the operator to select and parse the file again.
+
+Persisting the raw workbook would be excessive and would create a second file store, so recovery must remain session-scoped and store only parsed review material.
+
+### Corrections
+
+- Added a dedicated `sessionStorage` recovery key for Data Library import review.
+- Recovery stores only:
+  - import mode (customer/product);
+  - source filename for operator context;
+  - selected sheet name;
+  - parsed row arrays for each reviewed sheet;
+  - timestamp and recovery schema version.
+- Raw File/Blob/ArrayBuffer data is not persisted.
+- Recovery payload is capped at 1,000,000 serialized characters; oversized reviews continue to work normally but are not stored for reload recovery.
+- On recovery, candidates are rebuilt through the existing normalizer against the **current** Data Library, so update counts and duplicate decisions are recalculated instead of trusting stale derived state.
+- Closing the modal with X/backdrop keeps the recovery.
+- Returning to Data Library offers a one-time **Khôi phục** action for that saved review.
+- Explicit **Hủy** discards recovery.
+- Successful Apply discards recovery before the modal closes.
+- Failed persistence during Apply leaves the review/recovery intact.
+- No raw-file cache, backend, IndexedDB store or second Data Library engine is introduced.
+
+### Regression coverage
+
+- parsed customer import writes session recovery;
+- recovery payload contains parsed rows but no raw file/buffer object;
+- close → leave Data Library → return → Khôi phục reopens the review with the same parsed customer;
+- explicit Cancel clears recovery;
+- successful Data Library import/update clears recovery before exposing Undo.
+
+### Next pass
+
+Audit repetitive import cleanup: allow the operator to resolve duplicate/invalid rows directly in review without returning to Excel when the correction is safe and local, while preserving the rule that the system must never silently choose a winner from duplicate source rows.
+
+## Pass 2 hardening — Sequential import state
+
+### Defect found by combined regression
+
+When one Data Library import finished and a second import started immediately, the modal became visible before the new workbook finished parsing while the previous review counters and preview rows were still present. In a fast workflow this could briefly show stale data from the prior file and also made recovery tests race against old DOM state.
+
+### Fix
+
+- Starting a new import now resets all review counters, sheet selector, notice, preview rows and Apply state before asynchronous parsing begins.
+- Apply stays disabled with an explicit loading label until the new candidate is ready.
+- A read token invalidates an in-flight workbook parse when the modal is closed or a newer read begins, so a late result cannot repopulate a discarded review.
+- Invalid recovery schema/mode is now removed from session storage instead of being left behind indefinitely.
+- Regression covers stale count/preview reset while the next file's ArrayBuffer is deliberately held pending.

@@ -358,5 +358,10 @@ if (/id="pCustomer"[^>]*style=/.test(html)) fail('V5 Pass 18 report customer met
 if (!v5Css.includes('.color.color-teal') || !css.includes('.report-customer-meta')) fail('V5 Pass 18 inline-style ownership migration is incomplete');
 
 if (!js.includes('parseCustomerSpreadsheetRows')) fail('Data Library customer import parser is not wired');
+if (!js.includes('function resetDataLibraryImportReviewForLoading')) fail('V5.5 Data Library stale-review reset is missing');
+if (!js.includes('dataLibraryImportReadToken')) fail('V5.5 Data Library stale-read cancellation token is missing');
+if (!js.includes('function offerDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery prompt is missing');
+if (!js.includes('function writeDataLibraryImportRecovery') || !js.includes('function readDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery persistence is missing');
+if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Library import recovery size guard is missing');
 if (!js.includes('function offerDataLibraryUndo')) fail('V5.5 Data Library undo helper is missing');
 if (!js.includes("label: 'Hoàn tác'") || !js.includes('duration: 8000')) fail('V5.5 Data Library undo action contract is missing');
