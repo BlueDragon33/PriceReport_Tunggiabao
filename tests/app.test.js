@@ -224,6 +224,29 @@ test('V5.2 smart import exposes a dedicated multi-sheet chooser without clutteri
   expect(select.getAttribute('aria-label')).toContain('sheet Excel');
 });
 
+test('V5.3 Studio stepper exposes validation health per workflow step', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.querySelector('[data-tab="products"]').click();
+  document.querySelector('[data-tab="general"]').click();
+
+  const generalStep = document.querySelector('[data-studio-step="general"]');
+  const exportStep = document.querySelector('[data-studio-step="export"]');
+  expect(generalStep.dataset.health).toBe('error');
+  expect(generalStep.classList.contains('step-error')).toBe(true);
+  expect(exportStep.dataset.health).toBe('error');
+
+  company.value = previous;
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('[data-tab="products"]').click();
+  document.querySelector('[data-tab="general"]').click();
+  expect(generalStep.dataset.health).not.toBe('error');
+});
+
 test('V5.3 guided validation panel exists and is hidden until requested', () => {
   const panel = document.getElementById('studioGuidancePanel');
   const list = document.getElementById('studioGuidanceList');
