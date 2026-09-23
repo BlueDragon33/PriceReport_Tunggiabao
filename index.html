@@ -11,61 +11,66 @@
 <body class="v5-ui">
 <div id="app">
   <div class="shell app-workspace">
-    <nav class="nav" aria-label="Điều hướng ứng dụng">
+    <nav class="nav app-primary-nav" aria-label="Điều hướng ứng dụng">
       <div class="app-brand">
         <div class="brand" title="Tunggiabao">TGB</div>
-        <div class="brand-copy"><strong>Tunggiabao</strong><small>Báo giá chuyên nghiệp</small></div>
+        <div class="brand-copy"><strong>Tunggiabao</strong><small>Quotation Studio</small></div>
       </div>
-
-      <div class="nav-section-label">Tổng quan</div>
-      <button class="active nav-dashboard" data-tab="dashboard"><span class="nav-glyph">⌂</span><span>Trang chủ</span></button>
-      <button data-tab="general"><span class="nav-glyph">✎</span><span>Soạn báo giá</span></button>
-      <button class="nav-secondary" data-tab="history"><span class="nav-glyph">▤</span><span>Quản lý báo giá</span></button>
-
-      <div class="nav-section-label">Dữ liệu</div>
-      <button class="nav-secondary" data-tab="master"><span class="nav-glyph">▦</span><span>Khách hàng & sản phẩm</span></button>
-      <button data-tab="customer"><span class="nav-glyph">●</span><span>Khách hàng</span></button>
-      <button data-tab="products"><span class="nav-glyph">◆</span><span>Sản phẩm</span></button>
-
-      <div class="nav-section-label">Báo giá</div>
-      <button data-tab="payment"><span class="nav-glyph">₫</span><span>Thanh toán</span></button>
-      <button data-tab="terms"><span class="nav-glyph">≡</span><span>Điều khoản</span></button>
-      <button data-tab="design"><span class="nav-glyph">◉</span><span>Thiết kế</span></button>
-      <button data-tab="view"><span class="nav-glyph">▣</span><span>Xem báo cáo</span></button>
-      <button data-tab="export"><span class="nav-glyph">⇅</span><span>Xuất bản & dữ liệu</span></button>
-      <button data-tab="presets"><span class="nav-glyph">▱</span><span>Lưu mẫu</span></button>
-      <button class="mobile-more-toggle" id="mobileMoreToggle" type="button" aria-expanded="false" aria-controls="mobileMoreMenu">
-        <span class="nav-glyph">•••</span><span>Thêm</span>
-      </button>
-
-      <div class="mobile-more-menu" id="mobileMoreMenu" role="dialog" aria-modal="true" aria-labelledby="mobileMoreTitle" hidden>
-        <div class="mobile-more-head"><strong id="mobileMoreTitle">Công cụ khác</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
-        <div class="mobile-more-grid">
-          <button type="button" data-open-tab="customer"><span>●</span><b>Khách hàng</b></button>
-          <button type="button" data-open-tab="products"><span>◆</span><b>Sản phẩm</b></button>
-          <button type="button" data-open-tab="payment"><span>₫</span><b>Thanh toán</b></button>
-          <button type="button" data-open-tab="terms"><span>≡</span><b>Điều khoản</b></button>
-          <button type="button" data-open-tab="design"><span>◉</span><b>Thiết kế</b></button>
-          <button type="button" data-open-tab="view"><span>▣</span><b>Xem báo cáo</b></button>
-          <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất bản & dữ liệu</b></button>
-          <button type="button" data-open-tab="presets"><span>▱</span><b>Lưu mẫu</b></button>
-          <button type="button" data-open-tab="system"><span>⚙</span><b>Thiết bị & hệ thống</b></button>
-          <button type="button" data-open-tab="settings"><span>☷</span><b>Cài đặt ứng dụng</b></button>
-        </div>
-      </div>
-
-      <div class="nav-section-label">Hệ thống</div>
-      <button class="nav-secondary" data-tab="system"><span class="nav-glyph">⚙</span><span>Thiết bị & hệ thống</span></button>
-      <button class="nav-secondary" data-tab="settings"><span class="nav-glyph">☷</span><span>Cài đặt ứng dụng</span></button>
-
+      <button class="active nav-dashboard" data-tab="dashboard" title="Trang chủ"><span class="nav-glyph">⌂</span><span>Trang chủ</span></button>
+      <button data-tab="general" title="Soạn báo giá"><span class="nav-glyph">✎</span><span>Soạn báo giá</span></button>
+      <button data-tab="history" title="Quản lý báo giá"><span class="nav-glyph">▤</span><span>Quản lý</span></button>
+      <button data-tab="master" title="Khách hàng & sản phẩm"><span class="nav-glyph">▦</span><span>Dữ liệu</span></button>
+      <button data-tab="export" title="Xuất bản & dữ liệu"><span class="nav-glyph">⇅</span><span>Xuất</span></button>
+      <button data-tab="settings" title="Cài đặt"><span class="nav-glyph">⚙</span><span>Cài đặt</span></button>
       <div class="spacer"></div>
       <div class="device-profile-chip" id="deviceProfileChip" aria-live="polite">
-        <strong>Đang nhận diện thiết bị</strong><small>KT- · client runtime</small>
+        <strong>Đang nhận diện</strong><small>KT- · client runtime</small>
       </div>
-      <div class="tip"><b>Chế độ ứng dụng</b><br>Trang chủ để quản lý. Tạo báo giá để vào studio A4.</div>
+      <div class="tip"><b>Đơn giản mặc định</b><span>Thiết kế nâng cao chỉ hiện khi cần.</span></div>
     </nav>
 
     <section class="editor">
+      <div class="studio-v6-commandbar" id="studioV6Commandbar" aria-label="Thanh lệnh Soạn báo giá">
+        <div class="studio-v6-document">
+          <button class="studio-v6-home" id="studioV6Home" type="button" aria-label="Về Trang chủ">⌂</button>
+          <div><small>ĐANG SOẠN</small><strong id="studioV6QuoteName">Báo giá mới</strong><span id="studioV6QuoteNo">Chưa có mã</span></div>
+        </div>
+        <div class="studio-v6-save-state" id="studioAutosaveState" role="status" aria-live="polite"><span>●</span> Sẵn sàng</div>
+        <div class="studio-v6-command-actions">
+          <button class="btn" id="studioUndo" type="button" title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác">↶</button>
+          <button class="btn" id="studioRedo" type="button" title="Làm lại (Ctrl+Shift+Z)" aria-label="Làm lại">↷</button>
+          <button class="btn studio-command-search" id="studioCommandPalette" type="button">⌕ Tìm lệnh</button>
+          <button class="btn" id="studioV6Save" type="button">Lưu nháp</button>
+          <button class="btn" id="studioV6Check" type="button">Kiểm tra</button>
+          <button class="btn" id="studioV6Preview" type="button">Xem trước</button>
+          <button class="btn primary print-action" id="studioV6Pdf" type="button">Xuất PDF</button>
+          <button class="btn studio-v6-more" id="studioV6More" type="button" aria-label="Thêm thao tác">⋯</button>
+        </div>
+      </div>
+
+      <section class="studio-block-library" aria-label="Nội dung báo giá">
+        <div class="studio-block-library-head">
+          <div><strong>Nội dung</strong><small>Thêm hoặc chỉnh trực tiếp từng khối</small></div>
+          <label class="studio-mode-switch" title="Ẩn bớt tùy chọn kỹ thuật">
+            <span>Đơn giản</span><input id="studioAdvancedMode" type="checkbox"><span>Nâng cao</span>
+          </label>
+        </div>
+        <div class="studio-block-search"><span>⌕</span><input id="studioBlockSearch" type="search" placeholder="Tìm nội dung..." autocomplete="off"></div>
+        <div class="studio-block-list" id="studioBlockList">
+          <button type="button" data-studio-block="general" data-studio-search="thông tin chung doanh nghiệp báo giá"><span>▤</span><div><b>Thông tin chung</b><small>Doanh nghiệp, số báo giá, ngày</small></div><em>›</em></button>
+          <button type="button" data-studio-block="customer" data-studio-search="khách hàng liên hệ địa chỉ"><span>●</span><div><b>Khách hàng</b><small>Người nhận và thông tin liên hệ</small></div><em>›</em></button>
+          <button type="button" data-studio-block="products" data-studio-search="sản phẩm dịch vụ bảng nhập liệu excel"><span>◆</span><div><b>Sản phẩm / Dịch vụ</b><small>Nhập, dán hoặc import Excel</small></div><em>›</em></button>
+          <button type="button" data-studio-block="payment" data-studio-search="thanh toán vat tổng tiền ngân hàng"><span>₫</span><div><b>Thanh toán</b><small>VAT, giảm giá, ngân hàng</small></div><em>›</em></button>
+          <button type="button" data-studio-block="terms" data-studio-search="điều khoản chữ ký ghi chú cam kết"><span>≡</span><div><b>Điều khoản & chữ ký</b><small>Điều khoản, ngày, chữ ký</small></div><em>›</em></button>
+          <button type="button" data-studio-block="design" data-studio-search="thiết kế mẫu màu font branding"><span>◉</span><div><b>Thiết kế</b><small>Mẫu, màu, typography</small></div><em>›</em></button>
+        </div>
+        <div class="studio-template-shortcuts">
+          <span>Mẫu nhanh</span>
+          <button type="button" data-studio-template="modern">Doanh nghiệp</button>
+          <button type="button" data-studio-template="minimal">Tối giản</button>
+          <button type="button" data-studio-template="classic">Trang trọng</button>
+        </div>
+      </section>
       <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
       <div class="panel-head studio-panel-head">
         <div class="studio-context-row">
@@ -552,7 +557,27 @@
                 <button class="btn" id="collapseAllProducts">Thu gọn tất cả</button>
               </div>
             </div>
-            <div id="productEditor" class="product-editor-list"></div>
+            
+            <div class="product-data-entry-toolbar" aria-label="Thao tác nhập sản phẩm">
+              <button class="btn primary" id="addProductGrid" type="button">＋ Thêm dòng</button>
+              <button class="btn" id="pasteProductData" type="button">▣ Dán dữ liệu</button>
+              <label class="btn file-btn" for="productExcelInput">▦ Nhập từ Excel</label>
+              <input class="hidden-input" id="productExcelInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+              <button class="btn" type="button" data-open-master="products">◆ Chọn từ danh mục</button>
+            </div>
+            <div class="product-data-entry-help">Mẹo: copy vùng dữ liệu trong Excel rồi Ctrl+V vào bảng. Hệ thống tự nhận cột phổ biến và bỏ qua dòng trống.</div>
+            <div class="product-grid-shell" id="productGridShell">
+              <div class="product-grid-head" aria-hidden="true">
+                <span>STT</span><span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Số lượng</span><span>Đơn giá</span><span>Thành tiền</span><span>Ghi chú</span><span></span>
+              </div>
+              <div class="product-data-grid" id="productDataGridBody" role="grid" aria-label="Bảng nhập sản phẩm"></div>
+              <div class="product-grid-empty" id="productGridEmpty" hidden>
+                <strong>Báo giá chưa có sản phẩm</strong>
+                <span>Bạn có thể thêm dòng, dán trực tiếp từ Excel hoặc nhập file.</span>
+              </div>
+            </div>
+            <div class="product-import-summary" id="productImportSummary" role="status" aria-live="polite"></div>
+            <div id="productEditor" class="product-editor-list legacy-product-editor" hidden></div>
             <button class="btn primary block add-product-btn" id="addProduct">+ Thêm sản phẩm</button>
           </div>
           <div class="card">
@@ -763,6 +788,19 @@
     </section>
 
     <aside class="design" id="designPanel">
+      <div class="studio-inspector-tabs" role="tablist" aria-label="Bảng thuộc tính">
+        <button type="button" class="active" data-inspector-tab="design" role="tab" aria-selected="true">Thiết kế</button>
+        <button type="button" data-inspector-tab="content" role="tab" aria-selected="false">Nội dung</button>
+        <button type="button" data-inspector-tab="check" role="tab" aria-selected="false">Kiểm tra</button>
+      </div>
+      <section class="studio-inspector-panel" id="studioInspectorContent" data-panel="content" hidden>
+        <div class="studio-inspector-empty"><span>✦</span><strong>Chọn một khối trên A4</strong><small>Thuộc tính nội dung sẽ hiện ở đây. Bạn cũng có thể bấm trực tiếp vào chữ trên báo giá.</small></div>
+        <div id="studioInspectorSelection"></div>
+      </section>
+      <section class="studio-inspector-panel studio-check-panel" id="studioInspectorCheck" data-panel="check" hidden>
+        <div class="studio-check-summary" id="studioCheckSummary">Đang kiểm tra báo giá…</div>
+        <div class="studio-check-list" id="studioCheckList"></div>
+      </section>
       <button class="panel-edge-toggle design-edge-toggle" id="toggleDesignPanel" type="button" aria-label="Thu gọn bảng thiết kế" title="Thu gọn / mở bảng thiết kế">‹</button>
       <div class="panel-head"><h2>CHỌN MẪU TEMPLATE</h2><p>Đổi phong cách mà không làm mất dữ liệu.</p></div>
       <div class="panel-body">
@@ -1178,5 +1216,21 @@
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 <script type="module" src="./src/main.js"></script>
+
+  <div class="command-palette-backdrop" id="commandPaletteModal" hidden>
+    <section class="command-palette" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+      <div class="command-palette-head"><span>⌕</span><input id="commandPaletteInput" type="search" placeholder="Gõ lệnh hoặc chức năng…" autocomplete="off"><button id="commandPaletteClose" type="button" aria-label="Đóng">×</button></div>
+      <h2 id="commandPaletteTitle" class="sr-only">Tìm lệnh</h2>
+      <div class="command-palette-list" id="commandPaletteList">
+        <button type="button" data-command="products"><b>Sản phẩm / Dịch vụ</b><small>Mở bảng nhập liệu</small></button>
+        <button type="button" data-command="customer"><b>Khách hàng</b><small>Nhập hoặc chọn khách hàng</small></button>
+        <button type="button" data-command="check"><b>Kiểm tra báo giá</b><small>Xem lỗi và cảnh báo</small></button>
+        <button type="button" data-command="preview"><b>Xem trước A4</b><small>Kiểm tra bản phát hành</small></button>
+        <button type="button" data-command="export"><b>Xuất bản & dữ liệu</b><small>PDF, Excel, sao lưu</small></button>
+        <button type="button" data-command="advanced"><b>Thiết kế nâng cao</b><small>Mở toàn bộ tùy chọn thiết kế</small></button>
+      </div>
+      <div class="command-palette-hint">Ctrl/Cmd + K để mở · Esc để đóng</div>
+    </section>
+  </div>
 </body>
 </html>
