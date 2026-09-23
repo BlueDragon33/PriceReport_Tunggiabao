@@ -1467,34 +1467,54 @@ function renderEditorProducts() {
   list.innerHTML = '';
 
   state.products.forEach((product, index) => {
-    const card = document.createElement('article');
-    card.className = 'product-card' + (collapsedProducts.has(index) ? ' collapsed' : '');
+    const row = document.createElement('article');
+    row.className = 'product-card product-grid-row' + (collapsedProducts.has(index) ? ' collapsed' : '');
+    row.dataset.productIndex = String(index);
 
-    const head = document.createElement('div');
-    head.className = 'product-card-head';
-
-    const identity = document.createElement('div');
-    identity.className = 'product-card-identity';
     const badge = document.createElement('span');
-    badge.className = 'product-index';
+    badge.className = 'product-index product-grid-index';
     badge.textContent = String(index + 1);
-    const titleWrap = document.createElement('div');
-    const title = document.createElement('strong');
-    title.textContent = product.name || 'Sản phẩm chưa đặt tên';
-    const amount = document.createElement('span');
-    amount.className = 'product-live-total';
+    badge.setAttribute('aria-label', 'Dòng ' + (index + 1));
+
+    const amount = document.createElement('output');
+    amount.className = 'product-live-total product-grid-amount';
     amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
-    titleWrap.append(title, amount);
-    identity.append(badge, titleWrap);
+    amount.setAttribute('aria-label', 'Thành tiền dòng ' + (index + 1));
+
+    const updateProduct = (key, input, numeric = false) => {
+      if (numeric) {
+        const value = normalizeNonNegativeNumber(input.value);
+        product[key] = value;
+        if (Number(input.value) !== value) input.value = String(value);
+      } else {
+        product[key] = input.value;
+      }
+      row.classList.toggle('product-row-invalid', productHasDraftContent(product) && !String(product.name || '').trim());
+      amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
+      save();
+      renderPreviewProducts();
+      renderTotals();
+      updateDocumentHealth();
+      syncStudioContext('products');
+      requestAnimationFrame(updatePageEstimate);
+    };
+
+    const nameField = productField('Tên sản phẩm', 'name', product.name, 'text', input => updateProduct('name', input), 'grid-name');
+    const groupField = productField('Nhóm hàng', 'group', product.group, 'text', input => updateProduct('group', input), 'grid-group');
+    const packField = productField('Quy cách', 'pack', product.pack, 'text', input => updateProduct('pack', input), 'grid-pack');
+    const unitField = productField('Đơn vị tính', 'unit', product.unit, 'text', input => updateProduct('unit', input), 'grid-unit');
+    const qtyField = productField('Số lượng', 'qty', product.qty, 'number', input => updateProduct('qty', input, true), 'grid-qty');
+    const priceField = productField('Đơn giá', 'price', product.price, 'number', input => updateProduct('price', input, true), 'grid-price');
+    const noteField = productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'grid-note');
 
     const actions = document.createElement('div');
-    actions.className = 'product-card-actions';
+    actions.className = 'product-card-actions product-grid-actions';
 
     const collapse = document.createElement('button');
     collapse.className = 'mini-action';
     collapse.type = 'button';
-    collapse.title = collapsedProducts.has(index) ? 'Mở rộng' : 'Thu gọn';
-    collapse.setAttribute('aria-label', collapse.title + ' sản phẩm ' + (index + 1));
+    collapse.title = collapsedProducts.has(index) ? 'Mở rộng dòng' : 'Thu gọn dòng';
+    collapse.setAttribute('aria-label', collapse.title + ' ' + (index + 1));
     collapse.textContent = collapsedProducts.has(index) ? '＋' : '−';
     collapse.addEventListener('click', () => {
       if (collapsedProducts.has(index)) collapsedProducts.delete(index);
@@ -1512,7 +1532,10 @@ function renderEditorProducts() {
     up.addEventListener('click', () => {
       if (index === 0) return;
       [state.products[index - 1], state.products[index]] = [state.products[index], state.products[index - 1]];
-      save(); renderEditorProducts(); render();
+      save();
+      renderEditorProducts();
+      render();
+      focusProductName(index - 1);
     });
 
     const down = document.createElement('button');
@@ -1525,7 +1548,10 @@ function renderEditorProducts() {
     down.addEventListener('click', () => {
       if (index >= state.products.length - 1) return;
       [state.products[index + 1], state.products[index]] = [state.products[index], state.products[index + 1]];
-      save(); renderEditorProducts(); render();
+      save();
+      renderEditorProducts();
+      render();
+      focusProductName(index + 1);
     });
 
     const duplicate = document.createElement('button');
@@ -1536,7 +1562,10 @@ function renderEditorProducts() {
     duplicate.textContent = '⧉';
     duplicate.addEventListener('click', () => {
       state.products.splice(index + 1, 0, clone(product));
-      save(); renderEditorProducts(); render();
+      save();
+      renderEditorProducts();
+      render();
+      focusProductName(index + 1);
     });
 
     const remove = document.createElement('button');
@@ -1550,50 +1579,20 @@ function renderEditorProducts() {
       state.products.splice(index, 1);
       if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
-      save(); renderEditorProducts(); render();
+      save();
+      renderEditorProducts();
+      render();
     });
 
     actions.append(collapse, up, down, duplicate, remove);
-    head.append(identity, actions);
-
-    const body = document.createElement('div');
-    body.className = 'product-card-body';
-
-    const updateProduct = (key, input, numeric = false) => {
-      if (numeric) {
-        const value = normalizeNonNegativeNumber(input.value);
-        product[key] = value;
-        if (Number(input.value) !== value) input.value = String(value);
-      } else {
-        product[key] = input.value;
-      }
-      if (key === 'name') title.textContent = product.name || 'Sản phẩm chưa đặt tên';
-      amount.textContent = money(Number(product.qty || 0) * Number(product.price || 0));
-      save();
-      renderPreviewProducts();
-      renderTotals();
-      updateDocumentHealth();
-      syncStudioContext('products');
-      requestAnimationFrame(updatePageEstimate);
-    };
-
-    body.append(
-      productField('Nhóm hàng', 'group', product.group, 'text', input => updateProduct('group', input), 'wide'),
-      productField('Tên sản phẩm', 'name', product.name, 'text', input => updateProduct('name', input), 'wide'),
-      productField('Quy cách', 'pack', product.pack, 'text', input => updateProduct('pack', input)),
-      productField('Đơn vị tính', 'unit', product.unit, 'text', input => updateProduct('unit', input)),
-      productField('Số lượng', 'qty', product.qty, 'number', input => updateProduct('qty', input, true)),
-      productField('Đơn giá', 'price', product.price, 'number', input => updateProduct('price', input, true)),
-      productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'wide')
-    );
-
-    card.append(head, body);
-    list.appendChild(card);
+    row.classList.toggle('product-row-invalid', productHasDraftContent(product) && !String(product.name || '').trim());
+    row.append(badge, nameField, groupField, packField, unitField, qtyField, priceField, amount, noteField, actions);
+    list.appendChild(row);
   });
 
   const collapseButton = document.getElementById('collapseAllProducts');
   if (collapseButton) {
-    collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
+    collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn';
   }
 }
 
@@ -2876,9 +2875,24 @@ document.getElementById('productEditor')?.addEventListener('paste', (event) => {
 });
 
 document.getElementById('productEditor')?.addEventListener('keydown', (event) => {
-  if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.metaKey) return;
   const input = event.target.closest?.('[data-product-key]');
   if (!input) return;
+
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    const rows = [...document.querySelectorAll('#productEditor .product-grid-row')];
+    const row = input.closest('.product-grid-row');
+    const rowIndex = rows.indexOf(row);
+    const direction = event.key === 'ArrowDown' ? 1 : -1;
+    const target = rows[rowIndex + direction]?.querySelector('[data-product-key="' + input.dataset.productKey + '"]');
+    if (target) {
+      event.preventDefault();
+      target.focus();
+      target.select?.();
+    }
+    return;
+  }
+
+  if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.metaKey) return;
   const cards = [...document.querySelectorAll('#productEditor .product-card')];
   const card = input.closest('.product-card');
   if (card !== cards.at(-1)) return;
