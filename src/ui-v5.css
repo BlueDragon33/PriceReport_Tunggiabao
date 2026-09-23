@@ -4330,3 +4330,82 @@ body.v5-ui .import-duplicate-actions {
   flex-wrap: wrap;
   gap: var(--v5-space-2);
 }
+
+
+/* V5.3 guided data entry */
+body.v5-ui .studio-guidance-panel {
+  display: grid;
+  gap: var(--v5-space-3);
+  padding: var(--v5-space-3);
+  border-top: 1px solid var(--v5-border);
+  background: var(--v5-surface-soft);
+}
+body.v5-ui .studio-guidance-panel[hidden] { display: none; }
+body.v5-ui .studio-guidance-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--v5-space-3);
+  align-items: flex-start;
+}
+body.v5-ui .studio-guidance-head > div {
+  display: grid;
+  gap: 3px;
+}
+body.v5-ui .studio-guidance-head span {
+  color: var(--v5-muted);
+  font-size: 12px;
+}
+body.v5-ui .studio-guidance-list {
+  display: grid;
+  gap: 8px;
+}
+body.v5-ui .studio-guidance-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--v5-border);
+  border-radius: var(--v5-radius-md);
+  background: var(--v5-surface);
+  color: var(--v5-text);
+  text-align: left;
+  cursor: pointer;
+}
+body.v5-ui .studio-guidance-item:hover {
+  border-color: var(--v5-border-strong);
+  box-shadow: var(--v5-shadow-sm);
+}
+body.v5-ui .studio-guidance-item.error {
+  border-inline-start: 3px solid var(--v5-danger);
+}
+body.v5-ui .studio-guidance-item.warn {
+  border-inline-start: 3px solid var(--v5-warning);
+}
+body.v5-ui .studio-guidance-tone {
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+body.v5-ui .studio-guidance-item.error .studio-guidance-tone {
+  background: var(--v5-danger-soft);
+  color: var(--v5-danger);
+}
+body.v5-ui .studio-guidance-item.warn .studio-guidance-tone {
+  background: var(--v5-warning-soft);
+  color: var(--v5-warning);
+}
+body.v5-ui .studio-guidance-item small {
+  color: var(--v5-muted);
+  white-space: nowrap;
+}
+body.v5-ui .studio-guidance-ready {
+  padding: 10px 12px;
+  border: 1px solid var(--v5-border);
+  border-radius: var(--v5-radius-md);
+  background: var(--v5-success-soft);
+  color: var(--v5-success);
+  font-weight: 700;
+}
