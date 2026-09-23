@@ -2057,7 +2057,9 @@ html[data-price-report-device-access="offline"] body{overflow:hidden}
   .shell.app-workspace .nav button[data-tab="design"],
   .shell.app-workspace .nav button[data-tab="view"],
   .shell.app-workspace .nav button[data-tab="export"],
-  .shell.app-workspace .nav button[data-tab="presets"]{display:none}
+  .shell.app-workspace .nav button[data-tab="presets"],
+  .shell.app-workspace .nav button[data-tab="system"],
+  .shell.app-workspace .nav button[data-tab="settings"]{display:none}
   .shell.app-workspace .mobile-more-toggle{
     display:flex;min-width:70px!important;width:auto!important
   }
