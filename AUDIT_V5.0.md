@@ -60,8 +60,8 @@ Passes 1–17 completed and covered by regression/smoke gates:
 - Responsive layer reduced to four V5 media-query blocks.
 - Keyboard navigation, focus restoration, busy/empty/error feedback semantics added.
 
-Pass 18 in progress: final tester/visual-consistency cleanup.
-Current Pass 18 finding: seven Studio editor panes still used the generic legacy card language. They are now scoped under one `studio-pane` surface system so General, Customer, Products, Payment, Terms, Design and Presets share spacing, border, radius, heading and help-note treatment.
+Pass 18 completed: final tester/visual-consistency cleanup.
+Pass 18 finding: seven Studio editor panes still used the generic legacy card language. They are now scoped under one `studio-pane` surface system so General, Customer, Products, Payment, Terms, Design and Presets share spacing, border, radius, heading and help-note treatment.
 
 ### Current V5 metrics
 - Application stylesheet: `src/ui-v5.css`, zero `!important`, four responsive blocks.
@@ -95,3 +95,21 @@ V5 consolidation has completed the original 18-pass roadmap plus two corrective 
 
 ### RC decision
 No additional design pass is opened at this checkpoint. Further changes should be driven by a reproducible visual or UX defect, not by adding another override layer. V5 is promoted to `5.0.0-rc.1` and receives a new Service Worker cache namespace so a later production release cannot reuse stale V4.9 UI assets.
+
+## Pass 21 — Production cache correctness (2026-09-23)
+
+Release validation discovered that `production-config.mjs` replaced every release cache marker with hard-coded `v27`. The source-only RC1 cache check therefore did not prove the deployed cache was isolated. The materializer now preserves the release generation, replaces only its deployment suffix, and is idempotent. Tests failed before the fix and now cover release separation, repeated materialization, changed control origin and missing cache marker.
+
+Activation also deleted every origin cache, including sibling GitHub Pages apps. It now deletes only obsolete `pricereport-shell-*` caches. Navigation fallback and asset lookup read only the active application cache. Executable worker tests prove unrelated caches and the current generation survive, and that offline navigation/assets cannot read another application's cached response. RC2 uses `pricereport-shell-v50-ui-rc2` before the deployment suffix is added.
+
+## Pass 22 — Report print and import visibility corrections
+
+- The report viewer puts a scale on `#paper` and a scaled fixed height on its wrapper. Print CSS previously reset only the wrapper transform. The print layer now resets both transforms and the wrapper height, while leaving manually positioned report blocks and fixed report typography intact. The locked report CSS debt remains 428 `!important` and six media blocks.
+- The handwriting image preview declared `display:flex` even with `hidden`. The layout selector now applies only to visible previews. Computed-style checks reproduce `flex` before the fix, then `none` while hidden and `flex` after selection.
+
+### RC2 validation scope
+
+- Full Node checks, DOM regression suite (51 tests), smoke and production build are required before merge.
+- Existing CI for RC1 passed at `cfcb029`; RC2 requires a fresh CI run.
+- This session's cloud browser can reach production, but cannot open localhost (`ERR_BLOCKED_BY_CLIENT`). Local responsive screenshots and a rendered print/PDF check have not been completed; source/DOM validation is not reported as visual QA. Production interaction checks follow successful deployment.
+- No new business feature, data migration, authentication change, or management rollout is introduced by these corrections.

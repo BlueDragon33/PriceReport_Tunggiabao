@@ -2555,7 +2555,7 @@ body.v5-ui .import-progress[data-tone="error"]{
   background:var(--v5-danger-soft);
   color:var(--v5-danger);
 }
-body.v5-ui .import-image-preview{
+body.v5-ui .import-image-preview:not([hidden]){
   padding:8px;
   border:1px dashed var(--v5-border-strong);
   border-radius:10px;

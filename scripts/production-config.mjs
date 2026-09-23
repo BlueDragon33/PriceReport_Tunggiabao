@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url';
 
 const CONTROL_PROTOCOL = 'price-report-control-v1';
 const APPLICATION_ID = 'price-report-tunggiabao';
-const CACHE_VERSION = 'v27';
 
 export function normalizeControlOrigin(value = '') {
   const raw = String(value ?? '').trim().replace(/\/+$/, '');
@@ -77,14 +76,17 @@ export function materializeProductionConfig({
     },
   };
 
-  const cacheName = `pricereport-shell-${CACHE_VERSION}-${enabled ? 'managed' : 'local'}-${fingerprint}`;
-  const nextServiceWorker = String(serviceWorkerSource).replace(
-    /const CACHE = 'pricereport-shell-[^']+';/,
+  const source = String(serviceWorkerSource);
+  const marker = /const CACHE = '(pricereport-shell-[^']+)';/;
+  const currentCache = source.match(marker)?.[1];
+  if (!currentCache) throw new Error('Service-worker cache marker is missing.');
+  // Keep the release generation; replace only a previous deployment suffix.
+  const releaseCache = currentCache.replace(/-(?:managed|local)-[a-f0-9]{8}$/, '');
+  const cacheName = `${releaseCache}-${enabled ? 'managed' : 'local'}-${fingerprint}`;
+  const nextServiceWorker = source.replace(
+    marker,
     `const CACHE = '${cacheName}';`,
   );
-  if (!nextServiceWorker || nextServiceWorker === serviceWorkerSource) {
-    throw new Error('Service-worker cache marker is missing or was not updated.');
-  }
 
   return {
     enabled,

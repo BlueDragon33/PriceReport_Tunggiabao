@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v50-ui-rc1';
+const CACHE = 'pricereport-shell-v50-ui-rc2';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
@@ -42,7 +42,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))
+      Promise.all(keys.filter(key => key.startsWith('pricereport-shell-') && key !== CACHE).map(key => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -61,13 +61,13 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.open(CACHE).then(cache => cache.match('./index.html')))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.open(CACHE).then(cache => cache.match(event.request)).then(cached => {
       const network = fetch(event.request)
         .then(response => {
           const cacheable = response.ok || response.type === 'opaque';

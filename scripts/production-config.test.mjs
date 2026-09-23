@@ -59,7 +59,7 @@ assert.equal(local.enabled, false);
 assert.equal(local.deviceConfig.enabled, false);
 assert.equal(local.managementContract.policy.remoteAdminReady, false);
 assert.equal(local.managementContract.readiness.deviceRegistry, 'implemented-requires-d1-deployment');
-assert.match(local.cacheName, /^pricereport-shell-v27-local-[a-f0-9]{8}$/);
+assert.match(local.cacheName, /^pricereport-shell-v26-local-[a-f0-9]{8}$/);
 
 const live = materializeProductionConfig({
   origin: 'https://control.example.com/',
@@ -78,7 +78,27 @@ assert.equal(live.managementContract.readiness.remoteAuditApi, 'available');
 assert.equal(live.managementContract.readiness.deviceAccessGate, 'available');
 assert.equal(live.managementContract.controlService.origin, 'https://control.example.com');
 assert.equal(live.managementContract.controlService.rollout, 'enabled');
-assert.match(live.serviceWorkerSource, /pricereport-shell-v27-managed-[a-f0-9]{8}/);
+assert.match(live.serviceWorkerSource, /pricereport-shell-v26-managed-[a-f0-9]{8}/);
+
+// A UI release must retain its own cache generation through the Pages config step.
+const nextRelease = materializeProductionConfig({
+  origin: 'https://control.example.com',
+  serviceWorkerSource: "const CACHE = 'pricereport-shell-v50-ui-rc1';\n",
+});
+assert.match(nextRelease.cacheName, /^pricereport-shell-v50-ui-rc1-managed-[a-f0-9]{8}$/);
+assert.notEqual(nextRelease.cacheName, live.cacheName);
+const repeated = materializeProductionConfig({
+  origin: 'https://control.example.com',
+  serviceWorkerSource: nextRelease.serviceWorkerSource,
+});
+assert.equal(repeated.cacheName, nextRelease.cacheName);
+assert.equal(repeated.serviceWorkerSource, nextRelease.serviceWorkerSource);
+const changedOrigin = materializeProductionConfig({
+  origin: 'https://other-control.example.com',
+  serviceWorkerSource: nextRelease.serviceWorkerSource,
+});
+assert.notEqual(changedOrigin.cacheName, nextRelease.cacheName);
+assert.throws(() => materializeProductionConfig({ serviceWorkerSource: 'const CORE = [];' }), /cache marker/i);
 
 const healthy = await verifyControlHealth('https://control.example.com', async () => Response.json({
   application: 'price-report-tunggiabao',
