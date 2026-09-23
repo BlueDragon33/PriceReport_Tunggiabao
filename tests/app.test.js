@@ -271,9 +271,71 @@ test('V5.3 product warning guidance focuses the matching product row', async () 
   await new Promise(resolve => requestAnimationFrame(resolve));
 
   const targetCard = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
-  expect(targetCard.contains(document.activeElement)).toBe(true);
+  expect(document.activeElement).toBe(targetCard.querySelector('[data-product-key="qty"]'));
 
   targetCard.querySelector('.danger-icon').click();
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 duplicate product names still route a warning to the exact row and field', async () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+  document.getElementById('addProduct').click();
+
+  const cards = Array.from(document.querySelectorAll('#productEditor .product-card')).slice(-2);
+  for (const card of cards) {
+    const name = card.querySelector('[data-product-key="name"]');
+    name.value = 'Sản phẩm trùng tên V5.3';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  const refreshedCards = Array.from(document.querySelectorAll('#productEditor .product-card')).slice(-2);
+  const secondIndex = refreshedCards[1].dataset.productIndex;
+  const secondQty = refreshedCards[1].querySelector('[data-product-key="qty"]');
+  secondQty.value = '-3';
+  secondQty.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('studioCheckQuote').click();
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('Dòng sản phẩm ' + (Number(secondIndex) + 1))
+      && item.textContent.includes('Sản phẩm trùng tên V5.3')
+      && item.textContent.includes('số lượng âm'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  const targetCard = document.querySelector('#productEditor .product-card[data-product-index="' + secondIndex + '"]');
+  expect(document.activeElement).toBe(targetCard.querySelector('[data-product-key="qty"]'));
+
+  targetCard.querySelector('.danger-icon').click();
+  document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
+  document.getElementById('closeStudioGuidance').click();
+});
+
+test('V5.3 payment guidance targets the actionable missing control', async () => {
+  document.querySelector('[data-tab="payment"]').click();
+  const showTotals = document.getElementById('showTotals');
+  const discount = document.getElementById('discountPct');
+  const previousTotals = showTotals.checked;
+  const previousDiscount = discount.value;
+
+  showTotals.checked = false;
+  showTotals.dispatchEvent(new Event('change', { bubbles: true }));
+  discount.value = '5';
+  discount.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioCheckQuote').click();
+
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('bảng tổng cộng đang bị ẩn'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  expect(document.activeElement).toBe(showTotals);
+
+  discount.value = previousDiscount;
+  discount.dispatchEvent(new Event('input', { bubbles: true }));
+  showTotals.checked = previousTotals;
+  showTotals.dispatchEvent(new Event('change', { bubbles: true }));
   document.getElementById('closeStudioGuidance').click();
 });
 
