@@ -18,14 +18,14 @@ const dupIds = ids.filter((id, i) => ids.indexOf(id) !== i);
 if (dupIds.length) fail('Duplicate ids: ' + [...new Set(dupIds)].join(', '));
 
 const requiredIds = [
-  'paper','paperWrap','productEditor','qHead','qBody','summary',
-  'companyName','customerName','addProduct','exportJson','importJson',
+  'paper','paperWrap','qHead','qBody','summary',
+  'companyName','customerName','productDataGridBody','addProductGrid','productExcelInput','exportJson','importJson',
   'exportAllData','importAllData','quoteStatus','quoteStatusFilter',
   'designPanel','paymentPrint','pSlogan','pageEstimate',
   'customerLibraryList','productCatalogList','saveCurrentCustomer','saveCurrentProducts',
   'quickCustomerName','designShowStt','designShowPrice','designShowAmount','designShowTotals',
   'wideView','zoomOut','zoomIn','toolbarMenu',
-  'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
+  'studioV6Commandbar','studioUndo','studioRedo','studioV6Save','studioV6Check','studioV6Preview','logoDesignPreview','logoWidthRange',
   'logoWidthDesign','logoPadding','logoOffsetX','logoOffsetY','logoShrink','logoGrow','logoTreatment','resetLogoPosition',
   'logoBlendMode','logoBackdropColor','logoBackdropOpacity','logoBackdropRadius',
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
@@ -36,8 +36,8 @@ const requiredIds = [
   'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
   'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
-  'studioSaveQuote','studioCheckQuote','studioPreviewQuote','studioPrevStep','studioNextStep',
-  'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal'
+  'studioInspectorContent','studioInspectorCheck','commandPaletteModal',
+  'quickShowCustomer','studioSubtotal','studioGrandTotal'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -87,7 +87,7 @@ if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
 if (!html.includes("THÔNG TIN KHÁCH HÀNG")) fail('General-tab quick customer section is missing');
 if ((html.match(/data-theme=/g) || []).length < 8) fail('Template library must provide at least 8 usable themes');
 if (!js.includes("THEME_ACCENTS")) fail('Template accent presets are missing');
-if (!js.includes("product-focus")) fail('Comfortable product focus mode is missing');
+if (!js.includes("data-entry-mode") || !v5Css.includes('.shell.data-entry-mode')) fail('V6 expanded product data-entry mode is missing');
 if (!js.includes("logoTreatment")) fail('Logo treatment controls are missing');
 if (js.includes("const logoColumn =")) fail('Logo size must not push the company block sideways');
 if (!css.includes("grid-template-columns:minmax(0,41.5%) minmax(0,58.5%)")) fail('Balanced logo/company header grid is missing');
@@ -154,7 +154,7 @@ if (!js.includes('resetSmartImportDraft')) fail('Smart import fresh-session rese
 if (!js.includes('sheetNames.map')) fail('Excel importer must evaluate multiple workbook sheets');
 
 if (!js.includes("merged.previewSpacing === 'relaxed'") || !js.includes("['compact','standard','airy']")) fail('Preview spacing persistence migration is missing');
-if (!js.includes('resetCollapsedProductsForState')) fail('Large product-set editor auto-collapse is missing');
+if (!js.includes('function renderProductDataGrid()')) fail('Large product-set V6 grid renderer is missing');
 if (!css.includes('.paper[data-spacing="airy"]')) fail('Airy spacing CSS profile is missing');
 
 if (!js.includes('smartImportManualFields')) fail('Smart Import review must track explicit manual field edits');
@@ -337,8 +337,6 @@ for (const studioPane of ['general','customer','products','payment','terms','des
     fail('V5 Pass 18 studio pane scope missing: ' + studioPane);
   }
 }
-if ((html.match(/data-studio-step=/g) || []).length !== 6) fail('V5.1 quotation workflow must expose exactly six drafting steps');
-if (!html.includes('data-studio-step="terms"')) fail('V5.1 quotation workflow must expose Terms as its own step');
 if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
 if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
