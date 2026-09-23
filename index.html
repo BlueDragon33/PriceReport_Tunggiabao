@@ -563,10 +563,25 @@
               <input class="hidden-input" id="productExcelInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
               <button class="btn" type="button" data-open-master="products">◆ Chọn từ danh mục</button>
             </div>
-            <div class="product-data-entry-help">Mẹo: copy vùng dữ liệu trong Excel rồi Ctrl+V vào bảng. Hệ thống tự nhận cột phổ biến và bỏ qua dòng trống.</div>
+            <div class="product-data-entry-help">Mẹo: copy vùng dữ liệu trong Excel rồi Ctrl+V vào bảng. Hệ thống tự nhận cột phổ biến và chỉ hỏi lại khi mapping chưa đủ chắc chắn.</div>
+            <div class="product-bulk-bar" id="productBulkBar" hidden aria-live="polite">
+              <strong id="productBulkCount">0 dòng được chọn</strong>
+              <select id="productBulkAction" aria-label="Thao tác hàng loạt">
+                <option value="group">Đổi nhóm</option>
+                <option value="unit">Đổi ĐVT</option>
+                <option value="price-up">Tăng giá %</option>
+                <option value="price-down">Giảm giá %</option>
+                <option value="duplicate">Nhân bản</option>
+                <option value="catalog">Lưu vào danh mục</option>
+                <option value="delete">Xóa</option>
+              </select>
+              <input id="productBulkValue" type="text" placeholder="Giá trị áp dụng" aria-label="Giá trị thao tác hàng loạt">
+              <button class="btn primary" id="applyProductBulk" type="button">Áp dụng</button>
+              <button class="btn" id="clearProductSelection" type="button">Bỏ chọn</button>
+            </div>
             <div class="product-grid-shell" id="productGridShell">
-              <div class="product-grid-head" aria-hidden="true">
-                <span>STT</span><span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Số lượng</span><span>Đơn giá</span><span>Thành tiền</span><span>Ghi chú</span><span></span>
+              <div class="product-grid-head" role="row">
+                <span class="product-grid-select-head"><input id="productSelectAll" type="checkbox" aria-label="Chọn tất cả dòng"> STT</span><span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Số lượng</span><span>Đơn giá</span><span>Thành tiền</span><span>Ghi chú</span><span></span>
               </div>
               <div class="product-data-grid" id="productDataGridBody" role="grid" aria-label="Bảng nhập sản phẩm"></div>
               <div class="product-grid-empty" id="productGridEmpty" hidden>
@@ -575,6 +590,24 @@
               </div>
             </div>
             <div class="product-import-summary" id="productImportSummary" role="status" aria-live="polite"></div>
+            <section class="product-mapping-review" id="productMappingReview" hidden aria-labelledby="productMappingTitle">
+              <div class="product-mapping-head">
+                <div><span>KIỂM TRA TRƯỚC KHI NHẬP</span><h4 id="productMappingTitle">Hệ thống chưa chắc chắn về một vài cột</h4><p id="productMappingSource">Kiểm tra mapping rồi bấm Nhập.</p></div>
+                <button class="btn" id="cancelProductMapping" type="button">Hủy</button>
+              </div>
+              <div class="product-mapping-stats">
+                <span><b id="mappingTotalRows">0</b> dòng nhận dạng</span>
+                <span class="ok"><b id="mappingValidRows">0</b> hợp lệ</span>
+                <span class="warn"><b id="mappingReviewRows">0</b> cần kiểm tra</span>
+                <span><b id="mappingBlankRows">0</b> dòng trống</span>
+              </div>
+              <div class="product-mapping-columns" id="productMappingColumns"></div>
+              <div class="product-mapping-preview" id="productMappingPreview"></div>
+              <div class="product-mapping-actions">
+                <label class="check"><input id="mappingValidOnly" type="checkbox"> Chỉ nhập dòng hợp lệ</label>
+                <button class="btn primary" id="applyMappedImport" type="button">Nhập dữ liệu</button>
+              </div>
+            </section>
             
           </div>
           <div class="card">
