@@ -713,6 +713,50 @@ test('applied smart import exposes a working one-step undo action', () => {
   expect(document.getElementById('companyName').value).toBe(before);
 });
 
+test('smart import preserves an explicit zero quantity through apply and undo', () => {
+  document.getElementById('pasteProducts').click();
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nSản phẩm SL 0\tHộp\t0\t28000';
+  document.getElementById('parseSmartPaste').click();
+  document.getElementById('applySmartImport').click();
+
+  const qty = document.querySelector('#productEditor .product-card:first-child [data-product-key="qty"]');
+  expect(qty).toBeTruthy();
+  expect(Number(qty.value)).toBe(0);
+
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo?.textContent).toBe('Hoàn tác');
+  undo.click();
+});
+
+test('smart import rolls back and keeps review open when primary autosave fails', () => {
+  const primaryKey = 'tunggiabao-price-report-v1';
+  const recoveryKey = 'tunggiabao-price-report-recovery-v1';
+  const before = document.getElementById('companyName').value;
+
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - IMPORT TRANSACTION TEST\nĐT. 0962944688';
+  document.getElementById('reparseOcrText').click();
+
+  const nativeSetItem = Storage.prototype.setItem;
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (this === localStorage && storageKey === primaryKey) {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    }
+    return nativeSetItem.call(this, storageKey, value);
+  });
+
+  document.getElementById('applySmartImport').click();
+  spy.mockRestore();
+
+  expect(document.getElementById('smartImportModal').hidden).toBe(false);
+  expect(document.getElementById('companyName').value).toBe(before);
+  expect(document.getElementById('smartImportProgress').textContent).toContain('Chưa áp dụng import');
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+  document.getElementById('cancelSmartImport').click();
+});
+
 test('autosave reports real persistence state and retains a recovery snapshot on failure', () => {
   const primaryKey = 'tunggiabao-price-report-v1';
   const recoveryKey = 'tunggiabao-price-report-recovery-v1';
