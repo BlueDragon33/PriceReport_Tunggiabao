@@ -1554,6 +1554,8 @@ function numberToWords(value) {
 
 let collapsedProducts = new Set();
 let selectedProductRows = new Set();
+let selectedCustomerLibraryIds = new Set();
+let selectedProductCatalogIds = new Set();
 
 function selectedProductIndices() {
   selectedProductRows = new Set(
@@ -4078,7 +4080,44 @@ document.getElementById('saveCurrentCustomer').addEventListener('click', saveCur
 document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('saveProductsToCatalogTop')?.addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('customerLibrarySearch').addEventListener('input', renderMasterData);
+document.getElementById('customerLibraryFilter')?.addEventListener('change', renderMasterData);
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
+document.getElementById('productCatalogGroupFilter')?.addEventListener('change', renderMasterData);
+document.getElementById('productCatalogCurrencyFilter')?.addEventListener('change', renderMasterData);
+document.getElementById('productCatalogDuplicateOnly')?.addEventListener('change', renderMasterData);
+
+document.getElementById('clearCustomerLibrarySelection')?.addEventListener('click', () => {
+  selectedCustomerLibraryIds.clear();
+  renderMasterData();
+});
+document.getElementById('deleteSelectedCustomers')?.addEventListener('click', () => {
+  const ids = new Set(selectedCustomerLibraryIds);
+  if (!ids.size || !confirm('Xóa ' + ids.size + ' khách hàng đã chọn khỏi danh bạ?')) return;
+  if (!setCustomerLibrary(getCustomerLibrary().filter(item => !ids.has(item.id)))) return;
+  selectedCustomerLibraryIds.clear();
+  renderMasterData();
+  renderDashboard();
+  toast('Đã xóa ' + ids.size + ' khách hàng');
+});
+document.getElementById('clearProductCatalogSelection')?.addEventListener('click', () => {
+  selectedProductCatalogIds.clear();
+  renderMasterData();
+});
+document.getElementById('deleteSelectedCatalogProducts')?.addEventListener('click', () => {
+  const ids = new Set(selectedProductCatalogIds);
+  if (!ids.size || !confirm('Xóa ' + ids.size + ' sản phẩm đã chọn khỏi danh mục?')) return;
+  if (!setProductCatalog(getProductCatalog().filter(item => !ids.has(item.id)))) return;
+  selectedProductCatalogIds.clear();
+  renderMasterData();
+  renderDashboard();
+  toast('Đã xóa ' + ids.size + ' sản phẩm khỏi danh mục');
+});
+document.getElementById('addSelectedCatalogProducts')?.addEventListener('click', () => {
+  const ids = new Set(selectedProductCatalogIds);
+  const selected = getProductCatalog().filter(item => ids.has(item.id));
+  const changed = addCatalogProductsToQuote(selected);
+  if (changed) selectedProductCatalogIds.clear();
+});
 
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
@@ -4965,33 +5004,101 @@ function applyProductBulkAction() {
   toast(persisted ? 'Đã áp dụng thao tác cho ' + indices.length + ' dòng' : 'Đã thay đổi tạm thời; chưa autosave được');
 }
 
-function addCatalogProduct(product) {
-  const key = productKey(product);
-  const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+function addCatalogProductsToQuote(products, { notify = true } = {}) {
+  const items = Array.isArray(products) ? products : [];
+  if (!items.length) return 0;
   const targetCurrency = normalizeCatalogCurrency(state.currency);
-  const currencyMatches = sourceCurrency === targetCurrency;
-  const catalogPrice = currencyMatches ? normalizeNonNegativeNumber(product.price) : 0;
-  const existing = state.products.find(item => productKey(item) === key);
-  if (existing) {
-    existing.qty = normalizeNonNegativeNumber(existing.qty) + 1;
-    if (currencyMatches) existing.price = catalogPrice;
-  } else {
-    state.products.push({
-      group: product.group || '',
-      name: product.name || '',
-      pack: product.pack || '',
-      unit: product.unit || '',
-      qty: 1,
-      price: catalogPrice,
-      note: product.note || ''
-    });
-  }
+  let changed = 0;
+  let currencyMismatch = 0;
+
+  items.forEach((product) => {
+    const key = productKey(product);
+    if (!key.replace(/\|/g, '')) return;
+    const sourceCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+    const currencyMatches = sourceCurrency === targetCurrency;
+    const catalogPrice = currencyMatches ? normalizeNonNegativeNumber(product.price) : 0;
+    const existing = state.products.find(item => productKey(item) === key);
+    if (existing) {
+      existing.qty = normalizeNonNegativeNumber(existing.qty) + 1;
+      if (currencyMatches) existing.price = catalogPrice;
+    } else {
+      state.products.push({
+        group: product.group || '',
+        name: product.name || '',
+        pack: product.pack || '',
+        unit: product.unit || '',
+        qty: 1,
+        price: catalogPrice,
+        note: product.note || ''
+      });
+    }
+    if (!currencyMatches) currencyMismatch += 1;
+    changed += 1;
+  });
+
+  if (!changed) return 0;
   const persisted = save();
   renderEditorProducts();
   render();
   openTab('products');
-  const successMessage = currencyMatches ? 'Đã thêm sản phẩm vào báo giá' : 'Đã thêm sản phẩm; đơn giá để 0 vì khác loại tiền tệ';
-  toast(persisted ? successMessage : successMessage + ' — chưa autosave được');
+  if (notify) {
+    const mismatchText = currencyMismatch
+      ? ' • ' + currencyMismatch + ' dòng khác tiền tệ để giá 0'
+      : '';
+    toast((persisted ? 'Đã thêm ' : 'Đã thêm tạm thời ') + changed + ' sản phẩm vào báo giá' + mismatchText);
+  }
+  return changed;
+}
+
+function addCatalogProduct(product) {
+  return addCatalogProductsToQuote([product]);
+}
+
+function catalogDuplicateKeySet(products) {
+  const counts = new Map();
+  (Array.isArray(products) ? products : []).forEach((product) => {
+    const key = productKey(product);
+    if (!key.replace(/\|/g, '')) return;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+}
+
+function syncMasterBulkBars() {
+  const customerBar = document.getElementById('customerLibraryBulkBar');
+  const customerCount = document.getElementById('customerLibraryBulkCount');
+  const productBar = document.getElementById('productCatalogBulkBar');
+  const productCount = document.getElementById('productCatalogBulkCount');
+
+  if (customerBar) customerBar.hidden = selectedCustomerLibraryIds.size === 0;
+  if (customerCount) customerCount.textContent = selectedCustomerLibraryIds.size + ' khách hàng đã chọn';
+  if (productBar) productBar.hidden = selectedProductCatalogIds.size === 0;
+  if (productCount) productCount.textContent = selectedProductCatalogIds.size + ' sản phẩm đã chọn';
+}
+
+function syncProductGroupFilter(allProducts) {
+  const select = document.getElementById('productCatalogGroupFilter');
+  if (!select) return '';
+  const previous = select.value;
+  const groups = [...new Set(
+    (Array.isArray(allProducts) ? allProducts : [])
+      .map(item => String(item.group || '').trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'vi'));
+
+  select.innerHTML = '';
+  const all = document.createElement('option');
+  all.value = '';
+  all.textContent = 'Tất cả nhóm';
+  select.appendChild(all);
+  groups.forEach((group) => {
+    const option = document.createElement('option');
+    option.value = group;
+    option.textContent = group;
+    select.appendChild(option);
+  });
+  select.value = groups.includes(previous) ? previous : '';
+  return select.value;
 }
 
 function renderMasterData() {
@@ -5001,24 +5108,50 @@ function renderMasterData() {
 
   const customerQuery = canonicalSearchText(document.getElementById('customerLibrarySearch')?.value || '');
   const productQuery = canonicalSearchText(document.getElementById('productCatalogSearch')?.value || '');
+  const customerFilter = document.getElementById('customerLibraryFilter')?.value || '';
+  const productCurrency = document.getElementById('productCatalogCurrencyFilter')?.value || '';
+  const duplicateOnly = Boolean(document.getElementById('productCatalogDuplicateOnly')?.checked);
 
   const allCustomers = getCustomerLibrary();
   const allProducts = getProductCatalog();
+  const productGroup = syncProductGroupFilter(allProducts);
+  const duplicateKeys = catalogDuplicateKeySet(allProducts);
+
+  const customerIds = new Set(allCustomers.map(item => item.id));
+  selectedCustomerLibraryIds = new Set([...selectedCustomerLibraryIds].filter(id => customerIds.has(id)));
+  const productIds = new Set(allProducts.map(item => item.id));
+  selectedProductCatalogIds = new Set([...selectedProductCatalogIds].filter(id => productIds.has(id)));
+
   const customers = allCustomers.filter(item => {
-    const haystack = canonicalSearchText([item.name, item.company, item.phone, item.email, item.address, item.contact]
-      .filter(Boolean).join(' '));
-    return !customerQuery || haystack.includes(customerQuery);
+    const haystack = canonicalSearchText(
+      [item.name, item.company, item.phone, item.email, item.address, item.contact].filter(Boolean).join(' ')
+    );
+    if (customerQuery && !haystack.includes(customerQuery)) return false;
+    if (customerFilter === 'has-phone' && !canonicalLibraryPhone(item.phone)) return false;
+    if (customerFilter === 'missing-phone' && canonicalLibraryPhone(item.phone)) return false;
+    if (customerFilter === 'has-email' && !String(item.email || '').trim()) return false;
+    if (customerFilter === 'missing-email' && String(item.email || '').trim()) return false;
+    return true;
   });
+
   const products = allProducts.filter(item => {
-    const haystack = canonicalSearchText([item.group, item.name, item.pack, item.unit, item.note, item.currency]
-      .filter(Boolean).join(' '));
-    return !productQuery || haystack.includes(productQuery);
+    const haystack = canonicalSearchText(
+      [item.group, item.name, item.pack, item.unit, item.note, item.currency].filter(Boolean).join(' ')
+    );
+    if (productQuery && !haystack.includes(productQuery)) return false;
+    if (productGroup && item.group !== productGroup) return false;
+    if (productCurrency && normalizeCatalogCurrency(item.currency || 'VND') !== productCurrency) return false;
+    if (duplicateOnly && !duplicateKeys.has(productKey(item))) return false;
+    return true;
   });
 
   setText('customerLibraryCount', allCustomers.length);
   setText('productCatalogCount', allProducts.length);
   setText('customerLibraryResultCount', customers.length);
   setText('productCatalogResultCount', products.length);
+  setText('productCatalogDuplicateCount', duplicateKeys.size + ' nhóm trùng');
+  const duplicateSummary = document.getElementById('productCatalogDuplicateSummary');
+  if (duplicateSummary) duplicateSummary.hidden = duplicateKeys.size === 0;
 
   customerList.innerHTML = '';
   const customerFragment = document.createDocumentFragment();
@@ -5030,12 +5163,26 @@ function renderMasterData() {
       row.className = 'master-item master-table-row customer-table-grid';
 
       const nameCell = document.createElement('div');
-      nameCell.className = 'master-cell master-name-cell';
+      nameCell.className = 'master-cell master-name-cell master-select-cell';
+      const select = document.createElement('input');
+      select.type = 'checkbox';
+      select.className = 'master-row-select';
+      select.checked = selectedCustomerLibraryIds.has(customer.id);
+      select.setAttribute('aria-label', 'Chọn khách hàng ' + (customer.name || customer.company || ''));
+      select.addEventListener('change', () => {
+        if (select.checked) selectedCustomerLibraryIds.add(customer.id);
+        else selectedCustomerLibraryIds.delete(customer.id);
+        row.classList.toggle('bulk-selected', select.checked);
+        syncMasterBulkBars();
+      });
+      const identity = document.createElement('div');
       const name = document.createElement('strong');
       name.textContent = customer.name || customer.company || 'Khách hàng';
       const contact = document.createElement('small');
       contact.textContent = customer.contact || 'Chưa có người liên hệ';
-      nameCell.append(name, contact);
+      identity.append(name, contact);
+      nameCell.append(select, identity);
+      row.classList.toggle('bulk-selected', select.checked);
 
       const companyCell = document.createElement('div');
       companyCell.className = 'master-cell master-company-cell';
@@ -5065,6 +5212,7 @@ function renderMasterData() {
       del.addEventListener('click', () => {
         if (!confirm('Xóa khách hàng này khỏi danh bạ?')) return;
         if (!setCustomerLibrary(getCustomerLibrary().filter(item => item.id !== customer.id))) return;
+        selectedCustomerLibraryIds.delete(customer.id);
         renderMasterData();
         renderDashboard();
       });
@@ -5083,15 +5231,29 @@ function renderMasterData() {
     products.forEach(product => {
       const row = document.createElement('div');
       row.className = 'master-item master-table-row product-table-grid';
-      const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
+      const productCurrencyCode = normalizeCatalogCurrency(product.currency || 'VND');
 
       const nameCell = document.createElement('div');
-      nameCell.className = 'master-cell master-name-cell';
+      nameCell.className = 'master-cell master-name-cell master-select-cell';
+      const select = document.createElement('input');
+      select.type = 'checkbox';
+      select.className = 'master-row-select';
+      select.checked = selectedProductCatalogIds.has(product.id);
+      select.setAttribute('aria-label', 'Chọn sản phẩm ' + (product.name || ''));
+      select.addEventListener('change', () => {
+        if (select.checked) selectedProductCatalogIds.add(product.id);
+        else selectedProductCatalogIds.delete(product.id);
+        row.classList.toggle('bulk-selected', select.checked);
+        syncMasterBulkBars();
+      });
+      const identity = document.createElement('div');
       const name = document.createElement('strong');
       name.textContent = product.name || 'Sản phẩm';
       const currency = document.createElement('small');
-      currency.textContent = productCurrency;
-      nameCell.append(name, currency);
+      currency.textContent = productCurrencyCode + (duplicateKeys.has(productKey(product)) ? ' • Có thể trùng' : '');
+      identity.append(name, currency);
+      nameCell.append(select, identity);
+      row.classList.toggle('bulk-selected', select.checked);
 
       const groupCell = document.createElement('div');
       groupCell.className = 'master-cell master-group-cell';
@@ -5103,7 +5265,7 @@ function renderMasterData() {
 
       const priceCell = document.createElement('div');
       priceCell.className = 'master-cell master-price-cell';
-      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrency);
+      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrencyCode);
 
       const noteCell = document.createElement('div');
       noteCell.className = 'master-cell master-note-cell';
@@ -5121,6 +5283,7 @@ function renderMasterData() {
       del.addEventListener('click', () => {
         if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
         if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
+        selectedProductCatalogIds.delete(product.id);
         renderMasterData();
         renderDashboard();
       });
@@ -5130,6 +5293,7 @@ function renderMasterData() {
     });
     productList.appendChild(productFragment);
   }
+  syncMasterBulkBars();
 }
 
 function normalizePresetStore(value) {
