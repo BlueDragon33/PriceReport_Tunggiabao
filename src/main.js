@@ -1631,11 +1631,11 @@ function matchCustomerSuggestion(field, rawValue) {
   if (!value) return null;
   const customers = getCustomerLibrary();
   if (field === 'phone') {
-    const normalized = normalizePhone(value);
-    return customers.find(item => normalizePhone(item.phone) === normalized) || null;
+    const normalized = canonicalLibraryPhone(value);
+    return customers.find(item => canonicalLibraryPhone(item.phone) === normalized) || null;
   }
-  const folded = value.toLowerCase();
-  return customers.find(item => String(item?.[field] || '').trim().toLowerCase() === folded) || null;
+  const canonical = canonicalLibraryText(value);
+  return customers.find(item => canonicalLibraryText(item?.[field]) === canonical) || null;
 }
 
 function setupCustomerEntryAutocomplete() {
@@ -1939,10 +1939,10 @@ function renderEditorProducts() {
 
     const nameInput = body.querySelector('[data-product-key="name"]');
     nameInput?.addEventListener('change', () => {
-      const requested = String(nameInput.value || '').trim().toLowerCase();
+      const requested = canonicalLibraryText(nameInput.value);
       if (!requested) return;
       const selected = getProductCatalog().find(item =>
-        String(item.name || '').trim().toLowerCase() === requested
+        canonicalLibraryText(item.name) === requested
       );
       if (!selected) return;
       const currencyMatches = normalizeCatalogCurrency(selected.currency || 'VND') === normalizeCatalogCurrency(state.currency);
