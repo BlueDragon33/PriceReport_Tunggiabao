@@ -332,3 +332,7 @@ for (const studioPane of ['general','customer','products','payment','terms','des
 }
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
+
+if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
+if (/id="pCustomer"[^>]*style=/.test(html)) fail('V5 Pass 18 report customer meta must not use inline presentation');
+if (!v5Css.includes('.color.color-teal') || !css.includes('.report-customer-meta')) fail('V5 Pass 18 inline-style ownership migration is incomplete');
