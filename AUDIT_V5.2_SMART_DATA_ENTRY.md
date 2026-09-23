@@ -65,3 +65,23 @@ DOM regression now verifies that the multi-sheet chooser exists, is accessible a
 
 ### Next pass
 Improve row-level review for invalid and duplicate data so the user can inspect problematic rows instead of only seeing aggregate warning counts.
+
+
+## Pass 3 — Row-level invalid and duplicate review
+
+### Finding
+The import flow already calculated invalid rows and duplicate groups, but the UI exposed only aggregate counts. Users could see that something was wrong without seeing which source rows caused the warning.
+
+### Corrections
+- Added a dedicated “Dòng cần kiểm tra” review surface.
+- Invalid rows show original row number, captured name/quantity/price values and a Vietnamese reason.
+- Invalid rows remain excluded from the import result.
+- Duplicate candidates show the names involved and explicitly state that the application keeps all rows.
+- The issue panel stays hidden when no issue exists, preserving Simple Mode.
+- Styling uses existing V5 semantic tokens and adds no new responsive layer.
+
+### Regression guard
+DOM regression verifies the issue-review structure exists and remains hidden by default.
+
+### Next pass
+Add a controlled correction path for invalid rows so users can repair a row before applying the import, while preserving the current safe “only valid rows” default.
