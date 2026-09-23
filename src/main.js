@@ -4162,7 +4162,10 @@ function normalizeLibraryImportCandidate(mode, sheetName, rows) {
 async function readDataLibraryWorkbook(file, mode) {
   const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: 'array' });
+  const fileName = String(file?.name || '').toLowerCase();
+  const workbook = fileName.endsWith('.csv')
+    ? XLSX.read(new TextDecoder('utf-8').decode(buffer).replace(/^\uFEFF/, ''), { type: 'string', raw: true })
+    : XLSX.read(buffer, { type: 'array' });
   const sheetNames = workbook.SheetNames || [];
   if (!sheetNames.length) throw new Error('Workbook không có sheet dữ liệu.');
   const candidates = sheetNames.map(sheetName => {
