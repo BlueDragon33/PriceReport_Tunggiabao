@@ -290,3 +290,29 @@ assert.equal(afterRepair.products.length, 1);
 assert.equal(afterRepair.products[0].name, 'Trứng gà sửa lại');
 assert.equal(afterRepair.products[0].qty, 2);
 assert.equal(afterRepair.products[0].price, 28000);
+
+
+const duplicateRows = [
+  ['Tên SP', 'ĐVT', 'SL', 'Giá'],
+  ['Trứng gà', 'Hộp', '2', '28000'],
+  ['Trứng gà', 'Hộp', '3', '28000'],
+  ['Trứng vịt', 'Hộp', '1', '32000']
+];
+const duplicateHeader = detectSpreadsheetHeader(duplicateRows);
+const duplicateParsed = parseMappedSpreadsheetRows(duplicateRows, {
+  headerIndex: duplicateHeader.headerIndex,
+  mapping: duplicateHeader.mapping
+});
+assert.equal(duplicateParsed.duplicates.length, 1);
+assert.deepEqual(duplicateParsed.duplicates[0].rowNumbers, [2, 3]);
+assert.deepEqual(duplicateParsed.duplicates[0].quantities, [2, 3]);
+assert.deepEqual(duplicateParsed.duplicates[0].prices, [28000, 28000]);
+
+const duplicateSkipped = parseMappedSpreadsheetRows(duplicateRows, {
+  headerIndex: duplicateHeader.headerIndex,
+  mapping: duplicateHeader.mapping,
+  excludedRows: [3]
+});
+assert.equal(duplicateSkipped.duplicates.length, 0);
+assert.equal(duplicateSkipped.products.length, 2);
+assert.equal(duplicateSkipped.products.some(product => product.name === 'Trứng vịt'), true);
