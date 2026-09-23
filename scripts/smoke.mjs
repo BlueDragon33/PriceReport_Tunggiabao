@@ -306,3 +306,7 @@ if (!html.includes('id="settingsStartPage"') || !html.includes('id="settingsAuto
 if (!js.includes('function getAppPreferences()') || !js.includes('function renderSettingsWorkspace()')) fail('V4.9 settings preference runtime is missing');
 if (!js.includes("['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab)")) fail('V4.9 settings must use full-width application workspace');
 if (!css.includes('.settings-workspace-header') || !css.includes('.management-compact .history-table-row')) fail('V4.9 settings workspace or compact-management styles are missing');
+
+if (!js.includes("const initialAppPage = getAppPreferences().startPage")) fail('V4.9 start-page preference is not applied during boot');
+if (!js.includes("if (getAppPreferences().autoPcSave)")) fail('V4.9 PC autosave preference is not enforced');
+if (!css.includes('.nav button[data-tab="settings"]{display:none}') && !css.includes('.nav button[data-tab="settings"]')) fail('V4.9 mobile settings navigation rule is missing');
