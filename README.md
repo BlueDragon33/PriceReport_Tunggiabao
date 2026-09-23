@@ -2,23 +2,22 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.3 RC1 Guided Data Entry
+## Trạng thái hiện tại — V5.4 Data Management
 
-- Quotation Studio dùng quy trình 6 bước rõ ràng: **Thông tin → Sản phẩm → Thanh toán → Điều khoản → Thiết kế → Xuất**.
-- Mỗi bước có trạng thái **sẵn sàng / cần kiểm tra / có lỗi** từ cùng một validation engine, không tạo hệ kiểm tra song song.
-- Nút **Kiểm tra** mở guidance ngay trong Studio, phân biệt lỗi và cảnh báo, đưa người dùng tới đúng bước/field cần sửa.
-- Guidance cập nhật liên tục sau khi nhập liệu; thao tác bàn phím hỗ trợ quay lại đúng issue bằng **Escape** kể cả sau khi danh sách issue được render lại.
-- Cảnh báo sản phẩm định tuyến tới đúng khu vực sản phẩm và, khi xác định được, đúng dòng sản phẩm.
-- V5.2 Smart Data Entry vẫn là nền tảng: nhận diện cột Excel Việt/Anh, Smart Paste, chọn sheet, review mapping, sửa dòng lỗi, xử lý trùng có kiểm soát và Undo.
-- Product editor dùng data grid kiểu bảng tính, hỗ trợ nhập liên tục bằng bàn phím, bulk edit, autocomplete và lưu nhanh vào Data Library.
-- Danh bạ khách hàng và danh mục sản phẩm dùng canonical identity để giảm trùng do khác định dạng SĐT, khoảng trắng hoặc hoa/thường.
-- Import áp dụng theo transaction: nếu lưu bền thất bại thì rollback state và giữ màn review để thử lại, không báo thành công giả.
-- Export Excel/CSV giữ dữ liệu sản phẩm có cấu trúc; backup/restore và PC storage tiếp tục dùng các guard dữ liệu hiện có.
-- Preview A4, print/PDF, 8 template, typography ngoài bảng cố định và cỡ chữ trong bảng điều chỉnh độc lập vẫn được giữ.
-- Logo mặc định giữ ảnh gốc; chế độ xóa nền là thao tác minh bạch trên bản render, không phá file nguồn.
-- PWA/offline dùng cache generation riêng của V5.3 RC1 để tránh tái sử dụng asset V5.2 cũ.
-- Dữ liệu nghiệp vụ vẫn **local-first**; không có storage engine thứ hai cho khách hàng/sản phẩm.
-- Device classification / Device Gate và Application Management contract vẫn giữ kiến trúc hiện có.
+- Quotation Studio giữ quy trình 6 bước: **Thông tin → Sản phẩm → Thanh toán → Điều khoản → Thiết kế → Xuất**, với validation/guidance liên tục từ V5.3.
+- Data Library hiện quản lý **danh bạ khách hàng** và **danh mục sản phẩm** bằng cùng storage local-first hiện có, không tạo engine dữ liệu song song.
+- Tìm kiếm thư viện không phân biệt dấu tiếng Việt, hoa/thường và khoảng trắng; tập dữ liệu 100 / 300 / 500 dòng có regression riêng để tránh cắt ngầm.
+- Khách hàng có bộ lọc theo SĐT/email; sản phẩm có lọc nhóm, tiền tệ và bản ghi trùng.
+- Duplicate review dùng canonical identity; biến thể cùng sản phẩm khác tiền tệ không bị báo trùng giả.
+- Có bulk selection cho khách hàng/sản phẩm; sản phẩm đã chọn có thể thêm vào báo giá trong một chu kỳ state/save/render.
+- Data Library hỗ trợ **nhập Excel/XLS/CSV** theo luồng đọc → review → áp dụng, có chọn sheet, thống kê dòng hợp lệ/lỗi/trùng và cập nhật bản ghi hiện có mà giữ ID.
+- Nhóm trùng trong cùng file nhập bị loại khỏi Apply thay vì hệ thống tự chọn hoặc tự gộp một cách mơ hồ.
+- CSV được decode UTF-8 trước khi SheetJS parse để giữ chính xác tiêu đề/dữ liệu tiếng Việt.
+- Data Library hỗ trợ **xuất Excel và CSV** theo cấu trúc có thể nhập lại; catalog giữ nguyên currency.
+- V5.2 Smart Data Entry và V5.3 Guided Data Entry tiếp tục là nền tảng nhập liệu/guidance cho Quotation Studio.
+- Preview A4, print/PDF, 8 template, PC storage, backup/restore, Device Gate và Application Management contract tiếp tục giữ kiến trúc hiện có.
+- PWA/offline dùng cache generation riêng **V5.4 Data Management** để không giữ asset cũ từ V5.3.
+- Package release hiện được đồng bộ ở **5.4.0**.
 
 ## Kiểm thử
 

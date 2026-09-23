@@ -145,3 +145,28 @@ The same fallback is used by importer duplicate detection and storage/update log
 ### Safety
 Import/export UI is no longer a placeholder. Every visible control has a bound handler, and smoke guards the complete control contract.
 
+
+## Pass 4 — Release alignment
+
+### Finding
+After V5.4 functional work was merged and deployed, release metadata still identified the application as V5.3 RC1. Package version, PWA cache generation, smoke expectations and README status therefore described an older release than the actual production code.
+
+### Corrections
+- Package version is aligned to `5.4.0`.
+- Service Worker cache generation is rotated to `pricereport-shell-v54-data-management`.
+- Smoke gate now requires the V5.4 cache generation.
+- README current-status section now documents V5.4 Data Management, including transactional library import/export and UTF-8 CSV handling.
+- No business schema or storage migration is introduced by this pass.
+
+### Gate
+Release alignment must pass:
+1. runtime dependency audit;
+2. full npm test;
+3. service-worker ownership/lifetime regression;
+4. Data Library DOM regressions;
+5. smoke;
+6. production build;
+7. GitHub Actions green on the exact head.
+
+### Next track
+After V5.4 release alignment is green, start V5.5 from the aligned `main` baseline. The next audit should focus on operator safety and speed for repeated data-management work, especially reversible destructive actions, import-session recovery, and reducing repeated manual cleanup without introducing a second storage engine.
