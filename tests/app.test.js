@@ -47,6 +47,22 @@ test('V4 boots into application dashboard and exposes separate new-quote and edi
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 });
 
+test('V4.5 quotation studio shows current quote context and navigable workflow steps', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const quoteNo = document.getElementById('quoteNo').value;
+  expect(document.getElementById('studioQuoteLabel').textContent).toBe(quoteNo);
+  expect(document.querySelector('[data-studio-step="general"]').classList.contains('active')).toBe(true);
+
+  document.querySelector('[data-studio-step="products"]').click();
+  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
+  expect(document.querySelector('[data-studio-step="products"]').classList.contains('active')).toBe(true);
+
+  document.getElementById('studioBackHome').click();
+  expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
+
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
   const toggle = document.getElementById('mobileMoreToggle');
   const menu = document.getElementById('mobileMoreMenu');
