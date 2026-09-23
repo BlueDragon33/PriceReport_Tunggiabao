@@ -77,3 +77,21 @@ Current Pass 18 finding: seven Studio editor panes still used the generic legacy
 
 ### Pass 19 — semantic token normalization
 Pass 18 found no remaining application/report selector leakage, but repeated semantic colors were still hard-coded across Dashboard, management tables, Studio, Publishing and System surfaces. Pass 19 adds shared tokens for divider, heading/data text, purple accent and danger surface, preserving the exact existing colors while removing cross-workspace palette drift.
+
+## Pass 20 — Release Candidate gate
+V5 consolidation has completed the original 18-pass roadmap plus two corrective passes discovered during final QA.
+
+### Final RC metrics
+- Application UI stylesheet: 103,307 chars
+- Application `!important`: 0
+- Application responsive blocks: 4
+- Static inline styles in `index.html`: 0
+- Studio panes under one V5 surface language: 7/7
+- Full-width application workspaces using shared primitives: 6
+- Report/print stylesheet: 44,417 chars
+- Report/print `!important`: 428, held at the locked debt ceiling
+- Report/print media blocks: 6
+- Application/report selector leakage: none outside deliberate print-hide safeguards
+
+### RC decision
+No additional design pass is opened at this checkpoint. Further changes should be driven by a reproducible visual or UX defect, not by adding another override layer. V5 is promoted to `5.0.0-rc.1` and receives a new Service Worker cache namespace so a later production release cannot reuse stale V4.9 UI assets.
