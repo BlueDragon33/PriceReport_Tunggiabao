@@ -357,7 +357,13 @@
                 <span class="master-panel-icon">●</span>
                 <div><h3>Danh bạ khách hàng</h3><p>Lưu và sử dụng lại thông tin khách hàng cho báo giá mới.</p></div>
               </div>
-              <button class="btn primary" id="saveCurrentCustomer">＋ Lưu khách hàng hiện tại</button>
+              <div class="master-head-actions">
+                <button class="btn" id="importCustomerLibraryExcel" type="button">⇩ Nhập Excel/CSV</button>
+                <button class="btn" id="exportCustomerLibraryExcel" type="button">⇧ Excel</button>
+                <button class="btn" id="exportCustomerLibraryCsv" type="button">⇧ CSV</button>
+                <button class="btn primary" id="saveCurrentCustomer">＋ Lưu khách hàng hiện tại</button>
+                <input id="customerLibraryExcelInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+              </div>
             </div>
             <div class="master-toolbar">
               <div class="master-search-box"><span>⌕</span><input id="customerLibrarySearch" placeholder="Tên, công ty, SĐT, email..."></div>
@@ -391,7 +397,13 @@
                 <span class="master-panel-icon product-icon">◆</span>
                 <div><h3>Danh mục sản phẩm</h3><p>Lưu giá, quy cách và nhóm sản phẩm để thêm nhanh vào báo giá.</p></div>
               </div>
-              <button class="btn primary" id="saveCurrentProducts">＋ Lưu sản phẩm trong báo giá</button>
+              <div class="master-head-actions">
+                <button class="btn" id="importProductLibraryExcel" type="button">⇩ Nhập Excel/CSV</button>
+                <button class="btn" id="exportProductLibraryExcel" type="button">⇧ Excel</button>
+                <button class="btn" id="exportProductLibraryCsv" type="button">⇧ CSV</button>
+                <button class="btn primary" id="saveCurrentProducts">＋ Lưu sản phẩm trong báo giá</button>
+                <input id="productLibraryExcelInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+              </div>
             </div>
             <div class="master-toolbar master-toolbar-products">
               <div class="master-search-box"><span>⌕</span><input id="productCatalogSearch" placeholder="Tên sản phẩm, nhóm, quy cách, đơn vị..."></div>
@@ -1323,6 +1335,39 @@
       </footer>
     </section>
   </div>
+  <div class="data-library-import-backdrop" id="dataLibraryImportModal" hidden>
+    <section class="data-library-import-dialog" role="dialog" aria-modal="true" aria-labelledby="dataLibraryImportTitle">
+      <header class="data-library-import-head">
+        <div>
+          <strong id="dataLibraryImportTitle">KIỂM TRA DỮ LIỆU TRƯỚC KHI NHẬP</strong>
+          <span id="dataLibraryImportSubtitle">Chưa có dữ liệu.</span>
+        </div>
+        <button class="mini-action" id="closeDataLibraryImport" type="button" aria-label="Đóng">×</button>
+      </header>
+      <div class="data-library-import-body">
+        <div class="data-library-import-sheet-row" id="dataLibraryImportSheetRow" hidden>
+          <label for="dataLibraryImportSheetSelect">Sheet Excel</label>
+          <select id="dataLibraryImportSheetSelect"></select>
+        </div>
+        <div class="data-library-import-summary">
+          <article><small>Được áp dụng</small><strong id="dataLibraryImportValidCount">0</strong></article>
+          <article><small>Cập nhật bản có sẵn</small><strong id="dataLibraryImportUpdateCount">0</strong></article>
+          <article><small>Dòng lỗi</small><strong id="dataLibraryImportInvalidCount">0</strong></article>
+          <article><small>Nhóm trùng trong file</small><strong id="dataLibraryImportDuplicateCount">0</strong></article>
+        </div>
+        <div class="data-library-import-notice" id="dataLibraryImportNotice" role="status"></div>
+        <div class="data-library-import-preview">
+          <div class="data-library-import-preview-head" id="dataLibraryImportPreviewHead"></div>
+          <div id="dataLibraryImportPreviewBody"></div>
+        </div>
+      </div>
+      <footer class="data-library-import-actions">
+        <button class="btn" id="cancelDataLibraryImport" type="button">Hủy</button>
+        <button class="btn primary" id="applyDataLibraryImport" type="button" disabled>Áp dụng vào thư viện</button>
+      </footer>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 <script type="module" src="./src/main.js"></script>
