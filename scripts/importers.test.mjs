@@ -409,3 +409,13 @@ const catalogCurrencyParsedV54 = parseSpreadsheetRows(catalogCurrencyRowsV54);
 assert.equal(catalogCurrencyParsedV54.products.length, 1);
 assert.equal(catalogCurrencyParsedV54.products[0].currency, 'RUB');
 
+const emailOnlyCustomersV54 = parseCustomerSpreadsheetRows([
+  ['Customer name', 'Email'],
+  ['', 'one@example.com'],
+  ['', 'two@example.com'],
+  ['', 'ONE@example.com']
+]);
+assert.equal(emailOnlyCustomersV54.customers.length, 3);
+assert.equal(emailOnlyCustomersV54.duplicates.length, 1);
+assert.deepEqual(emailOnlyCustomersV54.duplicates[0].rowNumbers, [2, 4]);
+
