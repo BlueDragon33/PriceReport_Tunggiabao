@@ -67,6 +67,28 @@ test('V4.5 quotation studio shows current quote context and navigable workflow s
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5.1 quotation studio exposes six explicit workflow steps and drafting commands', () => {
+  document.querySelector('[data-tab="general"]').click();
+  expect(document.querySelectorAll('[data-studio-step]').length).toBe(6);
+  expect(document.querySelector('[data-studio-step="terms"]')).toBeTruthy();
+  expect(document.getElementById('studioSaveQuote')).toBeTruthy();
+  expect(document.getElementById('studioCheckQuote')).toBeTruthy();
+  expect(document.getElementById('studioPreviewQuote')).toBeTruthy();
+  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 1/6');
+
+  document.getElementById('studioNextStep').click();
+  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
+  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 2/6');
+
+  document.querySelector('[data-studio-step="terms"]').click();
+  expect(document.getElementById('pane-terms').classList.contains('active')).toBe(true);
+  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 4/6');
+
+  document.getElementById('studioPrevStep').click();
+  expect(document.getElementById('pane-payment').classList.contains('active')).toBe(true);
+  document.querySelector('[data-tab="general"]').click();
+});
+
 test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
   const toggle = document.getElementById('mobileMoreToggle');
   const menu = document.getElementById('mobileMoreMenu');
@@ -134,8 +156,8 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
     search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
   }
   search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-  expect(document.getElementById('pane-customer').classList.contains('active')).toBe(true);
-  expect(document.getElementById('customerCompany').value).toBe('Công ty Search V46');
+  expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
+  expect(document.getElementById('quickCustomerCompany').value).toBe('Công ty Search V46');
 
   if (previousCustomers == null) localStorage.removeItem(customersKey);
   else localStorage.setItem(customersKey, previousCustomers);
@@ -215,12 +237,57 @@ test('V5 Pass 18 applies one Studio surface language across all editor panes', (
   expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
 });
 
-test('product editor can add a row and keep preview in sync', () => {
+test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
   const beforeCards = document.querySelectorAll('.product-card').length;
   const beforeRows = document.querySelectorAll('#qBody tr').length;
   document.getElementById('addProduct').click();
   expect(document.querySelectorAll('.product-card').length).toBe(beforeCards + 1);
+  expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows);
+
+  const lastName = document.querySelector('.product-card:last-child [data-product-key="name"]');
+  expect(lastName).toBeTruthy();
+  lastName.value = 'Sản phẩm kiểm thử UX';
+  lastName.dispatchEvent(new Event('input', { bubbles: true }));
   expect(document.querySelectorAll('#qBody tr').length).toBe(beforeRows + 1);
+  expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
+});
+
+test('meaningful unnamed product is visibly flagged and blocks print preflight', () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+  const lastCard = document.querySelector('.product-card:last-child');
+  const price = lastCard.querySelector('[data-product-key="price"]');
+  price.value = '125000';
+  price.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(document.querySelector('#qBody tr:last-child').classList.contains('draft-missing-name')).toBe(true);
+  expect(document.getElementById('documentHealth').textContent).toContain('lỗi cần sửa');
+  const printsBefore = window.print.mock.calls.length;
+  document.querySelector('.print-action').click();
+  expect(window.print.mock.calls.length).toBe(printsBefore);
+
+  const name = lastCard.querySelector('[data-product-key="name"]');
+  name.value = 'Hàng bổ sung';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.querySelector('#qBody tr:last-child').classList.contains('draft-missing-name')).toBe(false);
+});
+
+test('pasted numbered terms are normalized and customer block is structured for report output', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const customerName = document.getElementById('quickCustomerName');
+  customerName.value = 'Công ty Minh Họa';
+  customerName.dispatchEvent(new Event('input', { bubbles: true }));
+  const showCustomer = document.getElementById('quickShowCustomer');
+  showCustomer.checked = true;
+  showCustomer.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('pCustomer').textContent).toContain('Khách hàng:');
+
+  document.querySelector('[data-tab="terms"]').click();
+  const terms = document.getElementById('termsText');
+  terms.value = '1. Giao hàng trong ngày\n2) Thanh toán chuyển khoản\n- Giá trị báo giá';
+  terms.dispatchEvent(new Event('input', { bubbles: true }));
+  const rendered = Array.from(document.querySelectorAll('#pTerms li')).map(el => el.textContent);
+  expect(rendered).toEqual(['Giao hàng trong ngày','Thanh toán chuyển khoản','Giá trị báo giá']);
 });
 
 test('template selection applies real document profile', () => {
@@ -233,7 +300,16 @@ test('template selection applies real document profile', () => {
   expect(document.querySelector('.quote-top > .qmeta').style.display).toBe('none');
 });
 
-test('history save records one quotation and print preflight reaches print', () => {
+test('history save records one valid quotation and print preflight reaches print', () => {
+  document.querySelectorAll('.product-card').forEach((card, index) => {
+    const name = card.querySelector('[data-product-key="name"]');
+    if (name && !name.value.trim()) {
+      name.value = 'Sản phẩm hợp lệ ' + (index + 1);
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+  window.alert.mockClear();
+  window.print.mockClear();
   document.getElementById('saveQuoteToHistory').click();
   expect(document.getElementById('historyCount').textContent).toBe('1');
   expect(document.getElementById('historyPendingCount').textContent).toBe('1');
@@ -837,4 +913,143 @@ test('KT Device Gate starts in rollout-safe classification-only mode before prod
   const accessState = document.documentElement.dataset.priceReportDeviceAccess;
   expect(['classification-only', undefined]).toContain(accessState);
   expect(document.getElementById('deviceProfileChip')).toBeTruthy();
+});
+
+
+test('failed history persistence keeps a changed quotation visibly unsaved', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const stateKey = 'tunggiabao-price-report-v1';
+  const previousHistory = localStorage.getItem(historyKey);
+  const base = JSON.parse(localStorage.getItem(stateKey));
+  const seeded = [{
+    id: 'v51-save-failure',
+    savedAt: new Date().toISOString(),
+    status: 'draft',
+    currency: base.currency || 'VND',
+    total: 1000,
+    data: { ...base, quoteNo: 'BG-V51-SAVE-FAIL', quoteStatus: 'draft', historyRecordId: '' }
+  }];
+  localStorage.setItem(historyKey, JSON.stringify(seeded));
+
+  document.querySelector('[data-tab="history"]').click();
+  const row = Array.from(document.querySelectorAll('#quoteHistoryList .history-table-row'))
+    .find(item => item.querySelector('.history-quote-cell strong')?.textContent === 'BG-V51-SAVE-FAIL');
+  expect(row).toBeTruthy();
+  row.querySelector('.history-actions .btn.primary').click();
+  expect(document.getElementById('studioHistoryState').textContent).toBe('Đã lưu lịch sử');
+
+  const title = document.getElementById('quoteTitle');
+  title.value = (title.value || 'BẢNG BÁO GIÁ') + ' · chỉnh sửa';
+  title.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+
+  const nativeSetItem = Storage.prototype.setItem;
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+    if (key === historyKey) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    return nativeSetItem.call(this, key, value);
+  });
+  document.getElementById('studioSaveQuote').click();
+  spy.mockRestore();
+
+  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+  expect(JSON.parse(localStorage.getItem(historyKey))[0].data.quoteTitle).not.toContain('· chỉnh sửa');
+
+  if (previousHistory == null) localStorage.removeItem(historyKey);
+  else localStorage.setItem(historyKey, previousHistory);
+});
+
+test('updating a saved quotation cannot reuse another quotation number', () => {
+  const historyKey = 'tunggiabao-price-report-history-v1';
+  const stateKey = 'tunggiabao-price-report-v1';
+  const previousHistory = localStorage.getItem(historyKey);
+  const base = JSON.parse(localStorage.getItem(stateKey));
+  const makeRecord = (id, quoteNo) => ({
+    id,
+    savedAt: new Date().toISOString(),
+    status: 'draft',
+    currency: base.currency || 'VND',
+    total: 1000,
+    data: {
+      ...base,
+      quoteNo,
+      quoteStatus: 'draft',
+      historyRecordId: '',
+      products: [{ group: '', name: 'Sản phẩm ' + id, pack: '', unit: 'cái', qty: 1, price: 1000, note: '' }]
+    }
+  });
+  localStorage.setItem(historyKey, JSON.stringify([
+    makeRecord('v51-collision-a', 'BG-V51-A'),
+    makeRecord('v51-collision-b', 'BG-V51-B')
+  ]));
+
+  document.querySelector('[data-tab="history"]').click();
+  const rowA = Array.from(document.querySelectorAll('#quoteHistoryList .history-table-row'))
+    .find(item => item.querySelector('.history-quote-cell strong')?.textContent === 'BG-V51-A');
+  expect(rowA).toBeTruthy();
+  rowA.querySelector('.history-actions .btn.primary').click();
+
+  const quoteNo = document.getElementById('quoteNo');
+  quoteNo.value = 'BG-V51-B';
+  quoteNo.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioSaveQuote').click();
+
+  expect(document.getElementById('quoteNo').value).not.toBe('BG-V51-B');
+  const stored = JSON.parse(localStorage.getItem(historyKey));
+  const numbers = stored.map(record => record.data.quoteNo);
+  expect(new Set(numbers).size).toBe(numbers.length);
+
+  if (previousHistory == null) localStorage.removeItem(historyKey);
+  else localStorage.setItem(historyKey, previousHistory);
+});
+
+
+test('product group heading repeats correctly after an ungrouped break', () => {
+  document.querySelector('[data-tab="products"]').click();
+  const addDraft = ({ group = '', name }) => {
+    document.getElementById('addProduct').click();
+    const card = document.querySelector('.product-card:last-child');
+    const nameInput = card.querySelector('[data-product-key="name"]');
+    const groupInput = card.querySelector('[data-product-key="group"]');
+    groupInput.value = group;
+    groupInput.dispatchEvent(new Event('input', { bubbles: true }));
+    nameInput.value = name;
+    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  addDraft({ group: 'V51-GROUP-REPEAT', name: 'Sản phẩm nhóm A' });
+  addDraft({ name: 'Sản phẩm không nhóm' });
+  addDraft({ group: 'V51-GROUP-REPEAT', name: 'Sản phẩm nhóm B' });
+
+  const headings = Array.from(document.querySelectorAll('#qBody .qgroup-row'))
+    .filter(row => row.textContent === 'V51-GROUP-REPEAT');
+  expect(headings.length).toBe(2);
+});
+
+test('professional report suppresses empty terms and empty payment rows', () => {
+  document.querySelector('[data-tab="payment"]').click();
+  const showPayment = document.getElementById('showPaymentBlock');
+  showPayment.checked = true;
+  showPayment.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const method = document.getElementById('paymentMethod');
+  method.value = 'Tiền mặt';
+  method.dispatchEvent(new Event('input', { bubbles: true }));
+  for (const id of ['bankName','bankAccount','bankOwner']) {
+    const input = document.getElementById(id);
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  expect(document.getElementById('paymentPrint').style.display).toBe('block');
+  expect(document.getElementById('pBankName').closest('div').style.display).toBe('none');
+  expect(document.getElementById('pBankAccount').closest('div').style.display).toBe('none');
+  expect(document.getElementById('pBankOwner').closest('div').style.display).toBe('none');
+
+  document.querySelector('[data-tab="terms"]').click();
+  const showTerms = document.getElementById('showTerms');
+  showTerms.checked = true;
+  showTerms.dispatchEvent(new Event('change', { bubbles: true }));
+  const terms = document.getElementById('termsText');
+  terms.value = '   \n   ';
+  terms.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('termsBox').style.display).toBe('none');
 });

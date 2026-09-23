@@ -148,7 +148,8 @@
 .theme-modern .footer,.theme-blue .footer{color:#fff}
 .footer span{vertical-align:middle}
 .clickable:hover{outline:1px dashed rgba(13,127,242,.55);background:rgba(13,127,242,.025);cursor:pointer}
-.report-customer-meta{display:none;margin-bottom:3mm}
+.report-customer-meta{display:none;margin:0 0 3mm;padding:1.8mm 2.4mm;border-left:1mm solid var(--doc);background:color-mix(in srgb,var(--doc) 5%,#fff);white-space:pre-line;line-height:1.45}
+.qtable .draft-missing-name td{background:#fff8e8;color:#805d12}
 /* Printing */
 @media print{
   @page{size:A4 portrait;margin:0}

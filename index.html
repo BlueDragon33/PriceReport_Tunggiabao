@@ -84,11 +84,25 @@
           <p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p>
         </div>
         <div class="studio-stepper" aria-label="Các bước soạn báo giá">
-          <button type="button" data-studio-step="general"><b>1</b><span>Nội dung</span></button>
+          <button type="button" data-studio-step="general"><b>1</b><span>Thông tin</span></button>
           <button type="button" data-studio-step="products"><b>2</b><span>Sản phẩm</span></button>
           <button type="button" data-studio-step="payment"><b>3</b><span>Thanh toán</span></button>
-          <button type="button" data-studio-step="design"><b>4</b><span>Thiết kế</span></button>
-          <button type="button" data-studio-step="export"><b>5</b><span>Xuất</span></button>
+          <button type="button" data-studio-step="terms"><b>4</b><span>Điều khoản</span></button>
+          <button type="button" data-studio-step="design"><b>5</b><span>Thiết kế</span></button>
+          <button type="button" data-studio-step="export"><b>6</b><span>Xuất</span></button>
+        </div>
+        <div class="studio-commandbar" aria-label="Thao tác báo giá">
+          <div class="studio-command-main">
+            <button class="btn primary" id="studioSaveQuote" type="button">Lưu nháp</button>
+            <button class="btn" id="studioCheckQuote" type="button">Kiểm tra</button>
+            <button class="btn" id="studioPreviewQuote" type="button">Xem A4</button>
+          </div>
+          <div class="studio-flow-controls">
+            <button class="btn studio-flow-button" id="studioPrevStep" type="button" aria-label="Bước trước">←</button>
+            <span class="studio-workflow-position" id="studioWorkflowPosition">Bước 1/6</span>
+            <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
+          </div>
+          <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
         </div>
       </div>
       <div class="panel-body">
@@ -207,13 +221,20 @@
             <div class="row"><label>Slogan</label><input id="slogan" data-bind="slogan"></div>
           </div>
           <div class="section-block quick-customer">
-            <div class="section-title">THÔNG TIN KHÁCH HÀNG</div>
+            <div class="quick-customer-head">
+              <div>
+                <div class="section-title">THÔNG TIN KHÁCH HÀNG</div>
+                <div class="help">Nhập trực tiếp hoặc lấy nhanh từ danh bạ. Đây là nơi nhập khách hàng chính của báo giá.</div>
+              </div>
+              <button class="btn" type="button" data-open-master="customers">Chọn từ danh bạ</button>
+            </div>
             <div class="row required"><label>Tên khách hàng</label><input id="quickCustomerName" data-bind="customerName"></div>
             <div class="row"><label>Công ty</label><input id="quickCustomerCompany" data-bind="customerCompany" placeholder="Nhập tên công ty (nếu có)"></div>
             <div class="row"><label>Địa chỉ</label><input id="quickCustomerAddress" data-bind="customerAddress" placeholder="Nhập địa chỉ"></div>
             <div class="row"><label>SĐT</label><input id="quickCustomerPhone" data-bind="customerPhone" placeholder="Nhập số điện thoại"></div>
             <div class="row"><label>Email</label><input id="quickCustomerEmail" data-bind="customerEmail" type="email" placeholder="Nhập email"></div>
             <div class="row"><label>Người liên hệ</label><input id="quickCustomerContact" data-bind="customerContact" placeholder="Nhập người liên hệ"></div>
+            <label class="check quick-customer-print"><input id="quickShowCustomer" data-bind="showCustomer" type="checkbox"> Hiện khối thông tin khách hàng trên bản in</label>
             <div class="grid2 compact-grid">
               <div class="row"><label>Ngày báo giá</label><input id="quickQuoteDate" data-bind="quoteDate" type="date"></div>
               <div class="row"><label>Hiệu lực báo giá</label><input id="quickValidity" data-bind="validity"></div>
@@ -526,6 +547,7 @@
                 <p>Nhập theo từng thẻ, có thể mở rộng vùng làm việc để thao tác thoải mái.</p>
               </div>
               <div class="btns product-workspace-actions">
+                <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
                 <button class="btn" id="productFocusToggle">⛶ Mở rộng vùng nhập</button>
                 <button class="btn" id="collapseAllProducts">Thu gọn tất cả</button>
               </div>
@@ -535,12 +557,14 @@
           </div>
           <div class="card">
             <h3>Cột hiển thị</h3>
-            <label class="check"><input id="showStt" data-bind="showStt" type="checkbox"> Hiện STT</label>
-            <label class="check"><input id="showPack" data-bind="showPack" type="checkbox"> Hiện quy cách</label>
-            <label class="check"><input id="showQty" data-bind="showQty" type="checkbox"> Hiện số lượng</label>
-            <label class="check"><input id="showPrice" data-bind="showPrice" type="checkbox"> Hiện đơn giá</label>
-            <label class="check"><input id="showAmount" data-bind="showAmount" type="checkbox"> Hiện thành tiền</label>
-            <label class="check"><input id="showNote" data-bind="showNote" type="checkbox"> Hiện ghi chú</label>
+            <div class="column-toggle-grid">
+              <label class="check"><input id="showStt" data-bind="showStt" type="checkbox"> Hiện STT</label>
+              <label class="check"><input id="showPack" data-bind="showPack" type="checkbox"> Hiện quy cách</label>
+              <label class="check"><input id="showQty" data-bind="showQty" type="checkbox"> Hiện số lượng</label>
+              <label class="check"><input id="showPrice" data-bind="showPrice" type="checkbox"> Hiện đơn giá</label>
+              <label class="check"><input id="showAmount" data-bind="showAmount" type="checkbox"> Hiện thành tiền</label>
+              <label class="check"><input id="showNote" data-bind="showNote" type="checkbox"> Hiện ghi chú</label>
+            </div>
           </div>
         </div>
 
@@ -555,6 +579,10 @@
             <div class="row"><label>Tiền tệ</label><select id="currency" data-bind="currency"><option>VND</option><option>USD</option><option>RUB</option></select></div>
             <label class="check"><input id="showTotals" data-bind="showTotals" type="checkbox"> Hiện bảng tổng cộng</label>
             <label class="check"><input id="showWords" data-bind="showWords" type="checkbox"> Hiện số tiền bằng chữ</label>
+            <div class="studio-money-summary" aria-live="polite">
+              <div><span>Tạm tính</span><strong id="studioSubtotal">0 VND</strong></div>
+              <div class="grand"><span>Tổng thanh toán</span><strong id="studioGrandTotal">0 VND</strong></div>
+            </div>
           </div>
           <div class="card">
             <h3>Thanh toán</h3>
@@ -1003,7 +1031,7 @@
             </div>
           </div>
           <div class="recipient clickable" data-target="recipientLine" id="pRecipient" data-layout-block="recipient" data-layout-label="Kính gửi"></div>
-          <div class="qmeta clickable report-customer-meta" data-target="customerName" id="pCustomer" data-layout-block="customer" data-layout-label="Khách hàng"></div>
+          <div class="qmeta clickable report-customer-meta" data-target="quickCustomerName" id="pCustomer" data-layout-block="customer" data-layout-label="Khách hàng"></div>
           <p class="intro clickable" data-target="intro" id="pIntro" data-layout-block="intro" data-layout-label="Lời mở đầu"></p>
           <div class="sectionbar clickable" data-target="sectionTitle" id="pSection" data-layout-block="section" data-layout-label="Tiêu đề nhóm"></div>
 

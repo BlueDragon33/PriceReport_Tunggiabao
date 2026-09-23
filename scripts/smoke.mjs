@@ -35,7 +35,9 @@ const requiredIds = [
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols',
   'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
   'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
-  'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport'
+  'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
+  'studioSaveQuote','studioCheckQuote','studioPreviewQuote','studioPrevStep','studioNextStep',
+  'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -65,7 +67,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v50-ui-rc2")) fail('Service-worker cache version was not upgraded for V5 UI release candidate');
+if (!sw.includes("pricereport-shell-v51-studio-rc1")) fail('Service-worker cache version was not upgraded for V5 UI release candidate');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -330,6 +332,13 @@ for (const studioPane of ['general','customer','products','payment','terms','des
     fail('V5 Pass 18 studio pane scope missing: ' + studioPane);
   }
 }
+if ((html.match(/data-studio-step=/g) || []).length !== 6) fail('V5.1 quotation workflow must expose exactly six drafting steps');
+if (!html.includes('data-studio-step="terms"')) fail('V5.1 quotation workflow must expose Terms as its own step');
+if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
+if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
+if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
+if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
+
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
