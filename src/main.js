@@ -583,6 +583,33 @@ function currentQuoteHistoryState() {
     : 'dirty';
 }
 
+function syncStudioBlocks(activeTab = '') {
+  const namedProducts = (state.products || []).filter(product => String(product?.name || '').trim()).length;
+  const statusByKey = {
+    general: Boolean(String(state.companyName || '').trim() && String(state.quoteTitle || '').trim()),
+    customer: Boolean(String(state.customerName || '').trim() || String(state.customerCompany || '').trim()),
+    products: namedProducts > 0,
+    payment: Boolean(String(state.paymentMethod || '').trim() || Number(state.vatPct || 0) || Number(state.discountPct || 0) || Number(state.otherFee || 0)),
+    terms: Boolean(String(state.termsText || '').trim()),
+    signature: Boolean(String(state.rightName || '').trim() || String(state.rightTitle || '').trim()),
+    custom: Boolean(String(state.intro || '').trim() || String(state.quoteSubtitle || '').trim()),
+    bank: Boolean(String(state.bankName || '').trim() || String(state.bankAccount || '').trim() || String(state.bankOwner || '').trim()),
+    design: true
+  };
+
+  document.querySelectorAll('[data-studio-block]').forEach((button) => {
+    const key = button.dataset.blockKey || button.dataset.studioBlock;
+    const complete = Boolean(statusByKey[key]);
+    const status = button.querySelector('[data-block-status]');
+    button.dataset.state = complete ? 'complete' : 'empty';
+    button.classList.toggle('active', button.dataset.studioBlock === activeTab);
+    if (status) {
+      if (key === 'products' && complete) status.textContent = namedProducts + ' sản phẩm';
+      else status.textContent = complete ? 'Đã có nội dung' : 'Chưa có nội dung';
+    }
+  });
+}
+
 function syncStudioContext(tab = '') {
   const quoteLabel = document.getElementById('studioQuoteLabel');
   const quoteStatus = document.getElementById('studioQuoteStatus');
@@ -630,6 +657,7 @@ function syncStudioContext(tab = '') {
       ? 'Tiếp: ' + STUDIO_WORKFLOW[workflowIndex + 1].label
       : 'Đang ở bước cuối';
   }
+  syncStudioBlocks(tab);
 }
 
 const tabMeta = {
