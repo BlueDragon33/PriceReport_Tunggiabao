@@ -1431,18 +1431,34 @@ function productHasDraftContent(product) {
   return normalizeNonNegativeNumber(product.qty) !== 1;
 }
 
-function focusProductName(index) {
+function focusProductCell(index, key = 'name') {
   requestAnimationFrame(() => {
-    const cards = document.querySelectorAll('#productEditor .product-card');
-    const target = cards[index]?.querySelector('[data-product-key="name"]');
+    const card = document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]');
+    const target = card?.querySelector('[data-product-key="' + key + '"]');
     target?.focus();
     target?.select?.();
   });
 }
 
+function focusProductName(index) {
+  focusProductCell(index, 'name');
+}
+
+function appendBlankProduct({ focusKey = 'name' } = {}) {
+  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  const nextIndex = state.products.length - 1;
+  collapsedProducts.delete(nextIndex);
+  save();
+  renderEditorProducts();
+  render();
+  focusProductCell(nextIndex, focusKey);
+  return nextIndex;
+}
+
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
   wrap.className = 'product-field ' + className;
+  wrap.dataset.productField = key;
   const title = document.createElement('span');
   title.textContent = label;
   const input = key === 'note' ? document.createElement('textarea') : document.createElement('input');
@@ -1458,6 +1474,33 @@ function productField(label, key, value, type, onInput, className = '') {
   if (key === 'pack') input.placeholder = 'VD: Hộp 10 quả';
   if (key === 'unit') input.placeholder = 'VD: Hộp, kg, cái';
   input.addEventListener('input', () => onInput(input));
+  input.addEventListener('keydown', (event) => {
+    const card = input.closest('.product-card');
+    const rowIndex = Number(card?.dataset.productIndex);
+    if (!Number.isInteger(rowIndex)) return;
+
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      const targetIndex = rowIndex + (event.key === 'ArrowDown' ? 1 : -1);
+      if (targetIndex >= 0 && targetIndex < state.products.length) {
+        event.preventDefault();
+        focusProductCell(targetIndex, key);
+      }
+      return;
+    }
+
+    if (event.key === 'Enter' && key !== 'note' && !event.shiftKey) {
+      event.preventDefault();
+      if (rowIndex >= state.products.length - 1) appendBlankProduct({ focusKey: 'name' });
+      else focusProductCell(rowIndex + 1, key);
+      return;
+    }
+
+    if (event.key === 'Tab' && !event.shiftKey && key === 'note') {
+      event.preventDefault();
+      if (rowIndex >= state.products.length - 1) appendBlankProduct({ focusKey: 'name' });
+      else focusProductCell(rowIndex + 1, 'name');
+    }
+  });
   wrap.append(title, input);
   return wrap;
 }
@@ -1468,7 +1511,8 @@ function renderEditorProducts() {
 
   state.products.forEach((product, index) => {
     const card = document.createElement('article');
-    card.className = 'product-card' + (collapsedProducts.has(index) ? ' collapsed' : '');
+    card.className = 'product-card product-grid-row' + (collapsedProducts.has(index) ? ' collapsed' : '');
+    card.dataset.productIndex = String(index);
 
     const head = document.createElement('div');
     head.className = 'product-card-head';
@@ -3003,12 +3047,7 @@ document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () 
 });
 
 document.getElementById('addProduct').addEventListener('click', () => {
-  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
-  const nextIndex = state.products.length - 1;
-  save();
-  renderEditorProducts();
-  render();
-  focusProductName(nextIndex);
+  appendBlankProduct({ focusKey: 'name' });
 });
 
 document.getElementById('productFocusToggle').addEventListener('click', () => {
