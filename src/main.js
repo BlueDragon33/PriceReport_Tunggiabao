@@ -676,6 +676,26 @@ document.querySelectorAll('[data-studio-step]').forEach((button) => {
   button.addEventListener('click', () => openTab(button.dataset.studioStep));
 });
 
+function moveStudioWorkflow(direction) {
+  const activeTab = document.querySelector('.pane.active')?.id?.replace('pane-', '') || '';
+  const stage = STUDIO_STAGE_BY_TAB[activeTab] || '';
+  const index = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
+  const target = STUDIO_WORKFLOW[index + direction];
+  if (target) openTab(target.tab);
+}
+
+document.getElementById('studioPrevStep')?.addEventListener('click', () => moveStudioWorkflow(-1));
+document.getElementById('studioNextStep')?.addEventListener('click', () => moveStudioWorkflow(1));
+document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurrentQuote);
+document.getElementById('studioCheckQuote')?.addEventListener('click', () => document.getElementById('preflightCheck')?.click());
+document.getElementById('studioPreviewQuote')?.addEventListener('click', () => openTab('view'));
+
+document.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return;
+  event.preventDefault();
+  saveCurrentQuote();
+});
+
 function dashboardStatusClass(status) {
   return ['draft','sent','accepted','rejected','expired'].includes(status) ? status : 'draft';
 }
@@ -1403,6 +1423,23 @@ function resetCollapsedProductsForState() {
 
 resetCollapsedProductsForState();
 
+function productHasDraftContent(product) {
+  if (!product) return false;
+  const textFields = [product.group, product.name, product.pack, product.unit, product.note];
+  if (textFields.some(value => String(value || '').trim())) return true;
+  if (normalizeNonNegativeNumber(product.price) > 0) return true;
+  return normalizeNonNegativeNumber(product.qty) !== 1;
+}
+
+function focusProductName(index) {
+  requestAnimationFrame(() => {
+    const cards = document.querySelectorAll('#productEditor .product-card');
+    const target = cards[index]?.querySelector('[data-product-key="name"]');
+    target?.focus();
+    target?.select?.();
+  });
+}
+
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
   wrap.className = 'product-field ' + className;
@@ -1410,11 +1447,16 @@ function productField(label, key, value, type, onInput, className = '') {
   title.textContent = label;
   const input = key === 'note' ? document.createElement('textarea') : document.createElement('input');
   if (key !== 'note') input.type = type || 'text';
+  input.dataset.productKey = key;
   input.value = value == null ? '' : value;
   if (type === 'number') {
     input.min = '0';
     input.step = key === 'price' ? '1000' : '1';
+    input.inputMode = 'decimal';
   }
+  if (key === 'name') input.placeholder = 'Tên hàng hóa / dịch vụ';
+  if (key === 'pack') input.placeholder = 'VD: Hộp 10 quả';
+  if (key === 'unit') input.placeholder = 'VD: Hộp, kg, cái';
   input.addEventListener('input', () => onInput(input));
   wrap.append(title, input);
   return wrap;
@@ -1504,7 +1546,7 @@ function renderEditorProducts() {
     remove.setAttribute('aria-label', 'Xóa sản phẩm ' + (index + 1));
     remove.textContent = '×';
     remove.addEventListener('click', () => {
-      if (state.products.length > 1 && !confirm('Xóa sản phẩm này?')) return;
+      if (productHasDraftContent(product) && !confirm('Xóa sản phẩm này khỏi báo giá?')) return;
       state.products.splice(index, 1);
       if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
@@ -1592,28 +1634,37 @@ function renderPreviewProducts() {
   });
   head.appendChild(hrow);
 
+  const draftProducts = state.products
+    .map((product, sourceIndex) => ({ product, sourceIndex }))
+    .filter(({ product }) => productHasDraftContent(product));
+
   let activeGroup = null;
   let groupIndex = 0;
-  state.products.forEach((product, index) => {
+  draftProducts.forEach(({ product }, visibleIndex) => {
     const productGroup = String(product.group || '').trim();
-    if (productGroup && productGroup !== activeGroup) {
+    if (productGroup !== activeGroup) {
       activeGroup = productGroup;
       groupIndex = 0;
-      const groupRow = document.createElement('tr');
-      groupRow.className = 'qgroup-row';
-      const groupCell = document.createElement('td');
-      groupCell.colSpan = Math.max(1, cols.length);
-      groupCell.textContent = productGroup;
-      groupRow.appendChild(groupCell);
-      body.appendChild(groupRow);
+      if (productGroup) {
+        const groupRow = document.createElement('tr');
+        groupRow.className = 'qgroup-row';
+        const groupCell = document.createElement('td');
+        groupCell.colSpan = Math.max(1, cols.length);
+        groupCell.textContent = productGroup;
+        groupRow.appendChild(groupCell);
+        body.appendChild(groupRow);
+      }
     }
     groupIndex += 1;
 
     const row = document.createElement('tr');
+    const missingName = !String(product.name || '').trim();
+    if (missingName) row.classList.add('draft-missing-name');
     cols.forEach(([, key]) => {
       const td = document.createElement('td');
       let value = '';
-      if (key === 'stt') value = productGroup ? groupIndex : index + 1;
+      if (key === 'stt') value = productGroup ? groupIndex : visibleIndex + 1;
+      else if (key === 'name') value = missingName ? '⚠ Chưa đặt tên' : product.name;
       else if (key === 'price') value = numericMoney(product.price);
       else if (key === 'amount') value = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
       else value = product[key] == null ? '' : product[key];
@@ -1655,6 +1706,8 @@ function renderTotals() {
   setText('vatLabel', 'VAT (' + vatPct + '%)');
   setText('fee', money(fee));
   setText('grand', money(total));
+  setText('studioSubtotal', money(subtotal));
+  setText('studioGrandTotal', money(total));
 
   document.getElementById('discRow').style.display = discount ? 'table-row' : 'none';
   document.getElementById('vatRow').style.display = vat ? 'table-row' : 'none';
@@ -1922,26 +1975,44 @@ function render() {
     el.style.display = hasValue && webGate ? 'block' : 'none';
   });
 
-  const customer = [state.customerName,state.customerCompany,state.customerAddress,state.customerPhone,state.customerEmail]
-    .filter(Boolean).join(' • ');
-  setText('pCustomer', customer);
-  document.getElementById('pCustomer').style.display = state.showCustomer && customer ? 'block' : 'none';
+  const customerPrimary = [state.customerName, state.customerCompany].filter(Boolean).join(' · ');
+  const customerContact = [state.customerContact, state.customerPhone, state.customerEmail].filter(Boolean).join(' · ');
+  const customerLines = [
+    customerPrimary ? 'Khách hàng: ' + customerPrimary : '',
+    customerContact ? 'Liên hệ: ' + customerContact : '',
+    state.customerAddress ? 'Địa chỉ: ' + state.customerAddress : ''
+  ].filter(Boolean);
+  setText('pCustomer', customerLines.join('\n'));
+  document.getElementById('pCustomer').style.display = state.showCustomer && customerLines.length ? 'block' : 'none';
 
   const terms = document.getElementById('pTerms');
   terms.innerHTML = '';
-  String(state.termsText || '').split(/\n+/).filter(Boolean).forEach((line) => {
+  const termLines = String(state.termsText || '').split(/\n+/)
+    .map(line => line.trim().replace(/^\s*(?:\d+[.)]|[-•])\s*/, ''))
+    .filter(Boolean);
+  termLines.forEach((line) => {
     const li = document.createElement('li');
     li.textContent = line;
     terms.appendChild(li);
   });
-  document.getElementById('termsBox').style.display = state.showTerms ? 'block' : 'none';
+  document.getElementById('termsBox').style.display = state.showTerms && termLines.length ? 'block' : 'none';
   document.getElementById('signatures').style.display = state.showSignature ? 'grid' : 'none';
 
   const quoteMeta = document.querySelector('.quote-top > .qmeta');
   if (quoteMeta) quoteMeta.style.display = state.showQuoteMeta ? 'block' : 'none';
   paper.classList.toggle('meta-hidden', !state.showQuoteMeta);
 
-  const hasPayment = [state.paymentMethod, state.bankName, state.bankAccount, state.bankOwner].some(Boolean);
+  const paymentFields = [
+    ['pPaymentMethod', state.paymentMethod],
+    ['pBankName', state.bankName],
+    ['pBankAccount', state.bankAccount],
+    ['pBankOwner', state.bankOwner]
+  ];
+  paymentFields.forEach(([id, value]) => {
+    const row = document.getElementById(id)?.closest('div');
+    if (row) row.style.display = String(value || '').trim() ? 'block' : 'none';
+  });
+  const hasPayment = paymentFields.some(([, value]) => String(value || '').trim());
   document.getElementById('paymentPrint').style.display = state.showPaymentBlock && hasPayment ? 'block' : 'none';
   document.getElementById('pSlogan').style.display = state.showSlogan && state.slogan ? 'inline' : 'none';
   document.getElementById('footerSep').style.display = state.showSlogan && state.slogan && state.footerText ? 'inline' : 'none';
@@ -1956,6 +2027,7 @@ function render() {
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
+  syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
   syncLayoutEditModeUI();
   requestAnimationFrame(() => {
     updatePageEstimate();
@@ -2680,9 +2752,11 @@ document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () 
 
 document.getElementById('addProduct').addEventListener('click', () => {
   state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  const nextIndex = state.products.length - 1;
   save();
   renderEditorProducts();
   render();
+  focusProductName(nextIndex);
 });
 
 document.getElementById('productFocusToggle').addEventListener('click', () => {
@@ -3056,11 +3130,11 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
 
 document.getElementById('saveQuoteToHistory').addEventListener('click', saveCurrentQuote);
 document.getElementById('newQuote').addEventListener('click', () => {
-  if (confirm('Lưu báo giá hiện tại vào lịch sử trước khi tạo báo giá mới?')) {
-    if (saveCurrentQuote()) createNewQuote();
-    return;
+  if (currentQuoteHistoryState() !== 'saved') {
+    const proceed = confirm('Tạo báo giá mới? Báo giá hiện tại có thay đổi chưa lưu vào lịch sử. Bấm Hủy để quay lại và chọn "Lưu nháp".');
+    if (!proceed) return;
   }
-  if (confirm('Tạo báo giá mới mà không lưu báo giá hiện tại vào lịch sử?')) createNewQuote();
+  createNewQuote();
 });
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
 document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
@@ -3108,7 +3182,10 @@ function validateQuote(data = state) {
     const name = String(product?.name || '').trim();
     const qty = Number(product?.qty || 0);
     const price = Number(product?.price || 0);
-    if (!name && (qty > 0 || price > 0)) warnings.push('Dòng sản phẩm ' + (index + 1) + ' chưa có tên.');
+    if (!name && productHasDraftContent(product)) {
+      errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
+      return;
+    }
     if (name && (data.showQty || data.showAmount || data.showTotals) && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
     if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
   });
@@ -3237,12 +3314,14 @@ function saveCurrentQuote() {
 
   const items = getHistory();
   const now = new Date().toISOString();
-  let existingIndex = state.historyRecordId
-    ? items.findIndex(item => item.id === state.historyRecordId)
+  const previousHistoryRecordId = state.historyRecordId || '';
+  let existingIndex = previousHistoryRecordId
+    ? items.findIndex(item => item.id === previousHistoryRecordId)
     : -1;
 
-  if (existingIndex < 0 && state.quoteNo) {
-    const collision = items.some(item => item?.data?.quoteNo === state.quoteNo);
+  if (state.quoteNo) {
+    const collision = items.some((item, index) =>
+      index !== existingIndex && item?.data?.quoteNo === state.quoteNo);
     if (collision) {
       state.quoteNo = generateUniqueQuoteNo();
       toast('Mã báo giá trùng; đã đổi thành ' + state.quoteNo);
@@ -3252,10 +3331,10 @@ function saveCurrentQuote() {
   const id = existingIndex >= 0
     ? items[existingIndex].id
     : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-  state.historyRecordId = id;
 
   const historyData = clone(state);
   historyData.logo = '';
+  historyData.historyRecordId = '';
   const record = {
     id,
     savedAt: now,
@@ -3267,10 +3346,17 @@ function saveCurrentQuote() {
 
   if (existingIndex >= 0) items.splice(existingIndex, 1);
   items.unshift(record);
-  if (!setHistory(items)) return false;
+  if (!setHistory(items)) {
+    state.historyRecordId = previousHistoryRecordId;
+    syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
+    return false;
+  }
+
+  state.historyRecordId = id;
   const currentSaved = save();
   syncInputs();
   renderHistory();
+  syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
   toast(currentSaved
     ? (existingIndex >= 0 ? 'Đã cập nhật báo giá' : 'Đã lưu báo giá')
     : 'Đã lưu vào lịch sử; trạng thái hiện tại chưa thể autosave');
@@ -3607,7 +3693,8 @@ function useCustomer(customer) {
   const persisted = save();
   syncInputs();
   render();
-  openTab('customer');
+  openTab('general');
+  requestAnimationFrame(() => document.getElementById('quickCustomerName')?.focus());
   toast(persisted ? 'Đã nạp khách hàng' : 'Đã nạp khách hàng tạm thời; chưa autosave được');
 }
 
