@@ -38,8 +38,8 @@
         <span class="nav-glyph">•••</span><span>Thêm</span>
       </button>
 
-      <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
-        <div class="mobile-more-head"><strong>Công cụ khác</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
+      <div class="mobile-more-menu" id="mobileMoreMenu" role="dialog" aria-modal="true" aria-labelledby="mobileMoreTitle" hidden>
+        <div class="mobile-more-head"><strong id="mobileMoreTitle">Công cụ khác</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
         <div class="mobile-more-grid">
           <button type="button" data-open-tab="customer"><span>●</span><b>Khách hàng</b></button>
           <button type="button" data-open-tab="products"><span>◆</span><b>Sản phẩm</b></button>
@@ -102,9 +102,9 @@
             <div class="dashboard-search-wrap">
               <div class="dashboard-search">
                 <span aria-hidden="true">⌕</span>
-                <input id="dashboardSearch" type="search" placeholder="Tìm báo giá, khách hàng, sản phẩm..." autocomplete="off" aria-controls="dashboardSearchResults" aria-expanded="false">
+                <input id="dashboardSearch" type="search" placeholder="Tìm báo giá, khách hàng, sản phẩm..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="dashboardSearchResults" aria-expanded="false">
               </div>
-              <div id="dashboardSearchResults" class="dashboard-search-results" hidden></div>
+              <div id="dashboardSearchResults" class="dashboard-search-results" role="listbox" aria-label="Kết quả tìm kiếm toàn cục" hidden></div>
             </div>
           </header>
 
