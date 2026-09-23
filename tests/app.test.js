@@ -224,6 +224,35 @@ test('V5.2 smart import exposes a dedicated multi-sheet chooser without clutteri
   expect(select.getAttribute('aria-label')).toContain('sheet Excel');
 });
 
+test('V5.3 guided validation panel exists and is hidden until requested', () => {
+  const panel = document.getElementById('studioGuidancePanel');
+  const list = document.getElementById('studioGuidanceList');
+  const summary = document.getElementById('studioGuidanceSummary');
+  expect(panel).toBeTruthy();
+  expect(list).toBeTruthy();
+  expect(summary).toBeTruthy();
+  expect(panel.hidden).toBe(true);
+});
+
+test('V5.3 Studio validation opens guided issues instead of relying only on alerts', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+
+  document.getElementById('studioCheckQuote').click();
+  const panel = document.getElementById('studioGuidancePanel');
+  expect(panel.hidden).toBe(false);
+  expect(panel.textContent).toContain('Thiếu tên công ty');
+  expect(panel.querySelector('.studio-guidance-item.error')).toBeTruthy();
+
+  company.value = previous;
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('closeStudioGuidance').click();
+  expect(panel.hidden).toBe(true);
+});
+
 test('V5 dynamic feedback exposes live, busy and empty-state semantics', async () => {
   const toast = document.getElementById('toast');
   expect(toast.getAttribute('role')).toBe('status');
