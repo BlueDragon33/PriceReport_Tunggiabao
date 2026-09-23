@@ -4323,3 +4323,93 @@ body.v5-ui .excel-mapping-row select {
   color: #0f172a;
   font-size: 10px;
 }
+
+
+body.v5-ui .product-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(37,99,235,.2);
+  border-radius: 10px;
+  background: rgba(37,99,235,.055);
+}
+
+body.v5-ui .product-bulk-bar[hidden] {
+  display: none;
+}
+
+body.v5-ui .product-bulk-bar > strong {
+  margin-right: 3px;
+  color: #1e3a8a;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+body.v5-ui .product-bulk-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body.v5-ui .product-bulk-field input,
+body.v5-ui .product-bulk-field select {
+  width: 112px;
+  min-height: 31px;
+  border: 1px solid rgba(148,163,184,.28);
+  border-radius: 7px;
+  background: #fff;
+  padding: 4px 7px;
+  color: #0f172a;
+  font-size: 9.5px;
+}
+
+body.v5-ui .product-bulk-bar .btn {
+  min-height: 31px;
+  padding: 5px 8px;
+  font-size: 9.5px;
+}
+
+body.v5-ui .product-select-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+body.v5-ui .product-select-all input,
+body.v5-ui .product-row-select {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: #2563eb;
+}
+
+body.v5-ui .product-data-grid .product-grid-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: auto;
+  min-width: 34px;
+  padding: 0 3px;
+  cursor: pointer;
+}
+
+body.v5-ui .product-data-grid .product-grid-index > span {
+  min-width: 12px;
+  color: #475569;
+  font-size: 9px;
+  text-align: center;
+}
+
+body.v5-ui .product-data-grid .product-grid-row.product-row-selected {
+  background: rgba(37,99,235,.055);
+  box-shadow: inset 3px 0 0 rgba(37,99,235,.62);
+}
