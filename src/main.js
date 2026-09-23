@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2403,6 +2403,53 @@ function openSmartImport() {
   requestAnimationFrame(() => document.getElementById('closeSmartImport')?.focus());
 }
 
+function applyClipboardProducts(rawText) {
+  const parsed = parseProductClipboardText(rawText);
+  if (!parsed.products.length) {
+    toast('Không nhận ra dòng sản phẩm để dán');
+    return false;
+  }
+
+  const firstExistingIsBlank = state.products.length === 1 && !productHasDraftContent(state.products[0]);
+  const insertionIndex = firstExistingIsBlank ? 0 : state.products.length;
+  const current = firstExistingIsBlank ? [] : state.products;
+  state.products = current.concat(parsed.products.map(product => ({
+    group: product.group || '',
+    name: product.name || '',
+    pack: product.pack || '',
+    unit: product.unit || '',
+    qty: normalizeNonNegativeNumber(product.qty) || 1,
+    price: normalizeNonNegativeNumber(product.price),
+    note: product.note || ''
+  })));
+  collapsedProducts.clear();
+  save();
+  renderEditorProducts();
+  render();
+
+  const hint = document.getElementById('productPasteHint');
+  if (hint) {
+    hint.textContent = parsed.warnings.length
+      ? 'Đã nhập ' + parsed.products.length + ' dòng • ' + parsed.warnings.length + ' ô cần kiểm tra.'
+      : 'Đã nhập ' + parsed.products.length + ' dòng từ dữ liệu dán. Có thể Ctrl+Z trong phiên chỉnh sửa tiếp theo khi History được mở rộng.';
+    hint.dataset.tone = parsed.warnings.length ? 'warning' : 'success';
+  }
+  focusProductName(insertionIndex);
+  toast('Đã dán ' + parsed.products.length + ' sản phẩm');
+  return true;
+}
+
+async function pasteProductsFromClipboard() {
+  try {
+    const text = await navigator.clipboard?.readText?.();
+    if (text && applyClipboardProducts(text)) return;
+  } catch (error) {
+    console.warn('Clipboard read unavailable:', error);
+  }
+  document.getElementById('productEditor')?.focus();
+  toast('Nhấn Ctrl+V để dán bảng đã copy từ Excel');
+}
+
 function closeSmartImport({ discard = false, force = false } = {}) {
   const modal = document.getElementById('smartImportModal');
   if (!modal) return false;
@@ -2759,6 +2806,32 @@ document.getElementById('addProduct').addEventListener('click', () => {
   renderEditorProducts();
   render();
   focusProductName(nextIndex);
+});
+
+document.getElementById('pasteProducts')?.addEventListener('click', pasteProductsFromClipboard);
+
+document.getElementById('importProductsExcel')?.addEventListener('click', () => {
+  openSmartImport();
+  requestAnimationFrame(() => document.getElementById('excelSmartImportInput')?.click());
+});
+
+document.getElementById('productEditor')?.addEventListener('paste', (event) => {
+  const text = event.clipboardData?.getData('text/plain') || '';
+  if (!text || (!text.includes('\t') && !text.includes('\n'))) return;
+  event.preventDefault();
+  applyClipboardProducts(text);
+});
+
+document.getElementById('productEditor')?.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.metaKey) return;
+  const input = event.target.closest?.('[data-product-key]');
+  if (!input) return;
+  const cards = [...document.querySelectorAll('#productEditor .product-card')];
+  const card = input.closest('.product-card');
+  if (card !== cards.at(-1)) return;
+  if (input.dataset.productKey !== 'note' && input.dataset.productKey !== 'price') return;
+  event.preventDefault();
+  document.getElementById('addProduct')?.click();
 });
 
 document.getElementById('productFocusToggle').addEventListener('click', () => {
