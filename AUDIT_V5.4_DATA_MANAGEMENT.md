@@ -77,3 +77,35 @@ Duplicate review now uses the existing canonical catalog identity: group + name 
 
 After the full gate is green, implement Data Library Excel/CSV import/export as one complete flow. Do not expose import/export buttons before their handlers, review state, validation and persistence transaction are ready.
 
+## Pass 3A — Shared Data Library import core
+
+### Architecture
+- Header inference is generalized around one scoring engine.
+- Product and customer imports provide different alias dictionaries to that shared engine.
+- No second spreadsheet parser is introduced.
+- Customer parsing normalizes Vietnamese phone numbers and identifies reusable rows by name/company/phone/email.
+- Product parsing now recognizes an optional currency column and preserves it for catalog import.
+
+### Customer schema
+Recognized fields:
+- customer name;
+- company / organization;
+- phone;
+- email;
+- address;
+- contact person.
+
+Rows with no reusable identity are returned as invalid rows for review instead of being persisted silently.
+
+### Duplicate inspection
+Customer duplicates are reported by normalized phone first, otherwise canonical name + company. The parser reports row numbers and does not merge/delete records itself.
+
+### Regression coverage
+- Vietnamese and English-style customer header inference.
+- +84/local phone normalization and duplicate detection.
+- invalid customer row reporting.
+- product currency import.
+
+### Gate before UI
+Run the full suite. Only after this parser core is green may the Data Library import/export controls and review modal be added.
+
