@@ -3421,6 +3421,7 @@ function renderStudioCheckPanel() {
 function showInspectorTab(tab) {
   const panel = document.getElementById('designPanel');
   if (!panel) return;
+  if (window.innerWidth <= 1280) panel.classList.add('inspector-drawer-open');
   panel.classList.toggle('inspector-content-mode', tab === 'content');
   panel.classList.toggle('inspector-check-mode', tab === 'check');
   document.getElementById('studioInspectorContent').hidden = tab !== 'content';
@@ -3476,10 +3477,12 @@ function renderInspectorSelection(targetId) {
   box.appendChild(wrap);
 }
 
+let commandPaletteLastFocus = null;
 function openCommandPalette() {
   const modal = document.getElementById('commandPaletteModal');
   const input = document.getElementById('commandPaletteInput');
   if (!modal) return;
+  commandPaletteLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   modal.hidden = false;
   if (input) {
     input.value = '';
@@ -3490,6 +3493,23 @@ function openCommandPalette() {
 function closeCommandPalette() {
   const modal = document.getElementById('commandPaletteModal');
   if (modal) modal.hidden = true;
+  commandPaletteLastFocus?.focus?.();
+  commandPaletteLastFocus = null;
+}
+function trapDialogFocus(event, dialog) {
+  if (event.key !== 'Tab' || !dialog) return;
+  const focusable = [...dialog.querySelectorAll('button:not([disabled]):not([hidden]), input:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), [tabindex]:not([tabindex="-1"])')]
+    .filter(element => element.getClientRects().length || element === document.activeElement);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 function filterCommandPalette(query) {
   const normalized = normalizeGridHeader(query);
@@ -3524,8 +3544,14 @@ function initStudioV6() {
   document.getElementById('studioCommandPalette')?.addEventListener('click', openCommandPalette);
   document.getElementById('studioV6More')?.addEventListener('click', openCommandPalette);
   document.getElementById('commandPaletteClose')?.addEventListener('click', closeCommandPalette);
+  document.getElementById('studioInspectorClose')?.addEventListener('click', () => {
+    document.getElementById('designPanel')?.classList.remove('inspector-drawer-open');
+  });
   document.getElementById('commandPaletteModal')?.addEventListener('click', event => {
     if (event.target?.id === 'commandPaletteModal') closeCommandPalette();
+  });
+  document.querySelector('#commandPaletteModal .command-palette')?.addEventListener('keydown', event => {
+    trapDialogFocus(event, event.currentTarget);
   });
   document.getElementById('commandPaletteInput')?.addEventListener('input', event => filterCommandPalette(event.currentTarget.value));
   document.querySelectorAll('#commandPaletteList [data-command]').forEach(button => button.addEventListener('click', () => runStudioCommand(button.dataset.command)));
