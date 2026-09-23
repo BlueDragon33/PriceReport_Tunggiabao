@@ -298,6 +298,31 @@ test('product editor adds a blank draft row without polluting A4 until content i
   expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
 });
 
+test('product grid preserves negative input and shows inline validation instead of silently clamping', () => {
+  document.querySelector('[data-tab="products"]').click();
+  document.getElementById('addProduct').click();
+  const card = document.querySelector('#productEditor .product-card:last-child');
+  const name = card.querySelector('[data-product-key="name"]');
+  const qty = card.querySelector('[data-product-key="qty"]');
+  const price = card.querySelector('[data-product-key="price"]');
+
+  name.value = 'Dòng kiểm tra số âm';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  qty.value = '-2';
+  qty.dispatchEvent(new Event('input', { bubbles: true }));
+  price.value = '-15000';
+  price.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(qty.value).toBe('-2');
+  expect(price.value).toBe('-15000');
+  expect(qty.getAttribute('aria-invalid')).toBe('true');
+  expect(price.getAttribute('aria-invalid')).toBe('true');
+  expect(card.querySelector('[data-product-field="qty"] .product-cell-validation').textContent).toContain('không được âm');
+  expect(card.querySelector('[data-product-field="price"] .product-cell-validation').textContent).toContain('không được âm');
+
+  card.querySelector('.danger-icon').click();
+});
+
 test('meaningful unnamed product is visibly flagged and blocks print preflight', () => {
   document.querySelector('[data-tab="products"]').click();
   document.getElementById('addProduct').click();
