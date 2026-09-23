@@ -78,7 +78,17 @@ const HEADER_ALIASES = {
   unit: ['dvt','don vi','don vi tinh','unit','uom'],
   qty: ['sl','so luong','quantity','qty'],
   price: ['gia','don gia','price','unit price'],
+  currency: ['tien te','loai tien','currency'],
   note: ['ghi chu','note','notes','remark','remarks']
+};
+
+const CUSTOMER_HEADER_ALIASES = {
+  name: ['ten khach hang','khach hang','ho ten','ten','customer','customer name','name'],
+  company: ['cong ty','don vi','company','organization','organisation'],
+  phone: ['sdt','so dien thoai','dien thoai','phone','mobile','tel'],
+  email: ['email','e mail','mail'],
+  address: ['dia chi','address'],
+  contact: ['nguoi lien he','lien he','contact','contact person']
 };
 
 const headerScore = (header, aliases) => {
@@ -98,13 +108,13 @@ const headerScore = (header, aliases) => {
   return best;
 };
 
-export function inferSpreadsheetColumns(row) {
+function inferColumns(row, aliasesByField) {
   const headers = Array.isArray(row) ? row : [];
   const mapping = {};
   const confidence = {};
   const used = new Set();
 
-  Object.entries(HEADER_ALIASES).forEach(([field, aliases]) => {
+  Object.entries(aliasesByField).forEach(([field, aliases]) => {
     let bestIndex = -1;
     let bestScore = 0;
     headers.forEach((header, index) => {
@@ -125,10 +135,18 @@ export function inferSpreadsheetColumns(row) {
   return { mapping, confidence };
 }
 
+export function inferSpreadsheetColumns(row) {
+  return inferColumns(row, HEADER_ALIASES);
+}
+
+export function inferCustomerSpreadsheetColumns(row) {
+  return inferColumns(row, CUSTOMER_HEADER_ALIASES);
+}
+
 export function normalizeImportedProduct(raw = {}) {
   const qtyParsed = parseNumber(raw.qty);
   const priceParsed = parseNumber(raw.price);
-  return {
+  const product = {
     group: clean(raw.group),
     name: clean(raw.name),
     pack: clean(raw.pack),
@@ -136,6 +154,102 @@ export function normalizeImportedProduct(raw = {}) {
     qty: qtyParsed.valid ? qtyParsed.value : 1,
     price: priceParsed.valid ? priceParsed.value : 0,
     note: clean(raw.note)
+  };
+  const currency = clean(raw.currency).toUpperCase();
+  if (currency) product.currency = currency;
+  return product;
+}
+
+export function detectCustomerSpreadsheetHeader(rows) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  let best = null;
+  safeRows.forEach((row, headerIndex) => {
+    const inferred = inferCustomerSpreadsheetColumns(row);
+    const keys = Object.keys(inferred.mapping);
+    const hasIdentity = ['name','company','phone','email'].some(key => inferred.mapping[key] != null);
+    if (!hasIdentity || keys.length < 2) return;
+    const score = keys.length * 10 +
+      (inferred.mapping.phone != null ? 5 : 0) +
+      (inferred.mapping.email != null ? 3 : 0);
+    if (!best || score > best.score) {
+      best = {
+        headerIndex,
+        headers: (Array.isArray(row) ? row : []).map(clean),
+        mapping: { ...inferred.mapping },
+        confidence: { ...inferred.confidence },
+        score
+      };
+    }
+  });
+  return best;
+}
+
+export function parseCustomerSpreadsheetRows(rows, options = {}) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const detected = detectCustomerSpreadsheetHeader(safeRows);
+  const headerIndex = Number.isInteger(options.headerIndex) ? options.headerIndex : detected?.headerIndex;
+  const mapping = options.mapping && typeof options.mapping === 'object'
+    ? options.mapping
+    : detected?.mapping;
+  if (!mapping || headerIndex == null) {
+    return { customers: [], invalidRows: [], duplicates: [], spreadsheetMeta: null };
+  }
+
+  const customers = [];
+  const rowNumbers = [];
+  const invalidRows = [];
+  safeRows.slice(headerIndex + 1).forEach((row, offset) => {
+    const cells = Array.isArray(row) ? row : [];
+    if (!nonEmptyCells(cells).length) return;
+    const customer = {
+      name: mapping.name != null ? clean(cells[mapping.name]) : '',
+      company: mapping.company != null ? clean(cells[mapping.company]) : '',
+      phone: mapping.phone != null ? normalizeImportedPhone(cells[mapping.phone]) : '',
+      email: mapping.email != null ? clean(cells[mapping.email]) : '',
+      address: mapping.address != null ? clean(cells[mapping.address]) : '',
+      contact: mapping.contact != null ? clean(cells[mapping.contact]) : ''
+    };
+    if (![customer.name, customer.company, customer.phone, customer.email].some(Boolean)) {
+      invalidRows.push({
+        rowNumber: headerIndex + offset + 2,
+        reason: 'missing-identity'
+      });
+      return;
+    }
+    customers.push(customer);
+    rowNumbers.push(headerIndex + offset + 2);
+  });
+
+  const duplicateMap = new Map();
+  customers.forEach((customer, index) => {
+    const signature = customer.phone
+      ? 'phone:' + customer.phone
+      : 'name:' + [customer.name, customer.company].map(value => fold(clean(value))).join('|');
+    if (!signature.replace(/(?:phone:|name:|\|)/g, '')) return;
+    const indexes = duplicateMap.get(signature) || [];
+    indexes.push(index);
+    duplicateMap.set(signature, indexes);
+  });
+  const duplicates = [...duplicateMap.entries()]
+    .filter(([, indexes]) => indexes.length > 1)
+    .map(([signature, indexes]) => ({
+      signature,
+      indexes,
+      rowNumbers: indexes.map(index => rowNumbers[index]),
+      names: indexes.map(index => customers[index].name || customers[index].company || customers[index].phone)
+    }));
+
+  return {
+    customers,
+    invalidRows,
+    duplicates,
+    spreadsheetMeta: {
+      headerIndex,
+      headers: detected?.headers || [],
+      mapping: { ...mapping },
+      confidence: { ...(detected?.confidence || {}) },
+      rows: safeRows.map(row => Array.isArray(row) ? [...row] : [])
+    }
   };
 }
 
@@ -275,7 +389,8 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
       unit: mapping.unit != null ? cells[mapping.unit] : '',
       qty: mapping.qty != null ? cells[mapping.qty] : 1,
       price: mapping.price != null ? cells[mapping.price] : '',
-      note: mapping.note != null ? cells[mapping.note] : ''
+      note: mapping.note != null ? cells[mapping.note] : '',
+      currency: mapping.currency != null ? cells[mapping.currency] : ''
     };
     const name = clean(rawProduct.name);
     const parsedPrice = parseNumber(rawProduct.price);
