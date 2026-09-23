@@ -474,16 +474,41 @@ const STATUS_LABELS = {
   expired: 'Hết hiệu lực'
 };
 
+const STUDIO_WORKFLOW = [
+  { tab: 'general', label: 'Thông tin' },
+  { tab: 'products', label: 'Sản phẩm' },
+  { tab: 'payment', label: 'Thanh toán' },
+  { tab: 'terms', label: 'Điều khoản' },
+  { tab: 'design', label: 'Thiết kế' },
+  { tab: 'export', label: 'Xuất' }
+];
+
 const STUDIO_STAGE_BY_TAB = {
   general: 'general',
   customer: 'general',
   products: 'products',
   payment: 'payment',
-  terms: 'payment',
+  terms: 'terms',
   design: 'design',
   presets: 'design',
   export: 'export'
 };
+
+function comparableQuoteForHistory(data) {
+  const snapshot = clone(data || {});
+  delete snapshot.logo;
+  delete snapshot.historyRecordId;
+  return snapshot;
+}
+
+function currentQuoteHistoryState() {
+  if (!state.historyRecordId) return 'new';
+  const record = getHistory().find(item => item.id === state.historyRecordId);
+  if (!record) return 'new';
+  return JSON.stringify(comparableQuoteForHistory(state)) === JSON.stringify(comparableQuoteForHistory(record.data))
+    ? 'saved'
+    : 'dirty';
+}
 
 function syncStudioContext(tab = '') {
   const quoteLabel = document.getElementById('studioQuoteLabel');
@@ -496,16 +521,42 @@ function syncStudioContext(tab = '') {
     quoteStatus.className = 'studio-status-badge status-' + currentStatus;
   }
   if (historyState) {
-    const saved = Boolean(state.historyRecordId);
-    historyState.textContent = saved ? 'Đã lưu lịch sử' : 'Chưa lưu lịch sử';
-    historyState.classList.toggle('saved', saved);
+    const historyMode = currentQuoteHistoryState();
+    historyState.textContent = historyMode === 'saved'
+      ? 'Đã lưu lịch sử'
+      : historyMode === 'dirty'
+        ? 'Có thay đổi chưa lưu'
+        : 'Chưa lưu lịch sử';
+    historyState.className = 'studio-history-state' +
+      (historyMode === 'saved' ? ' saved' : historyMode === 'dirty' ? ' dirty' : '');
   }
+
   const stage = STUDIO_STAGE_BY_TAB[tab] || '';
   document.querySelectorAll('[data-studio-step]').forEach((button) => {
     const active = Boolean(stage) && button.dataset.studioStep === stage;
     button.classList.toggle('active', active);
     button.setAttribute('aria-current', active ? 'step' : 'false');
   });
+
+  const workflowIndex = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
+  const position = document.getElementById('studioWorkflowPosition');
+  const prev = document.getElementById('studioPrevStep');
+  const next = document.getElementById('studioNextStep');
+  if (position) {
+    position.textContent = workflowIndex >= 0
+      ? 'Bước ' + (workflowIndex + 1) + '/' + STUDIO_WORKFLOW.length + ' · ' + STUDIO_WORKFLOW[workflowIndex].label
+      : 'Quy trình ' + STUDIO_WORKFLOW.length + ' bước';
+  }
+  if (prev) {
+    prev.disabled = workflowIndex <= 0;
+    prev.title = workflowIndex > 0 ? 'Về ' + STUDIO_WORKFLOW[workflowIndex - 1].label : 'Đang ở bước đầu';
+  }
+  if (next) {
+    next.disabled = workflowIndex < 0 || workflowIndex >= STUDIO_WORKFLOW.length - 1;
+    next.title = workflowIndex >= 0 && workflowIndex < STUDIO_WORKFLOW.length - 1
+      ? 'Tiếp: ' + STUDIO_WORKFLOW[workflowIndex + 1].label
+      : 'Đang ở bước cuối';
+  }
 }
 
 const tabMeta = {
