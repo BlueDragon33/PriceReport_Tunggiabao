@@ -620,6 +620,26 @@ document.querySelectorAll('[data-open-tab]').forEach((btn) => {
   btn.addEventListener('click', () => openTab(btn.dataset.openTab));
 });
 
+document.querySelectorAll('[data-create-quote]').forEach((btn) => {
+  btn.addEventListener('click', () => createNewQuote());
+});
+
+function openMasterSection(section) {
+  openTab('master');
+  const targetId = section === 'products' ? 'productCatalogCard' : 'customerLibraryCard';
+  requestAnimationFrame(() => {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    target.classList.add('master-section-highlight');
+    setTimeout(() => target.classList.remove('master-section-highlight'), 900);
+  });
+}
+
+document.querySelectorAll('[data-open-master]').forEach((btn) => {
+  btn.addEventListener('click', () => openMasterSection(btn.dataset.openMaster));
+});
+
 document.getElementById('mobileMoreToggle')?.addEventListener('click', () => {
   const menu = document.getElementById('mobileMoreMenu');
   setMobileMoreMenu(Boolean(menu?.hidden));
