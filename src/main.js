@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseGenericProductRows, parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseGenericProductRows, parseMappedProductRows, parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2595,6 +2595,108 @@ function closeSmartImport({ discard = false, force = false } = {}) {
   return true;
 }
 
+function combineExcelParses(reportParsed, productParsed) {
+  if (!productParsed || !productParsed.products?.length) return reportParsed;
+  return Object.assign({}, reportParsed, {
+    source: 'excel',
+    products: productParsed.products,
+    groups: productParsed.groups,
+    layoutHints: Object.assign({}, reportParsed.layoutHints || {}, productParsed.layoutHints || {}),
+    warnings: [...new Set([
+      ...(reportParsed.warnings || []).filter(message => !/Không tìm thấy dòng sản phẩm/i.test(message)),
+      ...(productParsed.warnings || [])
+    ])],
+    columnMapping: productParsed.columnMapping || [],
+    sourceHeaders: productParsed.sourceHeaders || [],
+    mapping: productParsed.mapping || [],
+    headerIndex: Number.isInteger(productParsed.headerIndex) ? productParsed.headerIndex : -1
+  });
+}
+
+function excelTargetLabel(key) {
+  return ({
+    group: 'Nhóm hàng',
+    name: 'Tên sản phẩm',
+    pack: 'Quy cách',
+    unit: 'ĐVT',
+    qty: 'Số lượng',
+    price: 'Đơn giá',
+    note: 'Ghi chú'
+  })[key] || 'Bỏ qua';
+}
+
+function renderExcelColumnMapping(candidate) {
+  const wrap = document.getElementById('excelColumnMapping');
+  const list = document.getElementById('excelColumnMappingList');
+  const confidence = document.getElementById('excelMappingConfidence');
+  if (!wrap || !list) return;
+  list.innerHTML = '';
+
+  const headers = candidate?.parsed?.sourceHeaders || [];
+  const mapping = candidate?.parsed?.mapping || [];
+  const editable = Number.isInteger(candidate?.parsed?.headerIndex) && candidate.parsed.headerIndex >= 0 && headers.some(Boolean);
+  wrap.hidden = !editable;
+  if (!editable) return;
+
+  const recognized = mapping.filter(Boolean).length;
+  if (confidence) confidence.textContent = recognized + '/' + headers.filter(Boolean).length + ' cột đã nhận';
+
+  headers.forEach((header, columnIndex) => {
+    if (!header) return;
+    const row = document.createElement('label');
+    row.className = 'excel-mapping-row';
+    const source = document.createElement('span');
+    source.textContent = header;
+    const arrow = document.createElement('span');
+    arrow.className = 'excel-mapping-arrow';
+    arrow.textContent = '→';
+    const select = document.createElement('select');
+    select.dataset.mappingColumn = String(columnIndex);
+    [
+      ['', 'Bỏ qua'],
+      ['name', 'Tên sản phẩm'],
+      ['group', 'Nhóm hàng'],
+      ['pack', 'Quy cách'],
+      ['unit', 'ĐVT'],
+      ['qty', 'Số lượng'],
+      ['price', 'Đơn giá'],
+      ['note', 'Ghi chú']
+    ].forEach(([value, label]) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.appendChild(option);
+    });
+    select.value = mapping[columnIndex] || '';
+    row.append(source, arrow, select);
+    list.appendChild(row);
+  });
+}
+
+function applyManualExcelMapping() {
+  const sheetName = document.getElementById('excelSheetSelect')?.value;
+  const candidate = smartImportExcelCandidates.find(item => item.sheetName === sheetName);
+  if (!candidate || !Number.isInteger(candidate.parsed?.headerIndex) || candidate.parsed.headerIndex < 0) return;
+
+  const nextMapping = [...(candidate.parsed.mapping || [])];
+  document.querySelectorAll('#excelColumnMappingList [data-mapping-column]').forEach((select) => {
+    nextMapping[Number(select.dataset.mappingColumn)] = select.value || '';
+  });
+
+  const mapped = parseMappedProductRows(candidate.rows, candidate.parsed.headerIndex, nextMapping);
+  candidate.parsed = combineExcelParses(candidate.reportParsed, mapped);
+  const parsed = prepareExcelCandidate(candidate, smartImportExcelCandidates.length);
+  const merged = mergeSmartImportSource(parsed, { replaceSourceFields: true, preferNext: true });
+  merged.products = (parsed.products || []).map(item => ({ ...item }));
+  merged.groups = [...(parsed.groups || [])];
+  merged.layoutHints = Object.assign({}, merged.layoutHints || {}, parsed.layoutHints || {});
+  smartImportDraft = merged;
+  renderExcelColumnMapping(candidate);
+  renderSmartImportReview();
+  syncExcelSheetSummary();
+  setSmartImportProgress('Đã cập nhật mapping: ' + parsed.products.length + ' sản phẩm được nhận dạng.', 'success');
+}
+
 function prepareExcelCandidate(candidate, sheetCount) {
   const parsed = clone(candidate.parsed);
   parsed.sheetName = candidate.sheetName;
@@ -2616,8 +2718,9 @@ function renderExcelSheetPicker(candidates, selectedName) {
     select.appendChild(option);
   });
   select.value = selectedName || candidates[0]?.sheetName || '';
-  picker.hidden = candidates.length <= 1;
+  picker.hidden = false;
   syncExcelSheetSummary();
+  renderExcelColumnMapping(candidates.find(item => item.sheetName === select.value));
 }
 
 function syncExcelSheetSummary() {
@@ -2643,24 +2746,20 @@ async function parseExcelFile(file) {
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
     const reportParsed = parseSpreadsheetRows(rows);
     const genericParsed = parseGenericProductRows(rows);
-    let parsed = reportParsed;
-    if (genericParsed.products.length > reportParsed.products.length) {
-      parsed = Object.assign({}, reportParsed, {
-        source: 'excel',
-        products: genericParsed.products,
-        groups: genericParsed.groups,
-        layoutHints: Object.assign({}, reportParsed.layoutHints || {}, genericParsed.layoutHints || {}),
-        warnings: [...new Set([
-          ...(reportParsed.warnings || []).filter(message => !/Không tìm thấy dòng sản phẩm/i.test(message)),
-          ...(genericParsed.warnings || [])
-        ])],
-        columnMapping: genericParsed.columnMapping || []
-      });
-    }
+    const parsed = genericParsed.products.length > reportParsed.products.length
+      ? combineExcelParses(reportParsed, genericParsed)
+      : reportParsed;
     const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
     const mappingBonus = (parsed.columnMapping || []).length * 2;
     const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount + mappingBonus;
-    return { sheetName, parsed, score, rowCount: rows.filter(row => Array.isArray(row) && row.some(value => String(value ?? '').trim())).length };
+    return {
+      sheetName,
+      parsed,
+      reportParsed,
+      rows,
+      score,
+      rowCount: rows.filter(row => Array.isArray(row) && row.some(value => String(value ?? '').trim())).length
+    };
   }).sort((a, b) => b.score - a.score);
   smartImportExcelCandidates = candidates;
   const best = candidates[0];
@@ -2765,6 +2864,11 @@ function setupSmartImport() {
     if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
   });
 
+  document.getElementById('excelColumnMappingList')?.addEventListener('change', (event) => {
+    if (!event.target.matches?.('[data-mapping-column]')) return;
+    applyManualExcelMapping();
+  });
+
   document.getElementById('excelSheetSelect')?.addEventListener('change', (event) => {
     const candidate = smartImportExcelCandidates.find(item => item.sheetName === event.target.value);
     if (!candidate) return;
@@ -2777,6 +2881,7 @@ function setupSmartImport() {
     smartImportDraft = merged;
     renderSmartImportReview();
     syncExcelSheetSummary();
+    renderExcelColumnMapping(candidate);
     setSmartImportProgress('Đang xem sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
   });
 
