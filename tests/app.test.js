@@ -330,6 +330,11 @@ test('customer library treats +84 and local-format phones as the same reusable c
   expect(secondItems.length).toBe(firstCount);
   expect(secondItems.some(item => item.name === 'Khách chuẩn hóa V52 cập nhật')).toBe(true);
 
+  setField('customerName', 'Tên tạm không khớp');
+  setField('customerPhone', '+84 912 345 679');
+  document.getElementById('customerPhone').dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.getElementById('customerName').value).toBe('Khách chuẩn hóa V52 cập nhật');
+
   if (beforeRaw == null) localStorage.removeItem(key);
   else localStorage.setItem(key, beforeRaw);
   Object.entries(fields).forEach(([id, value]) => setField(id, value));
@@ -344,6 +349,38 @@ test('product grid exposes autocomplete sources for name group and unit', () => 
   expect(document.getElementById('productNameSuggestions')).toBeTruthy();
   expect(document.getElementById('productGroupSuggestions')).toBeTruthy();
   expect(Array.from(document.getElementById('productUnitSuggestions').options).map(option => option.value)).toContain('Hộp');
+});
+
+test('product autocomplete matches catalog names canonically and fills reusable fields', () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const beforeRaw = localStorage.getItem(key);
+  const catalog = [{
+    id: 'canonical-product-v52',
+    group: 'Nhóm thử',
+    name: 'Trứng Gà Chuẩn',
+    pack: 'Hộp 10',
+    unit: 'Hộp',
+    price: 28000,
+    currency: 'VND',
+    note: 'Từ danh mục'
+  }];
+  localStorage.setItem(key, JSON.stringify(catalog));
+
+  document.querySelector('[data-tab="products"]').click();
+  const first = document.querySelector('#productEditor .product-card:first-child');
+  const name = first.querySelector('[data-product-key="name"]');
+  name.value = '  trứng   gà chuẩn  ';
+  name.dispatchEvent(new Event('input', { bubbles: true }));
+  name.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const refreshed = document.querySelector('#productEditor .product-card:first-child');
+  expect(refreshed.querySelector('[data-product-key="name"]').value).toBe('Trứng Gà Chuẩn');
+  expect(refreshed.querySelector('[data-product-key="pack"]').value).toBe('Hộp 10');
+  expect(refreshed.querySelector('[data-product-key="unit"]').value).toBe('Hộp');
+  expect(Number(refreshed.querySelector('[data-product-key="price"]').value)).toBe(28000);
+
+  if (beforeRaw == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, beforeRaw);
 });
 
 test('product editor adds a blank draft row without polluting A4 until content is entered', () => {
