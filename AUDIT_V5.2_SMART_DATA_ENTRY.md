@@ -44,3 +44,24 @@ Required before merge:
 
 ## Next implementation pass
 Wire inferred mapping metadata into the user-facing Excel import review screen so users can see and correct the guessed mapping before committing rows. This will be followed by Smart Paste and Undo Import history integration.
+
+
+## Pass 2 — Multi-sheet workbook selection
+
+### Finding
+The importer scored every sheet and silently selected the best candidate. That is useful as a default, but it did not satisfy the intended workflow for workbooks with multiple relevant sheets because the user could not inspect or switch the selected sheet.
+
+### Corrections
+- Added a dedicated sheet chooser that appears only when a workbook contains more than one sheet.
+- The highest-scoring sheet remains selected by default.
+- Each option shows the sheet name and number of recognized rows.
+- Switching sheets rebuilds the parsed product set, mapping preview, invalid-row count and duplicate detection before import.
+- Manual review fields already edited by the user are preserved when switching sheets.
+- Single-sheet files keep the chooser hidden to preserve Simple Mode.
+- Responsive behavior uses the existing V5 layout system without adding another media-query layer.
+
+### Regression guard
+DOM regression now verifies that the multi-sheet chooser exists, is accessible and remains hidden by default.
+
+### Next pass
+Improve row-level review for invalid and duplicate data so the user can inspect problematic rows instead of only seeing aggregate warning counts.
