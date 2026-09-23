@@ -55,6 +55,74 @@ const parseNumber = (value) => {
 
 const numberValue = (value) => parseNumber(value).value;
 
+const HEADER_ALIASES = {
+  name: ['ten san pham','ten sp','san pham','ten hang','hang hoa','mat hang','product','product name'],
+  group: ['nhom hang','nhom','group','category','loai hang'],
+  pack: ['quy cach','dong goi','packaging','package','spec','specification'],
+  unit: ['dvt','don vi','don vi tinh','unit','uom'],
+  qty: ['sl','so luong','quantity','qty'],
+  price: ['gia','don gia','price','unit price'],
+  note: ['ghi chu','note','notes','remark','remarks']
+};
+
+const headerScore = (header, aliases) => {
+  const value = fold(clean(header)).replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!value) return 0;
+  let best = 0;
+  aliases.forEach(alias => {
+    if (value === alias) best = Math.max(best, 100);
+    else if (value.includes(alias) || alias.includes(value)) best = Math.max(best, 80);
+    else {
+      const a = new Set(value.split(' ').filter(Boolean));
+      const b = new Set(alias.split(' ').filter(Boolean));
+      const overlap = [...a].filter(token => b.has(token)).length;
+      if (overlap) best = Math.max(best, Math.round((overlap / Math.max(a.size, b.size)) * 60));
+    }
+  });
+  return best;
+};
+
+export function inferSpreadsheetColumns(row) {
+  const headers = Array.isArray(row) ? row : [];
+  const mapping = {};
+  const confidence = {};
+  const used = new Set();
+
+  Object.entries(HEADER_ALIASES).forEach(([field, aliases]) => {
+    let bestIndex = -1;
+    let bestScore = 0;
+    headers.forEach((header, index) => {
+      if (used.has(index)) return;
+      const score = headerScore(header, aliases);
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+    if (bestIndex >= 0 && bestScore >= 55) {
+      mapping[field] = bestIndex;
+      confidence[field] = bestScore / 100;
+      used.add(bestIndex);
+    }
+  });
+
+  return { mapping, confidence };
+}
+
+export function normalizeImportedProduct(raw = {}) {
+  const qtyParsed = parseNumber(raw.qty);
+  const priceParsed = parseNumber(raw.price);
+  return {
+    group: clean(raw.group),
+    name: clean(raw.name),
+    pack: clean(raw.pack),
+    unit: clean(raw.unit),
+    qty: qtyParsed.valid ? qtyParsed.value : 1,
+    price: priceParsed.valid ? priceParsed.value : 0,
+    note: clean(raw.note)
+  };
+}
+
 export function parseSpreadsheetRows(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
   const fields = {};
@@ -64,6 +132,7 @@ export function parseSpreadsheetRows(rows) {
   const groups = [];
   let currentGroup = '';
   let noteColumnDetected = false;
+  let activeColumnMapping = null;
   let titleIndex = -1;
   let dateIndex = -1;
 
@@ -73,9 +142,12 @@ export function parseSpreadsheetRows(rows) {
     const folded = fold(text);
     if (!text) return;
 
-    if (looksLikeProductHeader(cells)) {
+    const inferred = inferSpreadsheetColumns(cells);
+    const inferredKeys = Object.keys(inferred.mapping);
+    if (looksLikeProductHeader(cells) || (inferred.mapping.name != null && inferred.mapping.price != null && inferredKeys.length >= 3)) {
       const headers = cells.map(cell => fold(clean(cell)));
-      noteColumnDetected ||= headers.some(cell => cell.includes('ghi chu'));
+      noteColumnDetected ||= headers.some(cell => cell.includes('ghi chu') || cell === 'note' || cell === 'notes');
+      activeColumnMapping = inferred.mapping;
       return;
     }
 
@@ -83,6 +155,26 @@ export function parseSpreadsheetRows(rows) {
       currentGroup = text;
       if (!groups.includes(currentGroup)) groups.push(currentGroup);
       return;
+    }
+
+    if (activeColumnMapping?.name != null) {
+      const rawProduct = {
+        group: activeColumnMapping.group != null ? cells[activeColumnMapping.group] : currentGroup,
+        name: cells[activeColumnMapping.name],
+        pack: activeColumnMapping.pack != null ? cells[activeColumnMapping.pack] : '',
+        unit: activeColumnMapping.unit != null ? cells[activeColumnMapping.unit] : '',
+        qty: activeColumnMapping.qty != null ? cells[activeColumnMapping.qty] : 1,
+        price: activeColumnMapping.price != null ? cells[activeColumnMapping.price] : '',
+        note: activeColumnMapping.note != null ? cells[activeColumnMapping.note] : ''
+      };
+      const parsedPrice = parseNumber(rawProduct.price);
+      const name = clean(rawProduct.name);
+      if (name && parsedPrice.valid) {
+        const product = normalizeImportedProduct(rawProduct);
+        if (!product.group) product.group = currentGroup;
+        products.push(product);
+        return;
+      }
     }
 
     const first = cells[0];
