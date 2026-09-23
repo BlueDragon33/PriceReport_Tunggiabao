@@ -556,8 +556,8 @@
               </div>
             </div>
             <div class="product-data-grid-shell" role="region" aria-label="Bảng nhập sản phẩm" tabindex="0">
-              <div class="product-data-grid-head" aria-hidden="true">
-                <span>STT</span>
+              <div class="product-data-grid-head">
+                <label class="product-select-all"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả sản phẩm"><span>STT</span></label>
                 <span>Nhóm hàng</span>
                 <span>Tên sản phẩm</span>
                 <span>Quy cách</span>
@@ -566,6 +566,20 @@
                 <span>Đơn giá</span>
                 <span>Ghi chú</span>
                 <span>Thao tác</span>
+              </div>
+              <div class="product-bulk-bar" id="productBulkBar" hidden>
+                <strong id="productBulkCount">0 dòng đã chọn</strong>
+                <select id="productBulkAction" aria-label="Thao tác hàng loạt">
+                  <option value="group">Đổi nhóm hàng</option>
+                  <option value="unit">Đổi ĐVT</option>
+                  <option value="price">Điều chỉnh giá %</option>
+                  <option value="duplicate">Nhân bản</option>
+                  <option value="catalog">Lưu vào danh mục</option>
+                  <option value="delete">Xóa dòng</option>
+                </select>
+                <input id="productBulkValue" placeholder="Giá trị áp dụng" aria-label="Giá trị thao tác hàng loạt">
+                <button class="btn primary" id="applyProductBulk" type="button">Áp dụng</button>
+                <button class="btn" id="clearProductSelection" type="button">Bỏ chọn</button>
               </div>
               <div id="productEditor" class="product-editor-list product-data-grid"></div>
             </div>
