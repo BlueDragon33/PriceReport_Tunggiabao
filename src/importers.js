@@ -208,9 +208,10 @@ export function parsePastedTable(rawText) {
     products: rebuilt.products,
     groups: rebuilt.groups,
     layoutHints: {},
-    warnings: rebuilt.invalidRows.length
-      ? ['Có ' + rebuilt.invalidRows.length + ' dòng dán chưa đủ dữ liệu bắt buộc.']
-      : [],
+    warnings: [
+      ...(rebuilt.invalidRows.length ? ['Có ' + rebuilt.invalidRows.length + ' dòng dán cần kiểm tra trước khi nhập.'] : []),
+      ...(rebuilt.duplicates.length ? ['Phát hiện ' + rebuilt.duplicates.length + ' nhóm sản phẩm có khả năng bị trùng.'] : [])
+    ],
     unmatched: [],
     spreadsheetMeta: {
       headerIndex,
@@ -218,7 +219,8 @@ export function parsePastedTable(rawText) {
       mapping,
       confidence,
       rows,
-      invalidRows: rebuilt.invalidRows
+      invalidRows: rebuilt.invalidRows,
+      duplicates: rebuilt.duplicates
     }
   };
 }
