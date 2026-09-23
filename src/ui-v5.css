@@ -4230,7 +4230,7 @@ body.v5-ui .product-field input::placeholder{color:#9aa8b8}
 /* V5.2 smart import: workbook sheet selection */
 body.v5-ui .import-sheet-picker {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 320px);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: var(--v5-space-3);
   align-items: center;
   padding: var(--v5-space-3);
@@ -4254,13 +4254,5 @@ body.v5-ui .import-sheet-picker select {
   min-height: var(--v5-control-height);
 }
 body.v5-ui .import-sheet-picker > small {
-  grid-column: 2;
-}
-@media (max-width: 760px) {
-  body.v5-ui .import-sheet-picker {
-    grid-template-columns: 1fr;
-  }
-  body.v5-ui .import-sheet-picker > small {
-    grid-column: 1;
-  }
+  grid-column: 1 / -1;
 }
