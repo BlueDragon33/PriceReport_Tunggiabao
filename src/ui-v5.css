@@ -1752,6 +1752,70 @@ body.v5-ui .studio-history-state.saved{
   background:var(--v5-success-soft);
   color:var(--v5-success);
 }
+body.v5-ui .studio-autosave-state{
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  padding:3px 7px;
+  border:1px solid var(--v5-border);
+  border-radius:999px;
+  background:var(--v5-surface-soft);
+  color:var(--v5-muted);
+  font-size:7.5px;
+  font-weight:800;
+  white-space:nowrap;
+}
+body.v5-ui .studio-autosave-state[data-state="saving"]{
+  border-color:var(--v5-primary);
+  background:var(--v5-primary-soft);
+  color:var(--v5-primary);
+}
+body.v5-ui .studio-autosave-state[data-state="saved"]{
+  border-color:var(--v5-success);
+  background:var(--v5-success-soft);
+  color:var(--v5-success);
+}
+body.v5-ui .studio-autosave-state[data-state="error"]{
+  border-color:var(--v5-danger);
+  background:var(--v5-danger-soft);
+  color:var(--v5-danger);
+}
+body.v5-ui .draft-recovery-banner{
+  margin:8px 14px 0;
+  padding:9px 10px;
+  border:1px solid var(--v5-warning);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-warning-soft);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+body.v5-ui .draft-recovery-banner[hidden]{display:none}
+body.v5-ui .draft-recovery-banner>div:first-child{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+body.v5-ui .draft-recovery-banner strong{
+  color:var(--v5-data-heading);
+  font-size:9px;
+}
+body.v5-ui .draft-recovery-banner span{
+  color:var(--v5-muted);
+  font-size:8px;
+}
+body.v5-ui .draft-recovery-actions{
+  flex:0 0 auto;
+  display:flex;
+  gap:6px;
+}
+body.v5-ui .draft-recovery-actions .btn{
+  min-height:30px;
+  height:30px;
+  padding:0 9px;
+  font-size:8.5px;
+}
 body.v5-ui .studio-pane-title{
   margin-top:8px;
   padding-top:9px;
