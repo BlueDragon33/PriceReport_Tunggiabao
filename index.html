@@ -33,7 +33,7 @@
       <div class="studio-v6-commandbar" id="studioV6Commandbar" aria-label="Thanh lệnh Soạn báo giá">
         <div class="studio-v6-document">
           <button class="studio-v6-home" id="studioV6Home" type="button" aria-label="Về Trang chủ">⌂</button>
-          <div><small>ĐANG SOẠN</small><strong id="studioV6QuoteName">Báo giá mới</strong><span id="studioV6QuoteNo">Chưa có mã</span></div>
+          <div><small>ĐANG SOẠN</small><strong id="studioV6QuoteName">Báo giá mới</strong><span id="studioV6QuoteNo">Chưa có mã</span><span class="studio-v6-history-state" id="studioV6HistoryState">Chưa lưu lịch sử</span></div>
         </div>
         <div class="studio-v6-save-state" id="studioAutosaveState" role="status" aria-live="polite"><span>●</span> Sẵn sàng</div>
         <div class="studio-v6-command-actions">
@@ -72,44 +72,6 @@
         </div>
       </section>
       <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
-      <div class="panel-head studio-panel-head">
-        <div class="studio-context-row">
-          <button class="studio-home-button" id="studioBackHome" type="button" aria-label="Về Trang chủ" title="Về Trang chủ">⌂</button>
-          <div class="studio-current-quote">
-            <small>ĐANG SOẠN</small>
-            <strong id="studioQuoteLabel">Báo giá mới</strong>
-          </div>
-          <div class="studio-context-badges">
-            <span class="studio-status-badge" id="studioQuoteStatus">Bản nháp</span>
-            <span class="studio-history-state" id="studioHistoryState">Chưa lưu lịch sử</span>
-          </div>
-        </div>
-        <div class="studio-pane-title">
-          <h2 id="paneTitle">THÔNG TIN CHUNG</h2>
-          <p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p>
-        </div>
-        <div class="studio-stepper" aria-label="Các bước soạn báo giá">
-          <button type="button" data-studio-step="general"><b>1</b><span>Thông tin</span></button>
-          <button type="button" data-studio-step="products"><b>2</b><span>Sản phẩm</span></button>
-          <button type="button" data-studio-step="payment"><b>3</b><span>Thanh toán</span></button>
-          <button type="button" data-studio-step="terms"><b>4</b><span>Điều khoản</span></button>
-          <button type="button" data-studio-step="design"><b>5</b><span>Thiết kế</span></button>
-          <button type="button" data-studio-step="export"><b>6</b><span>Xuất</span></button>
-        </div>
-        <div class="studio-commandbar" aria-label="Thao tác báo giá">
-          <div class="studio-command-main">
-            <button class="btn primary" id="studioSaveQuote" type="button">Lưu nháp</button>
-            <button class="btn" id="studioCheckQuote" type="button">Kiểm tra</button>
-            <button class="btn" id="studioPreviewQuote" type="button">Xem A4</button>
-          </div>
-          <div class="studio-flow-controls">
-            <button class="btn studio-flow-button" id="studioPrevStep" type="button" aria-label="Bước trước">←</button>
-            <span class="studio-workflow-position" id="studioWorkflowPosition">Bước 1/6</span>
-            <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
-          </div>
-          <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
-        </div>
-      </div>
       <div class="panel-body">
         <div class="pane active app-dashboard app-workspace-pane" id="pane-dashboard">
           <header class="dashboard-topbar app-workspace-header">
