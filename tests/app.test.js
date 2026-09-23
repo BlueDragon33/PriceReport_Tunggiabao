@@ -257,6 +257,30 @@ test('V5.3 guided validation panel exists and is hidden until requested', () => 
   expect(panel.hidden).toBe(true);
 });
 
+test('V5.3 guided correction can return focus to the issue with Escape', async () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioCheckQuote').click();
+
+  const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+    .find(item => item.textContent.includes('Thiếu tên công ty'));
+  expect(issue).toBeTruthy();
+  issue.click();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  expect(document.activeElement).toBe(company);
+  company.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  expect(document.activeElement).toBe(issue);
+
+  company.value = previous || 'Tùng Gia Bảo';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('closeStudioGuidance').click();
+});
+
 test('V5.3 open guidance refreshes immediately after a field is corrected', () => {
   document.querySelector('[data-tab="general"]').click();
   const company = document.getElementById('companyName');
