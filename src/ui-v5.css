@@ -2380,9 +2380,9 @@ body.v5-ui .price-report-device-card>small{
   font-size:10.5px;
   line-height:1.5;
 }
-html[data-price-report-device-access="pending"] body.v5-ui,
-html[data-price-report-device-access="blocked"] body.v5-ui,
-html[data-price-report-device-access="offline"] body.v5-ui{overflow:hidden}
+body.v5-ui:where(html[data-price-report-device-access="pending"] body),
+body.v5-ui:where(html[data-price-report-device-access="blocked"] body),
+body.v5-ui:where(html[data-price-report-device-access="offline"] body){overflow:hidden}
 
 /* ---------- Preview chrome, never the report document ---------- */
 body.v5-ui .preview{
