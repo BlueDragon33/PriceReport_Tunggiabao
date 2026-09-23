@@ -4824,7 +4824,10 @@ function canonicalLibraryPhone(value) {
 function customerKey(customer) {
   const phone = canonicalLibraryPhone(customer.phone);
   if (phone) return 'phone:' + phone;
-  return 'name:' + [customer.name, customer.company].map(canonicalLibraryText).filter(Boolean).join('|');
+  const nameCompany = [customer.name, customer.company].map(canonicalLibraryText).filter(Boolean).join('|');
+  if (nameCompany) return 'name:' + nameCompany;
+  const email = canonicalLibraryText(customer.email);
+  return email ? 'email:' + email : '';
 }
 
 function saveCurrentCustomerToLibrary() {
