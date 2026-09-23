@@ -4080,6 +4080,42 @@ document.getElementById('quoteStatusFilter').addEventListener('change', renderHi
 let dataLibraryImportDraft = null;
 let dataLibraryImportLastFocus = null;
 
+function refreshDataLibraryAfterMutation(mode) {
+  if (mode === 'customer') {
+    selectedCustomerLibraryIds.clear();
+    refreshCustomerEntrySuggestions();
+  } else {
+    selectedProductCatalogIds.clear();
+    refreshProductEntrySuggestions();
+  }
+  renderMasterData();
+  renderDashboard();
+}
+
+function restoreDataLibrarySnapshot(mode, items) {
+  const snapshot = clone(Array.isArray(items) ? items : []);
+  const restored = mode === 'customer'
+    ? setCustomerLibrary(snapshot)
+    : setProductCatalog(snapshot);
+  if (!restored) return false;
+  refreshDataLibraryAfterMutation(mode);
+  return true;
+}
+
+function offerDataLibraryUndo(mode, previousItems, message) {
+  const snapshot = clone(Array.isArray(previousItems) ? previousItems : []);
+  toast(message, {
+    label: 'Hoàn tác',
+    duration: 8000,
+    onClick: () => {
+      if (!restoreDataLibrarySnapshot(mode, snapshot)) return;
+      toast(mode === 'customer'
+        ? 'Đã hoàn tác thay đổi danh bạ khách hàng'
+        : 'Đã hoàn tác thay đổi danh mục sản phẩm');
+    }
+  });
+}
+
 function dataLibraryImportKey(mode, item) {
   return mode === 'customer' ? customerKey(item) : catalogKey(item);
 }
@@ -4319,8 +4355,10 @@ function applyDataLibraryImport() {
   const candidate = currentDataLibraryImportCandidate();
   if (!candidate?.accepted?.length) return;
 
+  let previousItems = [];
   if (candidate.mode === 'customer') {
     const next = getCustomerLibrary();
+    previousItems = clone(next);
     const indexByKey = new Map(next.map((item, index) => [customerKey(item), index]));
     candidate.accepted.forEach(customer => {
       const key = customerKey(customer);
@@ -4342,6 +4380,7 @@ function applyDataLibraryImport() {
     refreshCustomerEntrySuggestions();
   } else {
     const next = getProductCatalog();
+    previousItems = clone(next);
     const indexByKey = new Map(next.map((item, index) => [catalogKey(item), index]));
     candidate.accepted.forEach(product => {
       const normalized = {
@@ -4377,7 +4416,11 @@ function applyDataLibraryImport() {
   closeDataLibraryImport({ restoreFocus: false });
   renderMasterData();
   renderDashboard();
-  toast('Đã áp dụng ' + applied + ' dòng' + (updated ? ' • cập nhật ' + updated + ' bản ghi' : ''));
+  offerDataLibraryUndo(
+    candidate.mode,
+    previousItems,
+    'Đã áp dụng ' + applied + ' dòng' + (updated ? ' • cập nhật ' + updated + ' bản ghi' : '')
+  );
 }
 
 function customerLibraryRowsForExport() {
@@ -4443,11 +4486,10 @@ document.getElementById('clearCustomerLibrarySelection')?.addEventListener('clic
 document.getElementById('deleteSelectedCustomers')?.addEventListener('click', () => {
   const ids = new Set(selectedCustomerLibraryIds);
   if (!ids.size || !confirm('Xóa ' + ids.size + ' khách hàng đã chọn khỏi danh bạ?')) return;
-  if (!setCustomerLibrary(getCustomerLibrary().filter(item => !ids.has(item.id)))) return;
-  selectedCustomerLibraryIds.clear();
-  renderMasterData();
-  renderDashboard();
-  toast('Đã xóa ' + ids.size + ' khách hàng');
+  const before = getCustomerLibrary();
+  if (!setCustomerLibrary(before.filter(item => !ids.has(item.id)))) return;
+  refreshDataLibraryAfterMutation('customer');
+  offerDataLibraryUndo('customer', before, 'Đã xóa ' + ids.size + ' khách hàng');
 });
 document.getElementById('clearProductCatalogSelection')?.addEventListener('click', () => {
   selectedProductCatalogIds.clear();
@@ -4456,11 +4498,10 @@ document.getElementById('clearProductCatalogSelection')?.addEventListener('click
 document.getElementById('deleteSelectedCatalogProducts')?.addEventListener('click', () => {
   const ids = new Set(selectedProductCatalogIds);
   if (!ids.size || !confirm('Xóa ' + ids.size + ' sản phẩm đã chọn khỏi danh mục?')) return;
-  if (!setProductCatalog(getProductCatalog().filter(item => !ids.has(item.id)))) return;
-  selectedProductCatalogIds.clear();
-  renderMasterData();
-  renderDashboard();
-  toast('Đã xóa ' + ids.size + ' sản phẩm khỏi danh mục');
+  const before = getProductCatalog();
+  if (!setProductCatalog(before.filter(item => !ids.has(item.id)))) return;
+  refreshDataLibraryAfterMutation('product');
+  offerDataLibraryUndo('product', before, 'Đã xóa ' + ids.size + ' sản phẩm khỏi danh mục');
 });
 document.getElementById('addSelectedCatalogProducts')?.addEventListener('click', () => {
   const ids = new Set(selectedProductCatalogIds);
