@@ -1600,6 +1600,50 @@ function focusProductName(index) {
   });
 }
 
+function ensureProductEntryDatalist(id) {
+  let list = document.getElementById(id);
+  if (!list) {
+    list = document.createElement('datalist');
+    list.id = id;
+    document.body.appendChild(list);
+  }
+  return list;
+}
+
+function fillDatalist(id, values) {
+  const list = ensureProductEntryDatalist(id);
+  list.innerHTML = '';
+  [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'vi'))
+    .slice(0, 300)
+    .forEach(value => {
+      const option = document.createElement('option');
+      option.value = value;
+      list.appendChild(option);
+    });
+}
+
+function refreshProductEntryDatalists() {
+  const catalog = getProductCatalog();
+  fillDatalist('productNameSuggestions', catalog.map(item => item.name));
+  fillDatalist('productGroupSuggestions', catalog.map(item => item.group));
+  fillDatalist('productUnitSuggestions', [
+    ...catalog.map(item => item.unit),
+    'Cái','Hộp','Khay','Kg','Gói','Thùng','Bộ','Chai','Túi'
+  ]);
+}
+
+function findCatalogProductByName(name) {
+  const target = String(name || '').trim().toLocaleLowerCase('vi-VN');
+  if (!target) return null;
+  const candidates = getProductCatalog().filter(item =>
+    String(item.name || '').trim().toLocaleLowerCase('vi-VN') === target
+  );
+  if (!candidates.length) return null;
+  const currency = normalizeCatalogCurrency(state.currency);
+  return candidates.find(item => normalizeCatalogCurrency(item.currency || 'VND') === currency) || candidates[0];
+}
+
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
   wrap.className = 'product-field ' + className;
@@ -1614,9 +1658,16 @@ function productField(label, key, value, type, onInput, className = '') {
     input.step = key === 'price' ? '1000' : '1';
     input.inputMode = 'decimal';
   }
-  if (key === 'name') input.placeholder = 'Tên hàng hóa / dịch vụ';
+  if (key === 'name') {
+    input.placeholder = 'Tên hàng hóa / dịch vụ';
+    input.setAttribute('list', 'productNameSuggestions');
+  }
+  if (key === 'group') input.setAttribute('list', 'productGroupSuggestions');
   if (key === 'pack') input.placeholder = 'VD: Hộp 10 quả';
-  if (key === 'unit') input.placeholder = 'VD: Hộp, kg, cái';
+  if (key === 'unit') {
+    input.placeholder = 'VD: Hộp, kg, cái';
+    input.setAttribute('list', 'productUnitSuggestions');
+  }
   input.addEventListener('input', () => onInput(input));
   wrap.append(title, input);
   return wrap;
@@ -1625,6 +1676,7 @@ function productField(label, key, value, type, onInput, className = '') {
 function renderEditorProducts() {
   const list = document.getElementById('productEditor');
   list.innerHTML = '';
+  refreshProductEntryDatalists();
 
   state.products.forEach((product, index) => {
     const row = document.createElement('article');
@@ -1678,6 +1730,22 @@ function renderEditorProducts() {
     const qtyField = productField('Số lượng', 'qty', product.qty, 'number', input => updateProduct('qty', input, true), 'grid-qty');
     const priceField = productField('Đơn giá', 'price', product.price, 'number', input => updateProduct('price', input, true), 'grid-price');
     const noteField = productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'grid-note');
+
+    const nameInput = nameField.querySelector('[data-product-key="name"]');
+    nameInput?.addEventListener('change', () => {
+      const catalog = findCatalogProductByName(nameInput.value);
+      if (!catalog) return;
+      const sameCurrency = normalizeCatalogCurrency(catalog.currency || 'VND') === normalizeCatalogCurrency(state.currency);
+      product.group = catalog.group || product.group || '';
+      product.pack = catalog.pack || product.pack || '';
+      product.unit = catalog.unit || product.unit || '';
+      if (sameCurrency) product.price = normalizeNonNegativeNumber(catalog.price);
+      if (!product.note && catalog.note) product.note = catalog.note;
+      save();
+      renderEditorProducts();
+      render();
+      toast(sameCurrency ? 'Đã điền dữ liệu từ danh mục' : 'Đã điền thông tin; giữ giá hiện tại vì khác tiền tệ');
+    });
 
     const actions = document.createElement('div');
     actions.className = 'product-card-actions product-grid-actions';
