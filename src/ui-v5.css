@@ -2531,6 +2531,74 @@ body.v5-ui .import-source-card small{
   font-size:9.3px;
   line-height:1.35;
 }
+body.v5-ui .smart-paste-panel{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid #cfe1f3;
+  border-radius:11px;
+  background:#f6faff;
+}
+body.v5-ui .smart-paste-panel[hidden]{display:none}
+body.v5-ui .smart-paste-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+body.v5-ui .smart-paste-head strong{
+  display:block;
+  color:#274663;
+  font-size:10px;
+}
+body.v5-ui .smart-paste-head span{
+  display:block;
+  margin-top:2px;
+  color:var(--v5-muted);
+  font-size:8.8px;
+}
+body.v5-ui .smart-paste-panel textarea{
+  width:100%;
+  min-height:130px;
+  padding:9px 10px;
+  border:1px solid var(--v5-border-strong);
+  border-radius:8px;
+  resize:vertical;
+  font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+body.v5-ui .smart-paste-actions{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+body.v5-ui .smart-paste-actions small{
+  color:#6f8198;
+  font-size:8.5px;
+  line-height:1.35;
+}
+body.v5-ui .product-workspace-actions{flex-wrap:wrap}
+body.v5-ui .product-workspace-actions .product-secondary-action{
+  background:var(--v5-surface-soft);
+  color:#6f7f92;
+}
+body.v5-ui .toast{
+  gap:10px;
+  align-items:center;
+}
+body.v5-ui .toast-action{
+  min-height:28px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:7px;
+  background:rgba(255,255,255,.14);
+  color:inherit;
+  font:inherit;
+  font-weight:900;
+  cursor:pointer;
+}
+
 body.v5-ui .import-progress{
   margin:12px 0;
   padding:9px 11px;
