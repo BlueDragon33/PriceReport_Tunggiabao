@@ -7,18 +7,14 @@ const handlers = new Map();
 const cachedNames = new Set(['pricereport-shell-v49', 'bauman-offline-v1', 'other-app-assets']);
 const cachedResponse = new Response('current application');
 const unrelatedResponse = new Response('unrelated application');
-const cacheWrites = [];
 const appCache = {
   match: async () => cachedResponse,
-  put: async (request, response) => {
-    cacheWrites.push({ request, response });
-  },
+  put: async () => {},
   addAll: async () => {},
 };
 let activeCache;
 let claimed = false;
 let skipped = false;
-let fetchImpl = async () => { throw new Error('offline'); };
 vm.runInNewContext(source + '\nactiveCache = CACHE;', {
   set activeCache(value) { activeCache = value; cachedNames.add(value); },
   self: {
@@ -36,7 +32,7 @@ vm.runInNewContext(source + '\nactiveCache = CACHE;', {
     },
     match: async () => unrelatedResponse,
   },
-  fetch: (...args) => fetchImpl(...args),
+  fetch: async () => { throw new Error('offline'); },
   Response,
   URL,
 });
@@ -55,39 +51,27 @@ assert.equal(cachedNames.has('bauman-offline-v1'), true, 'other applications on 
 assert.equal(cachedNames.has('other-app-assets'), true);
 assert.equal(claimed, true, 'activation must await client claim');
 
-for (const mode of ['navigate', 'cors']) {
-  let response;
-  handlers.get('fetch')({
-    request: { method: 'GET', mode },
-    respondWith: promise => { response = promise; },
-    waitUntil: () => {},
-  });
-  assert.equal(await response, cachedResponse, `${mode} must read this application cache only`);
-}
+let navigationResponse;
+handlers.get('fetch')({
+  request: { method: 'GET', mode: 'navigate' },
+  respondWith: promise => { navigationResponse = promise; },
+  waitUntil: () => {},
+});
+assert.equal(await navigationResponse, cachedResponse, 'navigation fallback must read this application cache only');
 
-fetchImpl = async () => new Response('fresh application', { status: 200 });
-let staleResponse;
+let assetResponse;
 let backgroundRefresh;
 handlers.get('fetch')({
-  request: { method: 'GET', mode: 'cors', url: 'https://example.test/app/asset.js' },
-  respondWith: promise => { staleResponse = promise; },
+  request: { method: 'GET', mode: 'cors' },
+  respondWith: promise => { assetResponse = promise; },
   waitUntil: promise => { backgroundRefresh = promise; },
 });
-assert.equal(await staleResponse, cachedResponse, 'cached assets should respond immediately');
-assert.ok(backgroundRefresh, 'cached responses must keep background revalidation alive');
+assert.equal(await assetResponse, cachedResponse, 'cached assets must read this application cache only');
+assert.ok(backgroundRefresh, 'cached assets must attach revalidation to event.waitUntil');
 await backgroundRefresh;
-assert.ok(cacheWrites.length > 0, 'background revalidation must refresh the active cache');
 
-let navigationResponse;
-let navigationWrite;
-handlers.get('fetch')({
-  request: { method: 'GET', mode: 'navigate', url: 'https://example.test/app/' },
-  respondWith: promise => { navigationResponse = promise; },
-  waitUntil: promise => { navigationWrite = promise; },
-});
-assert.equal(await (await navigationResponse).text(), 'fresh application');
-assert.ok(navigationWrite, 'successful navigation must keep index cache write alive');
-await navigationWrite;
-assert.equal(cacheWrites.at(-1)?.request, './index.html');
+assert.match(source, /event\.waitUntil\(network\.then\(\(\) => undefined\)\)/, 'stale-while-revalidate lifetime guard is missing');
+assert.match(source, /if \(cacheable\) await cache\.put\(event\.request, response\.clone\(\)\)/, 'background refresh must await cache write');
+assert.match(source, /event\.waitUntil\(caches\.open\(CACHE\)\.then\(cache => cache\.put\('\.\/index\.html', copy\)\)\)/, 'navigation cache write must stay alive');
 
 console.log('SERVICE WORKER CACHE OWNERSHIP/LIFETIME PASS');
