@@ -2280,6 +2280,31 @@ function excelRowsForCurrentQuote() {
   return rows;
 }
 
+function exportCurrentQuoteCsv() {
+  const escapeCsv = (value) => {
+    const text = String(value ?? '');
+    return /[",\n\r]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  };
+  const rows = [
+    ['STT','Tên sản phẩm','Nhóm hàng','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú'],
+    ...(state.products || []).map((product, index) => [
+      index + 1,
+      product.name || '',
+      product.group || '',
+      product.pack || '',
+      product.unit || '',
+      Number(product.qty || 0),
+      Number(product.price || 0),
+      Number(product.qty || 0) * Number(product.price || 0),
+      product.note || ''
+    ])
+  ];
+  const csv = '\uFEFF' + rows.map(row => row.map(escapeCsv).join(',')).join('\r\n');
+  const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.csv';
+  download(name, csv, 'text/csv;charset=utf-8');
+  toast('Đã xuất file CSV');
+}
+
 async function exportCurrentQuoteExcel() {
   try {
     const XLSX = await import('xlsx');
@@ -3480,6 +3505,7 @@ document.getElementById('preflightCheck')?.addEventListener('click', () => {
 });
 
 document.getElementById('exportExcel')?.addEventListener('click', exportCurrentQuoteExcel);
+document.getElementById('exportCsv')?.addEventListener('click', exportCurrentQuoteCsv);
 document.getElementById('importExcelQuick')?.addEventListener('click', () => {
   openSmartImport();
   document.getElementById('excelSmartImportInput')?.click();
