@@ -2092,3 +2092,14 @@ html[data-price-report-device-access="offline"] body{overflow:hidden}
   .shell.app-workspace .mobile-more-toggle{flex:1;min-width:64px!important}
   .mobile-more-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* =========================
+   V4.2 WORKFLOW SEMANTICS
+   ========================= */
+.master-section-card{scroll-margin-top:18px;transition:box-shadow .22s ease,border-color .22s ease,transform .22s ease}
+.master-section-card.master-section-highlight{
+  border-color:#76acee!important;
+  box-shadow:0 0 0 4px rgba(42,125,225,.10),0 14px 32px rgba(25,73,132,.10)!important;
+  transform:translateY(-2px)
+}
