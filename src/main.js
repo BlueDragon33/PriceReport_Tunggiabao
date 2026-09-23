@@ -447,6 +447,14 @@ const setText = (id, value) => {
   if (el) el.textContent = value == null ? '' : value;
 };
 
+const STATUS_LABELS = {
+  draft: 'Bản nháp',
+  sent: 'Đã gửi',
+  accepted: 'Đã chấp nhận',
+  rejected: 'Từ chối',
+  expired: 'Hết hiệu lực'
+};
+
 const STUDIO_STAGE_BY_TAB = {
   general: 'general',
   customer: 'general',
@@ -2662,14 +2670,6 @@ function setHistory(items) {
 function calcTotal(data) {
   return calcQuoteTotal(data);
 }
-
-const STATUS_LABELS = {
-  draft: 'Bản nháp',
-  sent: 'Đã gửi',
-  accepted: 'Đã chấp nhận',
-  rejected: 'Từ chối',
-  expired: 'Hết hiệu lực'
-};
 
 function quoteLabel(data) {
   return data.quoteNo || 'Chưa có số báo giá';
