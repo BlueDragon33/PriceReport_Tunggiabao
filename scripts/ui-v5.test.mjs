@@ -18,15 +18,38 @@ const mediaCount = (css.match(/@media/g) || []).length;
 if (mediaCount > 4) fail('V5 responsive layer has too many media-query blocks: ' + mediaCount);
 
 const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
-const selectorLines = withoutComments
-  .split('\n')
-  .map(line => line.trim())
-  .filter(line => line && !line.startsWith('@') && line.includes('{'))
-  .map(line => line.slice(0, line.indexOf('{')).trim())
-  .filter(selector => selector && !selector.includes(';'))
-  .flatMap(group => group.split(',').map(value => value.trim()).filter(Boolean));
 
-const unscoped = selectorLines.filter(selector =>
+function extractSelectors(source) {
+  const selectors = [];
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const open = source.indexOf('{', cursor);
+    if (open < 0) break;
+
+    const prelude = source.slice(cursor, open).trim();
+    let depth = 1;
+    let close = open + 1;
+    for (; close < source.length && depth > 0; close += 1) {
+      if (source[close] === '{') depth += 1;
+      else if (source[close] === '}') depth -= 1;
+    }
+    const body = source.slice(open + 1, Math.max(open + 1, close - 1));
+
+    if (/^@(media|supports|container|layer)\b/i.test(prelude)) {
+      selectors.push(...extractSelectors(body));
+    } else if (prelude && !prelude.startsWith('@')) {
+      selectors.push(...prelude.split(',').map(value => value.trim()).filter(Boolean));
+    }
+
+    cursor = close;
+  }
+
+  return selectors;
+}
+
+const selectorRules = extractSelectors(withoutComments);
+const unscoped = selectorRules.filter(selector =>
   selector !== ':root' &&
   !selector.startsWith('body.v5-ui')
 );
