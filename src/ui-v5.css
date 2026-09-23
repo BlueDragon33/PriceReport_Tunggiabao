@@ -4065,7 +4065,9 @@ body.v5-ui .master-section-card.master-section-highlight{
   body.v5-ui .data-library-import-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
   body.v5-ui .data-library-import-sheet-row{align-items:stretch;flex-direction:column}
   body.v5-ui .data-library-import-sheet-row select{width:100%;min-width:0}
-  body.v5-ui .data-library-import-preview{overflow-x:auto}
+  body.v5-ui .data-library-import-preview{min-width:0;overflow-x:auto}
+  body.v5-ui .data-library-import-preview-head,
+  body.v5-ui .data-library-import-preview-row{min-width:720px}
 }
 
 body.v5-ui .color.color-teal{background:#0b8f83}
