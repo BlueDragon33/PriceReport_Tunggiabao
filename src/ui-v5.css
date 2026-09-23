@@ -998,8 +998,8 @@ body.v5-ui .history-stats-app .history-kpi small{color:var(--v5-subtle);font-siz
 body.v5-ui .history-stats-app #historyRevenue{font-size:13px}
 body.v5-ui .history-toolbar{
   display:grid;
-  grid-template-columns:minmax(260px,1fr) 210px auto;
-  gap:10px;
+  grid-template-columns:minmax(240px,1.4fr) 150px 180px 132px 132px auto auto;
+  gap:8px;
   align-items:end;
 }
 body.v5-ui .history-toolbar label{margin-bottom:5px;color:var(--v5-muted);font-size:8.5px;font-weight:700}
@@ -1019,7 +1019,9 @@ body.v5-ui .history-search-box input{
   box-shadow:none;
   font-size:10px;
 }
-body.v5-ui .history-filter-field select{height:38px;background:var(--v5-surface)}
+body.v5-ui .history-filter-field select,
+body.v5-ui .history-filter-field input{height:38px;background:var(--v5-surface)}
+body.v5-ui .history-clear-filters{height:38px;white-space:nowrap}
 body.v5-ui .history-result-summary{
   height:38px;
   min-width:76px;
