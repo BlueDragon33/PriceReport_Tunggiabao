@@ -77,3 +77,23 @@ Step health refreshed during Studio navigation, but an already-open guidance pan
 
 ### Next pass
 Audit keyboard flow and focus restoration across guided corrections, especially from issue item → field → return to validation, so users can complete the workflow without mouse-dependent recovery.
+
+
+## Pass 4 — Keyboard recovery from guided correction
+
+### Finding
+Issue items were keyboard-focusable, but once a user activated an issue and focus moved to the field, returning to the original checklist item still required pointer navigation.
+
+### Corrections
+- Guided issue activation now remembers the originating issue control.
+- After focus moves to the target field, Escape returns focus to the exact issue item that launched the correction.
+- The same behavior applies to mapped product-row corrections.
+- No global Escape override was added; the behavior is scoped to the focused correction target.
+
+### Regression coverage
+- A missing-company issue can be activated from guidance.
+- Focus moves to the company field.
+- Escape returns focus to the exact guidance item.
+
+### Next pass
+Run a consolidated V5.3 gate, inspect failures, and only then decide whether to continue into guided defaults/prefill or package a V5.3 release candidate.
