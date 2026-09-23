@@ -4440,15 +4440,45 @@ function renderDataLibraryImport() {
   }
 }
 
+function resetDataLibraryImportReviewForLoading(fileName) {
+  setText('dataLibraryImportSubtitle', 'Đang đọc ' + String(fileName || 'file dữ liệu') + '...');
+  setText('dataLibraryImportValidCount', '0');
+  setText('dataLibraryImportUpdateCount', '0');
+  setText('dataLibraryImportInvalidCount', '0');
+  setText('dataLibraryImportDuplicateCount', '0');
+
+  const sheetRow = document.getElementById('dataLibraryImportSheetRow');
+  const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
+  if (sheetRow) sheetRow.hidden = true;
+  if (sheetSelect) sheetSelect.innerHTML = '';
+
+  const notice = document.getElementById('dataLibraryImportNotice');
+  if (notice) {
+    notice.textContent = 'Đang đọc và nhận diện dữ liệu mới...';
+    notice.dataset.tone = 'working';
+  }
+
+  const head = document.getElementById('dataLibraryImportPreviewHead');
+  const body = document.getElementById('dataLibraryImportPreviewBody');
+  if (head) head.innerHTML = '';
+  if (body) body.innerHTML = '';
+
+  const apply = document.getElementById('applyDataLibraryImport');
+  if (apply) {
+    apply.disabled = true;
+    apply.textContent = 'Đang đọc dữ liệu...';
+  }
+}
+
 async function openDataLibraryImport(file, mode, trigger) {
   if (!file) return;
   dataLibraryImportLastFocus = trigger || document.activeElement;
   const modal = document.getElementById('dataLibraryImportModal');
   if (!modal) return;
+  dataLibraryImportDraft = null;
   modal.hidden = false;
   document.body.classList.add('data-library-import-open');
-  setText('dataLibraryImportSubtitle', 'Đang đọc ' + file.name + '...');
-  document.getElementById('applyDataLibraryImport')?.setAttribute('disabled', '');
+  resetDataLibraryImportReviewForLoading(file.name);
   try {
     const candidates = await readDataLibraryWorkbook(file, mode);
     dataLibraryImportDraft = {
