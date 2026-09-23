@@ -2844,8 +2844,13 @@ function renderHistory() {
 
   document.getElementById('historyCount').textContent = String(all.length);
   const acceptedCount = all.filter(record => (record?.data?.quoteStatus || record?.status || 'draft') === 'accepted').length;
+  const pendingCount = all.filter(record => ['draft','sent'].includes(record?.data?.quoteStatus || record?.status || 'draft')).length;
   const acceptedEl = document.getElementById('historyAcceptedCount');
+  const pendingEl = document.getElementById('historyPendingCount');
+  const resultEl = document.getElementById('historyResultCount');
   if (acceptedEl) acceptedEl.textContent = String(acceptedCount);
+  if (pendingEl) pendingEl.textContent = String(pendingCount);
+  if (resultEl) resultEl.textContent = String(items.length);
 
   const totalsByCurrency = historyTotalsByCurrency(all);
   const revenueEl = document.getElementById('historyRevenue');
@@ -2870,30 +2875,46 @@ function renderHistory() {
 
   items.forEach(record => {
     const data = record.data || {};
-    const row = document.createElement('div');
-    row.className = 'history-item';
-
-    const info = document.createElement('div');
-    info.className = 'history-info';
-    const titleLine = document.createElement('div');
-    titleLine.className = 'history-title-line';
-    const title = document.createElement('strong');
-    title.textContent = quoteLabel(data);
-    const badge = document.createElement('span');
     const currentStatus = data.quoteStatus || record.status || 'draft';
+    const customer = data.customerCompany || data.customerName || 'Chưa nhập khách hàng';
+    const recordCurrency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
+
+    const row = document.createElement('div');
+    row.className = 'history-item history-table-row';
+
+    const quoteCell = document.createElement('div');
+    quoteCell.className = 'history-cell history-quote-cell';
+    const quoteStrong = document.createElement('strong');
+    quoteStrong.textContent = quoteLabel(data);
+    const quoteSub = document.createElement('small');
+    quoteSub.textContent = data.quoteSubtitle || 'Báo giá';
+    quoteCell.append(quoteStrong, quoteSub);
+
+    const customerCell = document.createElement('div');
+    customerCell.className = 'history-cell history-customer-cell';
+    const customerStrong = document.createElement('strong');
+    customerStrong.textContent = customer;
+    const customerSub = document.createElement('small');
+    customerSub.textContent = data.customerPhone || data.customerName || '—';
+    customerCell.append(customerStrong, customerSub);
+
+    const dateCell = document.createElement('div');
+    dateCell.className = 'history-cell history-date-cell';
+    dateCell.textContent = formatDate(data.quoteDate || '') || '—';
+
+    const totalCell = document.createElement('div');
+    totalCell.className = 'history-cell history-value-cell';
+    totalCell.textContent = moneyForCurrency(Number(record.total ?? calcTotal(data)), recordCurrency);
+
+    const statusCell = document.createElement('div');
+    statusCell.className = 'history-cell history-status-cell';
+    const badge = document.createElement('span');
     badge.className = 'status-badge status-' + currentStatus;
     badge.textContent = statusLabel(currentStatus);
-    titleLine.append(title, badge);
-
-    const meta = document.createElement('span');
-    const customer = data.customerName || data.customerCompany || 'Chưa nhập khách hàng';
-    const recordCurrency = normalizeCatalogCurrency(record.currency || data.currency || 'VND');
-    meta.textContent = customer + ' • ' + formatDate(data.quoteDate || '') + ' • ' +
-      moneyForCurrency(Number(record.total ?? calcTotal(data)), recordCurrency);
-    info.append(titleLine, meta);
+    statusCell.appendChild(badge);
 
     const actions = document.createElement('div');
-    actions.className = 'history-actions';
+    actions.className = 'history-actions history-cell history-action-cell';
     const open = document.createElement('button');
     open.className = 'btn primary';
     open.textContent = 'Mở';
@@ -2911,11 +2932,12 @@ function renderHistory() {
       if (!confirm('Xóa ' + quoteLabel(data) + '?')) return;
       if (!setHistory(getHistory().filter(item => item.id !== record.id))) return;
       renderHistory();
+      renderDashboard();
       toast('Đã xóa báo giá');
     });
 
     actions.append(open, copy, del);
-    row.append(info, actions);
+    row.append(quoteCell, customerCell, dateCell, totalCell, statusCell, actions);
     list.appendChild(row);
   });
 }
