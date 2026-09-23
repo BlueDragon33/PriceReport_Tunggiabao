@@ -257,6 +257,23 @@ test('V5.3 guided validation panel exists and is hidden until requested', () => 
   expect(panel.hidden).toBe(true);
 });
 
+test('V5.3 open guidance refreshes immediately after a field is corrected', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const company = document.getElementById('companyName');
+  const previous = company.value;
+
+  company.value = '';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('studioCheckQuote').click();
+  expect(document.getElementById('studioGuidancePanel').textContent).toContain('Thiếu tên công ty');
+
+  company.value = previous || 'Tùng Gia Bảo';
+  company.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioGuidancePanel').textContent).not.toContain('Thiếu tên công ty');
+
+  document.getElementById('closeStudioGuidance').click();
+});
+
 test('V5.3 Studio validation opens guided issues instead of relying only on alerts', () => {
   document.querySelector('[data-tab="general"]').click();
   const company = document.getElementById('companyName');
