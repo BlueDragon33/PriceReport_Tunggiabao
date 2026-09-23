@@ -2634,6 +2634,8 @@ let quoteUndoStack = [];
 let quoteRedoStack = [];
 let gridEditBaseline = '';
 let productGridRenderQueued = false;
+let selectedProductRows = new Set();
+let pendingProductImport = null;
 
 function quoteSnapshotString() {
   const snapshot = stateForStorage();
@@ -2687,14 +2689,44 @@ function normalizeGridHeader(value) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
+function editDistance(a, b) {
+  const left = String(a || '');
+  const right = String(b || '');
+  const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let previous = row[0];
+    row[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const hold = row[j];
+      row[j] = Math.min(
+        row[j] + 1,
+        row[j - 1] + 1,
+        previous + (left[i - 1] === right[j - 1] ? 0 : 1)
+      );
+      previous = hold;
+    }
+  }
+  return row[right.length];
+}
+function headerSimilarity(a, b) {
+  const left = normalizeGridHeader(a);
+  const right = normalizeGridHeader(b);
+  if (!left || !right) return 0;
+  return 1 - (editDistance(left, right) / Math.max(left.length, right.length, 1));
+}
 function headerField(value) {
   const normalized = normalizeGridHeader(value);
   if (!normalized) return '';
+  let best = { key: '', score: 0 };
   for (const [key, aliases] of Object.entries(PRODUCT_HEADER_ALIASES)) {
     if (aliases.includes(normalized)) return key;
     if (aliases.some(alias => normalized === alias || normalized.startsWith(alias + ' '))) return key;
+    aliases.forEach((alias) => {
+      const score = headerSimilarity(normalized, alias);
+      if (score > best.score) best = { key, score };
+    });
   }
-  return '';
+  return best.score >= 0.78 ? best.key : '';
 }
 function normalizeGridNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
@@ -2818,7 +2850,19 @@ function renderProductDataGrid() {
 
     const indexCell = document.createElement('div');
     indexCell.className = 'product-grid-index';
-    indexCell.textContent = String(index + 1);
+    const select = document.createElement('input');
+    select.type = 'checkbox';
+    select.className = 'product-grid-select';
+    select.checked = selectedProductRows.has(index);
+    select.setAttribute('aria-label', 'Chọn dòng ' + (index + 1));
+    select.addEventListener('change', () => {
+      if (select.checked) selectedProductRows.add(index);
+      else selectedProductRows.delete(index);
+      updateProductBulkBar();
+    });
+    const indexText = document.createElement('span');
+    indexText.textContent = String(index + 1);
+    indexCell.append(select, indexText);
     row.appendChild(indexCell);
 
     const definitions = [
@@ -2963,31 +3007,58 @@ function renderProductDataGrid() {
     row.appendChild(remove);
     body.appendChild(row);
   });
+  selectedProductRows = new Set([...selectedProductRows].filter(index => index >= 0 && index < products.length));
+  updateProductBulkBar();
 }
 
+function cleanProductRows(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map(row => Array.from(row || []).map(value => value ?? ''))
+    .filter(row => row.some(value => String(value).trim()));
+}
 function guessProductColumnMap(rows) {
-  if (!rows.length) return { start: 0, map: [] };
+  if (!rows.length) return { start: 0, map: [], confidence: 0 };
+  const width = Math.max(...rows.map(row => row.length));
   const first = rows[0].map(headerField);
   const recognized = first.filter(Boolean).length;
-  if (recognized >= 2) return { start: 1, map: first };
-  const width = Math.max(...rows.map(row => row.length));
-  const sampleFirst = rows.slice(0, 5).map(row => String(row[0] ?? '').trim());
-  const looksLikeStt = sampleFirst.filter(Boolean).length >= 2 && sampleFirst.filter(v => /^\d+$/.test(v)).length === sampleFirst.filter(Boolean).length;
-  if (width >= 8 && looksLikeStt) return { start: 0, map: ['', 'name','group','pack','unit','qty','price','note'] };
-  if (width >= 7) return { start: 0, map: ['name','group','pack','unit','qty','price','note'] };
-  if (width === 6) return { start: 0, map: ['name','pack','unit','qty','price','note'] };
-  if (width === 5) return { start: 0, map: ['name','pack','unit','qty','price'] };
-  if (width === 4) return { start: 0, map: ['name','unit','qty','price'] };
-  if (width === 3) return { start: 0, map: ['name','qty','price'] };
-  if (width === 2) return { start: 0, map: ['name','unit'] };
-  return { start: 0, map: ['name'] };
+  if (recognized >= 2) {
+    const unique = new Set(first.filter(Boolean)).size;
+    const confidence = Math.min(1, 0.72 + (unique / Math.max(4, width)) * 0.28);
+    return { start: 1, map: first, confidence };
+  }
+
+  const sample = rows.slice(0, 8);
+  const sampleFirst = sample.map(row => String(row[0] ?? '').trim()).filter(Boolean);
+  const looksLikeStt = sampleFirst.length >= 2 && sampleFirst.every(value => /^\d+$/.test(value));
+  const numericRatio = (column) => {
+    const values = sample.map(row => String(row[column] ?? '').trim()).filter(Boolean);
+    if (!values.length) return 0;
+    return values.filter(value => /^[-+]?\s*[\d., ]+$/.test(value)).length / values.length;
+  };
+  const textRatio = (column) => {
+    const values = sample.map(row => String(row[column] ?? '').trim()).filter(Boolean);
+    if (!values.length) return 0;
+    return values.filter(value => /[A-Za-zÀ-ỹ]/.test(value)).length / values.length;
+  };
+
+  if (width >= 8 && looksLikeStt) return { start: 0, map: ['', 'name','group','pack','unit','qty','price','note'], confidence: 0.82 };
+  if (width === 4 && textRatio(0) > 0.6 && textRatio(1) > 0.4 && numericRatio(2) > 0.7 && numericRatio(3) > 0.7) {
+    return { start: 0, map: ['name','unit','qty','price'], confidence: 0.86 };
+  }
+  if (width === 3 && textRatio(0) > 0.6 && numericRatio(1) > 0.7 && numericRatio(2) > 0.7) {
+    return { start: 0, map: ['name','qty','price'], confidence: 0.82 };
+  }
+  if (width >= 7) return { start: 0, map: ['name','group','pack','unit','qty','price','note'], confidence: 0.62 };
+  if (width === 6) return { start: 0, map: ['name','pack','unit','qty','price','note'], confidence: 0.58 };
+  if (width === 5) return { start: 0, map: ['name','pack','unit','qty','price'], confidence: 0.58 };
+  if (width === 4) return { start: 0, map: ['name','unit','qty','price'], confidence: 0.6 };
+  if (width === 3) return { start: 0, map: ['name','qty','price'], confidence: 0.58 };
+  if (width === 2) return { start: 0, map: ['name','unit'], confidence: 0.5 };
+  return { start: 0, map: ['name'], confidence: 0.45 };
 }
-function rowsToProducts(rows) {
-  const cleanRows = rows.map(row => Array.from(row || []).map(value => value ?? ''))
-    .filter(row => row.some(value => String(value).trim()));
-  const { start, map } = guessProductColumnMap(cleanRows);
+function productsFromMappedRows(rows, { start = 0, map = [] } = {}) {
   const products = [];
-  cleanRows.slice(start).forEach(row => {
+  cleanProductRows(rows).slice(start).forEach(row => {
     const product = blankProduct();
     map.forEach((key, column) => {
       if (!key) return;
@@ -2998,6 +3069,109 @@ function rowsToProducts(rows) {
     if (productMeaningful(product)) products.push(product);
   });
   return products;
+}
+function rowsToProducts(rows) {
+  const cleanRows = cleanProductRows(rows);
+  const guess = guessProductColumnMap(cleanRows);
+  return productsFromMappedRows(cleanRows, guess);
+}
+function productImportValidity(product) {
+  if (!String(product?.name || '').trim()) return false;
+  if (Number(product?.qty) < 0 || Number(product?.price) < 0) return false;
+  return true;
+}
+function mappingLabel(key) {
+  return ({
+    '': 'Bỏ qua cột',
+    name: 'Tên sản phẩm',
+    group: 'Nhóm hàng',
+    pack: 'Quy cách',
+    unit: 'ĐVT',
+    qty: 'Số lượng',
+    price: 'Đơn giá',
+    note: 'Ghi chú'
+  })[key] || key;
+}
+function renderProductMappingReview() {
+  const review = document.getElementById('productMappingReview');
+  const columns = document.getElementById('productMappingColumns');
+  const preview = document.getElementById('productMappingPreview');
+  if (!review || !columns || !preview || !pendingProductImport) return;
+  const { rows, source, start, map } = pendingProductImport;
+  const width = Math.max(...rows.map(row => row.length));
+  review.hidden = false;
+  setText('productMappingSource', 'Nguồn: ' + source + ' · Hệ thống đã đoán trước, chỉ sửa cột nào chưa đúng.');
+  columns.innerHTML = '';
+  const options = ['', ...PRODUCT_GRID_KEYS];
+  for (let column = 0; column < width; column += 1) {
+    const box = document.createElement('label');
+    box.className = 'product-mapping-column';
+    const sample = rows.slice(start, start + 3).map(row => String(row[column] ?? '').trim()).filter(Boolean).join(' · ');
+    const title = document.createElement('strong');
+    title.textContent = 'Cột ' + String.fromCharCode(65 + column);
+    const small = document.createElement('small');
+    small.textContent = sample || 'Không có dữ liệu mẫu';
+    const select = document.createElement('select');
+    select.dataset.mappingColumn = String(column);
+    options.forEach(key => {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = mappingLabel(key);
+      option.selected = (map[column] || '') === key;
+      select.appendChild(option);
+    });
+    select.addEventListener('change', () => {
+      const nextKey = select.value;
+      if (nextKey) {
+        document.querySelectorAll('#productMappingColumns select').forEach(other => {
+          if (other !== select && other.value === nextKey) {
+            other.value = '';
+            pendingProductImport.map[Number(other.dataset.mappingColumn)] = '';
+          }
+        });
+      }
+      pendingProductImport.map[column] = nextKey;
+      renderProductMappingReview();
+    });
+    box.append(title, small, select);
+    columns.appendChild(box);
+  }
+
+  const products = productsFromMappedRows(rows, { start, map });
+  const valid = products.filter(productImportValidity).length;
+  const reviewCount = products.length - valid;
+  setText('mappingTotalRows', products.length);
+  setText('mappingValidRows', valid);
+  setText('mappingReviewRows', reviewCount);
+  setText('mappingBlankRows', Math.max(0, rows.length - start - products.length));
+  document.getElementById('applyMappedImport').textContent = 'Nhập ' + products.length + ' dòng';
+
+  const previewRows = products.slice(0, 6);
+  preview.innerHTML = '<table><thead><tr><th>Tên sản phẩm</th><th>Nhóm</th><th>Quy cách</th><th>ĐVT</th><th>SL</th><th>Đơn giá</th></tr></thead><tbody>' +
+    previewRows.map(product => '<tr><td>' + escapeHtml(product.name || '⚠ Thiếu tên') + '</td><td>' + escapeHtml(product.group || '') + '</td><td>' + escapeHtml(product.pack || '') + '</td><td>' + escapeHtml(product.unit || '') + '</td><td>' + escapeHtml(String(product.qty ?? '')) + '</td><td>' + escapeHtml(String(product.price ?? '')) + '</td></tr>').join('') +
+    '</tbody></table>';
+}
+function closeProductMappingReview(message = '') {
+  pendingProductImport = null;
+  const review = document.getElementById('productMappingReview');
+  if (review) review.hidden = true;
+  if (message) setProductImportSummary(message);
+}
+function stageProductRows(rows, { source = 'dữ liệu', startIndex = null } = {}) {
+  const cleanRows = cleanProductRows(rows);
+  if (!cleanRows.length) {
+    setProductImportSummary('Không tìm thấy dữ liệu để nhập.', 'warn');
+    return 0;
+  }
+  const guess = guessProductColumnMap(cleanRows);
+  if (guess.confidence >= 0.78) {
+    return applyImportedProducts(productsFromMappedRows(cleanRows, guess), { source, startIndex });
+  }
+  pendingProductImport = { rows: cleanRows, source, startIndex, start: guess.start, map: guess.map.slice() };
+  setProductImportSummary('Cần kiểm tra mapping trước khi nhập.', 'warn');
+  renderProductMappingReview();
+  document.getElementById('productMappingReview')?.scrollIntoView({ block: 'nearest' });
+  return 0;
 }
 function duplicateProductCount(products) {
   const seen = new Set();
@@ -3032,6 +3206,108 @@ function applyImportedProducts(products, { startIndex = null, source = 'dữ li�
   );
   return products.length;
 }
+function updateProductBulkBar() {
+  const bar = document.getElementById('productBulkBar');
+  const count = selectedProductRows.size;
+  if (bar) bar.hidden = count === 0;
+  setText('productBulkCount', count + ' dòng được chọn');
+  const selectAll = document.getElementById('productSelectAll');
+  if (selectAll) {
+    const total = Array.isArray(state.products) ? state.products.length : 0;
+    selectAll.checked = total > 0 && count === total;
+    selectAll.indeterminate = count > 0 && count < total;
+  }
+}
+function syncProductBulkActionUI() {
+  const action = document.getElementById('productBulkAction')?.value || 'group';
+  const value = document.getElementById('productBulkValue');
+  if (!value) return;
+  const needsValue = ['group','unit','price-up','price-down'].includes(action);
+  value.hidden = !needsValue;
+  value.type = ['price-up','price-down'].includes(action) ? 'number' : 'text';
+  value.placeholder = action === 'group' ? 'Tên nhóm mới' :
+    action === 'unit' ? 'ĐVT mới' :
+    action === 'price-up' ? '% tăng giá' :
+    action === 'price-down' ? '% giảm giá' : '';
+}
+function saveSelectedProductsToCatalog(products) {
+  const named = products.filter(product => String(product?.name || '').trim());
+  if (!named.length) {
+    toast('Các dòng đã chọn chưa có tên sản phẩm');
+    return false;
+  }
+  const items = getProductCatalog();
+  named.forEach(product => {
+    const item = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      group: product.group || '',
+      name: product.name || '',
+      pack: product.pack || '',
+      unit: product.unit || '',
+      price: normalizeNonNegativeNumber(product.price),
+      currency: normalizeCatalogCurrency(state.currency),
+      note: product.note || ''
+    };
+    const key = catalogKey(item);
+    const index = items.findIndex(existing => catalogKey(existing) === key);
+    if (index >= 0) {
+      item.id = items[index].id;
+      items[index] = item;
+    } else {
+      items.unshift(item);
+    }
+  });
+  if (!setProductCatalog(items)) return false;
+  renderMasterData();
+  ensureProductDatalists();
+  toast('Đã lưu ' + named.length + ' sản phẩm vào danh mục');
+  return true;
+}
+function applyProductBulkAction() {
+  const indices = [...selectedProductRows].filter(index => state.products[index]).sort((a,b) => a-b);
+  if (!indices.length) return;
+  const action = document.getElementById('productBulkAction')?.value || 'group';
+  const rawValue = document.getElementById('productBulkValue')?.value || '';
+  const products = indices.map(index => state.products[index]);
+
+  if (action === 'catalog') {
+    saveSelectedProductsToCatalog(products);
+    return;
+  }
+  if (action === 'delete' && !confirm('Xóa ' + indices.length + ' dòng sản phẩm đã chọn?')) return;
+  if (['group','unit'].includes(action) && !String(rawValue).trim()) {
+    toast('Nhập giá trị cần áp dụng');
+    document.getElementById('productBulkValue')?.focus();
+    return;
+  }
+  if (['price-up','price-down'].includes(action) && (!Number.isFinite(Number(rawValue)) || Number(rawValue) < 0)) {
+    toast('Nhập phần trăm hợp lệ');
+    document.getElementById('productBulkValue')?.focus();
+    return;
+  }
+
+  pushQuoteUndoSnapshot();
+  if (action === 'group') products.forEach(product => { product.group = String(rawValue).trim(); });
+  else if (action === 'unit') products.forEach(product => { product.unit = String(rawValue).trim(); });
+  else if (action === 'price-up' || action === 'price-down') {
+    const pct = Math.min(1000, Number(rawValue)) / 100;
+    products.forEach(product => {
+      const base = normalizeGridNumber(product.price);
+      product.price = Math.round(base * (action === 'price-up' ? 1 + pct : Math.max(0, 1 - pct)));
+    });
+  } else if (action === 'duplicate') {
+    state.products.push(...products.map(product => ({ ...product })));
+  } else if (action === 'delete') {
+    indices.slice().sort((a,b) => b-a).forEach(index => state.products.splice(index, 1));
+    if (!state.products.length) state.products.push(blankProduct());
+  }
+  selectedProductRows.clear();
+  save();
+  renderEditorProducts();
+  render();
+  toast('Đã áp dụng cho ' + indices.length + ' dòng');
+}
+
 function setProductImportSummary(message, tone = '') {
   const el = document.getElementById('productImportSummary');
   if (!el) return;
@@ -3095,8 +3371,7 @@ async function importProductWorkbook(file) {
       return;
     }
     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: false });
-    const products = rowsToProducts(rows);
-    applyImportedProducts(products, { source: file.name + ' / ' + sheetName });
+    stageProductRows(rows, { source: file.name + ' / ' + sheetName });
   } catch (error) {
     console.error('Product Excel import failed:', error);
     setProductImportSummary('Không thể đọc file Excel. File không bị áp dụng vào báo giá.', 'error');
@@ -3288,6 +3563,28 @@ function initStudioV6() {
     themeButton?.click();
   }));
   document.querySelectorAll('[data-inspector-tab]').forEach(button => button.addEventListener('click', () => showInspectorTab(button.dataset.inspectorTab)));
+  document.getElementById('productSelectAll')?.addEventListener('change', event => {
+    selectedProductRows = event.currentTarget.checked
+      ? new Set(state.products.map((_, index) => index))
+      : new Set();
+    renderProductDataGrid();
+  });
+  document.getElementById('productBulkAction')?.addEventListener('change', syncProductBulkActionUI);
+  document.getElementById('applyProductBulk')?.addEventListener('click', applyProductBulkAction);
+  document.getElementById('clearProductSelection')?.addEventListener('click', () => {
+    selectedProductRows.clear();
+    renderProductDataGrid();
+  });
+  document.getElementById('cancelProductMapping')?.addEventListener('click', () => closeProductMappingReview('Đã hủy nhập dữ liệu.'));
+  document.getElementById('applyMappedImport')?.addEventListener('click', () => {
+    if (!pendingProductImport) return;
+    let products = productsFromMappedRows(pendingProductImport.rows, pendingProductImport);
+    if (document.getElementById('mappingValidOnly')?.checked) products = products.filter(productImportValidity);
+    const { source, startIndex } = pendingProductImport;
+    closeProductMappingReview();
+    applyImportedProducts(products, { source, startIndex });
+  });
+  syncProductBulkActionUI();
   document.getElementById('addProductGrid')?.addEventListener('click', () => {
     pushQuoteUndoSnapshot();
     state.products.push(blankProduct());
@@ -3311,9 +3608,8 @@ function initStudioV6() {
     const text = event.clipboardData?.getData('text/plain') || '';
     if (!text.trim()) return;
     event.preventDefault();
-    const products = rowsToProducts(parseClipboardTable(text));
     const startIndex = Number(event.target?.dataset?.productGridIndex || 0);
-    applyImportedProducts(products, { startIndex, source: 'clipboard Excel' });
+    stageProductRows(parseClipboardTable(text), { startIndex, source: 'clipboard Excel' });
   });
   document.getElementById('paper')?.addEventListener('click', event => {
     const target = event.target?.closest?.('[data-target]');
