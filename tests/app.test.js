@@ -30,13 +30,14 @@ test('app boots and renders reference quotation without runtime failure', () => 
   expect(document.getElementById('documentHealth').textContent).toBe('Sẵn sàng in');
 });
 
-test('V4 boots into application dashboard and enters quotation studio from a quick action', () => {
+test('V4 boots into application dashboard and exposes separate new-quote and editor-entry actions', () => {
   const shell = document.querySelector('.shell');
   expect(shell.classList.contains('app-workspace')).toBe(true);
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
   expect(document.querySelector('[data-tab="dashboard"]').getAttribute('aria-current')).toBe('page');
+  expect(document.querySelector('#pane-dashboard [data-create-quote]')).toBeTruthy();
 
-  document.querySelector('#pane-dashboard [data-open-tab="general"]').click();
+  document.querySelector('[data-tab="general"]').click();
   expect(shell.classList.contains('app-workspace')).toBe(false);
   expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
   expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
