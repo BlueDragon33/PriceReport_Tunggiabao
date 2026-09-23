@@ -91,3 +91,17 @@ Persisting the raw workbook would be excessive and would create a second file st
 ### Next pass
 
 Audit repetitive import cleanup: allow the operator to resolve duplicate/invalid rows directly in review without returning to Excel when the correction is safe and local, while preserving the rule that the system must never silently choose a winner from duplicate source rows.
+
+## Pass 2 hardening — Sequential import state
+
+### Defect found by combined regression
+
+When one Data Library import finished and a second import started immediately, the modal became visible before the new workbook finished parsing while the previous review counters and preview rows were still present. In a fast workflow this could briefly show stale data from the prior file and also made recovery tests race against old DOM state.
+
+### Fix
+
+- Starting a new import now resets all review counters, sheet selector, notice, preview rows and Apply state before asynchronous parsing begins.
+- Apply stays disabled with an explicit loading label until the new candidate is ready.
+- A read token invalidates an in-flight workbook parse when the modal is closed or a newer read begins, so a late result cannot repopulate a discarded review.
+- Invalid recovery schema/mode is now removed from session storage instead of being left behind indefinitely.
+- Regression covers stale count/preview reset while the next file's ArrayBuffer is deliberately held pending.
