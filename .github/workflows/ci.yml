@@ -51,6 +51,14 @@ jobs:
         run: npx vitest run tests/app.test.js -t "V5.5 Data Library import can undo an update transaction"
       - name: V5.5 import recovery regression
         run: npx vitest run tests/app.test.js -t "V5.5 interrupted Data Library review can be recovered and explicit cancel discards it"
+      - name: V5.5 sequential delete regressions
+        run: npx vitest run tests/app.test.js -t "V5.5 (row-level customer deletion|bulk product deletion)"
+      - name: V5.5 sequential bulk and import undo regressions
+        run: npx vitest run tests/app.test.js -t "V5.5 (bulk product deletion|Data Library import can undo)"
+      - name: V5.5 sequential import regressions
+        run: npx vitest run tests/app.test.js -t "V5.5 (Data Library import can undo|interrupted Data Library review)"
+      - name: App regression excluding V5.5
+        run: npx vitest run tests/app.test.js -t "^(?!V5\\.5).*"
       - name: Full app DOM regression tests
         run: npx vitest run tests/app.test.js
       - name: Migration DOM regression tests
