@@ -557,6 +557,39 @@ test('smart import exposes one editable Excel mapping review surface', () => {
   document.getElementById('cancelSmartImport').click();
 });
 
+test('smart paste opens a guided review and infers ordinary Excel clipboard columns', () => {
+  document.getElementById('pasteProducts').click();
+  expect(document.getElementById('smartImportModal').hidden).toBe(false);
+  expect(document.getElementById('smartPastePanel').hidden).toBe(false);
+
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nTrứng gà\tHộp\t2\t28000\nTrứng vịt\tKhay\t3\t85000';
+  document.getElementById('parseSmartPaste').click();
+
+  expect(document.getElementById('smartImportMapping').hidden).toBe(false);
+  expect(document.getElementById('smartImportMappingRows').children.length).toBeGreaterThanOrEqual(4);
+  expect(document.getElementById('smartImportProductCount').textContent).toContain('2 sản phẩm');
+  expect(document.getElementById('smartImportProductPreview').textContent).toContain('Trứng gà');
+
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('applied smart import exposes a working one-step undo action', () => {
+  const before = document.getElementById('companyName').value;
+  document.getElementById('openSmartImport').click();
+  const raw = document.getElementById('ocrRawText');
+  raw.value = 'HKD - KIỂM THỬ UNDO\nĐT. 0962944688';
+  document.getElementById('reparseOcrText').click();
+  document.getElementById('applySmartImport').click();
+
+  expect(document.getElementById('companyName').value).toContain('KIỂM THỬ UNDO');
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo).toBeTruthy();
+  expect(undo.textContent).toBe('Hoàn tác');
+  undo.click();
+  expect(document.getElementById('companyName').value).toBe(before);
+});
+
 test('collection writes do not show false success when localStorage rejects a customer save', () => {
   const nativeSetItem = Storage.prototype.setItem;
   const key = 'tunggiabao-price-report-customers-v1';
