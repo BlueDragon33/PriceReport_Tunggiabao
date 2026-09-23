@@ -1177,6 +1177,15 @@
 
         <div class="import-progress" id="smartImportProgress" role="status" aria-live="polite">Chưa chọn nguồn dữ liệu.</div>
 
+        <section class="import-sheet-picker" id="smartImportSheetPicker" hidden>
+          <label for="smartImportSheetSelect">
+            <strong>Bạn muốn lấy sheet nào?</strong>
+            <span>Hệ thống đã chọn trước sheet phù hợp nhất. Có thể đổi nếu cần.</span>
+          </label>
+          <select id="smartImportSheetSelect" aria-label="Chọn sheet Excel để nhập"></select>
+          <small id="smartImportSheetHint">—</small>
+        </section>
+
         <div class="import-image-preview" id="handwritingPreviewWrap" hidden>
           <img id="handwritingPreview" alt="Ảnh chữ viết tay đang nhận diện">
         </div>
