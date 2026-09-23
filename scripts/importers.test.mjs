@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parseSpreadsheetRows } from '../src/importers.js';
+import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -215,3 +215,24 @@ const dirtyMapped = parseMappedSpreadsheetRows([
 assert.equal(dirtyMapped.products.length, 1);
 assert.equal(dirtyMapped.invalidRows.length, 2);
 assert.equal(dirtyMapped.invalidRows[0].rowNumber, 3);
+
+
+const pastedWithHeader = parsePastedTable(
+  'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nTrứng gà\tHộp\t2\t28 000\nTrứng vịt\tKhay\t3\t85.000'
+);
+assert.equal(pastedWithHeader.source, 'paste');
+assert.equal(pastedWithHeader.products.length, 2);
+assert.equal(pastedWithHeader.products[0].name, 'Trứng gà');
+assert.equal(pastedWithHeader.products[0].qty, 2);
+assert.equal(pastedWithHeader.products[0].price, 28000);
+assert.equal(pastedWithHeader.spreadsheetMeta.mapping.price, 3);
+
+const pastedNoHeader = parsePastedTable(
+  'Trứng gà\tHộp\t2\t28 000\nTrứng vịt\tKhay\t3\t85.000'
+);
+assert.equal(pastedNoHeader.products.length, 2);
+assert.equal(pastedNoHeader.spreadsheetMeta.headerIndex, -1);
+assert.equal(pastedNoHeader.spreadsheetMeta.headers[0], 'Cột A');
+assert.equal(pastedNoHeader.spreadsheetMeta.mapping.unit, 1);
+assert.equal(pastedNoHeader.spreadsheetMeta.mapping.qty, 2);
+assert.equal(pastedNoHeader.spreadsheetMeta.mapping.price, 3);
