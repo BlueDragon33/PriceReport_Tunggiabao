@@ -692,6 +692,41 @@ test('applied smart import exposes a working one-step undo action', () => {
   expect(document.getElementById('companyName').value).toBe(before);
 });
 
+test('autosave reports real persistence state and retains a recovery snapshot on failure', () => {
+  const primaryKey = 'tunggiabao-price-report-v1';
+  const recoveryKey = 'tunggiabao-price-report-recovery-v1';
+  sessionStorage.removeItem(recoveryKey);
+
+  const field = document.getElementById('companyName');
+  const before = field.value;
+  field.value = 'AUTOSAVE SUCCESS TEST';
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioAutosaveState').dataset.state).toBe('saved');
+  expect(document.getElementById('studioAutosaveState').textContent).toContain('Đã lưu lúc');
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+
+  const nativeSetItem = Storage.prototype.setItem;
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (this === localStorage && storageKey === primaryKey) {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    }
+    return nativeSetItem.call(this, storageKey, value);
+  });
+
+  field.value = 'AUTOSAVE FAILURE RECOVERY TEST';
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  spy.mockRestore();
+
+  expect(document.getElementById('studioAutosaveState').dataset.state).toBe('error');
+  expect(document.getElementById('studioAutosaveState').textContent).toContain('Không thể lưu');
+  expect(sessionStorage.getItem(recoveryKey)).toContain('AUTOSAVE FAILURE RECOVERY TEST');
+
+  field.value = before;
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.getElementById('studioAutosaveState').dataset.state).toBe('saved');
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+});
+
 test('collection writes do not show false success when localStorage rejects a customer save', () => {
   const nativeSetItem = Storage.prototype.setItem;
   const key = 'tunggiabao-price-report-customers-v1';
