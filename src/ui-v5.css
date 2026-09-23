@@ -4059,6 +4059,13 @@ body.v5-ui .master-section-card.master-section-highlight{
   body.v5-ui .system-workspace-header h2{font-size:20px}
   body.v5-ui .dashboard-hero{border-radius:14px}
   body.v5-ui .quick-app-card{min-height:82px}
+  body.v5-ui .master-head-actions{justify-content:flex-start}
+  body.v5-ui .data-library-import-backdrop{padding:8px}
+  body.v5-ui .data-library-import-dialog{width:100%;max-height:96vh}
+  body.v5-ui .data-library-import-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.v5-ui .data-library-import-sheet-row{align-items:stretch;flex-direction:column}
+  body.v5-ui .data-library-import-sheet-row select{width:100%;min-width:0}
+  body.v5-ui .data-library-import-preview{overflow-x:auto}
 }
 
 body.v5-ui .color.color-teal{background:#0b8f83}
@@ -4527,8 +4534,7 @@ body.v5-ui .data-library-import-dialog{
   background:var(--v5-surface);
   box-shadow:0 24px 70px rgba(17,31,52,.24);
 }
-body.v5-ui .data-library-import-head,
-body.v5-ui .data-library-import-actions{
+body.v5-ui .data-library-import-head{
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -4537,9 +4543,12 @@ body.v5-ui .data-library-import-actions{
   border-bottom:1px solid var(--v5-border);
 }
 body.v5-ui .data-library-import-actions{
+  display:flex;
+  align-items:center;
   justify-content:flex-end;
+  gap:var(--v5-space-3);
+  padding:14px 16px;
   border-top:1px solid var(--v5-border);
-  border-bottom:0;
 }
 body.v5-ui .data-library-import-head>div{
   min-width:0;
@@ -4660,14 +4669,5 @@ body.v5-ui .data-library-import-more{
   border-top:1px solid var(--v5-border);
   color:var(--v5-muted);
   font-size:8.5px;
-}
-@media (max-width:760px){
-  body.v5-ui .master-head-actions{justify-content:flex-start}
-  body.v5-ui .data-library-import-backdrop{padding:8px}
-  body.v5-ui .data-library-import-dialog{width:100%;max-height:96vh}
-  body.v5-ui .data-library-import-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
-  body.v5-ui .data-library-import-sheet-row{align-items:stretch;flex-direction:column}
-  body.v5-ui .data-library-import-sheet-row select{width:100%;min-width:0}
-  body.v5-ui .data-library-import-preview{overflow-x:auto}
 }
 
