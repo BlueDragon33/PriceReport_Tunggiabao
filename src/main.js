@@ -1704,6 +1704,7 @@ function renderEditorProducts() {
     up.addEventListener('click', () => {
       if (index === 0) return;
       [state.products[index - 1], state.products[index]] = [state.products[index], state.products[index - 1]];
+      clearProductSelection();
       save();
       renderEditorProducts();
       render();
@@ -1720,6 +1721,7 @@ function renderEditorProducts() {
     down.addEventListener('click', () => {
       if (index >= state.products.length - 1) return;
       [state.products[index + 1], state.products[index]] = [state.products[index], state.products[index + 1]];
+      clearProductSelection();
       save();
       renderEditorProducts();
       render();
@@ -1734,6 +1736,7 @@ function renderEditorProducts() {
     duplicate.textContent = '⧉';
     duplicate.addEventListener('click', () => {
       state.products.splice(index + 1, 0, clone(product));
+      clearProductSelection();
       save();
       renderEditorProducts();
       render();
@@ -1751,6 +1754,7 @@ function renderEditorProducts() {
       state.products.splice(index, 1);
       if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
       collapsedProducts = new Set();
+      clearProductSelection();
       save();
       renderEditorProducts();
       render();
@@ -3148,6 +3152,62 @@ render();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
   applyTungGiaBaoToCurrentQuote();
+});
+
+document.getElementById('selectAllProducts')?.addEventListener('change', (event) => {
+  selectedProductRows = event.target.checked
+    ? new Set(state.products.map((_, index) => index))
+    : new Set();
+  renderEditorProducts();
+});
+
+document.getElementById('bulkApplyGroup')?.addEventListener('click', () => {
+  const value = String(document.getElementById('bulkGroupValue')?.value || '').trim();
+  if (!value) return toast('Nhập nhóm hàng trước khi áp dụng');
+  applyBulkProductMutation(product => { product.group = value; }, 'Đã áp dụng nhóm cho ' + selectedProductRows.size + ' dòng');
+});
+
+document.getElementById('bulkApplyUnit')?.addEventListener('click', () => {
+  const value = String(document.getElementById('bulkUnitValue')?.value || '').trim();
+  if (!value) return toast('Nhập ĐVT trước khi áp dụng');
+  applyBulkProductMutation(product => { product.unit = value; }, 'Đã áp dụng ĐVT cho ' + selectedProductRows.size + ' dòng');
+});
+
+document.getElementById('bulkApplyPrice')?.addEventListener('click', () => {
+  const pct = Number(document.getElementById('bulkPriceAdjust')?.value || 0);
+  if (!Number.isFinite(pct) || pct === 0) return;
+  const count = selectedProductRows.size;
+  applyBulkProductMutation(product => {
+    product.price = Math.max(0, Math.round(Number(product.price || 0) * (1 + pct / 100)));
+  }, 'Đã điều chỉnh giá ' + pct + '% cho ' + count + ' dòng');
+});
+
+document.getElementById('bulkDuplicateProducts')?.addEventListener('click', () => {
+  const indices = [...selectedProductRows].sort((a, b) => a - b);
+  if (!indices.length) return;
+  const copies = indices.map(index => clone(state.products[index])).filter(Boolean);
+  state.products.push(...copies);
+  const count = copies.length;
+  clearProductSelection();
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  toast(persisted ? 'Đã nhân bản ' + count + ' dòng' : 'Đã nhân bản tạm thời • chưa lưu được');
+});
+
+document.getElementById('bulkDeleteProducts')?.addEventListener('click', () => {
+  const indices = [...selectedProductRows].sort((a, b) => a - b);
+  if (!indices.length) return;
+  if (!confirm('Xóa ' + indices.length + ' dòng sản phẩm đã chọn?')) return;
+  const selected = new Set(indices);
+  state.products = state.products.filter((_, index) => !selected.has(index));
+  if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  collapsedProducts.clear();
+  clearProductSelection();
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  toast(persisted ? 'Đã xóa ' + indices.length + ' dòng' : 'Đã xóa tạm thời • chưa lưu được');
 });
 
 document.getElementById('addProduct').addEventListener('click', () => {
