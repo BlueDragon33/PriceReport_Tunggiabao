@@ -595,6 +595,79 @@ test('V5.4 Data Management filters, currency-aware duplicates and bulk selection
   document.querySelector('[data-tab="master"]').click();
 });
 
+
+test('V5.4 customer library CSV import reviews and applies valid rows transactionally', async () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Nguyễn Văn A,Công ty A,0912345678,a@example.com,Nha Trang,Anh A',
+    ',Công ty B,,b@example.com,Hà Nội,Chị B'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'khach-hang.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+    expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('2');
+  });
+  expect(document.getElementById('dataLibraryImportInvalidCount').textContent).toBe('0');
+  expect(document.getElementById('applyDataLibraryImport').disabled).toBe(false);
+
+  document.getElementById('applyDataLibraryImport').click();
+  const imported = JSON.parse(localStorage.getItem(key));
+  expect(imported.length).toBe(2);
+  expect(imported.some(item => item.phone === '0912345678')).toBe(true);
+  expect(imported.some(item => item.email === 'b@example.com')).toBe(true);
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(true);
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.4 product import excludes duplicate groups and preserves currency variants', async () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([]));
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Nhóm hàng,Tên SP,Quy cách,ĐVT,Đơn giá,Tiền tệ,Ghi chú',
+    'Trứng,Trứng gà,Hộp 10,Hộp,28000,VND,Bản 1',
+    'Trứng,Trứng gà,Hộp 10,Hộp,29000,VND,Bản trùng',
+    'Trứng,Trứng gà,Hộp 10,Hộp,1.2,USD,Biến thể USD'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'san-pham.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('productLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
+    expect(document.getElementById('dataLibraryImportDuplicateCount').textContent).toBe('1');
+  });
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+  expect(document.getElementById('dataLibraryImportNotice').textContent).toContain('không được tự gộp');
+
+  document.getElementById('applyDataLibraryImport').click();
+  const imported = JSON.parse(localStorage.getItem(key));
+  expect(imported.length).toBe(1);
+  expect(imported[0].currency).toBe('USD');
+  expect(imported[0].note).toBe('Biến thể USD');
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
 test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
   document.querySelector('[data-tab="products"]').click();
   const quickSave = document.getElementById('saveProductsToCatalogTop');
