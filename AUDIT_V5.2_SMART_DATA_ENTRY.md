@@ -155,3 +155,32 @@ Importer tests now cover:
 
 ### Next pass
 Audit autosave, import undo and recovery interactions so a large import cannot leave the current quote or recovery snapshot in an inconsistent state.
+
+
+## Pass 7 — Transactional import apply, undo and recovery
+
+### Finding
+The base autosave/recovery system was already present, but smart import still had two data-integrity gaps:
+- an imported quantity of `0` was converted to `1` during apply because of a truthy fallback;
+- if primary localStorage persistence failed, the import modal still closed even though the new quote state had not been durably saved.
+
+### Corrections
+- Explicit quantity `0` is preserved during import apply.
+- Smart import apply is now transactional:
+  - build candidate state;
+  - attempt primary autosave;
+  - on failure, roll back in-memory state to the pre-import snapshot;
+  - clear the temporary recovery snapshot created by the failed candidate write;
+  - keep the import review open so the user can retry without re-importing the source.
+- Successful apply still creates one-step Undo.
+- Undo now retains its snapshot when persistence fails and exposes “Thử lưu lại” instead of discarding the only retry path.
+
+### Regression coverage
+DOM tests now verify:
+- imported quantity zero remains zero after apply;
+- primary-storage failure rolls the state back;
+- the import review stays open after a failed apply;
+- no stale recovery snapshot is left after transactional rollback.
+
+### Next pass
+Audit Data Library reuse flows and import-to-library handoff so repeated customer/product entry is reduced without creating a second storage engine.
