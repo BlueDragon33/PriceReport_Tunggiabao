@@ -264,3 +264,29 @@ const duplicateRows = parseMappedSpreadsheetRows([
 assert.equal(duplicateRows.products.length, 3);
 assert.equal(duplicateRows.duplicates.length, 1);
 assert.deepEqual(duplicateRows.duplicates[0].indexes, [0, 1]);
+
+
+const repairRows = [
+  ['Tên SP', 'SL', 'Giá'],
+  ['', '2', '28 000']
+];
+const repairMapping = detectSpreadsheetHeader(repairRows);
+const beforeRepair = parseMappedSpreadsheetRows(repairRows, {
+  headerIndex: repairMapping.headerIndex,
+  mapping: repairMapping.mapping
+});
+assert.equal(beforeRepair.products.length, 0);
+assert.equal(beforeRepair.invalidRows.length, 1);
+assert.equal(beforeRepair.invalidRows[0].rowNumber, 2);
+assert.ok(beforeRepair.invalidRows[0].reasons.includes('missing-name'));
+
+repairRows[1][repairMapping.mapping.name] = 'Trứng gà sửa lại';
+const afterRepair = parseMappedSpreadsheetRows(repairRows, {
+  headerIndex: repairMapping.headerIndex,
+  mapping: repairMapping.mapping
+});
+assert.equal(afterRepair.invalidRows.length, 0);
+assert.equal(afterRepair.products.length, 1);
+assert.equal(afterRepair.products[0].name, 'Trứng gà sửa lại');
+assert.equal(afterRepair.products[0].qty, 2);
+assert.equal(afterRepair.products[0].price, 28000);
