@@ -35,6 +35,8 @@ const requiredIds = [
   'historyAcceptedCount','documentHealth','preflightCheck','preflightExport','qCols',
   'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
   'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
+  'smartPastePanel','smartPasteText','parseSmartPaste','smartImportSheetPicker','smartImportSheetSelect',
+  'smartImportIssues','smartImportIssueList','saveProductsToCatalogTop',
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
   'studioSaveQuote','studioCheckQuote','studioPreviewQuote','studioPrevStep','studioNextStep',
   'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal'
@@ -67,7 +69,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v51-studio-rc1")) fail('Service-worker cache version was not upgraded for V5 UI release candidate');
+if (!sw.includes("pricereport-shell-v52-smart-entry-rc1")) fail('Service-worker cache version was not upgraded for V5.2 release candidate');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
