@@ -738,8 +738,11 @@ function renderSystemWorkspace() {
 
 async function refreshSystemWorkspace() {
   const button = document.getElementById('systemRefreshRuntime');
+  const pane = document.getElementById('pane-system');
+  pane?.setAttribute('aria-busy', 'true');
   if (button) {
     button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
     button.textContent = '↻ Đang kiểm tra...';
   }
   try {
@@ -754,8 +757,10 @@ async function refreshSystemWorkspace() {
     console.warn('System workspace refresh failed:', error);
   } finally {
     renderSystemWorkspace();
+    pane?.setAttribute('aria-busy', 'false');
     if (button) {
       button.disabled = false;
+      button.setAttribute('aria-busy', 'false');
       button.textContent = '↻ Kiểm tra lại';
     }
   }
@@ -906,6 +911,8 @@ function renderDashboardSearchResults(rawQuery) {
   if (!box.children.length) {
     const empty = document.createElement('div');
     empty.className = 'dashboard-search-empty';
+    empty.setAttribute('role', 'option');
+    empty.setAttribute('aria-disabled', 'true');
     empty.textContent = 'Không tìm thấy báo giá, khách hàng hoặc sản phẩm phù hợp.';
     box.appendChild(empty);
   }
@@ -985,6 +992,7 @@ function renderDashboard() {
     if (!recent.length) {
       const empty = document.createElement('div');
       empty.className = 'dashboard-empty';
+      empty.setAttribute('role', 'status');
       empty.textContent = 'Chưa có báo giá đã lưu. Tạo báo giá mới để bắt đầu.';
       list.appendChild(empty);
     } else {
@@ -1016,8 +1024,27 @@ function renderDashboard() {
   updateDashboardSystemState();
 }
 
+function focusTabDestination(tab) {
+  const pane = document.getElementById('pane-' + tab);
+  if (!pane) return;
+  const target = pane.querySelector('h1, h2, h3') || pane;
+  if (!(target instanceof HTMLElement)) return;
+  const previousTabIndex = target.getAttribute('tabindex');
+  target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+  target.addEventListener('blur', () => {
+    if (previousTabIndex == null) target.removeAttribute('tabindex');
+    else target.setAttribute('tabindex', previousTabIndex);
+  }, { once: true });
+}
+
 document.querySelectorAll('[data-open-tab]').forEach((btn) => {
-  btn.addEventListener('click', () => openTab(btn.dataset.openTab));
+  btn.addEventListener('click', () => {
+    const fromMobileMore = Boolean(btn.closest('#mobileMoreMenu'));
+    const tab = btn.dataset.openTab;
+    openTab(tab);
+    if (fromMobileMore) focusTabDestination(tab);
+  });
 });
 
 document.getElementById('settingsStartPage')?.addEventListener('change', (event) => {
@@ -2123,6 +2150,7 @@ function resetSmartImportDraft() {
 
 function setSmartImportBusy(busy) {
   smartImportBusy = Boolean(busy);
+  document.getElementById('smartImportDialog')?.setAttribute('aria-busy', smartImportBusy ? 'true' : 'false');
   ['excelSmartImportInput','handwritingSmartImportInput','applySmartImport','resetSmartImport','cancelSmartImport','closeSmartImport'].forEach((id) => {
     const element = document.getElementById(id);
     if (!element) return;
@@ -3385,7 +3413,7 @@ function renderHistory() {
 
   list.innerHTML = '';
   if (!items.length) {
-    list.innerHTML = '<div class="history-empty">Chưa có báo giá phù hợp.</div>';
+    list.innerHTML = '<div class="history-empty" role="status">Chưa có báo giá phù hợp.</div>';
     return;
   }
 
@@ -3660,7 +3688,7 @@ function renderMasterData() {
 
   customerList.innerHTML = '';
   if (!customers.length) {
-    customerList.innerHTML = '<div class="history-empty">Chưa có khách hàng phù hợp.</div>';
+    customerList.innerHTML = '<div class="history-empty" role="status">Chưa có khách hàng phù hợp.</div>';
   } else {
     customers.forEach(customer => {
       const row = document.createElement('div');
@@ -3713,7 +3741,7 @@ function renderMasterData() {
 
   productList.innerHTML = '';
   if (!products.length) {
-    productList.innerHTML = '<div class="history-empty">Chưa có sản phẩm phù hợp.</div>';
+    productList.innerHTML = '<div class="history-empty" role="status">Chưa có sản phẩm phù hợp.</div>';
   } else {
     products.forEach(product => {
       const row = document.createElement('div');
