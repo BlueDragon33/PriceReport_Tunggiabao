@@ -2332,3 +2332,85 @@ html[data-price-report-device-access="offline"] body{overflow:hidden}
 @media(max-width:980px){
   .dashboard-search-wrap{width:100%}
 }
+
+
+/* =========================
+   V4.7 PUBLISHING & DATA CENTER
+   ========================= */
+.export-workspace{max-width:1480px!important;padding:26px 28px 44px!important}
+.export-workspace-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:15px}
+.export-workspace-header h2{margin:0;color:#15396f;font-size:24px;line-height:1.2}
+.export-workspace-header p{margin:6px 0 0;color:#7c8ba0;font-size:11px}
+.export-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.export-header-actions .btn{min-height:38px;border-radius:10px;padding:7px 13px}
+.export-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.export-status-card{background:#fff;border:1px solid #e3eaf2;border-radius:14px;padding:13px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 18px rgba(20,49,83,.04)}
+.export-status-icon{width:38px;min-width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#e8f2ff;color:#1978e9;font-size:16px;font-weight:900}
+.export-health-icon{background:#e9f7f1;color:#159a69}
+.export-product-icon{background:#fff0df;color:#ee8518}
+.export-data-icon{background:#f0eaff;color:#7650db}
+.export-status-card div{min-width:0}
+.export-status-card small{display:block;color:#7e8c9f;font-size:8.6px}
+.export-status-card strong{display:block;margin:2px 0;color:#173a6d;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.export-status-card em{display:block;color:#929faf;font-size:8.2px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.export-status-card.health-ok{border-color:#cfeadd;background:#fbfffd}
+.export-status-card.health-warn{border-color:#f0dfb9;background:#fffdf8}
+.export-status-card.health-error{border-color:#f1d2d2;background:#fffafa}
+.export-status-card.health-ok .export-health-icon{background:#dcf5e9;color:#108a5d}
+.export-status-card.health-warn .export-health-icon{background:#fff2cf;color:#b57800}
+.export-status-card.health-error .export-health-icon{background:#ffe4e4;color:#c13b3b}
+.export-center-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.export-center-panel{background:#fff;border:1px solid #e3eaf2;border-radius:16px;padding:15px;box-shadow:0 8px 24px rgba(20,49,83,.045)}
+.export-panel-head{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.export-panel-head h3{margin:0;color:#173767;font-size:13px;text-transform:none}
+.export-panel-head p{margin:3px 0 0;color:#8c99aa;font-size:9px}
+.export-panel-icon{width:36px;min-width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#e8f2ff;color:#1978e9;font-size:16px;font-weight:900}
+.export-panel-icon.import{background:#e7f8f1;color:#119967}
+.export-panel-icon.pc{background:#f0eaff;color:#7650db}
+.export-panel-icon.backup{background:#fff0df;color:#ef8618}
+.export-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.export-action-card{min-height:88px;border:1px solid #e1e8f0;border-radius:12px;background:#fbfdff;color:#314a69;padding:12px;display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px;text-align:left}
+.export-action-card:hover{border-color:#b8d3ef;background:#f3f8ff}
+.export-action-card>span{grid-row:1/3;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#eaf3ff;color:#1978e8;font-size:15px;font-weight:900}
+.export-action-card b{align-self:end;color:#274565;font-size:10.5px}
+.export-action-card small{align-self:start;margin-top:3px;color:#8796a8;font-size:8.4px;line-height:1.35}
+.export-action-primary{background:linear-gradient(135deg,#1684f6,#0c6fdc);border-color:#167ae6;color:#fff}
+.export-action-primary:hover{background:linear-gradient(135deg,#0e7cea,#0866cc);border-color:#0866cc}
+.export-action-primary>span{background:rgba(255,255,255,.17);color:#fff}
+.export-action-primary b,.export-action-primary small{color:#fff}
+.export-action-primary small{opacity:.8}
+.file-action-card{cursor:pointer;margin:0}
+.export-pc-status{border:1px solid #e0e7ef;border-radius:10px;background:#f8fbff;padding:10px 11px;color:#536b87;font-size:9.5px;line-height:1.45;margin-bottom:11px}
+.export-pc-status[data-state="ready"]{background:#edf9f4;border-color:#cee9dd;color:#1a7c5b}
+.export-pc-status[data-state="unsupported"]{background:#fff8ea;border-color:#f1dfbd;color:#95651d}
+.export-inline-actions{display:flex;gap:7px;flex-wrap:wrap}
+.export-inline-actions .btn{min-height:35px;border-radius:9px;font-size:9.5px}
+.export-info-note{margin-top:10px;color:#8795a8;font-size:8.5px;line-height:1.5}
+.backup-scope{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
+.backup-scope span{display:inline-flex;align-items:center;gap:4px;border:1px solid #e3eaf2;border-radius:999px;background:#f8fbff;padding:5px 8px;color:#697b91;font-size:8.5px}
+.backup-scope b{color:#25466f;font-size:9px}
+.export-danger-zone{margin-top:14px;border:1px solid #f0dddd;border-radius:14px;background:#fffafa;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.export-danger-zone strong{display:block;color:#913d3d;font-size:11px}
+.export-danger-zone p{margin:4px 0 0;color:#9a7373;font-size:8.8px;line-height:1.45}
+.export-danger-zone .btn{flex:0 0 auto;min-height:36px;border-radius:9px}
+.shell.app-workspace #pane-export.export-workspace{max-width:1480px;margin:0 auto}
+@media(max-width:1100px){
+  .export-status-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px){
+  .export-workspace{padding:18px 12px 34px!important}
+  .export-workspace-header{flex-direction:column}
+  .export-header-actions{width:100%}
+  .export-header-actions .btn{flex:1}
+  .export-center-grid{grid-template-columns:1fr}
+  .export-danger-zone{flex-direction:column;align-items:stretch}
+  .export-danger-zone .btn{width:100%}
+}
+@media(max-width:480px){
+  .export-status-grid,.export-action-grid{grid-template-columns:1fr}
+  .export-inline-actions{display:grid;grid-template-columns:1fr}
+}
+/* Export center is full-width in the app shell, but print must always reveal the A4 preview. */
+@media print{
+  .shell.app-workspace .preview{display:block!important}
+}
