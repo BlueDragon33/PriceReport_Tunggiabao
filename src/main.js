@@ -516,6 +516,7 @@ function setMobileMoreMenu(open) {
 
 function openTab(tab) {
   setMobileMoreMenu(false);
+  if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
   const appWorkspace = ['dashboard', 'history', 'master'].includes(tab);
 
@@ -597,6 +598,110 @@ function updateDashboardSystemState() {
   }
   stateEl.textContent = 'Ứng dụng sẵn sàng';
   detailEl.textContent = 'Dữ liệu báo giá chạy local-first; quản trị từ xa đang ở chế độ an toàn.';
+}
+
+function closeDashboardSearchResults() {
+  const box = document.getElementById('dashboardSearchResults');
+  const input = document.getElementById('dashboardSearch');
+  if (box) {
+    box.hidden = true;
+    box.innerHTML = '';
+  }
+  input?.setAttribute('aria-expanded', 'false');
+}
+
+function appendDashboardSearchResult(box, { type, eyebrow, title, subtitle, onSelect }) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'dashboard-search-result';
+  button.dataset.resultType = type;
+
+  const icon = document.createElement('span');
+  icon.className = 'dashboard-search-result-icon';
+  icon.textContent = type === 'quote' ? '▤' : type === 'customer' ? '●' : '◆';
+
+  const content = document.createElement('span');
+  content.className = 'dashboard-search-result-copy';
+  const meta = document.createElement('small');
+  meta.textContent = eyebrow;
+  const strong = document.createElement('strong');
+  strong.textContent = title;
+  const sub = document.createElement('em');
+  sub.textContent = subtitle || '';
+  content.append(meta, strong, sub);
+
+  button.append(icon, content);
+  button.addEventListener('click', () => {
+    closeDashboardSearchResults();
+    onSelect();
+  });
+  box.appendChild(button);
+}
+
+function renderDashboardSearchResults(rawQuery) {
+  const box = document.getElementById('dashboardSearchResults');
+  const input = document.getElementById('dashboardSearch');
+  if (!box || !input) return;
+
+  const query = String(rawQuery || '').trim().toLowerCase();
+  if (query.length < 2) {
+    closeDashboardSearchResults();
+    return;
+  }
+
+  const quotes = getHistory().filter(record => {
+    const data = record.data || {};
+    return [data.quoteNo, data.customerName, data.customerCompany, data.customerPhone]
+      .filter(Boolean).join(' ').toLowerCase().includes(query);
+  }).slice(0, 4);
+  const customers = getCustomerLibrary().filter(customer =>
+    [customer.name, customer.company, customer.phone, customer.email, customer.address]
+      .filter(Boolean).join(' ').toLowerCase().includes(query)
+  ).slice(0, 4);
+  const products = getProductCatalog().filter(product =>
+    [product.name, product.group, product.pack, product.unit, product.note]
+      .filter(Boolean).join(' ').toLowerCase().includes(query)
+  ).slice(0, 4);
+
+  box.innerHTML = '';
+  quotes.forEach(record => {
+    const data = record.data || {};
+    appendDashboardSearchResult(box, {
+      type: 'quote',
+      eyebrow: 'BÁO GIÁ',
+      title: data.quoteNo || 'Chưa có mã',
+      subtitle: data.customerCompany || data.customerName || 'Chưa có khách hàng',
+      onSelect: () => loadQuoteRecord(record)
+    });
+  });
+  customers.forEach(customer => {
+    appendDashboardSearchResult(box, {
+      type: 'customer',
+      eyebrow: 'KHÁCH HÀNG',
+      title: customer.name || customer.company || 'Khách hàng',
+      subtitle: [customer.company, customer.phone].filter(Boolean).join(' • '),
+      onSelect: () => useCustomer(customer)
+    });
+  });
+  products.forEach(product => {
+    const currency = normalizeCatalogCurrency(product.currency || 'VND');
+    appendDashboardSearchResult(box, {
+      type: 'product',
+      eyebrow: 'SẢN PHẨM',
+      title: product.name || 'Sản phẩm',
+      subtitle: [product.group, moneyForCurrency(Number(product.price || 0), currency)].filter(Boolean).join(' • '),
+      onSelect: () => addCatalogProduct(product)
+    });
+  });
+
+  if (!box.children.length) {
+    const empty = document.createElement('div');
+    empty.className = 'dashboard-search-empty';
+    empty.textContent = 'Không tìm thấy báo giá, khách hàng hoặc sản phẩm phù hợp.';
+    box.appendChild(empty);
+  }
+  box.hidden = false;
+  input.setAttribute('aria-expanded', 'true');
 }
 
 function renderDashboard() {
@@ -697,8 +802,20 @@ document.getElementById('mobileMoreToggle')?.addEventListener('click', () => {
 document.getElementById('mobileMoreClose')?.addEventListener('click', () => setMobileMoreMenu(false));
 
 
+document.getElementById('dashboardSearch')?.addEventListener('input', (event) => {
+  renderDashboardSearchResults(event.currentTarget.value);
+});
 document.getElementById('dashboardSearch')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeDashboardSearchResults();
+    return;
+  }
   if (event.key !== 'Enter') return;
+  const firstResult = document.querySelector('#dashboardSearchResults .dashboard-search-result');
+  if (firstResult && !document.getElementById('dashboardSearchResults')?.hidden) {
+    firstResult.click();
+    return;
+  }
   const value = event.currentTarget.value.trim();
   openTab('history');
   const search = document.getElementById('quoteSearch');
