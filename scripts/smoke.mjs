@@ -142,7 +142,7 @@ if (!js.includes('parseHandwritingText')) fail('Handwriting semantic mapper is m
 if (!js.includes('TUNGGIABAO_PRODUCTS')) fail('Tùng Gia Bảo baseline dataset is missing');
 if (!html.includes('data-import-field="companyName"')) fail('Smart import review field mapping UI is missing');
 if (!html.includes('class="qgroup-row"') && !js.includes("groupRow.className = 'qgroup-row'")) fail('Grouped price-list rendering is missing');
-if (!css.includes('.smart-import-dialog')) fail('Smart import dialog styling is missing');
+if (!appCss.includes('.smart-import-dialog')) fail('Smart import dialog styling is missing');
 if (!css.includes('.qgroup-row td')) fail('Grouped product row styling is missing');
 
 if (!css.includes('flex-direction:column!important') || !css.includes('.paper .qsubtitle')) fail('Title/subtitle vertical hierarchy is missing');
@@ -177,7 +177,7 @@ if (!js.includes('--fs-table') || !css.includes('var(--fs-table,9px)')) fail('Do
 if (!js.includes('exportCurrentQuoteExcel')) fail('Excel export implementation is missing');
 if (!js.includes('saveCurrentToPc({ notify: false })')) fail('Explicit quote save does not trigger PC autosave');
 if (!js.includes('getRememberedPcDirectory')) fail('Remembered PC folder retrieval is missing');
-if (!css.includes('.shell.report-view .preview')) fail('Responsive report-view CSS is missing');
+if (!appCss.includes('.shell.report-view .preview')) fail('Responsive report-view CSS is missing');
 
 if (!html.includes('id="logoDisplayMode"')) fail('Logo display mode selector is missing');
 if (!html.includes('Giữ nguyên ảnh gốc (mặc định)')) fail('Original logo mode is not the explicit default in UI');
