@@ -4225,3 +4225,42 @@ body.v5-ui .studio-money-summary span{display:block;color:var(--v5-muted);font-s
 body.v5-ui .studio-money-summary strong{display:block;margin-top:2px;color:var(--v5-heading);font-size:11px}
 body.v5-ui .studio-money-summary .grand{border-color:#b8d3f3;background:var(--v5-primary-soft)}
 body.v5-ui .product-field input::placeholder{color:#9aa8b8}
+
+
+/* V5.2 smart import: workbook sheet selection */
+body.v5-ui .import-sheet-picker {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 320px);
+  gap: var(--v5-space-3);
+  align-items: center;
+  padding: var(--v5-space-3);
+  border: 1px solid var(--v5-border);
+  border-radius: var(--v5-radius-lg);
+  background: var(--v5-surface-subtle);
+}
+body.v5-ui .import-sheet-picker[hidden] { display: none; }
+body.v5-ui .import-sheet-picker label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+body.v5-ui .import-sheet-picker label span,
+body.v5-ui .import-sheet-picker > small {
+  color: var(--v5-text-muted);
+  font-size: 12px;
+}
+body.v5-ui .import-sheet-picker select {
+  width: 100%;
+  min-height: var(--v5-control-height);
+}
+body.v5-ui .import-sheet-picker > small {
+  grid-column: 2;
+}
+@media (max-width: 760px) {
+  body.v5-ui .import-sheet-picker {
+    grid-template-columns: 1fr;
+  }
+  body.v5-ui .import-sheet-picker > small {
+    grid-column: 1;
+  }
+}
