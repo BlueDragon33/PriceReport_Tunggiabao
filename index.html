@@ -451,46 +451,119 @@
           </div>
         </div>
 
-        <div class="pane" id="pane-export">
-          <div class="card">
-            <h3>Xuất / Nhập / In</h3>
-            <div class="btns export-primary-actions">
-              <button class="btn green print-action">In / Lưu PDF</button>
-              <button class="btn primary" id="exportExcel">Xuất Excel</button>
-              <button class="btn" id="importExcelQuick">Nhập Excel</button>
-              <button class="btn" id="importHandwritingQuick">Nhập ảnh chữ viết tay</button>
-              <button class="btn" id="preflightExport">Kiểm tra báo giá</button>
+        <div class="pane export-workspace" id="pane-export">
+          <div class="export-workspace-header">
+            <div>
+              <span class="workspace-eyebrow">XUẤT BẢN & DỮ LIỆU</span>
+              <h2>Trung tâm xuất bản & dữ liệu</h2>
+              <p>Kiểm tra báo giá, xuất file, nhập dữ liệu và sao lưu toàn bộ ứng dụng tại một nơi.</p>
             </div>
-            <div class="help">Excel được xuất theo cấu trúc có thể nhập lại. Excel/OCR đều đi qua màn hình kiểm tra trước khi áp dụng.</div>
+            <div class="export-header-actions">
+              <button class="btn" type="button" data-open-tab="view">▣ Xem bản A4</button>
+              <button class="btn primary" id="preflightExport" type="button">✓ Kiểm tra báo giá</button>
+            </div>
           </div>
 
-          <div class="card pc-workspace-card">
-            <h3>Lưu trên máy PC</h3>
-            <div class="pc-folder-status" id="pcFolderStatus">Chưa liên kết thư mục PC.</div>
-            <div class="btns">
-              <button class="btn primary" id="choosePcFolder" type="button">Chọn thư mục lưu</button>
-              <button class="btn" id="savePcNow" type="button">Lưu lên PC ngay</button>
-              <button class="btn" id="restorePcLatest" type="button">Đọc bản gần nhất</button>
-            </div>
-            <div class="help">Chrome/Edge trên PC có thể nhớ thư mục đã chọn bằng quyền thư mục của trình duyệt. Vì bảo mật, web không được đọc/hiện toàn bộ đường dẫn Windows; hệ thống nhớ folder handle và tự dùng lại khi quyền còn hiệu lực.</div>
+          <section class="export-status-grid" aria-label="Trạng thái xuất bản">
+            <article class="export-status-card">
+              <span class="export-status-icon">▤</span>
+              <div><small>Báo giá đang mở</small><strong id="exportCenterQuote">Báo giá mới</strong><em id="exportCenterQuoteStatus">Bản nháp</em></div>
+            </article>
+            <article class="export-status-card">
+              <span class="export-status-icon export-health-icon">✓</span>
+              <div><small>Sẵn sàng xuất bản</small><strong id="exportCenterHealth">Đang kiểm tra</strong><em id="exportCenterHealthDetail">Kiểm tra dữ liệu trước khi xuất.</em></div>
+            </article>
+            <article class="export-status-card">
+              <span class="export-status-icon export-product-icon">◆</span>
+              <div><small>Sản phẩm có nội dung</small><strong id="exportCenterProducts">0</strong><em>Trong báo giá hiện tại</em></div>
+            </article>
+            <article class="export-status-card">
+              <span class="export-status-icon export-data-icon">▦</span>
+              <div><small>Dữ liệu ứng dụng</small><strong id="exportCenterStored">0 mục</strong><em>History + khách hàng + sản phẩm</em></div>
+            </article>
+          </section>
+
+          <div class="export-center-grid">
+            <section class="export-center-panel export-publish-panel">
+              <div class="export-panel-head">
+                <span class="export-panel-icon">⇩</span>
+                <div><h3>Xuất bản báo giá</h3><p>Tạo bản gửi khách hoặc dữ liệu làm việc.</p></div>
+              </div>
+              <div class="export-action-grid">
+                <button class="export-action-card export-action-primary print-action" type="button">
+                  <span>▣</span><b>In / Lưu PDF</b><small>Bản A4 để gửi hoặc in giấy</small>
+                </button>
+                <button class="export-action-card" id="exportExcel" type="button">
+                  <span>▦</span><b>Xuất Excel</b><small>File bảng tính có thể nhập lại</small>
+                </button>
+                <button class="export-action-card" id="exportJson" type="button">
+                  <span>{ }</span><b>Xuất JSON báo giá</b><small>Dữ liệu báo giá đang mở</small>
+                </button>
+                <button class="export-action-card" type="button" data-open-tab="view">
+                  <span>◉</span><b>Xem trước A4</b><small>Rà bố cục trước khi phát hành</small>
+                </button>
+              </div>
+            </section>
+
+            <section class="export-center-panel export-import-panel">
+              <div class="export-panel-head">
+                <span class="export-panel-icon import">⇧</span>
+                <div><h3>Nhập dữ liệu</h3><p>Dữ liệu đều đi qua bước xem lại trước khi áp dụng khi cần.</p></div>
+              </div>
+              <div class="export-action-grid">
+                <button class="export-action-card" id="importExcelQuick" type="button">
+                  <span>▦</span><b>Nhập Excel</b><small>Đọc bảng báo giá từ file Excel</small>
+                </button>
+                <button class="export-action-card" id="importHandwritingQuick" type="button">
+                  <span>✎</span><b>Nhập ảnh chữ viết tay</b><small>OCR và rà lại trước khi áp dụng</small>
+                </button>
+                <label class="export-action-card file-action-card" for="importJson">
+                  <span>{ }</span><b>Nhập JSON báo giá</b><small>Thay báo giá đang mở sau kiểm tra</small>
+                </label>
+                <input class="hidden-input" id="importJson" type="file" accept=".json,application/json">
+              </div>
+            </section>
+
+            <section class="export-center-panel pc-workspace-card export-pc-panel">
+              <div class="export-panel-head">
+                <span class="export-panel-icon pc">▣</span>
+                <div><h3>Lưu trên máy PC</h3><p>Dùng thư mục đã cấp quyền trên Chrome/Edge desktop.</p></div>
+              </div>
+              <div class="pc-folder-status export-pc-status" id="pcFolderStatus">Chưa liên kết thư mục PC.</div>
+              <div class="export-inline-actions">
+                <button class="btn primary" id="choosePcFolder" type="button">Chọn thư mục lưu</button>
+                <button class="btn" id="savePcNow" type="button">Lưu lên PC ngay</button>
+                <button class="btn" id="restorePcLatest" type="button">Đọc bản gần nhất</button>
+              </div>
+              <div class="export-info-note">Trình duyệt chỉ giữ quyền truy cập thư mục, không hiển thị toàn bộ đường dẫn Windows. Ừ, bảo mật đôi khi buộc con người phải bấm thêm một nút.</div>
+            </section>
+
+            <section class="export-center-panel export-backup-panel">
+              <div class="export-panel-head">
+                <span class="export-panel-icon backup">⛁</span>
+                <div><h3>Sao lưu & khôi phục toàn bộ</h3><p>Bảo vệ lịch sử, mẫu, khách hàng và danh mục sản phẩm.</p></div>
+              </div>
+              <div class="backup-scope" id="exportBackupScope">
+                <span>▤ <b id="exportBackupHistoryCount">0</b> báo giá</span>
+                <span>● <b id="exportBackupCustomerCount">0</b> khách hàng</span>
+                <span>◆ <b id="exportBackupProductCount">0</b> sản phẩm</span>
+              </div>
+              <div class="export-inline-actions">
+                <button class="btn primary" id="exportAllData" type="button">Sao lưu toàn bộ WebApp</button>
+                <label class="btn file-btn" for="importAllData">Khôi phục toàn bộ</label>
+                <input class="hidden-input" id="importAllData" type="file" accept=".json,application/json">
+              </div>
+              <div class="export-info-note">Khôi phục toàn bộ có xác nhận và rollback khi ghi bộ nhớ thất bại.</div>
+            </section>
           </div>
 
-          <div class="card">
-            <h3>JSON / Sao lưu toàn bộ</h3>
-            <div class="btns">
-              <button class="btn" id="exportJson">Xuất báo giá JSON</button>
-              <label class="btn file-btn" for="importJson">Nhập báo giá JSON</label>
-              <input class="hidden-input" id="importJson" type="file" accept=".json,application/json">
+          <section class="export-danger-zone">
+            <div>
+              <strong>Đặt lại báo giá hiện tại</strong>
+              <p>Chỉ đưa báo giá đang mở về mẫu ban đầu. Lịch sử, danh bạ, danh mục và mẫu đã lưu vẫn được giữ.</p>
             </div>
-            <div class="backup-divider"></div>
-            <div class="btns">
-              <button class="btn primary" id="exportAllData">Sao lưu toàn bộ WebApp</button>
-              <label class="btn file-btn" for="importAllData">Khôi phục toàn bộ</label>
-              <input class="hidden-input" id="importAllData" type="file" accept=".json,application/json">
-            </div>
-            <div class="help">Bản sao lưu toàn bộ gồm báo giá đang mở, lịch sử, mẫu đã lưu, danh bạ khách hàng và danh mục sản phẩm.</div>
-          </div>
-          <div class="card"><h3>Đặt lại báo giá hiện tại</h3><div class="help">Chỉ đưa báo giá đang mở về mẫu ban đầu; không xóa lịch sử, danh bạ, danh mục hay mẫu đã lưu.</div><button class="btn danger block" id="reset">Khôi phục báo giá hiện tại</button></div>
+            <button class="btn danger" id="reset" type="button">Khôi phục báo giá hiện tại</button>
+          </section>
         </div>
 
         <div class="pane" id="pane-presets">
