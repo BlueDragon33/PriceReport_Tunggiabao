@@ -19,6 +19,28 @@ if (mediaCount > 4) fail('V5 responsive layer has too many media-query blocks: '
 
 const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
 
+function splitSelectorList(prelude) {
+  const values = [];
+  let start = 0;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+
+  for (let index = 0; index < prelude.length; index += 1) {
+    const char = prelude[index];
+    if (char === '(') parenDepth += 1;
+    else if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+    else if (char === '[') bracketDepth += 1;
+    else if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+    else if (char === ',' && parenDepth === 0 && bracketDepth === 0) {
+      values.push(prelude.slice(start, index).trim());
+      start = index + 1;
+    }
+  }
+
+  values.push(prelude.slice(start).trim());
+  return values.filter(Boolean);
+}
+
 function extractSelectors(source) {
   const selectors = [];
   let cursor = 0;
@@ -39,7 +61,7 @@ function extractSelectors(source) {
     if (/^@(media|supports|container|layer)\b/i.test(prelude)) {
       selectors.push(...extractSelectors(body));
     } else if (prelude && !prelude.startsWith('@')) {
-      selectors.push(...prelude.split(',').map(value => value.trim()).filter(Boolean));
+      selectors.push(...splitSelectorList(prelude));
     }
 
     cursor = close;
