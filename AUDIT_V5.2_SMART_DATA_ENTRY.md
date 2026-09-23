@@ -207,3 +207,24 @@ DOM tests verify:
 
 ### Next pass
 Audit the Studio’s product/customer search and keyboard paths for “data-entry-only” users, then clean remaining friction before promoting V5.2 to a release candidate.
+
+
+## Pass 9 — Canonical autocomplete for data-entry users
+
+### Finding
+The Studio already supported keyboard-oriented product entry and datalist suggestions, but suggestion matching still used raw trimmed/lowercase strings. Data Library deduplication had become canonical while autocomplete had not, so the same reusable record could fail to load when the user typed a different phone format or extra spaces.
+
+### Corrections
+- Customer autocomplete now uses the same canonical phone/text identity as Data Library deduplication.
+- A customer stored as `0912...` can be selected by entering the equivalent `+84...` format.
+- Product autocomplete now collapses whitespace and compares canonical text before loading catalog data.
+- Existing product-row keyboard behavior is preserved: arrows move vertically, Enter moves down/creates a row, Tab from the last note field creates the next row.
+
+### Regression coverage
+DOM tests verify:
+- canonical phone autocomplete loads the existing customer record;
+- a product name with different casing/extra spaces still loads the stored group, pack, unit and price;
+- the test restores product state after verification so later regression tests remain isolated.
+
+### Next pass
+Run a full V5.2 gate and inspect any remaining failures. If green, perform release-candidate cleanup: audit file debt, service-worker cache generation and final UX smoke before merge.
