@@ -72,11 +72,22 @@ test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunti
   const menu = document.getElementById('mobileMoreMenu');
   expect(toggle).toBeTruthy();
   expect(menu.hidden).toBe(true);
+  toggle.focus();
   toggle.click();
   expect(menu.hidden).toBe(false);
   expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  expect(menu.getAttribute('role')).toBe('dialog');
+  expect(menu.contains(document.activeElement)).toBe(true);
   document.getElementById('mobileMoreClose').click();
   expect(menu.hidden).toBe(true);
+  expect(document.activeElement).toBe(toggle);
+
+  toggle.click();
+  const customerAction = menu.querySelector('[data-open-tab="customer"]');
+  customerAction.click();
+  expect(menu.hidden).toBe(true);
+  expect(document.getElementById('pane-customer').contains(document.activeElement)).toBe(true);
+  document.querySelector('[data-tab="dashboard"]').click();
 });
 
 test('V4.1 dashboard recent quotation opens the selected record directly', () => {
@@ -113,7 +124,16 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
   search.dispatchEvent(new Event('input', { bubbles: true }));
   const result = document.querySelector('#dashboardSearchResults .dashboard-search-result[data-result-type="customer"]');
   expect(result).toBeTruthy();
-  result.click();
+  expect(search.getAttribute('role')).toBe('combobox');
+  expect(document.getElementById('dashboardSearchResults').getAttribute('role')).toBe('listbox');
+  search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  expect(search.getAttribute('aria-activedescendant')).toBeTruthy();
+  const activeOption = document.getElementById(search.getAttribute('aria-activedescendant'));
+  expect(activeOption?.getAttribute('aria-selected')).toBe('true');
+  while (document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active') !== result) {
+    search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  }
+  search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   expect(document.getElementById('pane-customer').classList.contains('active')).toBe(true);
   expect(document.getElementById('customerCompany').value).toBe('Công ty Search V46');
 
@@ -159,6 +179,40 @@ test('V4.9 settings persist application preferences without touching business da
   document.body.classList.toggle('dashboard-hero-hidden', previousPrefs.showDashboardHero === false);
   document.body.classList.toggle('management-compact', Boolean(previousPrefs.compactManagement));
   document.querySelector('[data-tab="general"]').click();
+});
+
+test('V5 dynamic feedback exposes live, busy and empty-state semantics', async () => {
+  const toast = document.getElementById('toast');
+  expect(toast.getAttribute('role')).toBe('status');
+  expect(toast.getAttribute('aria-live')).toBe('polite');
+
+  const dialog = document.getElementById('smartImportDialog');
+  expect(dialog.getAttribute('aria-busy')).toBe('false');
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  const recent = document.getElementById('dashRecentQuotes');
+  if (recent.querySelector('.dashboard-empty')) {
+    expect(recent.querySelector('.dashboard-empty').getAttribute('role')).toBe('status');
+  }
+
+  document.querySelector('[data-tab="system"]').click();
+  expect(document.getElementById('pane-system').getAttribute('aria-busy')).toBe('false');
+  document.querySelector('[data-tab="general"]').click();
+});
+
+test('V5 Pass 18 removes static inline presentation from application controls', () => {
+  const swatches = Array.from(document.querySelectorAll('.color[data-color]'));
+  expect(swatches.length).toBeGreaterThan(0);
+  expect(swatches.every((element) => !element.getAttribute('style'))).toBe(true);
+  expect(document.getElementById('pCustomer').classList.contains('report-customer-meta')).toBe(true);
+});
+
+test('V5 Pass 18 applies one Studio surface language across all editor panes', () => {
+  for (const id of ['general','customer','products','payment','terms','design','presets']) {
+    const pane = document.getElementById('pane-' + id);
+    expect(pane.classList.contains('studio-pane')).toBe(true);
+  }
+  expect(document.querySelector('#pane-general .studio-logo-actions')).toBeTruthy();
 });
 
 test('product editor can add a row and keep preview in sync', () => {

@@ -1,12 +1,12 @@
 {
   "name": "pricereport-tunggiabao",
   "private": true,
-  "version": "4.9.0",
+  "version": "5.0.0-rc.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "test": "node --check src/main.js && node scripts/core.test.mjs && node scripts/importers.test.mjs && node scripts/pc-storage.test.mjs && node scripts/logo-processing.test.mjs && node scripts/device-profile.test.mjs && node scripts/production-config.test.mjs && npm run test:dom && node scripts/smoke.mjs",
+    "test": "node --check src/main.js && node scripts/ui-v5.test.mjs && node scripts/ui-debt.test.mjs && node scripts/core.test.mjs && node scripts/importers.test.mjs && node scripts/pc-storage.test.mjs && node scripts/logo-processing.test.mjs && node scripts/device-profile.test.mjs && node scripts/production-config.test.mjs && node scripts/service-worker.test.mjs && npm run test:dom && node scripts/smoke.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test:dom": "vitest run tests/app.test.js tests/migration.test.js"
   },
