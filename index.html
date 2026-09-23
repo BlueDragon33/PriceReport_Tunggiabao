@@ -34,6 +34,23 @@
       <button data-tab="view"><span class="nav-glyph">▣</span><span>Xem báo cáo</span></button>
       <button data-tab="export"><span class="nav-glyph">⇅</span><span>Xuất / Nhập / In</span></button>
       <button data-tab="presets"><span class="nav-glyph">▱</span><span>Lưu mẫu</span></button>
+      <button class="mobile-more-toggle" id="mobileMoreToggle" type="button" aria-expanded="false" aria-controls="mobileMoreMenu">
+        <span class="nav-glyph">•••</span><span>Thêm</span>
+      </button>
+
+      <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
+        <div class="mobile-more-head"><strong>Công cụ khác</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
+        <div class="mobile-more-grid">
+          <button type="button" data-open-tab="customer"><span>●</span><b>Khách hàng</b></button>
+          <button type="button" data-open-tab="products"><span>◆</span><b>Sản phẩm</b></button>
+          <button type="button" data-open-tab="payment"><span>₫</span><b>Thanh toán</b></button>
+          <button type="button" data-open-tab="terms"><span>≡</span><b>Điều khoản</b></button>
+          <button type="button" data-open-tab="design"><span>◉</span><b>Thiết kế</b></button>
+          <button type="button" data-open-tab="view"><span>▣</span><b>Xem báo cáo</b></button>
+          <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất / Nhập</b></button>
+          <button type="button" data-open-tab="presets"><span>▱</span><b>Lưu mẫu</b></button>
+        </div>
+      </div>
 
       <div class="spacer"></div>
       <div class="device-profile-chip" id="deviceProfileChip" aria-live="polite">
