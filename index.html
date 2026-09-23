@@ -17,46 +17,27 @@
         <div class="brand-copy"><strong>Tunggiabao</strong><small>Báo giá chuyên nghiệp</small></div>
       </div>
 
-      <div class="nav-section-label">Tổng quan</div>
+      <div class="nav-section-label">Ứng dụng</div>
       <button class="active nav-dashboard" data-tab="dashboard"><span class="nav-glyph">⌂</span><span>Trang chủ</span></button>
       <button data-tab="general"><span class="nav-glyph">✎</span><span>Soạn báo giá</span></button>
       <button class="nav-secondary" data-tab="history"><span class="nav-glyph">▤</span><span>Quản lý báo giá</span></button>
-
-      <div class="nav-section-label">Dữ liệu</div>
       <button class="nav-secondary" data-tab="master"><span class="nav-glyph">▦</span><span>Khách hàng & sản phẩm</span></button>
-      <button data-tab="customer"><span class="nav-glyph">●</span><span>Khách hàng</span></button>
-      <button data-tab="products"><span class="nav-glyph">◆</span><span>Sản phẩm</span></button>
+      <button class="nav-secondary" data-tab="settings"><span class="nav-glyph">⚙</span><span>Cài đặt</span></button>
 
-      <div class="nav-section-label">Báo giá</div>
-      <button data-tab="payment"><span class="nav-glyph">₫</span><span>Thanh toán</span></button>
-      <button data-tab="terms"><span class="nav-glyph">≡</span><span>Điều khoản</span></button>
-      <button data-tab="design"><span class="nav-glyph">◉</span><span>Thiết kế</span></button>
-      <button data-tab="view"><span class="nav-glyph">▣</span><span>Xem báo cáo</span></button>
-      <button data-tab="export"><span class="nav-glyph">⇅</span><span>Xuất bản & dữ liệu</span></button>
-      <button data-tab="presets"><span class="nav-glyph">▱</span><span>Lưu mẫu</span></button>
       <button class="mobile-more-toggle" id="mobileMoreToggle" type="button" aria-expanded="false" aria-controls="mobileMoreMenu">
         <span class="nav-glyph">•••</span><span>Thêm</span>
       </button>
-
       <div class="mobile-more-menu" id="mobileMoreMenu" role="dialog" aria-modal="true" aria-labelledby="mobileMoreTitle" hidden>
-        <div class="mobile-more-head"><strong id="mobileMoreTitle">Công cụ khác</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
+        <div class="mobile-more-head"><strong id="mobileMoreTitle">Công cụ báo giá</strong><button type="button" id="mobileMoreClose" aria-label="Đóng menu">×</button></div>
         <div class="mobile-more-grid">
-          <button type="button" data-open-tab="customer"><span>●</span><b>Khách hàng</b></button>
           <button type="button" data-open-tab="products"><span>◆</span><b>Sản phẩm</b></button>
           <button type="button" data-open-tab="payment"><span>₫</span><b>Thanh toán</b></button>
           <button type="button" data-open-tab="terms"><span>≡</span><b>Điều khoản</b></button>
           <button type="button" data-open-tab="design"><span>◉</span><b>Thiết kế</b></button>
-          <button type="button" data-open-tab="view"><span>▣</span><b>Xem báo cáo</b></button>
-          <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất bản & dữ liệu</b></button>
-          <button type="button" data-open-tab="presets"><span>▱</span><b>Lưu mẫu</b></button>
-          <button type="button" data-open-tab="system"><span>⚙</span><b>Thiết bị & hệ thống</b></button>
-          <button type="button" data-open-tab="settings"><span>☷</span><b>Cài đặt ứng dụng</b></button>
+          <button type="button" data-open-tab="export"><span>⇅</span><b>Xuất & dữ liệu</b></button>
+          <button type="button" data-open-tab="system"><span>⚙</span><b>Thiết bị</b></button>
         </div>
       </div>
-
-      <div class="nav-section-label">Hệ thống</div>
-      <button class="nav-secondary" data-tab="system"><span class="nav-glyph">⚙</span><span>Thiết bị & hệ thống</span></button>
-      <button class="nav-secondary" data-tab="settings"><span class="nav-glyph">☷</span><span>Cài đặt ứng dụng</span></button>
 
       <div class="spacer"></div>
       <div class="device-profile-chip" id="deviceProfileChip" aria-live="polite">
@@ -546,14 +527,22 @@
                 <h3>Danh sách sản phẩm</h3>
                 <p>Nhập theo từng thẻ, có thể mở rộng vùng làm việc để thao tác thoải mái.</p>
               </div>
-              <div class="btns product-workspace-actions">
-                <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
-                <button class="btn" id="productFocusToggle">⛶ Mở rộng vùng nhập</button>
-                <button class="btn" id="collapseAllProducts">Thu gọn tất cả</button>
+              <div class="product-entry-primary-actions" aria-label="Thao tác nhập sản phẩm">
+                <button class="btn primary" id="addProduct" type="button">＋ Thêm dòng</button>
+                <button class="btn" id="pasteProducts" type="button">▣ Dán dữ liệu</button>
+                <button class="btn" id="importProductsExcel" type="button">⇧ Nhập từ Excel</button>
+                <button class="btn" type="button" data-open-master="products">◆ Chọn từ danh mục</button>
+              </div>
+              <div class="btns product-workspace-actions product-entry-secondary-actions">
+                <button class="btn" id="productFocusToggle" type="button">⛶ Mở rộng</button>
+                <button class="btn" id="collapseAllProducts" type="button">Thu gọn</button>
               </div>
             </div>
-            <div id="productEditor" class="product-editor-list"></div>
-            <button class="btn primary block add-product-btn" id="addProduct">+ Thêm sản phẩm</button>
+            <div class="product-paste-hint" id="productPasteHint">Mẹo: copy nhiều ô trong Excel rồi Ctrl+V trực tiếp tại bảng. Hệ thống tự nhận cột phổ biến.</div>
+            <div class="product-data-grid-head" aria-hidden="true">
+              <span>STT</span><span>Tên sản phẩm</span><span>Nhóm hàng</span><span>Quy cách</span><span>ĐVT</span><span>Số lượng</span><span>Đơn giá</span><span>Thành tiền</span><span></span>
+            </div>
+            <div id="productEditor" class="product-editor-list product-data-grid" tabindex="0" aria-label="Bảng nhập sản phẩm"></div>
           </div>
           <div class="card">
             <h3>Cột hiển thị</h3>
