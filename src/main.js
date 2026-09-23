@@ -43,6 +43,7 @@ const CUSTOMERS = 'tunggiabao-price-report-customers-v1';
 const CATALOG = 'tunggiabao-price-report-catalog-v1';
 const UI_STATE = 'tunggiabao-price-report-ui-v2';
 const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
+const RECOVERY_STORAGE = 'tunggiabao-price-report-recovery-v1';
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -408,7 +409,105 @@ function stateForStorage() {
   return data;
 }
 
-const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
+function updateAutosaveIndicator(mode, timestamp = Date.now()) {
+  const el = document.getElementById('studioAutosaveState');
+  if (!el) return;
+  el.dataset.state = mode;
+  if (mode === 'saving') {
+    el.textContent = '● Đang lưu...';
+  } else if (mode === 'saved') {
+    const time = new Date(timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    el.textContent = '✓ Đã lưu lúc ' + time;
+  } else if (mode === 'error') {
+    el.textContent = '⚠ Không thể lưu';
+  } else {
+    el.textContent = 'Đã nạp bản lưu';
+  }
+}
+
+function writeRecoverySnapshot() {
+  try {
+    sessionStorage.setItem(RECOVERY_STORAGE, JSON.stringify({
+      savedAt: Date.now(),
+      data: stateForStorage()
+    }));
+    return true;
+  } catch (error) {
+    console.warn('Draft recovery snapshot could not be stored.', error);
+    return false;
+  }
+}
+
+function clearRecoverySnapshot() {
+  try {
+    sessionStorage.removeItem(RECOVERY_STORAGE);
+  } catch (error) {
+    console.warn('Draft recovery snapshot could not be cleared.', error);
+  }
+}
+
+function readRecoverySnapshot() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(RECOVERY_STORAGE) || 'null');
+    if (!parsed || !isPlainObject(parsed.data)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function save() {
+  updateAutosaveIndicator('saving');
+  writeRecoverySnapshot();
+  const persisted = safeStore(STORAGE, JSON.stringify(stateForStorage()));
+  if (persisted) {
+    clearRecoverySnapshot();
+    updateAutosaveIndicator('saved');
+  } else {
+    updateAutosaveIndicator('error');
+  }
+  return persisted;
+}
+
+function offerDraftRecovery() {
+  const banner = document.getElementById('draftRecoveryBanner');
+  const detail = document.getElementById('draftRecoveryDetail');
+  const snapshot = readRecoverySnapshot();
+  if (!banner || !snapshot) return false;
+
+  const stored = JSON.stringify(stateForStorage());
+  const recovery = JSON.stringify(snapshot.data);
+  if (stored === recovery) {
+    clearRecoverySnapshot();
+    return false;
+  }
+
+  const time = new Date(Number(snapshot.savedAt || Date.now())).toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  if (detail) detail.textContent = 'Bản khôi phục gần nhất lúc ' + time + ' chưa được ghi hoàn chỉnh vào bộ nhớ chính.';
+  banner.hidden = false;
+
+  document.getElementById('restoreDraftRecovery')?.addEventListener('click', () => {
+    state = merge(snapshot.data);
+    const persisted = save();
+    syncInputs();
+    resetCollapsedProductsForState();
+    selectedProductRows.clear();
+    renderEditorProducts();
+    render();
+    banner.hidden = true;
+    toast(persisted ? 'Đã khôi phục bản đang soạn' : 'Đã khôi phục tạm thời; bộ nhớ chính vẫn chưa ghi được');
+  }, { once: true });
+
+  document.getElementById('discardDraftRecovery')?.addEventListener('click', () => {
+    clearRecoverySnapshot();
+    banner.hidden = true;
+    updateAutosaveIndicator('idle');
+  }, { once: true });
+  return true;
+}
 
 function captureStorageSnapshot(keys) {
   const snapshot = {};
@@ -3276,6 +3375,7 @@ setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
 render();
+offerDraftRecovery();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
   applyTungGiaBaoToCurrentQuote();
