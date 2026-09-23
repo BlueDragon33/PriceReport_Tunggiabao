@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mergeImportDraft, parseHandwritingText, parseSpreadsheetRows } from '../src/importers.js';
+import { mergeImportDraft, parseHandwritingText, parseProductClipboardText, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -121,3 +121,16 @@ assert.equal(mixedReparse.fields.companyAddressDetail, 'Địa chỉ Excel');
 assert.equal(mixedReparse.fields.companyWard, 'Nam Nha Trang');
 assert.equal(mixedReparse.fields.companyProvince, 'Khánh Hòa');
 assert.equal(mixedReparse.fields.phone, '0962944688');
+
+
+const clipboard = parseProductClipboardText('Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nTrứng gà\tHộp\t100\t28.000\nTrứng vịt\tKhay\t30\t85,000');
+assert.equal(clipboard.hasHeader, true);
+assert.equal(clipboard.products.length, 2);
+assert.equal(clipboard.products[0].name, 'Trứng gà');
+assert.equal(clipboard.products[0].qty, 100);
+assert.equal(clipboard.products[0].price, 28000);
+assert.equal(clipboard.products[1].price, 85000);
+
+const positionalClipboard = parseProductClipboardText('Trứng gà\tHộp\t100\t28000');
+assert.equal(positionalClipboard.products[0].unit, 'Hộp');
+assert.equal(positionalClipboard.products[0].qty, 100);
