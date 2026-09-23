@@ -233,15 +233,24 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     ? options.mapping
     : detected?.mapping;
   if (!mapping || mapping.name == null || mapping.price == null || headerIndex == null) {
-    return { products: [], groups: [], invalidRows: [] };
+    return { products: [], groups: [], invalidRows: [], duplicates: [] };
   }
 
+  const excludedRows = new Set(
+    (Array.isArray(options.excludedRows) ? options.excludedRows : [])
+      .map(value => Number(value))
+      .filter(Number.isFinite)
+  );
   const products = [];
+  const productRowNumbers = [];
   const groups = [];
   const invalidRows = [];
   let currentGroup = '';
 
   safeRows.slice(headerIndex + 1).forEach((row, offset) => {
+    const sourceRowNumber = headerIndex + offset + 2;
+    if (excludedRows.has(sourceRowNumber)) return;
+
     const cells = Array.isArray(row) ? row : [];
     const values = nonEmptyCells(cells);
     if (!values.length) return;
@@ -274,7 +283,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
       if (parsedPrice.valid && parsedPrice.value < 0) reasons.push('negative-price');
       if (parsedQty.valid && parsedQty.value < 0) reasons.push('negative-qty');
       invalidRows.push({
-        rowNumber: headerIndex + offset + 2,
+        rowNumber: sourceRowNumber,
         name,
         price: clean(rawProduct.price),
         qty: clean(rawProduct.qty),
@@ -287,6 +296,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     if (!product.group) product.group = currentGroup;
     if (product.group && !groups.includes(product.group)) groups.push(product.group);
     products.push(product);
+    productRowNumbers.push(sourceRowNumber);
   });
 
   const duplicateMap = new Map();
@@ -294,7 +304,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     const signature = [product.name, product.unit, product.pack]
       .map(value => fold(clean(value)))
       .join('|');
-    if (!signature.replace(/\|/g, '')) return;
+    if (!signature.replace(/|/g, '')) return;
     const indexes = duplicateMap.get(signature) || [];
     indexes.push(index);
     duplicateMap.set(signature, indexes);
@@ -304,7 +314,10 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
     .map(([signature, indexes]) => ({
       signature,
       indexes,
-      names: indexes.map(index => products[index].name)
+      rowNumbers: indexes.map(index => productRowNumbers[index]),
+      names: indexes.map(index => products[index].name),
+      prices: indexes.map(index => products[index].price),
+      quantities: indexes.map(index => products[index].qty)
     }));
 
   return { products, groups, invalidRows, duplicates };
