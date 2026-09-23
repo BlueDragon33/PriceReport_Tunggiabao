@@ -12,7 +12,7 @@ import {
   isValidISODate,
   localDateISO
 } from './core.js';
-import { parseHandwritingText, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
+import { parseHandwritingText, mergeImportDraft } from './importers.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -1958,49 +1958,70 @@ function fullBackupPayload() {
 
 function excelRowsForCurrentQuote() {
   const rows = [];
-  rows.push([state.companyName || '']);
-  if (state.companyAddressDetail) rows.push(['Địa chỉ chi tiết:', state.companyAddressDetail]);
-  if (companyRegionLine(state)) rows.push(['Khu vực:', companyRegionLine(state)]);
-  if (state.phone) rows.push(['Điện thoại:', state.phone]);
-  if (state.taxCode) rows.push(['MST:', state.taxCode]);
+  rows.push(['BÁO GIÁ', state.quoteTitle || 'BẢNG BÁO GIÁ']);
+  rows.push(['Mã báo giá', state.quoteNo || '']);
+  rows.push(['Ngày báo giá', state.quoteDate || '']);
+  rows.push(['Khách hàng', state.customerName || '']);
+  rows.push(['Công ty khách hàng', state.customerCompany || '']);
+  rows.push(['Tiền tệ', state.currency || 'VND']);
   rows.push([]);
-  rows.push([state.quoteTitle || 'BẢNG BÁO GIÁ']);
-  if (state.quoteSubtitle) rows.push([state.quoteSubtitle]);
-  if (state.recipientLine) rows.push([state.recipientLine]);
-  if (state.intro) rows.push([state.intro]);
-  rows.push([]);
-  rows.push(['STT','Mặt hàng','ĐVT','Đơn giá','Ghi chú']);
-
-  let activeGroup = '';
-  let groupIndex = 0;
-  (state.products || []).forEach((product, index) => {
-    const group = String(product.group || '').trim();
-    if (group && group !== activeGroup) {
-      activeGroup = group;
-      groupIndex = 0;
-      rows.push([group]);
-    }
-    groupIndex += 1;
+  rows.push(['STT','Tên sản phẩm','Nhóm hàng','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú']);
+  (state.products || []).filter(productMeaningful).forEach((product, index) => {
+    const qty = normalizeNonNegativeNumber(product.qty || 0);
+    const price = normalizeNonNegativeNumber(product.price || 0);
     rows.push([
-      group ? groupIndex : index + 1,
+      index + 1,
       product.name || '',
+      product.group || '',
+      product.pack || '',
       product.unit || '',
-      Number(product.price || 0),
+      qty,
+      price,
+      qty * price,
       product.note || ''
     ]);
   });
-
-  rows.push([]);
-  if (state.dateLine) rows.push(['', state.dateLine]);
-  if (state.rightName) rows.push(['', state.rightName]);
   return rows;
+}
+
+function csvEscape(value) {
+  const text = String(value ?? '');
+  return /[",\n\r]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+function productCsvRows() {
+  const rows = [['STT','Tên sản phẩm','Nhóm hàng','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú']];
+  (state.products || []).filter(productMeaningful).forEach((product, index) => {
+    const qty = normalizeNonNegativeNumber(product.qty || 0);
+    const price = normalizeNonNegativeNumber(product.price || 0);
+    rows.push([
+      index + 1,
+      product.name || '',
+      product.group || '',
+      product.pack || '',
+      product.unit || '',
+      qty,
+      price,
+      qty * price,
+      product.note || ''
+    ]);
+  });
+  return rows;
+}
+function exportCurrentQuoteCsv() {
+  const csv = '\uFEFF' + productCsvRows().map(row => row.map(csvEscape).join(',')).join('\r\n');
+  const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.csv';
+  download(name, csv, 'text/csv;charset=utf-8');
+  toast('Đã xuất file CSV');
 }
 
 async function exportCurrentQuoteExcel() {
   try {
     const XLSX = await import('xlsx');
     const sheet = XLSX.utils.aoa_to_sheet(excelRowsForCurrentQuote());
-    sheet['!cols'] = [{ wch: 8 }, { wch: 42 }, { wch: 12 }, { wch: 16 }, { wch: 26 }];
+    sheet['!cols'] = [
+      { wch: 8 }, { wch: 34 }, { wch: 20 }, { wch: 20 }, { wch: 12 },
+      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
+    ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, 'Bảng báo giá');
     const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
@@ -2145,7 +2166,6 @@ function resetSmartImportDraft() {
   const rawBox = document.getElementById('ocrRawBox');
   const previewWrap = document.getElementById('handwritingPreviewWrap');
   const preview = document.getElementById('handwritingPreview');
-  const excelInput = document.getElementById('excelSmartImportInput');
   const handwritingInput = document.getElementById('handwritingSmartImportInput');
   if (review) review.hidden = true;
   if (apply) apply.disabled = true;
@@ -2153,7 +2173,6 @@ function resetSmartImportDraft() {
   if (rawBox) rawBox.hidden = true;
   if (previewWrap) previewWrap.hidden = true;
   if (preview) preview.removeAttribute('src');
-  if (excelInput) excelInput.value = '';
   if (handwritingInput) handwritingInput.value = '';
   if (smartImportImageUrl) URL.revokeObjectURL(smartImportImageUrl);
   smartImportImageUrl = '';
@@ -2164,7 +2183,7 @@ function resetSmartImportDraft() {
 function setSmartImportBusy(busy) {
   smartImportBusy = Boolean(busy);
   document.getElementById('smartImportDialog')?.setAttribute('aria-busy', smartImportBusy ? 'true' : 'false');
-  ['excelSmartImportInput','handwritingSmartImportInput','applySmartImport','resetSmartImport','cancelSmartImport','closeSmartImport'].forEach((id) => {
+  ['handwritingSmartImportInput','applySmartImport','resetSmartImport','cancelSmartImport','closeSmartImport'].forEach((id) => {
     const element = document.getElementById(id);
     if (!element) return;
     if (id === 'applySmartImport') element.disabled = smartImportBusy || !smartImportDraft;
@@ -2305,31 +2324,6 @@ function closeSmartImport({ discard = false, force = false } = {}) {
   return true;
 }
 
-async function parseExcelFile(file) {
-  setSmartImportProgress('Đang đọc workbook và nhận diện cấu trúc...', 'working');
-  const XLSX = await import('xlsx');
-  const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer);
-  const sheetNames = workbook.SheetNames || [];
-  if (!sheetNames.length) throw new Error('Workbook không có sheet.');
-  const candidates = sheetNames.map((sheetName) => {
-    const worksheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
-    const parsed = parseSpreadsheetRows(rows);
-    const fieldCount = Object.values(parsed.fields || {}).filter(value => String(value || '').trim()).length;
-    const score = parsed.products.length * 12 + parsed.groups.length * 4 + fieldCount;
-    return { sheetName, parsed, score };
-  }).sort((a, b) => b.score - a.score);
-  const best = candidates[0];
-  best.parsed.sheetName = best.sheetName;
-  best.parsed.sheetCount = sheetNames.length;
-  if (sheetNames.length > 1) {
-    best.parsed.warnings = [...(best.parsed.warnings || []),
-      'Workbook có ' + sheetNames.length + ' sheet; hệ thống chọn sheet “' + best.sheetName + '” có cấu trúc phù hợp nhất.'];
-  }
-  return best.parsed;
-}
-
 async function imageToOcrCanvasUrl(file) {
   if (!window.createImageBitmap) return URL.createObjectURL(file);
   const bitmap = await createImageBitmap(file);
@@ -2425,30 +2419,6 @@ function setupSmartImport() {
 
   document.getElementById('smartImportModal')?.addEventListener('click', (event) => {
     if (event.target?.id === 'smartImportModal' && !smartImportBusy) closeSmartImport();
-  });
-
-  document.getElementById('excelSmartImportInput')?.addEventListener('change', async (event) => {
-    const file = event.target.files?.[0];
-    if (!file || smartImportBusy) return;
-    if (file.size > 12 * 1024 * 1024) {
-      setSmartImportProgress('File Excel vượt 12 MB; hãy rút gọn workbook trước khi nhập.', 'error');
-      event.target.value = '';
-      return;
-    }
-    try {
-      setSmartImportBusy(true);
-      syncDraftFromImportReview();
-      const parsed = await parseExcelFile(file);
-      smartImportDraft = mergeSmartImportSource(parsed);
-      renderSmartImportReview();
-      setSmartImportProgress('Đã đọc sheet “' + parsed.sheetName + '”: ' + parsed.products.length + ' sản phẩm.', 'success');
-    } catch (error) {
-      console.error('Excel smart import failed:', error);
-      setSmartImportProgress('Không thể đọc file Excel. Hãy kiểm tra định dạng hoặc thử file khác.', 'error');
-    } finally {
-      setSmartImportBusy(false);
-      event.target.value = '';
-    }
   });
 
   document.getElementById('handwritingSmartImportInput')?.addEventListener('change', async (event) => {
@@ -3871,9 +3841,10 @@ document.getElementById('preflightCheck')?.addEventListener('click', () => {
 });
 
 document.getElementById('exportExcel')?.addEventListener('click', exportCurrentQuoteExcel);
+document.getElementById('exportCsv')?.addEventListener('click', exportCurrentQuoteCsv);
 document.getElementById('importExcelQuick')?.addEventListener('click', () => {
-  openSmartImport();
-  document.getElementById('excelSmartImportInput')?.click();
+  openTab('products');
+  requestAnimationFrame(() => document.getElementById('productExcelInput')?.click());
 });
 document.getElementById('importHandwritingQuick')?.addEventListener('click', () => {
   openSmartImport();
