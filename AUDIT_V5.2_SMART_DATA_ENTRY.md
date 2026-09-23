@@ -130,3 +130,28 @@ Importer tests verify duplicate source row numbers, quantities, prices and expli
 
 ### Next pass
 Add data-normalization and validation improvements for phones, money and text values, then audit autosave/import history interactions before moving deeper into Data Library.
+
+
+## Pass 6 — Import normalization for real-world copied data
+
+### Finding
+Common business input formats still produced avoidable failures:
+- currency values such as `28.000 đ` or `32,000 VND`;
+- Vietnamese phone numbers entered as `+84...` or `0084...`;
+- hidden zero-width characters introduced by copy/paste from web or spreadsheet sources.
+
+### Corrections
+- Money parsing now strips common VND/USD/RUB currency markers before numeric normalization.
+- Vietnamese `+84` and `0084` phone formats are normalized to a leading-zero local number during import.
+- Spreadsheet and OCR phone extraction share the same import normalization helper.
+- Zero-width characters are removed before text whitespace normalization.
+- Existing number-separator behavior remains unchanged.
+
+### Regression coverage
+Importer tests now cover:
+- `+84` / `0084` / dotted Vietnamese phone formats;
+- `28.000 đ` and `32,000 VND` money values;
+- hidden zero-width characters in copied product names.
+
+### Next pass
+Audit autosave, import undo and recovery interactions so a large import cannot leave the current quote or recovery snapshot in an inconsistent state.
