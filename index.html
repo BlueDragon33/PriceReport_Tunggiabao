@@ -544,7 +544,7 @@
             <div class="product-workspace-head">
               <div>
                 <h3>Danh sách sản phẩm</h3>
-                <p>Nhập theo từng thẻ, có thể mở rộng vùng làm việc để thao tác thoải mái.</p>
+                <p>Nhập trực tiếp như bảng tính: Tab để sang ô, Enter để xuống dòng, có thể dán nguyên vùng từ Excel.</p>
               </div>
               <div class="btns product-workspace-actions">
                 <button class="btn primary" id="addProductTop" type="button">＋ Thêm dòng</button>
@@ -555,7 +555,20 @@
                 <button class="btn product-secondary-action" id="collapseAllProducts">Thu gọn</button>
               </div>
             </div>
-            <div id="productEditor" class="product-editor-list"></div>
+            <div class="product-data-grid-shell" role="region" aria-label="Bảng nhập sản phẩm" tabindex="0">
+              <div class="product-data-grid-head" aria-hidden="true">
+                <span>STT</span>
+                <span>Nhóm hàng</span>
+                <span>Tên sản phẩm</span>
+                <span>Quy cách</span>
+                <span>ĐVT</span>
+                <span>SL</span>
+                <span>Đơn giá</span>
+                <span>Ghi chú</span>
+                <span>Thao tác</span>
+              </div>
+              <div id="productEditor" class="product-editor-list product-data-grid"></div>
+            </div>
             <button class="btn primary block add-product-btn" id="addProduct">+ Thêm sản phẩm</button>
           </div>
           <div class="card">
