@@ -4189,12 +4189,19 @@ function focusValidationTarget(target, returnTarget = null) {
       if (field._studioGuidanceReturnKeyHandler) {
         field.removeEventListener('keydown', field._studioGuidanceReturnKeyHandler);
       }
+      const returnKey = returnTarget.dataset?.validationKey || '';
       const handleReturnKey = (event) => {
         if (event.key !== 'Escape') return;
         event.preventDefault();
         field.removeEventListener('keydown', handleReturnKey);
         delete field._studioGuidanceReturnKeyHandler;
-        returnTarget.focus();
+        const currentIssue = returnKey
+          ? Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
+            .find(item => item.dataset.validationKey === returnKey)
+          : null;
+        const connectedReturnTarget = returnTarget.isConnected ? returnTarget : null;
+        const fallback = document.getElementById('closeStudioGuidance') || document.getElementById('studioCheckQuote');
+        (currentIssue || connectedReturnTarget || fallback)?.focus?.();
       };
       field._studioGuidanceReturnKeyHandler = handleReturnKey;
       field.addEventListener('keydown', handleReturnKey);
@@ -4247,6 +4254,14 @@ function renderStudioGuidance({ focusFirst = false } = {}) {
     button.type = 'button';
     button.className = 'studio-guidance-item ' + item.tone;
     button.dataset.validationIndex = String(index);
+    const target = validationTargetForMessage(item.message);
+    button.dataset.validationKey = [
+      item.tone,
+      target?.tab || '',
+      Number.isInteger(target?.productIndex) ? String(target.productIndex) : '',
+      target?.fieldId || '',
+      item.message
+    ].join('|');
 
     const badge = document.createElement('span');
     badge.className = 'studio-guidance-tone';
@@ -4259,7 +4274,6 @@ function renderStudioGuidance({ focusFirst = false } = {}) {
     action.textContent = 'Bấm để tới chỗ cần xử lý';
 
     button.append(badge, message, action);
-    const target = validationTargetForMessage(item.message);
     button.addEventListener('click', () => focusValidationTarget(target, button));
     list.appendChild(button);
   });
