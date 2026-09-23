@@ -55,6 +55,65 @@ const parseNumber = (value) => {
 
 const numberValue = (value) => parseNumber(value).value;
 
+
+export function parseProductClipboardText(rawText) {
+  const rows = String(rawText || '')
+    .split(/\r?\n/)
+    .map(line => line.split('\t').map(clean))
+    .filter(row => row.some(Boolean));
+
+  if (!rows.length) return { products: [], warnings: ['Không có dữ liệu để dán.'], mapping: [] };
+
+  const aliases = {
+    group: ['nhom', 'nhom hang', 'category'],
+    name: ['ten san pham', 'ten hang', 'san pham', 'hang hoa', 'ten sp', 'product'],
+    pack: ['quy cach', 'packaging'],
+    unit: ['dvt', 'don vi', 'don vi tinh', 'unit'],
+    qty: ['sl', 'so luong', 'quantity', 'qty'],
+    price: ['gia', 'don gia', 'price'],
+    note: ['ghi chu', 'note']
+  };
+  const normalizedHeader = rows[0].map(cell => fold(cell));
+  const mapping = normalizedHeader.map(cell => {
+    for (const [key, names] of Object.entries(aliases)) {
+      if (names.some(name => cell === name || cell.includes(name))) return key;
+    }
+    return '';
+  });
+  const hasHeader = mapping.filter(Boolean).length >= 2;
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+
+  let positional = mapping;
+  if (!hasHeader) {
+    const width = Math.max(...dataRows.map(row => row.length));
+    if (width >= 7) positional = ['group','name','pack','unit','qty','price','note'];
+    else if (width === 6) positional = ['name','pack','unit','qty','price','note'];
+    else if (width === 5) positional = ['name','unit','qty','price','note'];
+    else if (width === 4) positional = ['name','unit','qty','price'];
+    else if (width === 3) positional = ['name','unit','price'];
+    else positional = ['name','price'];
+  }
+
+  const warnings = [];
+  const products = dataRows.map((row, rowIndex) => {
+    const product = { group:'', name:'', pack:'', unit:'', qty:1, price:0, note:'' };
+    positional.forEach((key, columnIndex) => {
+      if (!key) return;
+      const value = row[columnIndex];
+      if (key === 'qty' || key === 'price') {
+        const parsed = parseNumber(value);
+        if (clean(value) && !parsed.valid) warnings.push('Dòng ' + (rowIndex + 1 + (hasHeader ? 1 : 0)) + ': ' + key + ' không hợp lệ.');
+        product[key] = key === 'qty' && !clean(value) ? 1 : parsed.value;
+      } else {
+        product[key] = clean(value);
+      }
+    });
+    return product;
+  }).filter(product => product.name || product.group || product.pack || product.unit || product.note || product.price > 0 || product.qty !== 1);
+
+  return { products, warnings: [...new Set(warnings)], mapping: positional, hasHeader };
+}
+
 export function parseSpreadsheetRows(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
   const fields = {};
