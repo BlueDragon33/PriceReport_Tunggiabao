@@ -4256,3 +4256,47 @@ body.v5-ui .import-sheet-picker select {
 body.v5-ui .import-sheet-picker > small {
   grid-column: 1 / -1;
 }
+
+
+body.v5-ui .import-issue-review {
+  display: grid;
+  gap: var(--v5-space-3);
+  padding: var(--v5-space-3);
+  border: 1px solid var(--v5-border);
+  border-radius: var(--v5-radius-lg);
+  background: var(--v5-surface-subtle);
+}
+body.v5-ui .import-issue-review[hidden] { display: none; }
+body.v5-ui .import-issue-review-head {
+  display: flex;
+  gap: var(--v5-space-3);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+body.v5-ui .import-issue-review-head > div {
+  display: grid;
+  gap: 4px;
+}
+body.v5-ui .import-issue-review-head span,
+body.v5-ui .import-issue-item small {
+  color: var(--v5-text-muted);
+  font-size: 12px;
+}
+body.v5-ui .import-issue-list {
+  display: grid;
+  gap: 8px;
+}
+body.v5-ui .import-issue-item {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--v5-border);
+  border-radius: var(--v5-radius-md);
+  background: var(--v5-surface);
+}
+body.v5-ui .import-issue-item.issue-error {
+  border-inline-start: 3px solid var(--v5-danger);
+}
+body.v5-ui .import-issue-item.issue-warn {
+  border-inline-start: 3px solid var(--v5-warning);
+}
