@@ -354,6 +354,12 @@ for (const logic of ['function renderProductDataGrid()','function rowsToProducts
 }
 if (js.includes('window.prompt(')) fail('V6 data entry must not use prompt() for ordinary import flow');
 if (!js.includes("clipboardData?.getData('text/plain')")) fail('V6 Smart Paste clipboard path is missing');
+if (!js.includes('function renderProductMappingReview()') || !js.includes('function stageProductRows(rows')) fail('V6 uncertain-column mapping review is missing');
+if (!js.includes('function headerSimilarity(a, b)')) fail('V6 fuzzy Excel header matching is missing');
+if (!html.includes('id="productMappingReview"') || !html.includes('id="applyMappedImport"')) fail('V6 mapping review UI is missing');
+if (!html.includes('id="productBulkBar"') || !html.includes('id="productBulkAction"')) fail('V6 bulk-edit controls are missing');
+if (!js.includes('function applyProductBulkAction()')) fail('V6 bulk-edit logic is missing');
+if (!js.includes('pushQuoteUndoSnapshot();\n    state.theme')) fail('V6 theme changes must participate in undo history');
 if (!v5Css.includes('.product-grid-row') || !v5Css.includes('.studio-inspector-tabs')) fail('V6 grid/inspector styling is missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
