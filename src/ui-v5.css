@@ -4300,3 +4300,27 @@ body.v5-ui .import-issue-item.issue-error {
 body.v5-ui .import-issue-item.issue-warn {
   border-inline-start: 3px solid var(--v5-warning);
 }
+
+
+body.v5-ui .import-issue-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: var(--v5-space-2);
+  margin-top: 4px;
+}
+body.v5-ui .import-issue-editor label {
+  display: grid;
+  gap: 4px;
+}
+body.v5-ui .import-issue-editor label > span {
+  color: var(--v5-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+body.v5-ui .import-issue-editor input {
+  min-height: var(--v5-control);
+}
+body.v5-ui .import-issue-actions {
+  display: flex;
+  justify-content: flex-end;
+}
