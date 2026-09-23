@@ -48,7 +48,10 @@ const parseNumber = (value) => {
   if (typeof value === 'number' && Number.isFinite(value)) return { valid: true, value: Math.max(0, value) };
   const raw = clean(value);
   if (!raw) return { valid: false, value: 0 };
-  const text = raw.replace(/[.,](?=\d{3}(?:\D|$))/g, '').replace(',', '.');
+  const text = raw
+    .replace(/\s+/g, '')
+    .replace(/[.,](?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.');
   const parsed = Number(text);
   return Number.isFinite(parsed) ? { valid: true, value: Math.max(0, parsed) } : { valid: false, value: 0 };
 };
