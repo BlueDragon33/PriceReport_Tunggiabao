@@ -691,6 +691,209 @@ body.v5-ui .recent-quote-row{
 }
 body.v5-ui .recent-quote-row:hover{background:#f8fbff}
 
+/* ---------- Quotation management ---------- */
+body.v5-ui .history-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+body.v5-ui .history-stats-app{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+body.v5-ui .history-stats-app .history-kpi{padding:13px 14px}
+body.v5-ui .history-stats-app .history-kpi span{font-size:8.8px}
+body.v5-ui .history-stats-app .history-kpi strong{display:block;margin:3px 0;font-size:18px}
+body.v5-ui .history-stats-app .history-kpi small{color:var(--v5-subtle);font-size:8px}
+body.v5-ui .history-stats-app #historyRevenue{font-size:13px}
+body.v5-ui .history-toolbar{
+  display:grid;
+  grid-template-columns:minmax(260px,1fr) 210px auto;
+  gap:10px;
+  align-items:end;
+}
+body.v5-ui .history-toolbar label{margin-bottom:5px;color:var(--v5-muted);font-size:8.5px;font-weight:700}
+body.v5-ui .history-search-box{
+  height:38px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:0 10px;
+}
+body.v5-ui .history-search-box span{font-size:16px;color:#68809c}
+body.v5-ui .history-search-box input{
+  height:34px;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  font-size:10px;
+}
+body.v5-ui .history-filter-field select{height:38px;background:var(--v5-surface)}
+body.v5-ui .history-result-summary{
+  height:38px;
+  min-width:76px;
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  border-radius:var(--v5-radius-sm);
+}
+body.v5-ui .history-result-summary span{font-size:13px;font-weight:900}
+body.v5-ui .history-result-summary small{font-size:8px}
+body.v5-ui .history-table-head,
+body.v5-ui .history-table-row{
+  display:grid;
+  grid-template-columns:1.05fr 1.45fr .72fr 1fr .86fr 1.25fr;
+  gap:10px;
+  align-items:center;
+}
+body.v5-ui .history-table-body{gap:0}
+body.v5-ui .history-table-row{
+  padding:10px 12px;
+  border:0;
+  border-top:1px solid #edf1f5;
+  border-radius:0;
+  min-height:58px;
+}
+body.v5-ui .history-table-row:first-child{border-top:0}
+body.v5-ui .history-cell{min-width:0;color:#4a5e79;font-size:9.4px}
+body.v5-ui .history-cell strong{
+  display:block;
+  overflow:hidden;
+  color:#243e62;
+  font-size:10px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui .history-cell small{
+  display:block;
+  margin-top:3px;
+  overflow:hidden;
+  color:var(--v5-subtle);
+  font-size:8px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui .history-value-cell{color:#294667;font-weight:800;white-space:nowrap}
+body.v5-ui .history-status-cell{display:flex;align-items:center}
+body.v5-ui .history-action-cell{display:flex;justify-content:flex-end;gap:5px}
+body.v5-ui .history-action-cell .btn{min-height:29px;padding:5px 8px;font-size:8.5px}
+body.v5-ui .history-table-shell .history-empty{padding:28px;border:0;border-radius:0}
+
+/* ---------- Reusable master data ---------- */
+body.v5-ui .master-workspace-summary{display:flex;gap:8px}
+body.v5-ui .master-workspace-summary>div{
+  min-width:104px;
+  padding:10px 13px;
+  border:1px solid var(--v5-border);
+  border-radius:12px;
+  background:var(--v5-surface);
+  box-shadow:var(--v5-shadow-sm);
+}
+body.v5-ui .master-workspace-summary small{display:block;color:var(--v5-muted);font-size:8.3px}
+body.v5-ui .master-workspace-summary strong{display:block;margin-top:2px;color:var(--v5-text);font-size:18px}
+body.v5-ui .master-management-panel{margin-bottom:14px}
+body.v5-ui .master-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:13px;
+}
+body.v5-ui .master-panel-head>div{display:flex;align-items:center;gap:10px;min-width:0}
+body.v5-ui .master-panel-icon{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  background:#eaf4ff;
+  color:#1875d7;
+  font-size:15px;
+  font-weight:900;
+}
+body.v5-ui .master-panel-icon.product-icon{background:var(--v5-warning-soft);color:#db7d1e}
+body.v5-ui .master-panel-head>.btn{min-height:36px;padding:7px 11px;font-size:9px}
+body.v5-ui .master-toolbar{
+  display:grid;
+  grid-template-columns:minmax(240px,1fr) auto;
+  gap:10px;
+  align-items:center;
+}
+body.v5-ui .master-search-box{
+  height:38px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:0 10px;
+}
+body.v5-ui .master-search-box>span{font-size:16px;color:#68809c}
+body.v5-ui .master-search-box input{
+  height:34px;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  font-size:10px;
+}
+body.v5-ui .master-result-summary{
+  height:38px;
+  min-width:76px;
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  border-radius:var(--v5-radius-sm);
+}
+body.v5-ui .master-result-summary span{font-size:13px;font-weight:900}
+body.v5-ui .master-result-summary small{font-size:8px}
+body.v5-ui .master-table-head,
+body.v5-ui .master-table-row{display:grid;gap:10px;align-items:center}
+body.v5-ui .customer-table-grid{grid-template-columns:1.05fr 1.15fr 1.15fr 1.5fr .85fr}
+body.v5-ui .product-table-grid{grid-template-columns:1.35fr .9fr 1fr 1fr 1.25fr .9fr}
+body.v5-ui .master-table-body{gap:0}
+body.v5-ui .master-table-row{
+  min-height:58px;
+  padding:10px 12px;
+  border:0;
+  border-top:1px solid #edf1f5;
+  border-radius:0;
+}
+body.v5-ui .master-table-row:first-child{border-top:0}
+body.v5-ui .master-cell{
+  min-width:0;
+  overflow:hidden;
+  color:#4d6079;
+  font-size:9.3px;
+  text-overflow:ellipsis;
+}
+body.v5-ui .master-cell strong{
+  display:block;
+  overflow:hidden;
+  color:#29415f;
+  font-size:9.9px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui .master-name-cell strong{color:#1769c8}
+body.v5-ui .master-cell small{
+  display:block;
+  margin-top:3px;
+  overflow:hidden;
+  color:var(--v5-subtle);
+  font-size:8px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui .master-price-cell{color:#294667;font-weight:800;white-space:nowrap}
+body.v5-ui .master-address-cell,
+body.v5-ui .master-note-cell{white-space:nowrap}
+body.v5-ui .master-action-cell{display:flex;justify-content:flex-end;gap:5px;overflow:visible}
+body.v5-ui .master-action-cell .btn{min-height:29px;padding:5px 8px;font-size:8.5px}
+body.v5-ui .master-table-shell .history-empty{padding:28px;border:0;border-radius:0}
+
 /* ---------- Management toolbars & tables ---------- */
 body.v5-ui .history-management-panel,
 body.v5-ui .master-management-panel{padding:15px}
@@ -818,6 +1021,11 @@ body.v5-ui .studio-stepper button.active{
 
 /* ---------- Responsive V5: application only ---------- */
 @media(max-width:1180px){
+  body.v5-ui .history-stats-app{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.v5-ui .history-table-head,
+  body.v5-ui .history-table-row{grid-template-columns:1fr 1.3fr .7fr 1fr .85fr 1.15fr}
+  body.v5-ui .customer-table-grid{grid-template-columns:1.05fr 1fr 1.15fr 1.25fr .85fr}
+  body.v5-ui .product-table-grid{grid-template-columns:1.2fr .8fr .9fr 1fr 1fr .9fr}
   body.v5-ui .dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
   body.v5-ui .dashboard-main-grid{grid-template-columns:minmax(0,1fr) 290px}
   body.v5-ui .shell.app-workspace{grid-template-columns:200px minmax(0,1fr)}
@@ -983,7 +1191,70 @@ body.v5-ui .master-section-card.master-section-highlight{
   transform:translateY(-1px);
 }
 
+@media(max-width:760px){
+  body.v5-ui .history-header-actions{width:100%}
+  body.v5-ui .history-header-actions .btn{flex:1}
+  body.v5-ui .history-stats-app{grid-template-columns:1fr 1fr}
+  body.v5-ui .history-toolbar{grid-template-columns:1fr 1fr}
+  body.v5-ui .history-result-summary{grid-column:1/-1;justify-self:start}
+  body.v5-ui .history-table-head,
+  body.v5-ui .master-table-head{display:none}
+  body.v5-ui .history-table-shell,
+  body.v5-ui .master-table-shell{border:0;border-radius:0;overflow:visible;background:transparent}
+  body.v5-ui .history-table-body,
+  body.v5-ui .master-table-body{gap:9px}
+  body.v5-ui .history-table-row,
+  body.v5-ui .master-table-row{
+    grid-template-columns:1fr auto;
+    gap:8px 12px;
+    padding:12px;
+    border:1px solid var(--v5-border);
+    border-radius:12px;
+    background:var(--v5-surface);
+  }
+  body.v5-ui .history-quote-cell,
+  body.v5-ui .master-name-cell{grid-column:1}
+  body.v5-ui .history-status-cell{grid-column:2;grid-row:1}
+  body.v5-ui .history-customer-cell,
+  body.v5-ui .history-date-cell,
+  body.v5-ui .history-value-cell,
+  body.v5-ui .master-company-cell,
+  body.v5-ui .master-contact-cell,
+  body.v5-ui .master-address-cell,
+  body.v5-ui .master-group-cell,
+  body.v5-ui .master-pack-cell,
+  body.v5-ui .master-price-cell,
+  body.v5-ui .master-note-cell{grid-column:1/-1}
+  body.v5-ui .history-date-cell:before{content:"Ngày: ";color:var(--v5-subtle)}
+  body.v5-ui .history-value-cell:before{content:"Giá trị: ";color:var(--v5-subtle);font-weight:500}
+  body.v5-ui .master-company-cell:before{content:"Công ty: ";color:var(--v5-subtle)}
+  body.v5-ui .master-contact-cell:before{content:"Liên hệ: ";color:var(--v5-subtle)}
+  body.v5-ui .master-address-cell:before{content:"Địa chỉ: ";color:var(--v5-subtle)}
+  body.v5-ui .master-group-cell:before{content:"Nhóm: ";color:var(--v5-subtle)}
+  body.v5-ui .master-pack-cell:before{content:"Quy cách / ĐVT: ";color:var(--v5-subtle)}
+  body.v5-ui .master-price-cell:before{content:"Đơn giá: ";color:var(--v5-subtle);font-weight:500}
+  body.v5-ui .master-note-cell:before{content:"Ghi chú: ";color:var(--v5-subtle)}
+  body.v5-ui .history-action-cell,
+  body.v5-ui .master-action-cell{
+    grid-column:1/-1;
+    justify-content:flex-start;
+    padding-top:6px;
+    border-top:1px solid #edf1f5;
+  }
+  body.v5-ui .master-panel-head{flex-direction:column;align-items:stretch}
+  body.v5-ui .master-panel-head>div{align-items:flex-start}
+  body.v5-ui .master-panel-head>.btn{width:100%}
+  body.v5-ui .master-workspace-summary{width:100%}
+  body.v5-ui .master-workspace-summary>div{flex:1}
+}
+
 @media(max-width:620px){
+  body.v5-ui .history-stats-app,
+  body.v5-ui .history-toolbar{grid-template-columns:1fr}
+  body.v5-ui .history-result-summary{grid-column:auto}
+  body.v5-ui .master-workspace-summary{flex-direction:column}
+  body.v5-ui .master-toolbar{grid-template-columns:1fr}
+  body.v5-ui .master-result-summary{justify-self:start}
   body.v5-ui .dashboard-hero{padding:19px}
   body.v5-ui .dashboard-hero h2{font-size:21px}
   body.v5-ui .dashboard-quick-grid{grid-template-columns:1fr 1fr}
