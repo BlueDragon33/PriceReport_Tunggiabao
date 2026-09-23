@@ -104,3 +104,41 @@ DOM tests verify:
 ### Next pass
 
 Pass 12B: add Data Library Excel/CSV import/export by reusing the existing XLSX/import parsing and normalization layers. Imports must preview/validate before persistence and must not introduce a second import engine.
+
+
+## Pass 12B1 — Shared Data Library import core
+
+### Goal
+
+Prepare Excel import for both Product Library and Customer Library without introducing a second parser architecture.
+
+### Corrections
+
+- Generalized header inference around one shared scoring engine.
+- Product and customer schemas now provide their own alias dictionaries to the same inference core.
+- Added customer spreadsheet inference for:
+  - customer name;
+  - company / organization;
+  - phone;
+  - email;
+  - address;
+  - contact person.
+- Added customer row parsing with:
+  - Vietnamese phone normalization;
+  - invalid-row reporting for rows without a reusable identity;
+  - duplicate detection by normalized phone first, otherwise name + company.
+- Product import now recognizes an optional currency column.
+- Full spreadsheet product parsing now preserves detected currency.
+- Corrected the duplicate-signature empty-value guard to match literal pipe separators.
+
+### Regression coverage
+
+- Vietnamese customer headers.
+- English customer headers.
+- +84/local phone duplicate detection.
+- invalid customer rows.
+- product currency import.
+
+### Gate before UI
+
+Run the full CI suite before adding Data Library import/export controls and preview.
