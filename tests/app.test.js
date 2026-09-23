@@ -96,6 +96,10 @@ test('template selection applies real document profile', () => {
 test('history save records one quotation and print preflight reaches print', () => {
   document.getElementById('saveQuoteToHistory').click();
   expect(document.getElementById('historyCount').textContent).toBe('1');
+  expect(document.getElementById('historyPendingCount').textContent).toBe('1');
+  expect(document.getElementById('historyResultCount').textContent).toBe('1');
+  expect(document.querySelectorAll('#quoteHistoryList .history-table-row').length).toBe(1);
+  expect(document.querySelectorAll('#quoteHistoryList .history-table-row .history-cell').length).toBe(6);
 
   document.querySelector('.print-action').click();
   expect(window.print).toHaveBeenCalled();
