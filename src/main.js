@@ -3963,6 +3963,16 @@ document.getElementById('newQuote').addEventListener('click', () => {
 });
 document.getElementById('quoteSearch').addEventListener('input', renderHistory);
 document.getElementById('quoteStatusFilter').addEventListener('change', renderHistory);
+document.getElementById('quoteCustomerFilter')?.addEventListener('change', renderHistory);
+document.getElementById('quoteDateFrom')?.addEventListener('change', renderHistory);
+document.getElementById('quoteDateTo')?.addEventListener('change', renderHistory);
+document.getElementById('quoteClearFilters')?.addEventListener('click', () => {
+  ['quoteSearch','quoteStatusFilter','quoteCustomerFilter','quoteDateFrom','quoteDateTo'].forEach((id) => {
+    const field = document.getElementById(id);
+    if (field) field.value = '';
+  });
+  renderHistory();
+});
 
 document.getElementById('saveCurrentCustomer').addEventListener('click', saveCurrentCustomerToLibrary);
 document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
@@ -4346,13 +4356,37 @@ function renderHistory() {
   const all = getHistory();
   const query = (document.getElementById('quoteSearch')?.value || '').trim().toLowerCase();
   const statusFilter = document.getElementById('quoteStatusFilter')?.value || '';
+  const customerFilterEl = document.getElementById('quoteCustomerFilter');
+  const previousCustomerFilter = customerFilterEl?.value || '';
+  const customerOptions = [...new Set(all.map(record => {
+    const data = record.data || {};
+    return String(data.customerCompany || data.customerName || '').trim();
+  }).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'vi'));
+  if (customerFilterEl) {
+    customerFilterEl.innerHTML = '<option value="">Tất cả khách hàng</option>';
+    customerOptions.forEach(value => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      customerFilterEl.appendChild(option);
+    });
+    customerFilterEl.value = customerOptions.includes(previousCustomerFilter) ? previousCustomerFilter : '';
+  }
+  const customerFilter = customerFilterEl?.value || '';
+  const dateFrom = document.getElementById('quoteDateFrom')?.value || '';
+  const dateTo = document.getElementById('quoteDateTo')?.value || '';
   const items = all.filter(record => {
     const data = record.data || {};
     const status = data.quoteStatus || record.status || 'draft';
+    const customer = String(data.customerCompany || data.customerName || '').trim();
+    const quoteDate = String(data.quoteDate || '').trim();
     const matchesQuery = !query || [data.quoteNo, data.customerName, data.customerCompany, data.customerPhone]
       .filter(Boolean).join(' ').toLowerCase().includes(query);
     const matchesStatus = !statusFilter || status === statusFilter;
-    return matchesQuery && matchesStatus;
+    const matchesCustomer = !customerFilter || customer === customerFilter;
+    const matchesFrom = !dateFrom || (quoteDate && quoteDate >= dateFrom);
+    const matchesTo = !dateTo || (quoteDate && quoteDate <= dateTo);
+    return matchesQuery && matchesStatus && matchesCustomer && matchesFrom && matchesTo;
   });
 
   document.getElementById('historyCount').textContent = String(all.length);
