@@ -3230,7 +3230,7 @@ async function parseExcelFile(file) {
   setSmartImportProgress('Đang đọc workbook và nhận diện cấu trúc...', 'working');
   const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer);
+  const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetNames = workbook.SheetNames || [];
   if (!sheetNames.length) throw new Error('Workbook không có sheet.');
 
@@ -4162,7 +4162,7 @@ function normalizeLibraryImportCandidate(mode, sheetName, rows) {
 async function readDataLibraryWorkbook(file, mode) {
   const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer);
+  const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetNames = workbook.SheetNames || [];
   if (!sheetNames.length) throw new Error('Workbook không có sheet dữ liệu.');
   const candidates = sheetNames.map(sheetName => {
@@ -4476,14 +4476,16 @@ document.getElementById('importProductLibraryExcel')?.addEventListener('click', 
   document.getElementById('productLibraryExcelInput')?.click();
 });
 document.getElementById('customerLibraryExcelInput')?.addEventListener('change', async (event) => {
-  const file = event.currentTarget.files?.[0];
+  const input = event.currentTarget;
+  const file = input.files?.[0];
   await openDataLibraryImport(file, 'customer', dataLibraryImportLastFocus);
-  event.currentTarget.value = '';
+  input.value = '';
 });
 document.getElementById('productLibraryExcelInput')?.addEventListener('change', async (event) => {
-  const file = event.currentTarget.files?.[0];
+  const input = event.currentTarget;
+  const file = input.files?.[0];
   await openDataLibraryImport(file, 'product', dataLibraryImportLastFocus);
-  event.currentTarget.value = '';
+  input.value = '';
 });
 document.getElementById('exportCustomerLibraryExcel')?.addEventListener('click', () => exportDataLibraryExcel('customer'));
 document.getElementById('exportCustomerLibraryCsv')?.addEventListener('click', () => exportDataLibraryCsv('customer'));
