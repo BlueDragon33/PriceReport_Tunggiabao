@@ -17,19 +17,22 @@ if (/V[1-4](?:\.|\b)/.test(css)) fail('V5 stylesheet must not carry legacy versi
 const mediaCount = (css.match(/@media/g) || []).length;
 if (mediaCount > 4) fail('V5 responsive layer has too many media-query blocks: ' + mediaCount);
 
-const scopedRuleCandidates = [...css.matchAll(/(^|})\s*([^@][^{]+)\{/gm)]
-  .map(match => match[2].trim())
-  .filter(Boolean)
-  .flatMap(group => group.split(',').map(value => value.trim()));
+const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+const selectorLines = withoutComments
+  .split('\n')
+  .map(line => line.trim())
+  .filter(line => line && !line.startsWith('@') && line.includes('{'))
+  .map(line => line.slice(0, line.indexOf('{')).trim())
+  .filter(selector => selector && !selector.includes(';'))
+  .flatMap(group => group.split(',').map(value => value.trim()).filter(Boolean));
 
-const unscoped = scopedRuleCandidates.filter(selector =>
-  selector &&
-  !selector.startsWith(':root') &&
+const unscoped = selectorLines.filter(selector =>
+  selector !== ':root' &&
   !selector.startsWith('body.v5-ui')
 );
 
 if (unscoped.length) {
-  fail('V5 application selectors must be explicitly scoped: ' + unscoped.slice(0, 6).join(' | '));
+  fail('V5 application selectors must be explicitly scoped: ' + unscoped.slice(0, 8).join(' | '));
 }
 
 if (!process.exitCode) {
