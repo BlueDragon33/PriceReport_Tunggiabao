@@ -79,7 +79,24 @@
           <h2 id="paneTitle">THÔNG TIN CHUNG</h2>
           <p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p>
         </div>
-        <div class="studio-stepper" aria-label="Các bước soạn báo giá">
+        <div class="studio-block-browser" aria-label="Khối nội dung báo giá">
+          <div class="studio-block-search">
+            <span aria-hidden="true">⌕</span>
+            <input id="studioBlockSearch" type="search" placeholder="Tìm nội dung…" autocomplete="off">
+          </div>
+          <div class="studio-block-grid" id="studioBlockGrid">
+            <button type="button" data-studio-block="general" data-block-key="general"><span>▤</span><b>Thông tin chung</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="customer" data-block-key="customer"><span>●</span><b>Khách hàng</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="products" data-block-key="products"><span>◆</span><b>Sản phẩm / Dịch vụ</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="payment" data-block-key="payment"><span>₫</span><b>Thanh toán</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="terms" data-block-key="terms"><span>≡</span><b>Điều khoản</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="terms" data-block-key="signature"><span>✎</span><b>Chữ ký</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="terms" data-block-key="custom"><span>¶</span><b>Văn bản tùy chỉnh</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="payment" data-block-key="bank"><span>▦</span><b>Thông tin ngân hàng</b><small data-block-status>Chưa kiểm tra</small></button>
+            <button type="button" data-studio-block="design" data-block-key="design"><span>◉</span><b>Thiết kế</b><small data-block-status>Sẵn sàng</small></button>
+          </div>
+        </div>
+        <div class="studio-stepper legacy-workflow-hooks" hidden aria-hidden="true">
           <button type="button" data-studio-step="general"><b>1</b><span>Thông tin</span></button>
           <button type="button" data-studio-step="products"><b>2</b><span>Sản phẩm</span></button>
           <button type="button" data-studio-step="payment"><b>3</b><span>Thanh toán</span></button>
@@ -96,7 +113,7 @@
             <button class="btn" id="studioPreviewQuote" type="button">Xem A4</button>
           </div>
           <span class="studio-autosave-status" id="studioAutosaveStatus" role="status" aria-live="polite">✓ Đã lưu cục bộ</span>
-          <div class="studio-flow-controls">
+          <div class="studio-flow-controls legacy-workflow-hooks" hidden aria-hidden="true">
             <button class="btn studio-flow-button" id="studioPrevStep" type="button" aria-label="Bước trước">←</button>
             <span class="studio-workflow-position" id="studioWorkflowPosition">Bước 1/6</span>
             <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
