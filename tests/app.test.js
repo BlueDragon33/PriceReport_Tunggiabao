@@ -240,6 +240,93 @@ test('V6 product grid adds a blank row without polluting A4 until content is ent
   expect(document.querySelector('#qBody tr:last-child .col-name').textContent).toBe('Sản phẩm kiểm thử UX');
 });
 
+
+test('V6 Smart Paste imports a clear four-column Excel range without a mapping detour', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  document.getElementById('addProductGrid').click();
+  const index = document.querySelectorAll('.product-grid-row').length - 1;
+  const target = document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="name"]');
+  const paste = new Event('paste', { bubbles: true, cancelable: true });
+  Object.defineProperty(paste, 'clipboardData', {
+    value: { getData: () => 'Trứng test paste\tHộp\t12\t28.000' }
+  });
+  target.dispatchEvent(paste);
+
+  expect(document.getElementById('productMappingReview').hidden).toBe(true);
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="name"]').value).toBe('Trứng test paste');
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="unit"]').value).toBe('Hộp');
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="qty"]').value).toBe('12');
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="price"]').value).toBe('28000');
+});
+
+test('V6 uncertain paste opens mapping review and applies user-corrected columns', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  document.getElementById('addProductGrid').click();
+  const index = document.querySelectorAll('.product-grid-row').length - 1;
+  const target = document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="name"]');
+  const paste = new Event('paste', { bubbles: true, cancelable: true });
+  Object.defineProperty(paste, 'clipboardData', {
+    value: { getData: () => 'SP Mapping\tNhóm M\tGói 10\tHộp\tGhi chú M' }
+  });
+  target.dispatchEvent(paste);
+
+  const review = document.getElementById('productMappingReview');
+  expect(review.hidden).toBe(false);
+  const choose = (column, value) => {
+    const select = document.querySelector('[data-mapping-column="' + column + '"]');
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  choose(0, 'name');
+  choose(1, 'group');
+  choose(2, 'pack');
+  choose(3, 'unit');
+  choose(4, 'note');
+  document.getElementById('applyMappedImport').click();
+
+  expect(review.hidden).toBe(true);
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="name"]').value).toBe('SP Mapping');
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="group"]').value).toBe('Nhóm M');
+  expect(document.querySelector('[data-product-grid-index="' + index + '"][data-product-grid-key="unit"]').value).toBe('Hộp');
+});
+
+test('V6 bulk edit changes selected rows and is reversible with Studio undo', () => {
+  document.querySelector('[data-studio-block="products"]').click();
+  const group0 = document.querySelector('[data-product-grid-index="0"][data-product-grid-key="group"]').value;
+  const group1 = document.querySelector('[data-product-grid-index="1"][data-product-grid-key="group"]').value;
+  const checks = document.querySelectorAll('.product-grid-select');
+  checks[0].click();
+  checks[1].click();
+  expect(document.getElementById('productBulkBar').hidden).toBe(false);
+
+  const action = document.getElementById('productBulkAction');
+  action.value = 'group';
+  action.dispatchEvent(new Event('change', { bubbles: true }));
+  const value = document.getElementById('productBulkValue');
+  value.value = 'NHÓM BULK TEST';
+  document.getElementById('applyProductBulk').click();
+
+  expect(document.querySelector('[data-product-grid-index="0"][data-product-grid-key="group"]').value).toBe('NHÓM BULK TEST');
+  expect(document.querySelector('[data-product-grid-index="1"][data-product-grid-key="group"]').value).toBe('NHÓM BULK TEST');
+
+  document.getElementById('studioUndo').click();
+  expect(document.querySelector('[data-product-grid-index="0"][data-product-grid-key="group"]').value).toBe(group0);
+  expect(document.querySelector('[data-product-grid-index="1"][data-product-grid-key="group"]').value).toBe(group1);
+});
+
+test('V6 bound form editing participates in Studio undo history', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const title = document.getElementById('quoteTitle');
+  const before = title.value;
+  title.focus();
+  title.value = 'BẢNG BÁO GIÁ UNDO TEST';
+  title.dispatchEvent(new Event('input', { bubbles: true }));
+  title.blur();
+  expect(title.value).toBe('BẢNG BÁO GIÁ UNDO TEST');
+  document.getElementById('studioUndo').click();
+  expect(document.getElementById('quoteTitle').value).toBe(before);
+});
+
 test('V6 meaningful unnamed product is inline-flagged and blocks print preflight', () => {
   document.querySelector('[data-studio-block="products"]').click();
   document.getElementById('addProductGrid').click();
