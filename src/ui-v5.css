@@ -707,8 +707,33 @@ body.v5-ui .studio-stepper button.active{
   body.v5-ui .system-workspace{padding:18px 14px 30px}
 }
 
+body.v5-ui.mobile-more-open:after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:150;
+  background:rgba(12,31,58,.24);
+  pointer-events:none;
+}
+
+body.v5-ui .master-section-card{scroll-margin-top:18px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+body.v5-ui .master-section-card.master-section-highlight{
+  border-color:#79aae5;
+  box-shadow:0 0 0 3px rgba(36,119,232,.09),var(--v5-shadow-md);
+  transform:translateY(-1px);
+}
+
 @media(max-width:620px){
   body.v5-ui .mobile-more-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.v5-ui .shell.app-workspace .nav button[data-tab="master"]{min-width:88px}
+  body.v5-ui .shell.app-workspace .nav button[data-tab="dashboard"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="general"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="history"],
+  body.v5-ui .shell.app-workspace .nav button[data-tab="master"],
+  body.v5-ui .shell.app-workspace .mobile-more-toggle{
+    flex:1;
+    min-width:62px;
+  }
   body.v5-ui .dashboard-topbar,
   body.v5-ui .history-workspace-header,
   body.v5-ui .master-workspace-header,
