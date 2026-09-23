@@ -228,10 +228,10 @@
               </div>
               <button class="btn" type="button" data-open-master="customers">Chọn từ danh bạ</button>
             </div>
-            <div class="row required"><label>Tên khách hàng</label><input id="quickCustomerName" data-bind="customerName"></div>
-            <div class="row"><label>Công ty</label><input id="quickCustomerCompany" data-bind="customerCompany" placeholder="Nhập tên công ty (nếu có)"></div>
+            <div class="row required"><label>Tên khách hàng</label><input id="quickCustomerName" data-bind="customerName" data-customer-autocomplete="name" list="customerNameSuggestions" autocomplete="off"></div>
+            <div class="row"><label>Công ty</label><input id="quickCustomerCompany" data-bind="customerCompany" data-customer-autocomplete="company" list="customerCompanySuggestions" autocomplete="off" placeholder="Nhập tên công ty (nếu có)"></div>
             <div class="row"><label>Địa chỉ</label><input id="quickCustomerAddress" data-bind="customerAddress" placeholder="Nhập địa chỉ"></div>
-            <div class="row"><label>SĐT</label><input id="quickCustomerPhone" data-bind="customerPhone" placeholder="Nhập số điện thoại"></div>
+            <div class="row"><label>SĐT</label><input id="quickCustomerPhone" data-bind="customerPhone" data-customer-autocomplete="phone" list="customerPhoneSuggestions" autocomplete="off" placeholder="Nhập số điện thoại"></div>
             <div class="row"><label>Email</label><input id="quickCustomerEmail" data-bind="customerEmail" type="email" placeholder="Nhập email"></div>
             <div class="row"><label>Người liên hệ</label><input id="quickCustomerContact" data-bind="customerContact" placeholder="Nhập người liên hệ"></div>
             <label class="check quick-customer-print"><input id="quickShowCustomer" data-bind="showCustomer" type="checkbox"> Hiện khối thông tin khách hàng trên bản in</label>
@@ -527,11 +527,11 @@
         <div class="pane studio-pane studio-pane-customer" id="pane-customer">
           <div class="card">
             <h3>Thông tin khách hàng</h3>
-            <div class="row"><label>Tên khách hàng</label><input id="customerName" data-bind="customerName"></div>
-            <div class="row"><label>Công ty / đơn vị</label><input id="customerCompany" data-bind="customerCompany"></div>
+            <div class="row"><label>Tên khách hàng</label><input id="customerName" data-bind="customerName" data-customer-autocomplete="name" list="customerNameSuggestions" autocomplete="off"></div>
+            <div class="row"><label>Công ty / đơn vị</label><input id="customerCompany" data-bind="customerCompany" data-customer-autocomplete="company" list="customerCompanySuggestions" autocomplete="off"></div>
             <div class="row"><label>Địa chỉ</label><input id="customerAddress" data-bind="customerAddress"></div>
             <div class="grid2">
-              <div class="row"><label>SĐT</label><input id="customerPhone" data-bind="customerPhone"></div>
+              <div class="row"><label>SĐT</label><input id="customerPhone" data-bind="customerPhone" data-customer-autocomplete="phone" list="customerPhoneSuggestions" autocomplete="off"></div>
               <div class="row"><label>Email</label><input id="customerEmail" data-bind="customerEmail" type="email"></div>
             </div>
             <div class="row"><label>Người liên hệ</label><input id="customerContact" data-bind="customerContact"></div>
