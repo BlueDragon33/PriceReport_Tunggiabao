@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v33-studio-context")) fail('Service-worker cache version was not upgraded for V4.5 quotation studio context');
+if (!sw.includes("pricereport-shell-v34-global-search")) fail('Service-worker cache version was not upgraded for V4.6 global search');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -282,3 +282,8 @@ if (!html.includes('id="studioBackHome"') || !html.includes('id="studioQuoteLabe
 if (!js.includes('function syncStudioContext(tab')) fail('V4.5 studio context synchronizer is missing');
 if (!js.includes("document.querySelectorAll('[data-studio-step]')")) fail('V4.5 studio step navigation is not wired');
 if (!css.includes('.studio-context-row') || !css.includes('.studio-stepper button.active')) fail('V4.5 quotation studio context styles are missing');
+
+if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-search-wrap')) fail('V4.6 dashboard global-search result surface is missing');
+if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
+if (!js.includes("type: 'quote'") || !js.includes("type: 'customer'") || !js.includes("type: 'product'")) fail('V4.6 global search must cover quotes, customers and products');
+if (!css.includes('.dashboard-search-result') || !css.includes('.dashboard-search-results')) fail('V4.6 global-search styles are missing');
