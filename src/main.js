@@ -408,7 +408,27 @@ function stateForStorage() {
   return data;
 }
 
-const save = () => safeStore(STORAGE, JSON.stringify(stateForStorage()));
+let autosaveStateTimer = 0;
+function setAutosaveState(mode, label) {
+  const el = document.getElementById('studioAutosaveState');
+  if (!el) return;
+  el.classList.remove('saving','saved','error');
+  if (mode) el.classList.add(mode);
+  el.innerHTML = '<span>●</span> ' + label;
+}
+function save() {
+  setAutosaveState('saving', 'Đang lưu…');
+  const ok = safeStore(STORAGE, JSON.stringify(stateForStorage()));
+  window.clearTimeout(autosaveStateTimer);
+  if (ok) {
+    const stamp = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(new Date());
+    setAutosaveState('saved', 'Đã lưu lúc ' + stamp);
+    autosaveStateTimer = window.setTimeout(() => setAutosaveState('saved', 'Đã tự động lưu'), 2400);
+  } else {
+    setAutosaveState('error', 'Không thể lưu');
+  }
+  return ok;
+}
 
 function captureStorageSnapshot(keys) {
   const snapshot = {};
@@ -625,6 +645,11 @@ function openTab(tab) {
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
   const appWorkspace = ['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab);
+  shell?.classList.toggle('data-entry-mode', tab === 'products');
+  document.querySelectorAll('[data-studio-block]').forEach((button) => {
+    const activeBlock = button.dataset.studioBlock === (STUDIO_STAGE_BY_TAB[tab] || tab);
+    button.classList.toggle('active', activeBlock);
+  });
 
   document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
     const active = el.dataset.tab === tab;
@@ -1433,8 +1458,9 @@ function productHasDraftContent(product) {
 
 function focusProductName(index) {
   requestAnimationFrame(() => {
-    const cards = document.querySelectorAll('#productEditor .product-card');
-    const target = cards[index]?.querySelector('[data-product-key="name"]');
+    const gridTarget = document.querySelector('#productDataGridBody [data-product-grid-index="' + index + '"][data-product-grid-key="name"]');
+    const legacyTarget = document.querySelectorAll('#productEditor .product-card')[index]?.querySelector('[data-product-key="name"]');
+    const target = gridTarget || legacyTarget;
     target?.focus();
     target?.select?.();
   });
@@ -1595,6 +1621,7 @@ function renderEditorProducts() {
   if (collapseButton) {
     collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
   }
+  renderProductDataGrid();
 }
 
 function renderPreviewProducts() {
@@ -2029,7 +2056,10 @@ function render() {
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
   updateDocumentHealth();
-  syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
+  const activeStudioTab = document.querySelector('.pane.active')?.id?.replace('pane-', '') || '';
+  syncStudioContext(activeStudioTab);
+  syncStudioV6Context(activeStudioTab);
+  renderStudioCheckPanel();
   syncLayoutEditModeUI();
   requestAnimationFrame(() => {
     updatePageEstimate();
@@ -2742,11 +2772,638 @@ function enhanceCollapsibleCards() {
   });
 }
 
+
+const PRODUCT_GRID_KEYS = ['name','group','pack','unit','qty','price','note'];
+const PRODUCT_HEADER_ALIASES = {
+  name: ['ten san pham','ten sp','ten hang','san pham','hang hoa','mat hang','product','item'],
+  group: ['nhom hang','nhom','group','category','loai'],
+  pack: ['quy cach','dong goi','packaging','package','spec'],
+  unit: ['dvt','don vi','don vi tinh','unit'],
+  qty: ['sl','so luong','quantity','qty'],
+  price: ['gia','don gia','price','unit price'],
+  note: ['ghi chu','note','notes','remark']
+};
+let quoteUndoStack = [];
+let quoteRedoStack = [];
+let gridEditBaseline = '';
+let productGridRenderQueued = false;
+
+function quoteSnapshotString() {
+  const snapshot = stateForStorage();
+  return JSON.stringify(snapshot);
+}
+function pushQuoteUndoSnapshot(snapshot = quoteSnapshotString()) {
+  if (!snapshot) return;
+  if (quoteUndoStack[quoteUndoStack.length - 1] === snapshot) return;
+  quoteUndoStack.push(snapshot);
+  if (quoteUndoStack.length > 40) quoteUndoStack.shift();
+  quoteRedoStack = [];
+  syncUndoRedoButtons();
+}
+function restoreQuoteSnapshot(snapshot) {
+  const keepLogo = state.logo;
+  state = merge(JSON.parse(snapshot));
+  state.logo = keepLogo;
+  save();
+  syncInputs();
+  resetCollapsedProductsForState();
+  renderEditorProducts();
+  render();
+}
+function undoQuoteChange() {
+  if (!quoteUndoStack.length) return;
+  const current = quoteSnapshotString();
+  const snapshot = quoteUndoStack.pop();
+  quoteRedoStack.push(current);
+  restoreQuoteSnapshot(snapshot);
+  syncUndoRedoButtons();
+  toast('Đã hoàn tác');
+}
+function redoQuoteChange() {
+  if (!quoteRedoStack.length) return;
+  const current = quoteSnapshotString();
+  const snapshot = quoteRedoStack.pop();
+  quoteUndoStack.push(current);
+  restoreQuoteSnapshot(snapshot);
+  syncUndoRedoButtons();
+  toast('Đã làm lại');
+}
+function syncUndoRedoButtons() {
+  const undo = document.getElementById('studioUndo');
+  const redo = document.getElementById('studioRedo');
+  if (undo) undo.disabled = !quoteUndoStack.length;
+  if (redo) redo.disabled = !quoteRedoStack.length;
+}
+
+function normalizeGridHeader(value) {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function headerField(value) {
+  const normalized = normalizeGridHeader(value);
+  if (!normalized) return '';
+  for (const [key, aliases] of Object.entries(PRODUCT_HEADER_ALIASES)) {
+    if (aliases.includes(normalized)) return key;
+    if (aliases.some(alias => normalized === alias || normalized.startsWith(alias + ' '))) return key;
+  }
+  return '';
+}
+function normalizeGridNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  let raw = String(value ?? '').trim();
+  if (!raw) return 0;
+  raw = raw.replace(/\s+/g, '');
+  const sign = raw.startsWith('-') ? '-' : '';
+  raw = raw.replace(/^[+-]/, '');
+  if (/^\d{1,3}([.,]\d{3})+$/.test(raw)) raw = raw.replace(/[.,]/g, '');
+  else if (raw.includes(',') && raw.includes('.')) {
+    const decimalIsComma = raw.lastIndexOf(',') > raw.lastIndexOf('.');
+    raw = decimalIsComma
+      ? raw.replace(/\./g, '').replace(',', '.')
+      : raw.replace(/,/g, '');
+  } else if (raw.includes(',')) {
+    const pieces = raw.split(',');
+    raw = pieces.length === 2 && pieces[1].length !== 3 ? pieces[0] + '.' + pieces[1] : pieces.join('');
+  } else if ((raw.match(/\./g) || []).length > 1 || /^\d{1,3}(\.\d{3})+$/.test(raw)) {
+    raw = raw.replace(/\./g, '');
+  }
+  const parsed = Number(sign + raw.replace(/[^\d.]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function blankProduct() {
+  return { group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' };
+}
+function productMeaningful(product) {
+  return Boolean(
+    String(product?.name || '').trim() ||
+    String(product?.group || '').trim() ||
+    String(product?.pack || '').trim() ||
+    String(product?.unit || '').trim() ||
+    String(product?.note || '').trim() ||
+    Number(product?.price || 0) !== 0 ||
+    Number(product?.qty ?? 1) !== 1
+  );
+}
+function ensureProductDatalists() {
+  let holder = document.getElementById('productGridDatalists');
+  if (!holder) {
+    holder = document.createElement('div');
+    holder.id = 'productGridDatalists';
+    holder.hidden = true;
+    holder.innerHTML = '<datalist id="productNameDatalist"></datalist><datalist id="productGroupDatalist"></datalist><datalist id="productUnitDatalist"></datalist>';
+    document.body.appendChild(holder);
+  }
+  const catalog = getProductCatalog();
+  const fill = (id, values) => {
+    const list = document.getElementById(id);
+    if (!list) return;
+    list.innerHTML = '';
+    [...new Set(values.filter(Boolean).map(value => String(value).trim()).filter(Boolean))].slice(0, 500).forEach(value => {
+      const option = document.createElement('option');
+      option.value = value;
+      list.appendChild(option);
+    });
+  };
+  fill('productNameDatalist', catalog.map(item => item.name));
+  fill('productGroupDatalist', catalog.map(item => item.group));
+  fill('productUnitDatalist', catalog.map(item => item.unit));
+}
+function fillProductFromCatalog(product) {
+  const name = String(product?.name || '').trim().toLowerCase();
+  if (!name) return false;
+  const match = getProductCatalog().find(item => String(item?.name || '').trim().toLowerCase() === name);
+  if (!match) return false;
+  if (!String(product.group || '').trim()) product.group = match.group || '';
+  if (!String(product.pack || '').trim()) product.pack = match.pack || '';
+  if (!String(product.unit || '').trim()) product.unit = match.unit || '';
+  if (!Number(product.price || 0)) product.price = normalizeGridNumber(match.price);
+  return true;
+}
+function productGridValidity(product, key) {
+  if (key === 'name' && productMeaningful(product) && !String(product.name || '').trim()) return 'Thiếu tên sản phẩm';
+  if (key === 'qty' && Number(product.qty) < 0) return 'Số lượng không được âm';
+  if (key === 'price' && Number(product.price) < 0) return 'Đơn giá không được âm';
+  return '';
+}
+function scheduleProductGridRender() {
+  if (productGridRenderQueued) return;
+  productGridRenderQueued = true;
+  requestAnimationFrame(() => {
+    productGridRenderQueued = false;
+    renderProductDataGrid();
+  });
+}
+function renderProductDataGrid() {
+  const body = document.getElementById('productDataGridBody');
+  const empty = document.getElementById('productGridEmpty');
+  if (!body) return;
+  ensureProductDatalists();
+  body.innerHTML = '';
+  const products = Array.isArray(state.products) ? state.products : [];
+  if (empty) empty.hidden = products.some(productMeaningful);
+
+  products.forEach((product, index) => {
+    const row = document.createElement('div');
+    row.className = 'product-grid-row';
+    row.setAttribute('role', 'row');
+
+    const indexCell = document.createElement('div');
+    indexCell.className = 'product-grid-index';
+    indexCell.textContent = String(index + 1);
+    row.appendChild(indexCell);
+
+    const definitions = [
+      ['name','text'],['group','text'],['pack','text'],['unit','text'],['qty','number'],['price','number']
+    ];
+    definitions.forEach(([key, type]) => {
+      const cell = document.createElement('div');
+      cell.className = 'product-grid-cell';
+      const input = document.createElement('input');
+      input.type = type;
+      if (type === 'number') {
+        input.step = key === 'price' ? '1000' : '1';
+        input.inputMode = 'decimal';
+      }
+      input.value = product[key] == null ? '' : product[key];
+      input.dataset.productGridIndex = String(index);
+      input.dataset.productGridKey = key;
+      input.setAttribute('aria-label', (key === 'name' ? 'Tên sản phẩm' : key) + ' dòng ' + (index + 1));
+      if (key === 'name') input.setAttribute('list', 'productNameDatalist');
+      if (key === 'group') input.setAttribute('list', 'productGroupDatalist');
+      if (key === 'unit') input.setAttribute('list', 'productUnitDatalist');
+      const validity = productGridValidity(product, key);
+      if (validity) {
+        cell.classList.add('invalid');
+        input.setAttribute('aria-invalid', 'true');
+        input.title = validity;
+      }
+      input.addEventListener('focus', () => { gridEditBaseline = quoteSnapshotString(); });
+      input.addEventListener('input', () => {
+        if (key === 'qty' || key === 'price') product[key] = normalizeGridNumber(input.value);
+        else product[key] = input.value;
+        if (key === 'name') fillProductFromCatalog(product);
+        save();
+        renderPreviewProducts();
+        renderTotals();
+        updateDocumentHealth();
+        renderStudioCheckPanel();
+        syncStudioV6Context('products');
+        if (key === 'name') scheduleProductGridRender();
+      });
+      input.addEventListener('blur', () => {
+        if (gridEditBaseline && gridEditBaseline !== quoteSnapshotString()) pushQuoteUndoSnapshot(gridEditBaseline);
+        gridEditBaseline = '';
+      });
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          if (index === state.products.length - 1) {
+            pushQuoteUndoSnapshot();
+            state.products.push(blankProduct());
+            save();
+            renderEditorProducts();
+            focusProductName(index + 1);
+          } else {
+            focusProductName(index + 1);
+          }
+        }
+      });
+      cell.appendChild(input);
+      row.appendChild(cell);
+    });
+
+    const amount = document.createElement('div');
+    amount.className = 'product-grid-amount';
+    amount.textContent = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
+    row.appendChild(amount);
+
+    const noteCell = document.createElement('div');
+    noteCell.className = 'product-grid-cell';
+    const note = document.createElement('input');
+    note.value = product.note || '';
+    note.dataset.productGridIndex = String(index);
+    note.dataset.productGridKey = 'note';
+    note.setAttribute('aria-label', 'Ghi chú dòng ' + (index + 1));
+    note.addEventListener('focus', () => { gridEditBaseline = quoteSnapshotString(); });
+    note.addEventListener('input', () => {
+      product.note = note.value;
+      save(); renderPreviewProducts(); updateDocumentHealth(); renderStudioCheckPanel();
+    });
+    note.addEventListener('blur', () => {
+      if (gridEditBaseline && gridEditBaseline !== quoteSnapshotString()) pushQuoteUndoSnapshot(gridEditBaseline);
+      gridEditBaseline = '';
+    });
+    noteCell.appendChild(note);
+    row.appendChild(noteCell);
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'product-grid-delete';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', 'Xóa dòng ' + (index + 1));
+    remove.addEventListener('click', () => {
+      if (productMeaningful(product) && !confirm('Xóa dòng sản phẩm này?')) return;
+      pushQuoteUndoSnapshot();
+      state.products.splice(index, 1);
+      if (!state.products.length) state.products.push(blankProduct());
+      save(); renderEditorProducts(); render();
+    });
+    row.appendChild(remove);
+    body.appendChild(row);
+  });
+}
+
+function guessProductColumnMap(rows) {
+  if (!rows.length) return { start: 0, map: [] };
+  const first = rows[0].map(headerField);
+  const recognized = first.filter(Boolean).length;
+  if (recognized >= 2) return { start: 1, map: first };
+  const width = Math.max(...rows.map(row => row.length));
+  const sampleFirst = rows.slice(0, 5).map(row => String(row[0] ?? '').trim());
+  const looksLikeStt = sampleFirst.filter(Boolean).length >= 2 && sampleFirst.filter(v => /^\d+$/.test(v)).length === sampleFirst.filter(Boolean).length;
+  if (width >= 8 && looksLikeStt) return { start: 0, map: ['', 'name','group','pack','unit','qty','price','note'] };
+  if (width >= 7) return { start: 0, map: ['name','group','pack','unit','qty','price','note'] };
+  if (width === 6) return { start: 0, map: ['name','pack','unit','qty','price','note'] };
+  if (width === 5) return { start: 0, map: ['name','pack','unit','qty','price'] };
+  if (width === 4) return { start: 0, map: ['name','unit','qty','price'] };
+  if (width === 3) return { start: 0, map: ['name','qty','price'] };
+  if (width === 2) return { start: 0, map: ['name','unit'] };
+  return { start: 0, map: ['name'] };
+}
+function rowsToProducts(rows) {
+  const cleanRows = rows.map(row => Array.from(row || []).map(value => value ?? ''))
+    .filter(row => row.some(value => String(value).trim()));
+  const { start, map } = guessProductColumnMap(cleanRows);
+  const products = [];
+  cleanRows.slice(start).forEach(row => {
+    const product = blankProduct();
+    map.forEach((key, column) => {
+      if (!key) return;
+      const value = row[column];
+      if (key === 'qty' || key === 'price') product[key] = normalizeGridNumber(value);
+      else product[key] = String(value ?? '').trim();
+    });
+    if (productMeaningful(product)) products.push(product);
+  });
+  return products;
+}
+function duplicateProductCount(products) {
+  const seen = new Set();
+  let duplicates = 0;
+  products.forEach(product => {
+    const key = normalizeGridHeader(product.name);
+    if (!key) return;
+    if (seen.has(key)) duplicates += 1;
+    else seen.add(key);
+  });
+  return duplicates;
+}
+function applyImportedProducts(products, { startIndex = null, source = 'dữ liệu' } = {}) {
+  if (!products.length) {
+    setProductImportSummary('Không tìm thấy dòng sản phẩm hợp lệ.', 'warn');
+    return 0;
+  }
+  pushQuoteUndoSnapshot();
+  const target = Array.isArray(state.products) ? state.products.slice() : [];
+  const start = Number.isInteger(startIndex) ? startIndex : (target.length === 1 && !productMeaningful(target[0]) ? 0 : target.length);
+  target.splice(start, products.length, ...products);
+  state.products = target.length ? target : [blankProduct()];
+  save();
+  resetCollapsedProductsForState();
+  renderEditorProducts();
+  render();
+  const duplicates = duplicateProductCount(state.products);
+  setProductImportSummary(
+    'Đã nhập ' + products.length + ' dòng từ ' + source +
+    (duplicates ? ' · Phát hiện ' + duplicates + ' sản phẩm có thể trùng, dữ liệu vẫn được giữ nguyên.' : ''),
+    duplicates ? 'warn' : 'ok'
+  );
+  return products.length;
+}
+function setProductImportSummary(message, tone = '') {
+  const el = document.getElementById('productImportSummary');
+  if (!el) return;
+  el.textContent = message;
+  el.dataset.tone = tone;
+}
+function parseClipboardTable(text) {
+  return String(text || '').replace(/\r/g, '').split('\n')
+    .filter(line => line.trim())
+    .map(line => line.split('\t'));
+}
+async function importProductWorkbook(file) {
+  if (!file) return;
+  setProductImportSummary('Đang đọc ' + file.name + '…');
+  try {
+    const XLSX = await import('xlsx');
+    const bytes = await file.arrayBuffer();
+    const workbook = XLSX.read(bytes, { type: 'array', cellDates: true });
+    if (!workbook.SheetNames.length) throw new Error('Workbook không có sheet.');
+    let sheetName = workbook.SheetNames[0];
+    if (workbook.SheetNames.length > 1) {
+      const requested = window.prompt(
+        'File có nhiều sheet. Nhập tên sheet cần lấy:\n' + workbook.SheetNames.join(' · '),
+        sheetName
+      );
+      if (requested === null) return;
+      if (workbook.SheetNames.includes(requested)) sheetName = requested;
+    }
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: false });
+    const products = rowsToProducts(rows);
+    applyImportedProducts(products, { source: file.name + ' / ' + sheetName });
+  } catch (error) {
+    console.error('Product Excel import failed:', error);
+    setProductImportSummary('Không thể đọc file Excel. File không bị áp dụng vào báo giá.', 'error');
+  }
+}
+
+function syncStudioV6Context(tab = '') {
+  setText('studioV6QuoteName', String(state.quoteTitle || '').trim() || 'Báo giá mới');
+  setText('studioV6QuoteNo', String(state.quoteNo || '').trim() || 'Chưa có mã');
+  const stage = STUDIO_STAGE_BY_TAB[tab] || tab;
+  document.querySelectorAll('[data-studio-block]').forEach(button => button.classList.toggle('active', button.dataset.studioBlock === stage));
+  syncUndoRedoButtons();
+}
+function studioFieldTarget(message) {
+  if (/tên công ty/i.test(message)) return ['general','companyName'];
+  if (/tiêu đề báo giá/i.test(message)) return ['general','quoteTitle'];
+  if (/Kính gửi/i.test(message)) return ['general','recipientLine'];
+  if (/email khách hàng/i.test(message)) return ['customer','quickCustomerEmail'];
+  if (/email công ty/i.test(message)) return ['general','companyEmail'];
+  if (/sản phẩm|dòng sản phẩm|đơn giá|số lượng/i.test(message)) return ['products',''];
+  if (/VAT|tổng cộng|ngân hàng|chuyển khoản/i.test(message)) return ['payment',''];
+  if (/điều khoản|chữ ký/i.test(message)) return ['terms',''];
+  if (/logo/i.test(message)) return ['design',''];
+  return ['general',''];
+}
+function focusValidationIssue(message) {
+  const rowMatch = String(message).match(/(?:Dòng sản phẩm|Sản phẩm).*?(\d+)/i);
+  openTab(/sản phẩm|dòng sản phẩm|đơn giá|số lượng/i.test(message) ? 'products' : studioFieldTarget(message)[0]);
+  requestAnimationFrame(() => {
+    if (rowMatch) {
+      const target = document.querySelector('[data-product-grid-index="' + (Number(rowMatch[1]) - 1) + '"][data-product-grid-key="name"]');
+      target?.focus();
+      target?.scrollIntoView({ block: 'center', inline: 'center' });
+      return;
+    }
+    const id = studioFieldTarget(message)[1];
+    if (id) {
+      const target = document.getElementById(id);
+      target?.focus();
+      target?.scrollIntoView({ block: 'center' });
+    }
+  });
+}
+function renderStudioCheckPanel() {
+  const list = document.getElementById('studioCheckList');
+  const summary = document.getElementById('studioCheckSummary');
+  if (!list || !summary) return;
+  const result = validateQuote();
+  list.innerHTML = '';
+  if (!result.errors.length && !result.warnings.length) {
+    summary.textContent = '✓ Sẵn sàng · Không phát hiện lỗi nghiệp vụ.';
+    summary.dataset.tone = 'ok';
+    return;
+  }
+  summary.textContent = result.errors.length + ' lỗi · ' + result.warnings.length + ' cảnh báo';
+  summary.dataset.tone = result.errors.length ? 'error' : 'warn';
+  [...result.errors.map(message => ['error',message]), ...result.warnings.map(message => ['warn',message])].forEach(([tone,message]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'studio-check-item ' + tone;
+    button.innerHTML = '<span>' + (tone === 'error' ? '✕' : '⚠') + '</span><span><b>' + message + '</b><small>Bấm để tới vị trí cần kiểm tra</small></span>';
+    button.addEventListener('click', () => focusValidationIssue(message));
+    list.appendChild(button);
+  });
+}
+function showInspectorTab(tab) {
+  const panel = document.getElementById('designPanel');
+  if (!panel) return;
+  panel.classList.toggle('inspector-content-mode', tab === 'content');
+  panel.classList.toggle('inspector-check-mode', tab === 'check');
+  document.getElementById('studioInspectorContent').hidden = tab !== 'content';
+  document.getElementById('studioInspectorCheck').hidden = tab !== 'check';
+  document.querySelectorAll('[data-inspector-tab]').forEach(button => {
+    const active = button.dataset.inspectorTab === tab;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  if (tab === 'check') renderStudioCheckPanel();
+}
+function inspectorStageForTarget(targetId) {
+  if (/Customer/i.test(targetId) || /^quickCustomer|^customer/.test(targetId)) return 'customer';
+  if (/product/i.test(targetId)) return 'products';
+  if (/payment|bank|discount|vat|currency|Fee/i.test(targetId)) return 'payment';
+  if (/terms|closing|dateLine|left|right|footer/i.test(targetId)) return 'terms';
+  if (/logo|theme|font|margin|preview/i.test(targetId)) return 'design';
+  return 'general';
+}
+function renderInspectorSelection(targetId) {
+  const box = document.getElementById('studioInspectorSelection');
+  if (!box) return;
+  const source = document.getElementById(targetId);
+  const key = source?.dataset?.bind;
+  const label = source?.closest('.row')?.querySelector('label')?.textContent?.trim() || source?.getAttribute('aria-label') || targetId;
+  box.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  const heading = document.createElement('h3');
+  heading.textContent = label || 'Nội dung';
+  wrap.appendChild(heading);
+  if (key) {
+    const field = source.tagName === 'TEXTAREA' ? document.createElement('textarea') : document.createElement('input');
+    if (field instanceof HTMLInputElement) field.type = source.type === 'email' ? 'email' : 'text';
+    field.value = state[key] == null ? '' : state[key];
+    field.addEventListener('input', () => {
+      state[key] = field.value;
+      source.value = field.value;
+      save();
+      render();
+    });
+    wrap.appendChild(field);
+  }
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'btn';
+  open.textContent = 'Mở phần nhập đầy đủ';
+  open.addEventListener('click', () => {
+    openTab(inspectorStageForTarget(targetId));
+    requestAnimationFrame(() => source?.focus());
+  });
+  wrap.appendChild(open);
+  box.appendChild(wrap);
+}
+
+function openCommandPalette() {
+  const modal = document.getElementById('commandPaletteModal');
+  const input = document.getElementById('commandPaletteInput');
+  if (!modal) return;
+  modal.hidden = false;
+  requestAnimationFrame(() => input?.focus());
+}
+function closeCommandPalette() {
+  const modal = document.getElementById('commandPaletteModal');
+  if (modal) modal.hidden = true;
+}
+function filterCommandPalette(query) {
+  const normalized = normalizeGridHeader(query);
+  document.querySelectorAll('#commandPaletteList [data-command]').forEach(button => {
+    button.hidden = Boolean(normalized) && !normalizeGridHeader(button.textContent).includes(normalized);
+  });
+}
+function runStudioCommand(command) {
+  closeCommandPalette();
+  if (['products','customer'].includes(command)) openTab(command);
+  else if (command === 'check') showInspectorTab('check');
+  else if (command === 'preview') openTab('view');
+  else if (command === 'export') openTab('export');
+  else if (command === 'advanced') {
+    const toggle = document.getElementById('studioAdvancedMode');
+    if (toggle) {
+      toggle.checked = true;
+      document.body.dataset.studioMode = 'advanced';
+    }
+    openTab('design');
+    showInspectorTab('design');
+  }
+}
+function initStudioV6() {
+  document.body.dataset.studioMode = document.getElementById('studioAdvancedMode')?.checked ? 'advanced' : 'simple';
+  document.getElementById('studioV6Home')?.addEventListener('click', () => openTab('dashboard'));
+  document.getElementById('studioV6Save')?.addEventListener('click', saveCurrentQuote);
+  document.getElementById('studioV6Check')?.addEventListener('click', () => showInspectorTab('check'));
+  document.getElementById('studioV6Preview')?.addEventListener('click', () => openTab('view'));
+  document.getElementById('studioUndo')?.addEventListener('click', undoQuoteChange);
+  document.getElementById('studioRedo')?.addEventListener('click', redoQuoteChange);
+  document.getElementById('studioCommandPalette')?.addEventListener('click', openCommandPalette);
+  document.getElementById('commandPaletteClose')?.addEventListener('click', closeCommandPalette);
+  document.getElementById('commandPaletteModal')?.addEventListener('click', event => {
+    if (event.target?.id === 'commandPaletteModal') closeCommandPalette();
+  });
+  document.getElementById('commandPaletteInput')?.addEventListener('input', event => filterCommandPalette(event.currentTarget.value));
+  document.querySelectorAll('#commandPaletteList [data-command]').forEach(button => button.addEventListener('click', () => runStudioCommand(button.dataset.command)));
+  document.getElementById('studioAdvancedMode')?.addEventListener('change', event => {
+    document.body.dataset.studioMode = event.currentTarget.checked ? 'advanced' : 'simple';
+  });
+  document.getElementById('studioBlockSearch')?.addEventListener('input', event => {
+    const query = normalizeGridHeader(event.currentTarget.value);
+    document.querySelectorAll('[data-studio-block]').forEach(button => {
+      button.hidden = Boolean(query) && !normalizeGridHeader(button.dataset.studioSearch + ' ' + button.textContent).includes(query);
+    });
+  });
+  document.querySelectorAll('[data-studio-block]').forEach(button => button.addEventListener('click', () => openTab(button.dataset.studioBlock)));
+  document.querySelectorAll('[data-studio-template]').forEach(button => button.addEventListener('click', () => {
+    const themeButton = document.querySelector('.tpl[data-theme="' + button.dataset.studioTemplate + '"]');
+    themeButton?.click();
+  }));
+  document.querySelectorAll('[data-inspector-tab]').forEach(button => button.addEventListener('click', () => showInspectorTab(button.dataset.inspectorTab)));
+  document.getElementById('addProductGrid')?.addEventListener('click', () => {
+    pushQuoteUndoSnapshot();
+    state.products.push(blankProduct());
+    save(); renderEditorProducts(); render(); focusProductName(state.products.length - 1);
+  });
+  document.getElementById('pasteProductData')?.addEventListener('click', () => {
+    openTab('products');
+    requestAnimationFrame(() => {
+      const first = document.querySelector('[data-product-grid-key="name"]');
+      first?.focus();
+      toast('Bấm Ctrl+V để dán bảng từ Excel');
+    });
+  });
+  document.getElementById('productExcelInput')?.addEventListener('change', async event => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    await importProductWorkbook(file);
+    input.value = '';
+  });
+  document.getElementById('productDataGridBody')?.addEventListener('paste', event => {
+    const text = event.clipboardData?.getData('text/plain') || '';
+    if (!text.trim()) return;
+    event.preventDefault();
+    const products = rowsToProducts(parseClipboardTable(text));
+    const startIndex = Number(event.target?.dataset?.productGridIndex || 0);
+    applyImportedProducts(products, { startIndex, source: 'clipboard Excel' });
+  });
+  document.getElementById('paper')?.addEventListener('click', event => {
+    const target = event.target?.closest?.('[data-target]');
+    if (!target?.dataset?.target) return;
+    renderInspectorSelection(target.dataset.target);
+    showInspectorTab('content');
+  }, true);
+  document.addEventListener('keydown', event => {
+    const mod = event.ctrlKey || event.metaKey;
+    if (mod && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      openCommandPalette();
+      return;
+    }
+    if (event.key === 'Escape' && !document.getElementById('commandPaletteModal')?.hidden) {
+      closeCommandPalette();
+      return;
+    }
+    const editable = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+    if (!mod || editable) return;
+    if (event.key.toLowerCase() === 'z' && event.shiftKey) {
+      event.preventDefault(); redoQuoteChange();
+    } else if (event.key.toLowerCase() === 'z') {
+      event.preventDefault(); undoQuoteChange();
+    } else if (event.key.toLowerCase() === 'y') {
+      event.preventDefault(); redoQuoteChange();
+    }
+  });
+  renderProductDataGrid();
+  renderStudioCheckPanel();
+  syncStudioV6Context(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
+  syncUndoRedoButtons();
+}
+
 bindInputs();
 setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
 render();
+initStudioV6();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
   applyTungGiaBaoToCurrentQuote();
