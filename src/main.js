@@ -1455,6 +1455,37 @@ function appendBlankProduct({ focusKey = 'name' } = {}) {
   return nextIndex;
 }
 
+function ensureSuggestionList(id, values) {
+  let list = document.getElementById(id);
+  if (!list) {
+    list = document.createElement('datalist');
+    list.id = id;
+    document.body.appendChild(list);
+  }
+  list.innerHTML = '';
+  [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]
+    .slice(0, 300)
+    .forEach((value) => {
+      const option = document.createElement('option');
+      option.value = value;
+      list.appendChild(option);
+    });
+}
+
+function refreshProductEntrySuggestions() {
+  const catalog = getProductCatalog();
+  ensureSuggestionList('productNameSuggestions', catalog.map(item => item.name));
+  ensureSuggestionList('productGroupSuggestions', [
+    ...catalog.map(item => item.group),
+    ...state.products.map(item => item.group)
+  ]);
+  ensureSuggestionList('productUnitSuggestions', [
+    'Cái','Bộ','Hộp','Khay','Gói','Túi','Chai','Thùng','Kg','g','Lít','ml','m','m²',
+    ...catalog.map(item => item.unit),
+    ...state.products.map(item => item.unit)
+  ]);
+}
+
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
   wrap.className = 'product-field ' + className;
@@ -1470,9 +1501,21 @@ function productField(label, key, value, type, onInput, className = '') {
     input.step = key === 'price' ? '1000' : '1';
     input.inputMode = 'decimal';
   }
-  if (key === 'name') input.placeholder = 'Tên hàng hóa / dịch vụ';
+  if (key === 'name') {
+    input.placeholder = 'Tên hàng hóa / dịch vụ';
+    input.setAttribute('list', 'productNameSuggestions');
+    input.setAttribute('autocomplete', 'off');
+  }
+  if (key === 'group') {
+    input.setAttribute('list', 'productGroupSuggestions');
+    input.setAttribute('autocomplete', 'off');
+  }
   if (key === 'pack') input.placeholder = 'VD: Hộp 10 quả';
-  if (key === 'unit') input.placeholder = 'VD: Hộp, kg, cái';
+  if (key === 'unit') {
+    input.placeholder = 'VD: Hộp, kg, cái';
+    input.setAttribute('list', 'productUnitSuggestions');
+    input.setAttribute('autocomplete', 'off');
+  }
   input.addEventListener('input', () => onInput(input));
   input.addEventListener('keydown', (event) => {
     const card = input.closest('.product-card');
@@ -1508,6 +1551,7 @@ function productField(label, key, value, type, onInput, className = '') {
 function renderEditorProducts() {
   const list = document.getElementById('productEditor');
   list.innerHTML = '';
+  refreshProductEntrySuggestions();
 
   state.products.forEach((product, index) => {
     const card = document.createElement('article');
@@ -1630,6 +1674,31 @@ function renderEditorProducts() {
       productField('Đơn giá', 'price', product.price, 'number', input => updateProduct('price', input, true)),
       productField('Ghi chú', 'note', product.note, 'text', input => updateProduct('note', input), 'wide')
     );
+
+    const nameInput = body.querySelector('[data-product-key="name"]');
+    nameInput?.addEventListener('change', () => {
+      const requested = String(nameInput.value || '').trim().toLowerCase();
+      if (!requested) return;
+      const selected = getProductCatalog().find(item =>
+        String(item.name || '').trim().toLowerCase() === requested
+      );
+      if (!selected) return;
+      const currencyMatches = normalizeCatalogCurrency(selected.currency || 'VND') === normalizeCatalogCurrency(state.currency);
+      product.group = selected.group || product.group || '';
+      product.name = selected.name || product.name || '';
+      product.pack = selected.pack || '';
+      product.unit = selected.unit || '';
+      product.price = currencyMatches ? normalizeNonNegativeNumber(selected.price) : 0;
+      product.note = selected.note || '';
+      if (!normalizeNonNegativeNumber(product.qty)) product.qty = 1;
+      save();
+      renderEditorProducts();
+      render();
+      focusProductCell(index, 'qty');
+      toast(currencyMatches
+        ? 'Đã điền thông tin từ danh mục'
+        : 'Đã điền sản phẩm; đơn giá để 0 vì khác loại tiền tệ');
+    });
 
     card.append(head, body);
     list.appendChild(card);
