@@ -547,9 +547,12 @@
                 <p>Nhập theo từng thẻ, có thể mở rộng vùng làm việc để thao tác thoải mái.</p>
               </div>
               <div class="btns product-workspace-actions">
+                <button class="btn primary" id="addProductTop" type="button">＋ Thêm dòng</button>
+                <button class="btn" id="pasteProducts" type="button">▤ Dán dữ liệu</button>
+                <button class="btn" id="importProductsExcel" type="button">XL Nhập từ Excel</button>
                 <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
-                <button class="btn" id="productFocusToggle">⛶ Mở rộng vùng nhập</button>
-                <button class="btn" id="collapseAllProducts">Thu gọn tất cả</button>
+                <button class="btn product-secondary-action" id="productFocusToggle">⛶ Mở rộng</button>
+                <button class="btn product-secondary-action" id="collapseAllProducts">Thu gọn</button>
               </div>
             </div>
             <div id="productEditor" class="product-editor-list"></div>
@@ -1115,6 +1118,21 @@
             <input id="handwritingSmartImportInput" type="file" accept="image/*">
           </label>
         </div>
+
+        <section class="smart-paste-panel" id="smartPastePanel" hidden>
+          <div class="smart-paste-head">
+            <div>
+              <strong>DÁN BẢNG TỪ EXCEL</strong>
+              <span>Copy vùng dữ liệu trong Excel rồi Ctrl+V vào ô dưới đây.</span>
+            </div>
+            <button class="mini-action" id="closeSmartPastePanel" type="button" aria-label="Đóng vùng dán">×</button>
+          </div>
+          <textarea id="smartPasteText" rows="7" placeholder="Ví dụ:&#10;Tên sản phẩm[TAB]ĐVT[TAB]Số lượng[TAB]Đơn giá&#10;Trứng gà[TAB]Hộp[TAB]2[TAB]28000"></textarea>
+          <div class="smart-paste-actions">
+            <small>Không cần chỉnh cột trước. Hệ thống sẽ đoán và cho kiểm tra ở bước kế tiếp.</small>
+            <button class="btn primary" id="parseSmartPaste" type="button">Kiểm tra dữ liệu dán</button>
+          </div>
+        </section>
 
         <div class="import-progress" id="smartImportProgress" role="status" aria-live="polite">Chưa chọn nguồn dữ liệu.</div>
 
