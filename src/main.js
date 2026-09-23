@@ -1540,6 +1540,40 @@ function numberToWords(value) {
 }
 
 let collapsedProducts = new Set();
+let selectedProductRows = new Set();
+
+function clearProductSelection() {
+  selectedProductRows.clear();
+  syncProductBulkBar();
+}
+
+function syncProductBulkBar() {
+  selectedProductRows = new Set([...selectedProductRows].filter(index => index >= 0 && index < state.products.length));
+  const count = selectedProductRows.size;
+  const bar = document.getElementById('productBulkBar');
+  const countLabel = document.getElementById('productBulkCount');
+  const selectAll = document.getElementById('selectAllProducts');
+  if (bar) bar.hidden = count === 0;
+  if (countLabel) countLabel.textContent = count + ' dòng đã chọn';
+  if (selectAll) {
+    selectAll.checked = count > 0 && count === state.products.length;
+    selectAll.indeterminate = count > 0 && count < state.products.length;
+  }
+}
+
+function applyBulkProductMutation(mutator, message) {
+  const indices = [...selectedProductRows].sort((a, b) => a - b);
+  if (!indices.length) return false;
+  indices.forEach((index) => {
+    const product = state.products[index];
+    if (product) mutator(product, index);
+  });
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  toast(persisted ? message : message + ' • chưa lưu được vào trình duyệt');
+  return persisted;
+}
 
 function resetCollapsedProductsForState() {
   collapsedProducts = state.products.length >= 24
@@ -1597,10 +1631,22 @@ function renderEditorProducts() {
     row.className = 'product-card product-grid-row' + (collapsedProducts.has(index) ? ' collapsed' : '');
     row.dataset.productIndex = String(index);
 
-    const badge = document.createElement('span');
+    const badge = document.createElement('label');
     badge.className = 'product-index product-grid-index';
-    badge.textContent = String(index + 1);
-    badge.setAttribute('aria-label', 'Dòng ' + (index + 1));
+    const selectRow = document.createElement('input');
+    selectRow.type = 'checkbox';
+    selectRow.className = 'product-row-select';
+    selectRow.checked = selectedProductRows.has(index);
+    selectRow.setAttribute('aria-label', 'Chọn dòng ' + (index + 1));
+    selectRow.addEventListener('change', () => {
+      if (selectRow.checked) selectedProductRows.add(index);
+      else selectedProductRows.delete(index);
+      row.classList.toggle('product-row-selected', selectRow.checked);
+      syncProductBulkBar();
+    });
+    const rowNumber = document.createElement('span');
+    rowNumber.textContent = String(index + 1);
+    badge.append(selectRow, rowNumber);
 
     const amount = document.createElement('output');
     amount.className = 'product-live-total product-grid-amount';
@@ -1712,6 +1758,7 @@ function renderEditorProducts() {
 
     actions.append(collapse, up, down, duplicate, remove);
     row.classList.toggle('product-row-invalid', productHasDraftContent(product) && !String(product.name || '').trim());
+    row.classList.toggle('product-row-selected', selectedProductRows.has(index));
     row.append(badge, nameField, groupField, packField, unitField, qtyField, priceField, amount, noteField, actions);
     list.appendChild(row);
   });
@@ -1720,6 +1767,7 @@ function renderEditorProducts() {
   if (collapseButton) {
     collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn';
   }
+  syncProductBulkBar();
 }
 
 function renderPreviewProducts() {
