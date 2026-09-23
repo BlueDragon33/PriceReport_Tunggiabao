@@ -126,6 +126,89 @@ export function normalizeImportedProduct(raw = {}) {
   };
 }
 
+export function detectSpreadsheetHeader(rows) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  let best = null;
+  safeRows.forEach((row, headerIndex) => {
+    const inferred = inferSpreadsheetColumns(row);
+    const keys = Object.keys(inferred.mapping);
+    if (inferred.mapping.name == null || inferred.mapping.price == null) return;
+    const score = keys.length * 10 +
+      (inferred.mapping.unit != null ? 5 : 0) +
+      (inferred.mapping.qty != null ? 5 : 0) +
+      (inferred.mapping.group != null ? 3 : 0);
+    if (!best || score > best.score) {
+      best = {
+        headerIndex,
+        headers: (Array.isArray(row) ? row : []).map(clean),
+        mapping: { ...inferred.mapping },
+        confidence: { ...inferred.confidence },
+        score
+      };
+    }
+  });
+  return best;
+}
+
+export function parseMappedSpreadsheetRows(rows, options = {}) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const detected = detectSpreadsheetHeader(safeRows);
+  const headerIndex = Number.isInteger(options.headerIndex) ? options.headerIndex : detected?.headerIndex;
+  const mapping = options.mapping && typeof options.mapping === 'object'
+    ? options.mapping
+    : detected?.mapping;
+  if (!mapping || mapping.name == null || mapping.price == null || headerIndex == null) {
+    return { products: [], groups: [], invalidRows: [] };
+  }
+
+  const products = [];
+  const groups = [];
+  const invalidRows = [];
+  let currentGroup = '';
+
+  safeRows.slice(headerIndex + 1).forEach((row, offset) => {
+    const cells = Array.isArray(row) ? row : [];
+    const values = nonEmptyCells(cells);
+    if (!values.length) return;
+
+    const rawProduct = {
+      group: mapping.group != null ? cells[mapping.group] : currentGroup,
+      name: cells[mapping.name],
+      pack: mapping.pack != null ? cells[mapping.pack] : '',
+      unit: mapping.unit != null ? cells[mapping.unit] : '',
+      qty: mapping.qty != null ? cells[mapping.qty] : 1,
+      price: mapping.price != null ? cells[mapping.price] : '',
+      note: mapping.note != null ? cells[mapping.note] : ''
+    };
+    const name = clean(rawProduct.name);
+    const parsedPrice = parseNumber(rawProduct.price);
+
+    if ((!name || !parsedPrice.valid) && values.length === 1) {
+      currentGroup = values[0];
+      if (!groups.includes(currentGroup)) groups.push(currentGroup);
+      return;
+    }
+
+    if (!name && !parsedPrice.valid) return;
+    if (/^(tong|tong cong|cong|subtotal|total)$/i.test(fold(name))) return;
+    if (!name || !parsedPrice.valid) {
+      invalidRows.push({
+        rowNumber: headerIndex + offset + 2,
+        name,
+        price: clean(rawProduct.price)
+      });
+      return;
+    }
+
+    const product = normalizeImportedProduct(rawProduct);
+    if (!product.group) product.group = currentGroup;
+    if (product.group && !groups.includes(product.group)) groups.push(product.group);
+    products.push(product);
+  });
+
+  return { products, groups, invalidRows };
+}
+
 export function parseSpreadsheetRows(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
   const fields = {};
@@ -136,6 +219,7 @@ export function parseSpreadsheetRows(rows) {
   let currentGroup = '';
   let noteColumnDetected = false;
   let activeColumnMapping = null;
+  let spreadsheetMeta = null;
   let titleIndex = -1;
   let dateIndex = -1;
 
@@ -151,6 +235,14 @@ export function parseSpreadsheetRows(rows) {
       const headers = cells.map(cell => fold(clean(cell)));
       noteColumnDetected ||= headers.some(cell => cell.includes('ghi chu') || cell === 'note' || cell === 'notes');
       activeColumnMapping = inferred.mapping;
+      if (!spreadsheetMeta) {
+        spreadsheetMeta = {
+          headerIndex: index,
+          headers: cells.map(clean),
+          mapping: { ...inferred.mapping },
+          confidence: { ...inferred.confidence }
+        };
+      }
       return;
     }
 
@@ -303,7 +395,8 @@ export function parseSpreadsheetRows(rows) {
       showTerms: false
     },
     warnings,
-    unmatched
+    unmatched,
+    spreadsheetMeta
   };
 }
 
@@ -399,7 +492,8 @@ export function mergeImportDraft(base, next, options = {}) {
     layoutHints: { ...(base?.layoutHints || {}) },
     warnings: [...(base?.warnings || [])],
     unmatched: [...(base?.unmatched || [])],
-    confidence: { ...(base?.confidence || {}) }
+    confidence: { ...(base?.confidence || {}) },
+    spreadsheetMeta: next?.spreadsheetMeta || base?.spreadsheetMeta || null
   };
 
   if (options.replaceSourceFields && nextSource) {
