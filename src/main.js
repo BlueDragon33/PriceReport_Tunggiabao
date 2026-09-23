@@ -3225,9 +3225,11 @@ function openCommandPalette() {
   const input = document.getElementById('commandPaletteInput');
   if (!modal) return;
   modal.hidden = false;
-  if (input) input.value = '';
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
   filterCommandPalette('');
-  requestAnimationFrame(() => input?.focus());
 }
 function closeCommandPalette() {
   const modal = document.getElementById('commandPaletteModal');
