@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v52-smart-entry-rc1';
+const CACHE = 'pricereport-shell-v53-guided-entry-rc1';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
