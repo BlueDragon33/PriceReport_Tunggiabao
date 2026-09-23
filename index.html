@@ -740,8 +740,11 @@
                 <button class="export-action-card" id="exportExcel" type="button">
                   <span>▦</span><b>Xuất Excel</b><small>File bảng tính có thể nhập lại</small>
                 </button>
+                <button class="export-action-card" id="exportCsv" type="button">
+                  <span>CSV</span><b>Xuất CSV</b><small>Bảng sản phẩm sạch, có thể nhập lại</small>
+                </button>
                 <button class="export-action-card" id="exportJson" type="button">
-                  <span>{ }</span><b>Xuất JSON báo giá</b><small>Dữ liệu báo giá đang mở</small>
+                  <span>{ }</span><b>Xuất dữ liệu báo giá</b><small>JSON của báo giá đang mở</small>
                 </button>
                 <button class="export-action-card" type="button" data-open-tab="view">
                   <span>◉</span><b>Xem trước A4</b><small>Rà bố cục trước khi phát hành</small>
@@ -756,7 +759,7 @@
               </div>
               <div class="export-action-grid">
                 <button class="export-action-card" id="importExcelQuick" type="button">
-                  <span>▦</span><b>Nhập Excel</b><small>Đọc bảng báo giá từ file Excel</small>
+                  <span>▦</span><b>Nhập Excel / CSV</b><small>Mở cùng hệ nhập liệu của bảng sản phẩm</small>
                 </button>
                 <button class="export-action-card" id="importHandwritingQuick" type="button">
                   <span>✎</span><b>Nhập ảnh chữ viết tay</b><small>OCR và rà lại trước khi áp dụng</small>
@@ -981,7 +984,7 @@
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
           <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
-          <button class="toolbar-btn import-data" id="openSmartImport" type="button">⇧&nbsp; Nhập dữ liệu</button>
+          <button class="toolbar-btn import-data" id="openSmartImport" type="button">✎&nbsp; Nhập từ ảnh</button>
           <button class="toolbar-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false">✥&nbsp; Sắp xếp</button>
           <button class="toolbar-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden>↺&nbsp; Tự động</button>
           <span class="layout-selection" id="layoutSelection" hidden>Chọn khối để kéo</span>
@@ -1161,21 +1164,14 @@
     <section class="smart-import-dialog" id="smartImportDialog" role="dialog" aria-modal="true" aria-labelledby="smartImportTitle" aria-busy="false">
       <header class="smart-import-head">
         <div>
-          <strong id="smartImportTitle">NHẬP DỮ LIỆU THÔNG MINH</strong>
-          <span>Đọc Excel hoặc ảnh chữ viết tay, kiểm tra trước rồi mới áp dụng vào báo giá.</span>
+          <strong id="smartImportTitle">NHẬP DỮ LIỆU TỪ ẢNH</strong>
+          <span>OCR ảnh chữ viết tay, kiểm tra trước rồi mới áp dụng vào báo giá.</span>
         </div>
         <button class="mini-action" id="closeSmartImport" type="button" aria-label="Đóng">×</button>
       </header>
 
       <div class="smart-import-body">
         <div class="import-source-grid">
-          <label class="import-source-card">
-            <span class="import-source-icon">XL</span>
-            <strong>Đọc file Excel</strong>
-            <small>.xlsx / .xls / .csv — tự tìm thông tin đơn vị, tiêu đề, nhóm hàng và bảng giá.</small>
-            <input id="excelSmartImportInput" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
-          </label>
-
           <label class="import-source-card">
             <span class="import-source-icon">OCR</span>
             <strong>Đọc chữ viết tay</strong>
