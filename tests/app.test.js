@@ -603,15 +603,24 @@ test('report view tab enters a dedicated responsive preview mode and exits clean
   expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 });
 
-test('export pane exposes Excel import/export, OCR import and PC workspace controls', () => {
+test('V4.7 publishing center exposes export, import, PC and backup controls in app workspace', () => {
   document.querySelector('[data-tab="export"]').click();
+  expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
+  expect(document.getElementById('pane-export').classList.contains('active')).toBe(true);
+  expect(document.getElementById('exportCenterHealth').textContent.length).toBeGreaterThan(0);
+  expect(document.getElementById('exportCenterQuote').textContent.length).toBeGreaterThan(0);
   expect(document.getElementById('exportExcel')).toBeTruthy();
   expect(document.getElementById('importExcelQuick')).toBeTruthy();
   expect(document.getElementById('importHandwritingQuick')).toBeTruthy();
+  expect(document.getElementById('exportJson')).toBeTruthy();
+  expect(document.getElementById('importJson')).toBeTruthy();
   expect(document.getElementById('choosePcFolder')).toBeTruthy();
   expect(document.getElementById('savePcNow')).toBeTruthy();
   expect(document.getElementById('restorePcLatest')).toBeTruthy();
+  expect(document.getElementById('exportAllData')).toBeTruthy();
+  expect(document.getElementById('importAllData')).toBeTruthy();
   expect(document.getElementById('pcFolderStatus').textContent.length).toBeGreaterThan(0);
+  document.querySelector('[data-tab="general"]').click();
 });
 
 
