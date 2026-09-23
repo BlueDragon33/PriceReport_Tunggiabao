@@ -203,6 +203,17 @@ test('V4.9 settings persist application preferences without touching business da
   document.querySelector('[data-tab="general"]').click();
 });
 
+test('V5.2 smart import exposes a dedicated multi-sheet chooser without cluttering the default flow', () => {
+  const picker = document.getElementById('smartImportSheetPicker');
+  const select = document.getElementById('smartImportSheetSelect');
+  const hint = document.getElementById('smartImportSheetHint');
+  expect(picker).toBeTruthy();
+  expect(select).toBeTruthy();
+  expect(hint).toBeTruthy();
+  expect(picker.hidden).toBe(true);
+  expect(select.getAttribute('aria-label')).toContain('sheet Excel');
+});
+
 test('V5 dynamic feedback exposes live, busy and empty-state semantics', async () => {
   const toast = document.getElementById('toast');
   expect(toast.getAttribute('role')).toBe('status');
