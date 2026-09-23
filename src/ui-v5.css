@@ -2605,6 +2605,50 @@ body.v5-ui .status-accepted{border-color:#c8eadc;background:var(--v5-success-sof
 body.v5-ui .status-rejected{border-color:#f2d0d0;background:var(--v5-danger-soft);color:#ad3b3b}
 body.v5-ui .status-expired{border-color:#f2dfb9;background:var(--v5-warning-soft);color:#9b6418}
 
+/* ---------- App feedback & logo-preview-only treatment ---------- */
+body.v5-ui .toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:120;
+  padding:10px 14px;
+  border-radius:9px;
+  background:#172640;
+  color:#fff;
+  font-size:11.5px;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(10px);
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  transition:opacity .2s ease,transform .2s ease;
+}
+body.v5-ui .toast.show{opacity:1;transform:none}
+body.v5-ui .logo-design-preview.logo-treatment-soft{
+  border-color:#dce8e5;
+  background:color-mix(in srgb,var(--accent,#0b8f83) 7%,#fff);
+}
+body.v5-ui .logo-design-preview.logo-treatment-blend{
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
+}
+body.v5-ui .logo-design-preview.logo-treatment-blend:before{
+  content:"";
+  position:absolute;
+  inset:12% 7%;
+  z-index:0;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(11,143,131,.10),transparent 72%);
+  filter:blur(10px);
+}
+body.v5-ui .logo-design-preview.logo-treatment-custom{box-shadow:none}
+body.v5-ui .logo-design-preview.logo-treatment-clean{box-shadow:0 3px 12px rgba(31,48,69,.05)}
+body.v5-ui .logo-design-preview.logo-treatment-none{
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
+}
+
 /* ---------- Auxiliary application tools ---------- */
 body.v5-ui .document-health{
   height:28px;
