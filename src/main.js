@@ -543,9 +543,9 @@ function setMobileMoreMenu(open, { restoreFocus = false } = {}) {
   toggle.setAttribute('aria-expanded', enabled ? 'true' : 'false');
   document.body.classList.toggle('mobile-more-open', enabled);
   if (enabled) {
-    requestAnimationFrame(() => mobileMoreFocusable()[0]?.focus());
+    mobileMoreFocusable()[0]?.focus();
   } else if (restoreFocus) {
-    requestAnimationFrame(() => (mobileMoreLastFocus || toggle)?.focus?.());
+    (mobileMoreLastFocus || toggle)?.focus?.();
   }
 }
 
