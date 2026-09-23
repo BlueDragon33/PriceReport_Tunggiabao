@@ -787,7 +787,14 @@ function moveStudioWorkflow(direction) {
 document.getElementById('studioPrevStep')?.addEventListener('click', () => moveStudioWorkflow(-1));
 document.getElementById('studioNextStep')?.addEventListener('click', () => moveStudioWorkflow(1));
 document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurrentQuote);
-document.getElementById('studioCheckQuote')?.addEventListener('click', () => document.getElementById('preflightCheck')?.click());
+document.getElementById('studioCheckQuote')?.addEventListener('click', () => {
+  updateDocumentHealth();
+  renderStudioGuidance();
+});
+document.getElementById('closeStudioGuidance')?.addEventListener('click', () => {
+  const panel = document.getElementById('studioGuidancePanel');
+  if (panel) panel.hidden = true;
+});
 document.getElementById('studioPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
 document.addEventListener('keydown', (event) => {
@@ -4102,6 +4109,99 @@ function validateQuote(data = state) {
   if (data.showPaymentBlock && partialBank) warnings.push('Thông tin tài khoản ngân hàng đang nhập dở.');
 
   return { errors, warnings };
+}
+
+function validationTargetForMessage(message) {
+  const text = String(message || '');
+  const productMatch = text.match(/Dòng sản phẩm\s+(\d+)/i) || text.match(/Sản phẩm\s+"[^"]+"/i);
+  if (productMatch) return { tab: 'products', productIndex: productMatch[1] ? Math.max(0, Number(productMatch[1]) - 1) : null };
+
+  const rules = [
+    [/tên công ty|email công ty|logo/i, { tab: 'general', fieldId: /email công ty/i.test(text) ? 'companyEmail' : (/logo/i.test(text) ? 'logoInput' : 'companyName') }],
+    [/tiêu đề báo giá/i, { tab: 'general', fieldId: 'quoteTitle' }],
+    [/kính gửi/i, { tab: 'general', fieldId: 'recipientLine' }],
+    [/số báo giá/i, { tab: 'general', fieldId: 'quoteNo' }],
+    [/ngày báo giá/i, { tab: 'general', fieldId: 'quoteDate' }],
+    [/email khách hàng/i, { tab: 'customer', fieldId: 'customerEmail' }],
+    [/ngân hàng|tài khoản/i, { tab: 'payment', fieldId: 'bankName' }],
+    [/giảm giá|VAT|phí khác|tổng cộng/i, { tab: 'payment', fieldId: 'discountPct' }],
+    [/điều khoản/i, { tab: 'terms', fieldId: 'termsText' }],
+    [/chữ ký|chức danh/i, { tab: 'terms', fieldId: 'rightTitle' }]
+  ];
+  for (const [pattern, target] of rules) {
+    if (pattern.test(text)) return target;
+  }
+  return { tab: 'general', fieldId: null };
+}
+
+function focusValidationTarget(target) {
+  if (!target) return;
+  openTab(target.tab || 'general');
+  requestAnimationFrame(() => {
+    if (Number.isInteger(target.productIndex)) {
+      const card = document.querySelector('#productEditor .product-card[data-product-index="' + target.productIndex + '"]');
+      const input = card?.querySelector('[data-product-key="name"], input, select, textarea');
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input?.focus?.();
+      return;
+    }
+    const field = target.fieldId ? document.getElementById(target.fieldId) : null;
+    field?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    field?.focus?.();
+  });
+}
+
+function renderStudioGuidance({ focusFirst = false } = {}) {
+  const panel = document.getElementById('studioGuidancePanel');
+  const list = document.getElementById('studioGuidanceList');
+  const summary = document.getElementById('studioGuidanceSummary');
+  if (!panel || !list || !summary) return;
+
+  const result = validateQuote();
+  const items = [
+    ...result.errors.map(message => ({ tone: 'error', label: 'Cần sửa', message })),
+    ...result.warnings.map(message => ({ tone: 'warn', label: 'Kiểm tra', message }))
+  ];
+
+  list.innerHTML = '';
+  if (!items.length) {
+    summary.textContent = 'Báo giá đã sẵn sàng để in.';
+    panel.hidden = false;
+    const ready = document.createElement('div');
+    ready.className = 'studio-guidance-ready';
+    ready.textContent = '✓ Không phát hiện lỗi nghiệp vụ.';
+    list.appendChild(ready);
+    return;
+  }
+
+  summary.textContent = result.errors.length
+    ? result.errors.length + ' lỗi • ' + result.warnings.length + ' mục cần kiểm tra'
+    : result.warnings.length + ' mục cần kiểm tra';
+
+  items.forEach((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'studio-guidance-item ' + item.tone;
+    button.dataset.validationIndex = String(index);
+
+    const badge = document.createElement('span');
+    badge.className = 'studio-guidance-tone';
+    badge.textContent = item.label;
+
+    const message = document.createElement('strong');
+    message.textContent = item.message;
+
+    const action = document.createElement('small');
+    action.textContent = 'Bấm để tới chỗ cần xử lý';
+
+    button.append(badge, message, action);
+    const target = validationTargetForMessage(item.message);
+    button.addEventListener('click', () => focusValidationTarget(target));
+    list.appendChild(button);
+  });
+
+  panel.hidden = false;
+  if (focusFirst && items.length) focusValidationTarget(validationTargetForMessage(items[0].message));
 }
 
 function updateDocumentHealth() {
