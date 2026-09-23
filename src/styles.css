@@ -2268,3 +2268,39 @@ html[data-price-report-device-access="offline"] body{overflow:hidden}
   .master-toolbar{grid-template-columns:1fr}
   .master-result-summary{justify-self:start}
 }
+
+
+/* =========================
+   V4.5 QUOTATION STUDIO CONTEXT
+   ========================= */
+.studio-panel-head{padding:10px 12px 9px}
+.studio-context-row{display:grid;grid-template-columns:32px minmax(0,1fr);gap:8px;align-items:center}
+.studio-home-button{width:32px;height:32px;border:1px solid #d7e1eb;border-radius:9px;background:#f7faff;color:#1c70cf;font-size:17px;font-weight:900;padding:0}
+.studio-home-button:hover{background:#eaf4ff;border-color:#b8d3ef}
+.studio-current-quote{min-width:0}
+.studio-current-quote small{display:block;color:#8996a8;font-size:7.8px;font-weight:900;letter-spacing:.12em}
+.studio-current-quote strong{display:block;margin-top:2px;color:#163b71;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.studio-context-badges{grid-column:1/-1;display:flex;gap:5px;align-items:center;padding-left:40px}
+.studio-status-badge,.studio-history-state{display:inline-flex;align-items:center;min-height:20px;padding:3px 7px;border-radius:999px;font-size:7.8px;font-weight:800;white-space:nowrap}
+.studio-history-state{background:#f0f3f7;color:#7a8798;border:1px solid #e0e6ed}
+.studio-history-state.saved{background:#e8f8f1;color:#177650;border-color:#c8eadc}
+.studio-pane-title{border-top:1px solid #edf1f5;margin-top:8px;padding-top:9px}
+.studio-pane-title h2{font-size:15px!important}
+.studio-pane-title p{font-size:9.5px!important;margin-top:3px!important}
+.studio-stepper{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:9px}
+.studio-stepper button{min-width:0;height:38px;border:1px solid #e1e8f0;border-radius:8px;background:#f9fbfd;color:#758398;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.studio-stepper button b{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:#e7edf4;color:#6d7c90;font-size:7.5px}
+.studio-stepper button span{font-size:7.3px;white-space:nowrap}
+.studio-stepper button:hover{border-color:#b9d3ee;background:#f2f8ff;color:#316da9}
+.studio-stepper button.active{border-color:#98c5f4;background:#edf6ff;color:#166bc7}
+.studio-stepper button.active b{background:#1684f6;color:#fff}
+.shell.app-workspace .studio-panel-head{display:none}
+@media(max-width:980px){
+  .studio-panel-head{position:relative;top:auto}
+  .studio-stepper{grid-template-columns:repeat(5,minmax(58px,1fr));overflow-x:auto;padding-bottom:2px}
+}
+@media(max-width:620px){
+  .studio-context-badges{padding-left:0}
+  .studio-stepper button{height:36px}
+  .studio-stepper button span{font-size:7px}
+}
