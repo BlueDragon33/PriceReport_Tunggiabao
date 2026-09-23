@@ -2729,6 +2729,36 @@ function refreshProductGridRow(row, product) {
   const amount = row.querySelector('.product-grid-amount');
   if (amount) amount.textContent = numericMoney(Number(product.qty || 0) * Number(product.price || 0));
 }
+function createProductGridFieldCell({ product, index, key, type = 'text', context = 'quote' }) {
+  const cell = document.createElement('div');
+  cell.className = 'product-grid-cell';
+  const input = document.createElement('input');
+  input.type = type;
+  if (type === 'number') {
+    input.step = key === 'price' ? '1000' : '1';
+    input.inputMode = 'decimal';
+  }
+  input.value = product[key] == null ? '' : product[key];
+  const prefix = context === 'catalog' ? 'catalogGrid' : 'productGrid';
+  input.dataset[prefix + 'Index'] = String(index);
+  input.dataset[prefix + 'Key'] = key;
+  input.dataset.gridContext = context;
+  input.setAttribute('aria-label', (key === 'name' ? 'Tên sản phẩm' : key) + ' dòng ' + (index + 1));
+  if (key === 'name') input.setAttribute('list', 'productNameDatalist');
+  if (key === 'group') input.setAttribute('list', 'productGroupDatalist');
+  if (key === 'unit') input.setAttribute('list', 'productUnitDatalist');
+  if (context === 'quote') {
+    const validity = productGridValidity(product, key);
+    if (validity) {
+      cell.classList.add('invalid');
+      input.setAttribute('aria-invalid', 'true');
+      input.title = validity;
+    }
+  }
+  cell.appendChild(input);
+  return { cell, input };
+}
+
 function scheduleProductGridRender() {
   if (productGridRenderQueued) return;
   productGridRenderQueued = true;
@@ -2772,27 +2802,7 @@ function renderProductDataGrid() {
       ['name','text'],['group','text'],['pack','text'],['unit','text'],['qty','number'],['price','number']
     ];
     definitions.forEach(([key, type]) => {
-      const cell = document.createElement('div');
-      cell.className = 'product-grid-cell';
-      const input = document.createElement('input');
-      input.type = type;
-      if (type === 'number') {
-        input.step = key === 'price' ? '1000' : '1';
-        input.inputMode = 'decimal';
-      }
-      input.value = product[key] == null ? '' : product[key];
-      input.dataset.productGridIndex = String(index);
-      input.dataset.productGridKey = key;
-      input.setAttribute('aria-label', (key === 'name' ? 'Tên sản phẩm' : key) + ' dòng ' + (index + 1));
-      if (key === 'name') input.setAttribute('list', 'productNameDatalist');
-      if (key === 'group') input.setAttribute('list', 'productGroupDatalist');
-      if (key === 'unit') input.setAttribute('list', 'productUnitDatalist');
-      const validity = productGridValidity(product, key);
-      if (validity) {
-        cell.classList.add('invalid');
-        input.setAttribute('aria-invalid', 'true');
-        input.title = validity;
-      }
+      const { cell, input } = createProductGridFieldCell({ product, index, key, type, context: 'quote' });
       input.addEventListener('focus', () => { gridEditBaseline = quoteSnapshotString(); });
       input.addEventListener('input', () => {
         if (key === 'qty' || key === 'price') product[key] = normalizeGridNumber(input.value);
@@ -3978,6 +3988,23 @@ document.getElementById('saveCurrentCustomer').addEventListener('click', saveCur
 document.getElementById('saveCurrentProducts').addEventListener('click', saveCurrentProductsToCatalog);
 document.getElementById('customerLibrarySearch').addEventListener('input', renderMasterData);
 document.getElementById('productCatalogSearch').addEventListener('input', renderMasterData);
+document.querySelectorAll('[data-master-tab]').forEach(button => button.addEventListener('click', () => showMasterDataTab(button.dataset.masterTab)));
+document.getElementById('catalogAddProduct')?.addEventListener('click', addBlankCatalogProduct);
+document.getElementById('catalogBulkAction')?.addEventListener('change', syncCatalogBulkActionUI);
+document.getElementById('applyCatalogBulk')?.addEventListener('click', applyCatalogBulkAction);
+document.getElementById('clearCatalogSelection')?.addEventListener('click', () => {
+  selectedCatalogProductIds.clear();
+  renderMasterData();
+});
+document.getElementById('catalogSelectAll')?.addEventListener('change', event => {
+  const query = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
+  const visible = getProductCatalog().filter(item => !query || [item.group,item.name,item.pack,item.unit,item.note,item.currency].filter(Boolean).join(' ').toLowerCase().includes(query));
+  selectedCatalogProductIds = event.currentTarget.checked ? new Set(visible.map(product => product.id)) : new Set();
+  renderMasterData();
+});
+document.getElementById('exportCatalogCsv')?.addEventListener('click', exportCatalogCsv);
+document.getElementById('exportCustomerCsv')?.addEventListener('click', exportCustomerCsv);
+syncCatalogBulkActionUI();
 
 document.getElementById('reset').addEventListener('click', () => {
   if (!confirm('Khôi phục báo giá hiện tại về mẫu ban đầu? Lịch sử, danh bạ và danh mục sẽ được giữ nguyên.')) return;
@@ -4664,10 +4691,229 @@ function addCatalogProduct(product) {
   toast(persisted ? successMessage : successMessage + ' — chưa autosave được');
 }
 
+
+let selectedCatalogProductIds = new Set();
+let activeMasterDataTab = 'customers';
+
+function showMasterDataTab(tab) {
+  activeMasterDataTab = tab === 'products' ? 'products' : 'customers';
+  document.querySelectorAll('[data-master-tab]').forEach(button => {
+    const active = button.dataset.masterTab === activeMasterDataTab;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-master-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.masterPanel !== activeMasterDataTab;
+  });
+}
+
+function persistCatalogProducts(items, message = '') {
+  const ok = setProductCatalog(items);
+  if (!ok) {
+    toast('Không thể lưu danh mục sản phẩm');
+    return false;
+  }
+  ensureProductDatalists();
+  if (message) toast(message);
+  return true;
+}
+
+function updateCatalogBulkBar(visibleProducts = []) {
+  const bar = document.getElementById('catalogBulkBar');
+  const validIds = new Set(visibleProducts.map(product => product.id));
+  selectedCatalogProductIds = new Set([...selectedCatalogProductIds].filter(id => validIds.has(id)));
+  const count = selectedCatalogProductIds.size;
+  if (bar) bar.hidden = count === 0;
+  setText('catalogBulkCount', count + ' dòng được chọn');
+  const all = document.getElementById('catalogSelectAll');
+  if (all) {
+    all.checked = visibleProducts.length > 0 && count === visibleProducts.length;
+    all.indeterminate = count > 0 && count < visibleProducts.length;
+  }
+}
+
+function syncCatalogBulkActionUI() {
+  const action = document.getElementById('catalogBulkAction')?.value || 'group';
+  const value = document.getElementById('catalogBulkValue');
+  if (!value) return;
+  const needsValue = ['group','unit','price-up','price-down'].includes(action);
+  value.hidden = !needsValue;
+  value.type = ['price-up','price-down'].includes(action) ? 'number' : 'text';
+  value.placeholder = action === 'group' ? 'Tên nhóm mới' :
+    action === 'unit' ? 'ĐVT mới' :
+    action === 'price-up' ? '% tăng giá' :
+    action === 'price-down' ? '% giảm giá' : '';
+}
+
+function renderCatalogProductGrid(allProducts = getProductCatalog(), visibleProducts = allProducts) {
+  const body = document.getElementById('productCatalogGridBody');
+  const empty = document.getElementById('catalogGridEmpty');
+  if (!body) return;
+  ensureProductDatalists();
+  body.innerHTML = '';
+  if (empty) empty.hidden = visibleProducts.length > 0;
+
+  visibleProducts.forEach((product, index) => {
+    const row = document.createElement('div');
+    row.className = 'product-grid-row catalog-product-grid-row';
+    row.setAttribute('role', 'row');
+
+    const indexCell = document.createElement('div');
+    indexCell.className = 'product-grid-index';
+    const select = document.createElement('input');
+    select.type = 'checkbox';
+    select.className = 'product-grid-select';
+    select.checked = selectedCatalogProductIds.has(product.id);
+    select.setAttribute('aria-label', 'Chọn sản phẩm danh mục ' + (index + 1));
+    select.addEventListener('change', () => {
+      if (select.checked) selectedCatalogProductIds.add(product.id);
+      else selectedCatalogProductIds.delete(product.id);
+      updateCatalogBulkBar(visibleProducts);
+    });
+    const indexText = document.createElement('span');
+    indexText.textContent = String(index + 1);
+    indexCell.append(select, indexText);
+    row.appendChild(indexCell);
+
+    const definitions = [['name','text'],['group','text'],['pack','text'],['unit','text'],['price','number']];
+    definitions.forEach(([key,type]) => {
+      const { cell, input } = createProductGridFieldCell({ product, index, key, type, context: 'catalog' });
+      input.addEventListener('input', () => {
+        product[key] = key === 'price' ? normalizeGridNumber(input.value) : input.value;
+        persistCatalogProducts(allProducts);
+        if (key === 'name' || key === 'group' || key === 'unit') ensureProductDatalists();
+      });
+      input.addEventListener('keydown', event => {
+        const keys = ['name','group','pack','unit','price','note'];
+        const keyIndex = keys.indexOf(key);
+        const focusCell = (rowIndex, columnKey) => {
+          const target = document.querySelector('[data-catalog-grid-index="' + rowIndex + '"][data-catalog-grid-key="' + columnKey + '"]');
+          target?.focus(); target?.select?.();
+        };
+        if (event.key === 'ArrowDown') { event.preventDefault(); focusCell(Math.min(visibleProducts.length - 1,index + 1),key); }
+        else if (event.key === 'ArrowUp') { event.preventDefault(); focusCell(Math.max(0,index - 1),key); }
+        else if (event.key === 'ArrowRight' && keyIndex < keys.length - 1) { event.preventDefault(); focusCell(index,keys[keyIndex + 1]); }
+        else if (event.key === 'ArrowLeft' && keyIndex > 0) { event.preventDefault(); focusCell(index,keys[keyIndex - 1]); }
+      });
+      row.appendChild(cell);
+    });
+
+    const noteCellData = createProductGridFieldCell({ product, index, key: 'note', context: 'catalog' });
+    noteCellData.input.addEventListener('input', () => {
+      product.note = noteCellData.input.value;
+      persistCatalogProducts(allProducts);
+    });
+    row.appendChild(noteCellData.cell);
+
+    const actions = document.createElement('div');
+    actions.className = 'catalog-product-grid-actions';
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'product-grid-mini-action';
+    add.textContent = '+';
+    add.title = 'Thêm vào báo giá';
+    add.setAttribute('aria-label', 'Thêm ' + (product.name || 'sản phẩm') + ' vào báo giá');
+    add.addEventListener('click', () => addCatalogProduct(product));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'product-grid-delete';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', 'Xóa ' + (product.name || 'sản phẩm') + ' khỏi danh mục');
+    remove.addEventListener('click', () => {
+      if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
+      const next = allProducts.filter(item => item.id !== product.id);
+      selectedCatalogProductIds.delete(product.id);
+      if (persistCatalogProducts(next)) {
+        renderMasterData();
+        renderDashboard();
+      }
+    });
+    actions.append(add, remove);
+    row.appendChild(actions);
+    body.appendChild(row);
+  });
+  updateCatalogBulkBar(visibleProducts);
+}
+
+function applyCatalogBulkAction() {
+  const allProducts = getProductCatalog();
+  const selected = allProducts.filter(product => selectedCatalogProductIds.has(product.id));
+  if (!selected.length) return;
+  const action = document.getElementById('catalogBulkAction')?.value || 'group';
+  const raw = document.getElementById('catalogBulkValue')?.value || '';
+  if (['group','unit'].includes(action) && !String(raw).trim()) {
+    toast('Nhập giá trị cần áp dụng');
+    document.getElementById('catalogBulkValue')?.focus();
+    return;
+  }
+  if (['price-up','price-down'].includes(action) && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) {
+    toast('Nhập phần trăm hợp lệ');
+    document.getElementById('catalogBulkValue')?.focus();
+    return;
+  }
+  if (action === 'delete' && !confirm('Xóa ' + selected.length + ' sản phẩm đã chọn khỏi danh mục?')) return;
+
+  let next = allProducts.slice();
+  if (action === 'group') selected.forEach(product => { product.group = String(raw).trim(); });
+  else if (action === 'unit') selected.forEach(product => { product.unit = String(raw).trim(); });
+  else if (action === 'price-up' || action === 'price-down') {
+    const pct = Math.min(1000, Number(raw)) / 100;
+    selected.forEach(product => {
+      const base = normalizeNonNegativeNumber(product.price);
+      product.price = Math.round(base * (action === 'price-up' ? 1 + pct : Math.max(0,1 - pct)));
+    });
+  } else if (action === 'duplicate') {
+    const copies = selected.map(product => ({
+      ...product,
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())
+    }));
+    next = [...copies, ...next];
+  } else if (action === 'delete') {
+    next = next.filter(product => !selectedCatalogProductIds.has(product.id));
+  }
+  selectedCatalogProductIds.clear();
+  if (persistCatalogProducts(next, 'Đã cập nhật ' + selected.length + ' sản phẩm')) renderMasterData();
+}
+
+function addBlankCatalogProduct() {
+  const items = getProductCatalog();
+  const item = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    group: '', name: '', pack: '', unit: '', price: 0,
+    currency: normalizeCatalogCurrency(state.currency || 'VND'), note: ''
+  };
+  items.unshift(item);
+  if (!persistCatalogProducts(items)) return;
+  renderMasterData();
+  requestAnimationFrame(() => document.querySelector('[data-catalog-grid-index="0"][data-catalog-grid-key="name"]')?.focus());
+}
+
+function exportCatalogCsv() {
+  const rows = [['Tên sản phẩm','Nhóm hàng','Quy cách','ĐVT','Đơn giá','Tiền tệ','Ghi chú']];
+  getProductCatalog().forEach(product => rows.push([
+    product.name || '', product.group || '', product.pack || '', product.unit || '',
+    normalizeNonNegativeNumber(product.price), normalizeCatalogCurrency(product.currency || 'VND'), product.note || ''
+  ]));
+  const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  download('danh-muc-san-pham.csv', csv, 'text/csv;charset=utf-8');
+  toast('Đã xuất danh mục sản phẩm CSV');
+}
+
+function exportCustomerCsv() {
+  const rows = [['Tên khách hàng','Công ty','Người liên hệ','SĐT','Email','Địa chỉ']];
+  getCustomerLibrary().forEach(customer => rows.push([
+    customer.name || '', customer.company || '', customer.contact || '', customer.phone || '',
+    customer.email || '', customer.address || ''
+  ]));
+  const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  download('danh-ba-khach-hang.csv', csv, 'text/csv;charset=utf-8');
+  toast('Đã xuất danh bạ khách hàng CSV');
+}
+
 function renderMasterData() {
   const customerList = document.getElementById('customerLibraryList');
-  const productList = document.getElementById('productCatalogList');
-  if (!customerList || !productList) return;
+  const productGrid = document.getElementById('productCatalogGridBody');
+  if (!customerList || !productGrid) return;
 
   const customerQuery = (document.getElementById('customerLibrarySearch')?.value || '').trim().toLowerCase();
   const productQuery = (document.getElementById('productCatalogSearch')?.value || '').trim().toLowerCase();
@@ -4743,59 +4989,8 @@ function renderMasterData() {
     });
   }
 
-  productList.innerHTML = '';
-  if (!products.length) {
-    productList.innerHTML = '<div class="history-empty" role="status">Chưa có sản phẩm phù hợp.</div>';
-  } else {
-    products.forEach(product => {
-      const row = document.createElement('div');
-      row.className = 'master-item master-table-row product-table-grid';
-      const productCurrency = normalizeCatalogCurrency(product.currency || 'VND');
-
-      const nameCell = document.createElement('div');
-      nameCell.className = 'master-cell master-name-cell';
-      const name = document.createElement('strong');
-      name.textContent = product.name || 'Sản phẩm';
-      const currency = document.createElement('small');
-      currency.textContent = productCurrency;
-      nameCell.append(name, currency);
-
-      const groupCell = document.createElement('div');
-      groupCell.className = 'master-cell master-group-cell';
-      groupCell.textContent = product.group || '—';
-
-      const packCell = document.createElement('div');
-      packCell.className = 'master-cell master-pack-cell';
-      packCell.textContent = [product.pack, product.unit].filter(Boolean).join(' / ') || '—';
-
-      const priceCell = document.createElement('div');
-      priceCell.className = 'master-cell master-price-cell';
-      priceCell.textContent = moneyForCurrency(Number(product.price || 0), productCurrency);
-
-      const noteCell = document.createElement('div');
-      noteCell.className = 'master-cell master-note-cell';
-      noteCell.textContent = product.note || '—';
-
-      const actions = document.createElement('div');
-      actions.className = 'master-actions master-cell master-action-cell';
-      const add = document.createElement('button');
-      add.className = 'btn primary';
-      add.textContent = 'Thêm';
-      add.addEventListener('click', () => addCatalogProduct(product));
-      const del = document.createElement('button');
-      del.className = 'btn danger';
-      del.textContent = 'Xóa';
-      del.addEventListener('click', () => {
-        if (!confirm('Xóa sản phẩm này khỏi danh mục?')) return;
-        if (!setProductCatalog(getProductCatalog().filter(item => item.id !== product.id))) return;
-        renderMasterData();
-        renderDashboard();
-      });
-      actions.append(add, del);
-      row.append(nameCell, groupCell, packCell, priceCell, noteCell, actions);
-      productList.appendChild(row);
-    });
-  }
+  renderCatalogProductGrid(allProducts, products);
+  showMasterDataTab(activeMasterDataTab);
 }
 
 function normalizePresetStore(value) {
