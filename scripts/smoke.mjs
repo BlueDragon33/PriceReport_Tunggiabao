@@ -258,7 +258,7 @@ if (!css.includes('.shell.app-workspace')) fail('Application workspace shell sty
 if (!appCss.includes('.dashboard-main-grid')) fail('Dashboard responsive grid is missing');
 
 if (!html.includes('id="mobileMoreToggle"') || !html.includes('id="mobileMoreMenu"')) fail('V4.1 compact mobile navigation is missing');
-if (!js.includes('function setMobileMoreMenu(open)')) fail('V4.1 mobile navigation controller is missing');
+if (!js.includes('function setMobileMoreMenu(open, { restoreFocus = false } = {})')) fail('V5 mobile navigation focus controller is missing');
 if (!js.includes("row.addEventListener('click', () => loadQuoteRecord(record))")) fail('Recent dashboard quotation must open the selected record directly');
 if (!appCss.includes('.mobile-more-grid')) fail('Mobile action sheet styles are missing');
 
@@ -319,3 +319,8 @@ if (!html.includes('<body class="v5-ui">')) fail('V5 UI scope is missing from bo
 for (const primitive of ['app-workspace-pane','app-workspace-header','app-surface-panel','app-status-card','app-data-table']) {
   if (!html.includes(primitive)) fail('V5 shared UI primitive missing from markup: ' + primitive);
 }
+
+if (!html.includes('role="combobox"') || !html.includes('role="listbox"')) fail('V5 global-search accessibility semantics are missing');
+if (!js.includes("event.key === 'ArrowDown' || event.key === 'ArrowUp'")) fail('V5 global-search keyboard navigation is missing');
+if (!html.includes('id="mobileMoreMenu" role="dialog"')) fail('V5 mobile More dialog semantics are missing');
+if (!js.includes('mobileMoreFocusable()')) fail('V5 mobile More focus trap is missing');
