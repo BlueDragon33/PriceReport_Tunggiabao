@@ -63,7 +63,7 @@ if (!js.includes('getCustomerLibrary')) fail('Customer master-data library is mi
 if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v28-app")) fail('Service-worker cache version was not upgraded for V4 application shell');
+if (!sw.includes("pricereport-shell-v29-app-ux")) fail('Service-worker cache version was not upgraded for V4.1 application UX');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -254,3 +254,8 @@ if (!js.includes('function renderDashboard()')) fail('Dashboard data renderer is
 if (!js.includes("openTab('dashboard')")) fail('Application must start on dashboard');
 if (!css.includes('.shell.app-workspace')) fail('Application workspace shell styles are missing');
 if (!css.includes('.dashboard-main-grid')) fail('Dashboard responsive grid is missing');
+
+if (!html.includes('id="mobileMoreToggle"') || !html.includes('id="mobileMoreMenu"')) fail('V4.1 compact mobile navigation is missing');
+if (!js.includes('function setMobileMoreMenu(open)')) fail('V4.1 mobile navigation controller is missing');
+if (!js.includes("row.addEventListener('click', () => loadQuoteRecord(record))")) fail('Recent dashboard quotation must open the selected record directly');
+if (!css.includes('.mobile-more-grid')) fail('V4.1 mobile action sheet styles are missing');
