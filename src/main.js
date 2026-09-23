@@ -4174,11 +4174,18 @@ function focusValidationTarget(target, returnTarget = null) {
   requestAnimationFrame(() => {
     const installReturnKey = (field) => {
       if (!field || !returnTarget) return;
-      field.addEventListener('keydown', (event) => {
+      if (field._studioGuidanceReturnKeyHandler) {
+        field.removeEventListener('keydown', field._studioGuidanceReturnKeyHandler);
+      }
+      const handleReturnKey = (event) => {
         if (event.key !== 'Escape') return;
         event.preventDefault();
+        field.removeEventListener('keydown', handleReturnKey);
+        delete field._studioGuidanceReturnKeyHandler;
         returnTarget.focus();
-      }, { once: true });
+      };
+      field._studioGuidanceReturnKeyHandler = handleReturnKey;
+      field.addEventListener('keydown', handleReturnKey);
     };
 
     if (Number.isInteger(target.productIndex)) {
