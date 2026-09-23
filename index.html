@@ -89,10 +89,13 @@
         </div>
         <div class="studio-commandbar" aria-label="Thao tác báo giá">
           <div class="studio-command-main">
+            <button class="btn studio-history-button" id="studioUndo" type="button" title="Hoàn tác (Ctrl/Cmd+Z)" aria-label="Hoàn tác" disabled>↶</button>
+            <button class="btn studio-history-button" id="studioRedo" type="button" title="Làm lại (Ctrl/Cmd+Shift+Z)" aria-label="Làm lại" disabled>↷</button>
             <button class="btn primary" id="studioSaveQuote" type="button">Lưu nháp</button>
             <button class="btn" id="studioCheckQuote" type="button">Kiểm tra</button>
             <button class="btn" id="studioPreviewQuote" type="button">Xem A4</button>
           </div>
+          <span class="studio-autosave-status" id="studioAutosaveStatus" role="status" aria-live="polite">✓ Đã lưu cục bộ</span>
           <div class="studio-flow-controls">
             <button class="btn studio-flow-button" id="studioPrevStep" type="button" aria-label="Bước trước">←</button>
             <span class="studio-workflow-position" id="studioWorkflowPosition">Bước 1/6</span>
