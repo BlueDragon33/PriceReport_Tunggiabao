@@ -131,6 +131,7 @@ test('V4.9 settings persist application preferences without touching business da
   const uiKey = 'tunggiabao-price-report-ui-v2';
   const historyKey = 'tunggiabao-price-report-history-v1';
   const beforeHistory = localStorage.getItem(historyKey);
+  const beforeUi = localStorage.getItem(uiKey);
 
   document.querySelector('[data-tab="settings"]').click();
   expect(document.getElementById('pane-settings').classList.contains('active')).toBe(true);
@@ -152,12 +153,11 @@ test('V4.9 settings persist application preferences without touching business da
   expect(savedUi.appPreferences.startPage).toBe('history');
   expect(localStorage.getItem(historyKey)).toBe(beforeHistory);
 
-  hero.checked = true;
-  hero.dispatchEvent(new Event('change', { bubbles: true }));
-  compact.checked = false;
-  compact.dispatchEvent(new Event('change', { bubbles: true }));
-  start.value = 'dashboard';
-  start.dispatchEvent(new Event('change', { bubbles: true }));
+  if (beforeUi == null) localStorage.removeItem(uiKey);
+  else localStorage.setItem(uiKey, beforeUi);
+  const previousPrefs = beforeUi ? (JSON.parse(beforeUi).appPreferences || {}) : {};
+  document.body.classList.toggle('dashboard-hero-hidden', previousPrefs.showDashboardHero === false);
+  document.body.classList.toggle('management-compact', Boolean(previousPrefs.compactManagement));
   document.querySelector('[data-tab="general"]').click();
 });
 
