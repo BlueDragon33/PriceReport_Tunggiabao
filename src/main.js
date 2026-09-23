@@ -1516,6 +1516,54 @@ function refreshProductEntrySuggestions() {
   ]);
 }
 
+function productCellIssue(product, key) {
+  const name = String(product?.name || '').trim();
+  const qty = Number(product?.qty);
+  const price = Number(product?.price);
+
+  if (key === 'name' && !name && productHasDraftContent(product)) {
+    return { tone: 'error', message: 'Cần nhập tên sản phẩm.' };
+  }
+  if (key === 'qty' && name) {
+    if (!Number.isFinite(qty)) return { tone: 'error', message: 'Số lượng không hợp lệ.' };
+    if (qty < 0) return { tone: 'warning', message: 'Số lượng không được âm.' };
+    if (qty === 0 && (state.showQty || state.showAmount || state.showTotals)) {
+      return { tone: 'warning', message: 'Số lượng đang bằng 0.' };
+    }
+  }
+  if (key === 'price' && name) {
+    if (!Number.isFinite(price)) return { tone: 'error', message: 'Đơn giá không hợp lệ.' };
+    if (price < 0) return { tone: 'warning', message: 'Đơn giá không được âm.' };
+    if (price === 0 && state.showPrice) return { tone: 'warning', message: 'Chưa có đơn giá.' };
+  }
+  return null;
+}
+
+function syncProductRowValidation(card, product) {
+  if (!card) return;
+  card.querySelectorAll('[data-product-key]').forEach((input) => {
+    const key = input.dataset.productKey;
+    const field = input.closest('.product-field');
+    if (!field) return;
+    field.classList.remove('cell-error', 'cell-warning');
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
+    field.querySelector('.product-cell-validation')?.remove();
+
+    const issue = productCellIssue(product, key);
+    if (!issue) return;
+    field.classList.add(issue.tone === 'error' ? 'cell-error' : 'cell-warning');
+    input.setAttribute('aria-invalid', 'true');
+    const message = document.createElement('small');
+    message.className = 'product-cell-validation';
+    message.id = 'product-cell-' + card.dataset.productIndex + '-' + key + '-message';
+    message.setAttribute('role', 'status');
+    message.textContent = issue.message;
+    input.setAttribute('aria-describedby', message.id);
+    field.appendChild(message);
+  });
+}
+
 function productField(label, key, value, type, onInput, className = '') {
   const wrap = document.createElement('label');
   wrap.className = 'product-field ' + className;
@@ -1679,9 +1727,9 @@ function renderEditorProducts() {
 
     const updateProduct = (key, input, numeric = false) => {
       if (numeric) {
-        const value = normalizeNonNegativeNumber(input.value);
-        product[key] = value;
-        if (Number(input.value) !== value) input.value = String(value);
+        const raw = String(input.value || '').trim();
+        const value = raw === '' ? 0 : Number(raw);
+        product[key] = Number.isFinite(value) ? value : 0;
       } else {
         product[key] = input.value;
       }
@@ -1692,6 +1740,7 @@ function renderEditorProducts() {
       renderTotals();
       updateDocumentHealth();
       syncStudioContext('products');
+      syncProductRowValidation(card, product);
       requestAnimationFrame(updatePageEstimate);
     };
 
@@ -1731,6 +1780,7 @@ function renderEditorProducts() {
     });
 
     card.append(head, body);
+    syncProductRowValidation(card, product);
     list.appendChild(card);
   });
 
@@ -3577,8 +3627,10 @@ function validateQuote(data = state) {
       errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
       return;
     }
-    if (name && (data.showQty || data.showAmount || data.showTotals) && qty <= 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
-    if (name && data.showPrice && price <= 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
+    if (name && qty < 0) warnings.push('Sản phẩm "' + name + '" có số lượng âm.');
+    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Sản phẩm "' + name + '" có số lượng bằng 0.');
+    if (name && price < 0) warnings.push('Sản phẩm "' + name + '" có đơn giá âm.');
+    else if (name && data.showPrice && price === 0) warnings.push('Sản phẩm "' + name + '" chưa có đơn giá.');
   });
 
   if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
