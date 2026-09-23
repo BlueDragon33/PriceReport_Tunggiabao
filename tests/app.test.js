@@ -98,8 +98,8 @@ test('V4.1 dashboard recent quotation opens the selected record directly', () =>
 test('V4.6 dashboard global search can find a saved customer and open it', () => {
   const customersKey = 'tunggiabao-price-report-customers-v1';
   const previousCustomers = localStorage.getItem(customersKey);
-  const previousName = document.getElementById('customerName').value;
-  const previousCompany = document.getElementById('customerCompany').value;
+  const fieldIds = ['customerName','customerCompany','customerAddress','customerPhone','customerEmail','customerContact','recipientLine'];
+  const previousFields = Object.fromEntries(fieldIds.map(id => [id, document.getElementById(id).value]));
 
   document.getElementById('customerName').value = 'Khách V46';
   document.getElementById('customerName').dispatchEvent(new Event('input', { bubbles: true }));
@@ -119,10 +119,11 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
 
   if (previousCustomers == null) localStorage.removeItem(customersKey);
   else localStorage.setItem(customersKey, previousCustomers);
-  document.getElementById('customerName').value = previousName;
-  document.getElementById('customerName').dispatchEvent(new Event('input', { bubbles: true }));
-  document.getElementById('customerCompany').value = previousCompany;
-  document.getElementById('customerCompany').dispatchEvent(new Event('input', { bubbles: true }));
+  fieldIds.forEach((id) => {
+    const el = document.getElementById(id);
+    el.value = previousFields[id];
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
   document.querySelector('[data-tab="general"]').click();
 });
 
