@@ -213,26 +213,36 @@
           </div>
         </div>
 
-        <div class="pane" id="pane-history">
-          <div class="card">
-            <h3>Quản lý báo giá</h3>
-            <div class="history-stats">
-              <div class="history-kpi"><span>Đã lưu</span><strong id="historyCount">0</strong></div>
-              <div class="history-kpi"><span>Đã chấp nhận</span><strong id="historyAcceptedCount">0</strong></div>
-              <div class="history-kpi history-kpi-wide"><span>Tổng giá trị đã lưu theo tiền tệ</span><strong id="historyRevenue">0 VND</strong></div>
+        <div class="pane history-workspace" id="pane-history">
+          <div class="history-workspace-header">
+            <div>
+              <span class="workspace-eyebrow">QUẢN TRỊ BÁO GIÁ</span>
+              <h2>Quản lý báo giá</h2>
+              <p>Tìm, mở lại, nhân bản và kiểm soát trạng thái báo giá tại một nơi.</p>
             </div>
-            <div class="btns" style="margin-top:10px">
-              <button class="btn primary" id="saveQuoteToHistory">Lưu báo giá hiện tại</button>
-              <button class="btn" id="newQuote">Tạo báo giá mới</button>
+            <div class="history-header-actions">
+              <button class="btn" id="saveQuoteToHistory">Lưu báo giá hiện tại</button>
+              <button class="btn primary" id="newQuote">＋ Tạo báo giá mới</button>
             </div>
           </div>
-          <div class="card">
-            <h3>Lịch sử báo giá</h3>
-            <div class="grid2">
-              <div class="row"><label>Tìm theo số báo giá / khách hàng</label><input id="quoteSearch" placeholder="Nhập từ khóa..."></div>
-              <div class="row"><label>Lọc trạng thái</label>
+
+          <div class="history-stats history-stats-app">
+            <div class="history-kpi"><span>Tổng báo giá</span><strong id="historyCount">0</strong><small>Đã lưu trong ứng dụng</small></div>
+            <div class="history-kpi"><span>Đang xử lý</span><strong id="historyPendingCount">0</strong><small>Nháp hoặc đã gửi</small></div>
+            <div class="history-kpi"><span>Đã chấp nhận</span><strong id="historyAcceptedCount">0</strong><small>Báo giá thành công</small></div>
+            <div class="history-kpi history-kpi-wide"><span>Tổng giá trị đã lưu</span><strong id="historyRevenue">0 VND</strong><small>Theo từng loại tiền tệ</small></div>
+          </div>
+
+          <div class="history-management-panel">
+            <div class="history-toolbar">
+              <div class="history-search-field">
+                <label for="quoteSearch">Tìm báo giá</label>
+                <div class="history-search-box"><span>⌕</span><input id="quoteSearch" placeholder="Mã báo giá, khách hàng, công ty, SĐT..."></div>
+              </div>
+              <div class="history-filter-field">
+                <label for="quoteStatusFilter">Trạng thái</label>
                 <select id="quoteStatusFilter">
-                  <option value="">Tất cả</option>
+                  <option value="">Tất cả trạng thái</option>
                   <option value="draft">Bản nháp</option>
                   <option value="sent">Đã gửi</option>
                   <option value="accepted">Đã chấp nhận</option>
@@ -240,8 +250,15 @@
                   <option value="expired">Hết hiệu lực</option>
                 </select>
               </div>
+              <div class="history-result-summary"><span id="historyResultCount">0</span><small>kết quả</small></div>
             </div>
-            <div id="quoteHistoryList" class="history-list"></div>
+
+            <div class="history-table-shell">
+              <div class="history-table-head" aria-hidden="true">
+                <span>Mã báo giá</span><span>Khách hàng</span><span>Ngày</span><span>Giá trị</span><span>Trạng thái</span><span>Thao tác</span>
+              </div>
+              <div id="quoteHistoryList" class="history-list history-table-body"></div>
+            </div>
           </div>
         </div>
 
