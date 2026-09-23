@@ -223,12 +223,13 @@ body.v5-ui input,
 body.v5-ui textarea,
 body.v5-ui select{
   width:100%;
-  height:34px;
   padding:7px 9px;
   outline:none;
   font-size:11.5px;
   transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
 }
+body.v5-ui input,
+body.v5-ui select{height:34px}
 body.v5-ui textarea{
   height:auto;
   min-height:76px;
@@ -576,7 +577,6 @@ body.v5-ui .system-workspace{
   margin:0 auto;
   padding:26px 28px 42px;
 }
-body.v5-ui .dashboard-topbar,
 body.v5-ui .history-workspace-header,
 body.v5-ui .master-workspace-header,
 body.v5-ui .export-workspace-header,
@@ -655,7 +655,13 @@ body.v5-ui .system-panel-head p{
 }
 
 /* ---------- Dashboard layout ---------- */
-body.v5-ui .dashboard-topbar{align-items:center}
+body.v5-ui .dashboard-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  margin:0 0 18px;
+}
 body.v5-ui .dashboard-search-wrap{width:min(390px,36vw)}
 body.v5-ui .dashboard-search{
   width:100%;
@@ -815,7 +821,7 @@ body.v5-ui .recent-quote-row{
 }
 body.v5-ui .recent-quote-head{
   padding:8px 10px;
-  color:#66778e;
+  color:var(--v5-muted);
   font-size:8.5px;
   font-weight:800;
 }
@@ -963,7 +969,7 @@ body.v5-ui .recent-quote-table{
   border-radius:12px;
   overflow:hidden;
 }
-body.v5-ui .recent-quote-head{background:var(--v5-surface-soft);color:var(--v5-muted)}
+body.v5-ui .recent-quote-head{background:var(--v5-surface-soft)}
 body.v5-ui .recent-quote-row{
   border-top:1px solid #edf1f5;
   background:var(--v5-surface);
@@ -1039,7 +1045,7 @@ body.v5-ui .history-cell{min-width:0;color:#4a5e79;font-size:9.4px}
 body.v5-ui .history-cell strong{
   display:block;
   overflow:hidden;
-  color:#243e62;
+  color:#29415f;
   font-size:10px;
   text-overflow:ellipsis;
   white-space:nowrap;
@@ -1217,7 +1223,6 @@ body.v5-ui .master-table-row{
 }
 body.v5-ui .history-table-row:hover,
 body.v5-ui .master-table-row:hover{background:#f9fbfe}
-body.v5-ui .history-cell strong,
 body.v5-ui .master-cell strong{color:#29415f}
 body.v5-ui .history-quote-cell strong,
 body.v5-ui .master-name-cell strong{color:#1769c8}
