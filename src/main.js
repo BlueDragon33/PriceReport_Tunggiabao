@@ -3302,15 +3302,25 @@ async function recognizeHandwritingFile(file) {
 
 function undoLastImport() {
   if (!lastImportUndoSnapshot) return;
-  state = merge(clone(lastImportUndoSnapshot));
-  lastImportUndoSnapshot = null;
+  const undoSnapshot = clone(lastImportUndoSnapshot);
+  state = merge(undoSnapshot);
   syncLegacyCompanyAddress();
   const persisted = save();
+  if (persisted) lastImportUndoSnapshot = null;
+  else lastImportUndoSnapshot = undoSnapshot;
   syncInputs();
   resetCollapsedProductsForState();
   renderEditorProducts();
   render();
-  toast(persisted ? 'Đã hoàn tác lần nhập dữ liệu gần nhất' : 'Đã hoàn tác tạm thời; chưa thể lưu vào trình duyệt');
+  if (persisted) {
+    toast('Đã hoàn tác lần nhập dữ liệu gần nhất');
+  } else {
+    toast('Đã hoàn tác tạm thời; chưa thể lưu vào trình duyệt', {
+      label: 'Thử lưu lại',
+      onClick: undoLastImport,
+      duration: 6000
+    });
+  }
 }
 
 function applySmartImportDraft() {
@@ -3327,7 +3337,7 @@ function applySmartImportDraft() {
       name: String(product.name || ''),
       pack: String(product.pack || ''),
       unit: String(product.unit || ''),
-      qty: normalizeNonNegativeNumber(product.qty || 1),
+      qty: normalizeNonNegativeNumber(product.qty ?? 1),
       price: normalizeNonNegativeNumber(product.price),
       note: String(product.note || '')
     }));
@@ -3340,6 +3350,16 @@ function applySmartImportDraft() {
   state = merge(next);
   syncLegacyCompanyAddress();
   const persisted = save();
+  if (!persisted) {
+    state = merge(previousState);
+    syncLegacyCompanyAddress();
+    clearRecoverySnapshot();
+    updateAutosaveIndicator('error');
+    setSmartImportProgress('Không thể lưu dữ liệu vào bộ nhớ chính. Chưa áp dụng import; dữ liệu kiểm tra vẫn được giữ để thử lại.', 'error');
+    toast('Chưa áp dụng dữ liệu nhập vì bộ nhớ trình duyệt chưa ghi được');
+    return false;
+  }
+
   syncInputs();
   resetCollapsedProductsForState();
   renderEditorProducts();
@@ -3347,12 +3367,12 @@ function applySmartImportDraft() {
   closeSmartImport({ discard: true });
   openTab('general');
   lastImportUndoSnapshot = previousState;
-  toast(
-    persisted
-      ? 'Đã áp dụng dữ liệu nhập vào báo giá'
-      : 'Đã áp dụng tạm thời; trình duyệt chưa lưu được dữ liệu',
-    { label: 'Hoàn tác', onClick: undoLastImport, duration: 6000 }
-  );
+  toast('Đã áp dụng dữ liệu nhập vào báo giá', {
+    label: 'Hoàn tác',
+    onClick: undoLastImport,
+    duration: 6000
+  });
+  return true;
 }
 
 function setupSmartImport() {
