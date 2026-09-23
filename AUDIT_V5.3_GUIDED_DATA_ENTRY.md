@@ -122,3 +122,45 @@ The first consolidated tester pass found three interaction defects that source/D
 ### Next pass
 Run the full V5.3 gate on the final head. If green, perform release-candidate cleanup and documentation/version alignment before merge.
 
+## Pass 6 — Exact correction targets
+
+### Finding
+A second UX audit found that a guidance issue could identify the right workflow area while still focusing the wrong control:
+- quantity and unit-price warnings entered the product row but focused the product name;
+- duplicate product names made name-only warning routing ambiguous;
+- the hidden-totals warning focused Discount instead of the Show totals control;
+- partially entered bank information always focused Bank name even when Account number or Account owner was the missing value.
+
+### Corrections
+- Product validation warnings now include their source row number.
+- Product guidance targets carry a field key so quantity warnings focus Quantity and price warnings focus Unit price.
+- Duplicate names remain safe because routing uses the source row number instead of the first matching name.
+- Hidden-totals guidance focuses the Show totals checkbox.
+- Incomplete bank guidance resolves the first actually missing bank field.
+- VAT/terms conflict guidance routes to the Terms text that contains the conflicting statement.
+
+### Regression coverage
+- Named-product quantity warning focuses the exact Quantity input.
+- Two products with the same name still route a warning to the correct row and Quantity field.
+- Hidden-totals warning focuses the actionable Show totals control.
+
+## Pass 7 — V5.3 Release Candidate packaging
+
+### Release identity
+- Package version: `5.3.0-rc.1`.
+- Service Worker generation: `pricereport-shell-v53-guided-entry-rc1`.
+- Production materialization continues to append only its managed/local deployment suffix, preserving the V5.3 cache generation.
+
+### Documentation alignment
+- README current-status section now describes the V5.3 Guided Data Entry workflow instead of the obsolete V3.3 checkpoint.
+- V5.2 Smart Data Entry remains documented as the data-entry foundation under V5.3.
+
+### Final merge gate
+Merge only when the final RC head confirms:
+1. syntax and UI/debt guards;
+2. business/import/export/storage/service-worker tests;
+3. DOM regression tests including live guidance refresh and exact correction targets;
+4. smoke gate with the V5.3 cache generation;
+5. production build;
+6. GitHub Actions green on the exact final head.
+
