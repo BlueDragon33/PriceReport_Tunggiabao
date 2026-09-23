@@ -109,3 +109,39 @@ Customer duplicates are reported by normalized phone first, otherwise canonical 
 ### Gate before UI
 Run the full suite. Only after this parser core is green may the Data Library import/export controls and review modal be added.
 
+## Pass 3B — Transactional Data Library import/export
+
+### Import flow
+- Visible import controls are added only after handlers are wired.
+- Excel/XLS/CSV files are read through the existing `xlsx` dependency.
+- Multi-sheet workbooks are scored and the best sheet is selected first; operators can switch sheets in the review modal.
+- Customer rows use the shared customer parser.
+- Product rows reuse the existing spreadsheet parser/mapping pipeline.
+- The review modal shows:
+  - rows eligible to apply;
+  - existing records that will be updated;
+  - invalid rows;
+  - duplicate groups inside the source file.
+- Invalid rows are skipped explicitly.
+- Every row belonging to a duplicate group inside the same file is excluded from Apply. The system does not silently pick a winner or merge those duplicates.
+- Existing canonical records are updated while preserving their IDs; new records receive new IDs.
+- Each library is persisted once after the complete next state is built.
+
+### Export flow
+- Customer and product libraries can be exported as both Excel and CSV.
+- Product exports preserve currency.
+- Export column order is aligned with the import aliases so exported files can be re-imported without manual remodeling.
+
+### Additional identity defect fixed before UI
+The shared customer parser allowed email-only records, while the existing storage key previously used only phone or name+company. Email-only customers could therefore collapse onto an empty identity.
+
+Customer identity now resolves in this order:
+1. normalized phone;
+2. canonical name + company;
+3. canonical email.
+
+The same fallback is used by importer duplicate detection and storage/update logic.
+
+### Safety
+Import/export UI is no longer a placeholder. Every visible control has a bound handler, and smoke guards the complete control contract.
+
