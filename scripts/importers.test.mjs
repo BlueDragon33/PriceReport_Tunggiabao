@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows } from '../src/importers.js';
+import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedPhone, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -316,3 +316,32 @@ const duplicateSkipped = parseMappedSpreadsheetRows(duplicateResolutionRows, {
 assert.equal(duplicateSkipped.duplicates.length, 0);
 assert.equal(duplicateSkipped.products.length, 2);
 assert.equal(duplicateSkipped.products.some(product => product.name === 'Trứng vịt'), true);
+
+
+assert.equal(normalizeImportedPhone('+84 962 944 688'), '0962944688');
+assert.equal(normalizeImportedPhone('0084 962 944 688'), '0962944688');
+assert.equal(normalizeImportedPhone('0962.944.688'), '0962944688');
+
+const currencyNormalized = normalizeImportedProduct({
+  name: '\u200B Trứng gà ',
+  qty: '2',
+  price: '28.000 đ'
+});
+assert.equal(currencyNormalized.name, 'Trứng gà');
+assert.equal(currencyNormalized.price, 28000);
+
+const currencyCodeNormalized = normalizeImportedProduct({
+  name: 'Trứng vịt',
+  qty: '1',
+  price: '32,000 VND'
+});
+assert.equal(currencyCodeNormalized.price, 32000);
+
+const internationalPhoneSheet = parseSpreadsheetRows([
+  ['HKD Test'],
+  ['SĐT:', '+84 962 944 688'],
+  ['STT', 'Mặt hàng', 'ĐVT', 'Đơn giá'],
+  [1, 'Trứng gà', 'Hộp', '28.000 đ']
+]);
+assert.equal(internationalPhoneSheet.fields.phone, '0962944688');
+assert.equal(internationalPhoneSheet.products[0].price, 28000);
