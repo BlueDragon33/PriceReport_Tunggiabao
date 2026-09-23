@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { detectSpreadsheetHeader, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedPhone, normalizeImportedProduct, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows } from '../src/importers.js';
+import { detectCustomerSpreadsheetHeader, detectSpreadsheetHeader, inferCustomerSpreadsheetColumns, inferSpreadsheetColumns, mergeImportDraft, normalizeImportedPhone, normalizeImportedProduct, parseCustomerSpreadsheetRows, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows } from '../src/importers.js';
 
 const rows = [
   ['HKD - Tùng Gia Bảo','','','',''],
@@ -365,4 +365,47 @@ for (const size of [100, 300, 500]) {
   assert.equal(largeParsed.products.length, size);
   assert.equal(largeParsed.invalidRows.length, 0);
 }
+
+const customerHeaderV54 = inferCustomerSpreadsheetColumns([
+  'Tên khách hàng', 'Công ty', 'SĐT', 'Email', 'Địa chỉ', 'Người liên hệ'
+]);
+assert.deepEqual(customerHeaderV54.mapping, {
+  name: 0,
+  company: 1,
+  phone: 2,
+  email: 3,
+  address: 4,
+  contact: 5
+});
+
+const customerRowsV54 = [
+  ['Tên khách hàng', 'Công ty', 'SĐT', 'Email', 'Địa chỉ', 'Người liên hệ'],
+  ['Nguyễn Văn A', 'Công ty A', '+84 912 345 678', 'a@example.com', 'Nha Trang', 'Anh A'],
+  ['Nguyễn Văn B', 'Công ty B', '', 'b@example.com', 'Hà Nội', 'Chị B'],
+  ['', '', '', '', 'Chỉ có địa chỉ', '']
+];
+const customerDetectedV54 = detectCustomerSpreadsheetHeader(customerRowsV54);
+assert.equal(customerDetectedV54.headerIndex, 0);
+const customerParsedV54 = parseCustomerSpreadsheetRows(customerRowsV54);
+assert.equal(customerParsedV54.customers.length, 2);
+assert.equal(customerParsedV54.customers[0].phone, '0912345678');
+assert.equal(customerParsedV54.customers[1].email, 'b@example.com');
+assert.equal(customerParsedV54.invalidRows.length, 1);
+assert.equal(customerParsedV54.invalidRows[0].rowNumber, 4);
+
+const duplicatedCustomersV54 = parseCustomerSpreadsheetRows([
+  ['Customer name', 'Phone', 'Email'],
+  ['Khách A', '0912345678', 'a@example.com'],
+  ['Khách A mới', '+84 912 345 678', 'new@example.com']
+]);
+assert.equal(duplicatedCustomersV54.duplicates.length, 1);
+assert.deepEqual(duplicatedCustomersV54.duplicates[0].rowNumbers, [2, 3]);
+
+const catalogCurrencyRowsV54 = [
+  ['Tên SP', 'ĐVT', 'Giá', 'Tiền tệ'],
+  ['Sản phẩm RUB', 'cái', '1500', 'RUB']
+];
+const catalogCurrencyParsedV54 = parseSpreadsheetRows(catalogCurrencyRowsV54);
+assert.equal(catalogCurrencyParsedV54.products.length, 1);
+assert.equal(catalogCurrencyParsedV54.products[0].currency, 'RUB');
 
