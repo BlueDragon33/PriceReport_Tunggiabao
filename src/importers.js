@@ -157,6 +157,69 @@ function productHeaderKey(value) {
   return best.distance <= threshold ? best.key : '';
 }
 
+export function parseMappedProductRows(rows, headerIndex, mapping) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const safeMapping = Array.isArray(mapping) ? mapping : [];
+  const header = Array.isArray(safeRows[headerIndex]) ? safeRows[headerIndex] : [];
+  const warnings = [];
+  const products = [];
+  const dataRows = safeRows.slice(headerIndex + 1);
+
+  dataRows.forEach((row, offset) => {
+    const cells = Array.isArray(row) ? row : [];
+    if (!cells.some(value => clean(value))) return;
+    const product = { group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' };
+    let meaningful = false;
+
+    safeMapping.forEach((key, columnIndex) => {
+      if (!key) return;
+      const raw = cells[columnIndex];
+      const value = clean(raw);
+      if (value) meaningful = true;
+      if (key === 'qty' || key === 'price') {
+        const parsed = parseNumber(raw);
+        if (value && !parsed.valid) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': ' + (key === 'qty' ? 'Số lượng' : 'Đơn giá') + ' không hợp lệ.');
+        if (/^-/.test(value)) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': ' + (key === 'qty' ? 'Số lượng' : 'Đơn giá') + ' đang là số âm.');
+        product[key] = key === 'qty' && !value ? 1 : parsed.value;
+      } else {
+        product[key] = value;
+      }
+    });
+
+    if (!meaningful) return;
+    if (!product.name) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': có dữ liệu nhưng chưa có tên sản phẩm.');
+    products.push(product);
+  });
+
+  const groups = [...new Set(products.map(product => clean(product.group)).filter(Boolean))];
+  const mappedKeys = new Set(safeMapping.filter(Boolean));
+  const hasNoteValues = products.some(product => clean(product.note));
+  return {
+    source: 'excel-table',
+    fields: {},
+    products,
+    groups,
+    layoutHints: {
+      showPack: mappedKeys.has('pack') && products.some(product => clean(product.pack)),
+      showQty: mappedKeys.has('qty'),
+      showPrice: mappedKeys.has('price'),
+      showAmount: mappedKeys.has('qty') && mappedKeys.has('price'),
+      showNote: mappedKeys.has('note') && hasNoteValues,
+      showTotals: mappedKeys.has('qty') && mappedKeys.has('price')
+    },
+    warnings: [...new Set(warnings)],
+    unmatched: [],
+    headerIndex,
+    sourceHeaders: header.map(clean),
+    mapping: [...safeMapping],
+    columnMapping: header.map((source, index) => ({
+      index,
+      source: clean(source),
+      target: safeMapping[index] || ''
+    })).filter(item => item.source)
+  };
+}
+
 export function parseGenericProductRows(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
   let headerIndex = -1;
@@ -181,65 +244,14 @@ export function parseGenericProductRows(rows) {
       layoutHints: {},
       warnings: ['Chưa nhận diện được hàng tiêu đề của bảng sản phẩm.'],
       unmatched: [],
+      headerIndex: -1,
+      sourceHeaders: [],
+      mapping: [],
       columnMapping: []
     };
   }
 
-  const warnings = [];
-  const products = [];
-  const dataRows = safeRows.slice(headerIndex + 1);
-  dataRows.forEach((row, offset) => {
-    const cells = Array.isArray(row) ? row : [];
-    if (!cells.some(value => clean(value))) return;
-    const product = { group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' };
-    let meaningful = false;
-
-    mapping.forEach((key, columnIndex) => {
-      if (!key) return;
-      const raw = cells[columnIndex];
-      const value = clean(raw);
-      if (value) meaningful = true;
-      if (key === 'qty' || key === 'price') {
-        const parsed = parseNumber(raw);
-        if (value && !parsed.valid) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': ' + (key === 'qty' ? 'Số lượng' : 'Đơn giá') + ' không hợp lệ.');
-        if (/^-/.test(value)) warnings.push('Dòng ' + (headerIndex + offset + 2) + ': ' + (key === 'qty' ? 'Số lượng' : 'Đơn giá') + ' đang là số âm.');
-        product[key] = key === 'qty' && !value ? 1 : parsed.value;
-      } else {
-        product[key] = value;
-      }
-    });
-
-    if (!meaningful) return;
-    if (!product.name) {
-      warnings.push('Dòng ' + (headerIndex + offset + 2) + ': có dữ liệu nhưng chưa có tên sản phẩm.');
-    }
-    products.push(product);
-  });
-
-  const groups = [...new Set(products.map(product => clean(product.group)).filter(Boolean))];
-  const mappedKeys = new Set(mapping.filter(Boolean));
-  const hasNoteValues = products.some(product => clean(product.note));
-  return {
-    source: 'excel-table',
-    fields: {},
-    products,
-    groups,
-    layoutHints: {
-      showPack: mappedKeys.has('pack') && products.some(product => clean(product.pack)),
-      showQty: mappedKeys.has('qty'),
-      showPrice: mappedKeys.has('price'),
-      showAmount: mappedKeys.has('qty') && mappedKeys.has('price'),
-      showNote: mappedKeys.has('note') && hasNoteValues,
-      showTotals: mappedKeys.has('qty') && mappedKeys.has('price')
-    },
-    warnings: [...new Set(warnings)],
-    unmatched: [],
-    columnMapping: mapping.map((key, index) => ({
-      index,
-      source: clean(safeRows[headerIndex]?.[index]),
-      target: key
-    })).filter(item => item.target)
-  };
+  return parseMappedProductRows(safeRows, headerIndex, mapping);
 }
 
 export function parseSpreadsheetRows(rows) {
