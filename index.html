@@ -14,7 +14,7 @@
       const shell = document.querySelector('.shell');
       if (!shell) return;
 
-      const recoveryKey = 'tgb-style-recovery-v2';
+      const recoveryKey = 'tgb-style-recovery-v3';
       const recoveryAttempt = Math.max(0, Number(sessionStorage.getItem(recoveryKey) || '0') || 0);
       const shellIsStyled = () => getComputedStyle(shell).display === 'grid';
 
@@ -86,7 +86,7 @@
     }, { once: true });
   </script>
 </head>
-<body class="v5-ui reference-ui-v56">
+<body class="v5-ui reference-ui-v57">
 <div id="app">
   <div class="shell app-workspace">
     <nav class="nav" aria-label="Điều hướng ứng dụng">
