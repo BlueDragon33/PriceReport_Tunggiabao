@@ -4428,9 +4428,17 @@ function dataLibraryImportItemSummary(mode, item) {
 
 function focusNextDataLibraryImportIssue({ fromStart = false } = {}) {
   const list = document.getElementById('dataLibraryImportIssueList');
+  const apply = document.getElementById('applyDataLibraryImport');
   if (!list) return false;
   const unresolved = [...list.querySelectorAll('[data-review-unresolved="true"]')];
-  if (!unresolved.length) return false;
+  if (!unresolved.length) {
+    if (apply && !apply.disabled) {
+      apply.focus?.({ preventScroll: true });
+      apply.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return true;
+    }
+    return false;
+  }
   const focused = document.activeElement?.closest?.('[data-review-unresolved="true"]');
   const marked = list.querySelector('[data-review-current="true"]');
   const current = fromStart ? null : (focused || marked);
@@ -4447,6 +4455,44 @@ function focusNextDataLibraryImportIssue({ fromStart = false } = {}) {
   target.focus?.({ preventScroll: true });
   next.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
   return true;
+}
+
+function focusInitialDataLibraryImportReview() {
+  const sheetRow = document.getElementById('dataLibraryImportSheetRow');
+  const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
+  if (sheetRow && !sheetRow.hidden && sheetSelect && !sheetSelect.disabled) {
+    sheetSelect.focus?.();
+    return true;
+  }
+  if (focusNextDataLibraryImportIssue({ fromStart: true })) return true;
+  const apply = document.getElementById('applyDataLibraryImport');
+  if (apply && !apply.disabled) {
+    apply.focus?.();
+    return true;
+  }
+  document.getElementById('cancelDataLibraryImport')?.focus?.();
+  return false;
+}
+
+function trapDataLibraryImportTab(event, modal) {
+  if (event.key !== 'Tab' || !modal || modal.hidden) return false;
+  const controls = [...modal.querySelectorAll(
+    'button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter(element => !element.closest('[hidden]'));
+  if (!controls.length) return false;
+  const first = controls[0];
+  const last = controls[controls.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+    return true;
+  }
+  if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+    return true;
+  }
+  return false;
 }
 
 function closeDataLibraryImport({ restoreFocus = true, discardRecovery = false } = {}) {
@@ -4474,6 +4520,37 @@ function renderDataLibraryImport() {
   setText('dataLibraryImportUpdateCount', reviewState.updateCount);
   setText('dataLibraryImportInvalidCount', reviewState.unresolvedInvalidRows.length);
   setText('dataLibraryImportDuplicateCount', reviewState.unresolvedDuplicateGroups.length);
+
+  const unresolvedTotal = reviewState.unresolvedDuplicateGroups.length + reviewState.unresolvedInvalidRows.length;
+  const resolvedDuplicateCount = candidate.duplicateGroups.length - reviewState.unresolvedDuplicateGroups.length;
+  const completion = document.getElementById('dataLibraryImportCompletion');
+  if (completion) {
+    const hadReviewIssues = candidate.duplicateGroups.length > 0 || candidate.invalidRows.length > 0;
+    if (unresolvedTotal > 0) {
+      completion.dataset.state = 'warning';
+      setText('dataLibraryImportCompletionTitle', 'Còn ' + unresolvedTotal + ' vấn đề cần xử lý');
+      setText(
+        'dataLibraryImportCompletionDetail',
+        'Có thể áp dụng ' + reviewState.accepted.length + ' dòng an toàn; ' +
+          unresolvedTotal + ' vấn đề chưa xử lý sẽ không được nhập.'
+      );
+    } else if (hadReviewIssues) {
+      completion.dataset.state = 'ready';
+      setText('dataLibraryImportCompletionTitle', 'Đã xử lý xong toàn bộ vấn đề');
+      const resolvedParts = [];
+      if (resolvedDuplicateCount) resolvedParts.push('đã chọn bản giữ cho ' + resolvedDuplicateCount + ' nhóm trùng');
+      if (reviewState.ignoredInvalidRows.length) resolvedParts.push('đã xác nhận bỏ qua ' + reviewState.ignoredInvalidRows.length + ' dòng lỗi');
+      setText(
+        'dataLibraryImportCompletionDetail',
+        (resolvedParts.length ? resolvedParts.join(' • ') + '. ' : '') +
+          reviewState.accepted.length + ' dòng đã sẵn sàng để áp dụng.'
+      );
+    } else {
+      completion.dataset.state = 'ready';
+      setText('dataLibraryImportCompletionTitle', 'Dữ liệu đã sẵn sàng');
+      setText('dataLibraryImportCompletionDetail', reviewState.accepted.length + ' dòng hợp lệ, không có lỗi hoặc nhóm trùng cần xử lý.');
+    }
+  }
 
   const sheetRow = document.getElementById('dataLibraryImportSheetRow');
   const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
@@ -4513,7 +4590,6 @@ function renderDataLibraryImport() {
         .filter(Number.isFinite)
     );
     const showResolved = Boolean(document.getElementById('dataLibraryImportShowResolved')?.checked);
-    const unresolvedTotal = reviewState.unresolvedDuplicateGroups.length + reviewState.unresolvedInvalidRows.length;
     setText('dataLibraryImportUnresolvedCount', unresolvedTotal + ' chưa xử lý');
     const nextIssueButton = document.getElementById('dataLibraryImportNextIssue');
     if (nextIssueButton) nextIssueButton.disabled = unresolvedTotal === 0;
@@ -4627,9 +4703,16 @@ function renderDataLibraryImport() {
   const apply = document.getElementById('applyDataLibraryImport');
   if (apply) {
     apply.disabled = reviewState.accepted.length === 0;
-    apply.textContent = reviewState.accepted.length
-      ? 'Áp dụng ' + reviewState.accepted.length + ' dòng đã xác nhận'
-      : 'Không có dòng đã xác nhận để áp dụng';
+    if (!reviewState.accepted.length) {
+      apply.textContent = 'Không có dòng đã xác nhận để áp dụng';
+      apply.dataset.reviewState = 'empty';
+    } else if (unresolvedTotal > 0) {
+      apply.textContent = 'Áp dụng ' + reviewState.accepted.length + ' dòng an toàn • bỏ qua ' + unresolvedTotal + ' vấn đề';
+      apply.dataset.reviewState = 'warning';
+    } else {
+      apply.textContent = 'Áp dụng ' + reviewState.accepted.length + ' dòng đã kiểm tra';
+      apply.dataset.reviewState = 'ready';
+    }
   }
 }
 
@@ -4650,6 +4733,11 @@ function resetDataLibraryImportReviewForLoading(fileName) {
     notice.textContent = 'Đang đọc và nhận diện dữ liệu mới...';
     notice.dataset.tone = 'working';
   }
+
+  const completion = document.getElementById('dataLibraryImportCompletion');
+  if (completion) completion.dataset.state = 'pending';
+  setText('dataLibraryImportCompletionTitle', 'Đang kiểm tra dữ liệu');
+  setText('dataLibraryImportCompletionDetail', 'Hệ thống sẽ báo rõ khi phần kiểm tra đã hoàn tất.');
 
   const head = document.getElementById('dataLibraryImportPreviewHead');
   const body = document.getElementById('dataLibraryImportPreviewBody');
@@ -4698,7 +4786,7 @@ async function openDataLibraryImport(file, mode, trigger) {
     }
     writeDataLibraryImportRecovery();
     renderDataLibraryImport();
-    document.getElementById('dataLibraryImportSheetSelect')?.focus?.();
+    focusInitialDataLibraryImportReview();
   } catch (error) {
     if (readToken !== dataLibraryImportReadToken) return;
     console.error('Data Library import failed:', error);
@@ -4918,10 +5006,13 @@ document.getElementById('dataLibraryImportModal')?.addEventListener('click', (ev
 });
 document.addEventListener('keydown', (event) => {
   const modal = document.getElementById('dataLibraryImportModal');
-  if (event.key === 'Escape' && modal && !modal.hidden) {
+  if (!modal || modal.hidden) return;
+  if (event.key === 'Escape') {
     event.preventDefault();
     closeDataLibraryImport();
+    return;
   }
+  trapDataLibraryImportTab(event, modal);
 });
 
 document.getElementById('reset').addEventListener('click', () => {
