@@ -8,7 +8,7 @@ WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo 
 - Quotation Studio desktop đổi đúng trật tự thị giác của ảnh mẫu: **118px app rail → 320px editor → Preview A4 linh hoạt → 368px inspector Thiết kế**. Preview nằm ở giữa; inspector nằm ngoài cùng bên phải.
 - Sidebar quản trị và Studio dùng cùng ngôn ngữ navy/blue, hit-area lớn và trạng thái active rõ; các workspace không còn chuyển sang rail 224px tách biệt.
 - Typography ứng dụng được nâng lên theo mức đọc của một ứng dụng productivity hiện đại: baseline 15px, form 12.5–14px, button 13.5px, workspace heading 30px. Chữ 8–10px chỉ còn ở metadata/badge/table header nhỏ có chủ đích.
-- Studio dùng chrome navy đồng nhất cho rail/editor/inspector, trong khi A4 nằm trên canvas xanh xám trung tính. Inspector bên phải có ba tab Thiết kế / Nội dung / Kiểm tra và tái sử dụng đúng workflow/preflight hiện có. Các workspace quản trị vẫn giữ surface sáng để dễ đọc bảng/dữ liệu.
+- Studio dùng chrome navy đồng nhất cho rail/editor/inspector, trong khi A4 nằm trên canvas xanh xám trung tính. Thanh lệnh 68px chạy xuyên Editor–Preview–Inspector và dùng lại đúng hành động Lưu/Xem trước/PDF; inspector bên phải có ba tab Thiết kế / Nội dung / Kiểm tra và tái sử dụng workflow/preflight hiện có. Các workspace quản trị vẫn giữ surface sáng để dễ đọc bảng/dữ liệu.
 - **Trung tâm xuất bản & dữ liệu** đã bỏ kiểu card xám lớn nhưng chữ nhỏ; action card dùng nền trắng/soft-blue, title 14px, mô tả 11.5px và hover rõ.
 - Dashboard, History và Data Management được tăng chiều cao card/toolbar/table row để chữ lớn không bị nhồi; Settings/System được nhóm lại theo nhịp 20px.
 - Smart Import và Data Library review được mở rộng trên desktop, đồng thời giữ containment riêng cho tablet/phone.
