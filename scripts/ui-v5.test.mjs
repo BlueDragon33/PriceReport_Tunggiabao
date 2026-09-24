@@ -12,7 +12,7 @@ function fail(message) {
 if (!css.includes('--v5-primary:')) fail('V5 design tokens are missing');
 if (!css.includes('body.v5-ui')) fail('V5 stylesheet is not body-scoped');
 if (!html.includes('class="v5-ui reference-ui-v57"')) fail('V5.7 reference UI scope is not active on the application body');
-if (!css.includes('V5.7 reference-image UI/UX refactor')) fail('V5.7 reference-image refactor block is missing');
+if (!css.includes('V5.7 reference-fidelity UI/UX refactor')) fail('V5.7 reference-fidelity refactor block is missing');
 if (!css.includes('--v5-sidebar-width:118px') || !css.includes('--nav:118px') || !css.includes('--edit:320px') || !css.includes('--design:368px')) fail('V5.7 reference desktop geometry 118/320/flexible/368 is missing');
 if (!css.includes('body.v5-ui.reference-ui-v57{') || !css.includes('font-size:15px')) fail('V5.7 readable application typography baseline is missing');
 if (!css.includes('min-height:204px') || !css.includes('grid-template-columns:minmax(0,1fr) 300px')) fail('V5.7 workspace proportion polish is missing');
