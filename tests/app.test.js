@@ -944,7 +944,12 @@ test('V5.5 large import review hides resolved items and navigates unresolved wor
   expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-resolved="true"]')).toHaveLength(0);
 
   document.getElementById('dataLibraryImportNextIssue').click();
-  expect(document.activeElement?.closest?.('[data-review-unresolved="true"]')).toBeTruthy();
+  const firstCurrent = document.querySelector('#dataLibraryImportIssueList [data-review-current="true"]');
+  expect(firstCurrent).toBeTruthy();
+  document.getElementById('dataLibraryImportNextIssue').click();
+  const secondCurrent = document.querySelector('#dataLibraryImportIssueList [data-review-current="true"]');
+  expect(secondCurrent).toBeTruthy();
+  expect(secondCurrent).not.toBe(firstCurrent);
 
   const firstDuplicate = document.querySelector('#dataLibraryImportIssueList .data-library-import-issue-card:not(.invalid)');
   firstDuplicate.querySelector('.data-library-import-issue-option .btn').click();
