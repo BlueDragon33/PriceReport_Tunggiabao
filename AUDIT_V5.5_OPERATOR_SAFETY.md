@@ -284,3 +284,16 @@ Release is still blocked until the exact Pass 6 head passes:
 9. GitHub Actions green on the exact head.
 
 After that gate, align release metadata/cache documentation for V5.5 and run the complete gate once more before merge and publish.
+
+
+## V5.5 release alignment
+
+Pass 6 exact-head CI #661 completed successfully after correcting one regression assertion that expected bulk-delete wording for a row-level delete. The production behavior was not changed to satisfy the test; the test was aligned to the existing row-delete contract.
+
+Release metadata is now aligned with the completed feature set:
+- package version: **5.5.0**;
+- README status: **V5.5 Operator Safety**;
+- Service Worker cache generation: **pricereport-shell-v55-operator-safety**;
+- service-worker and smoke guards updated to require that exact release cache generation.
+
+This release-alignment head must pass the complete CI gate again. Merge/publish remains blocked until that final exact-head run is green.
