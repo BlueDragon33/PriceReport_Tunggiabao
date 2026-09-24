@@ -13,27 +13,75 @@
     window.addEventListener('load', async () => {
       const shell = document.querySelector('.shell');
       if (!shell) return;
-      const styled = getComputedStyle(shell).display === 'grid';
-      const key = 'tgb-style-recovery-v1';
-      if (styled) {
-        sessionStorage.removeItem(key);
+
+      const recoveryKey = 'tgb-style-recovery-v2';
+      const recoveryAttempt = Math.max(0, Number(sessionStorage.getItem(recoveryKey) || '0') || 0);
+      const shellIsStyled = () => getComputedStyle(shell).display === 'grid';
+
+      if (shellIsStyled()) {
+        sessionStorage.removeItem(recoveryKey);
         return;
       }
-      if (sessionStorage.getItem(key)) return;
-      sessionStorage.setItem(key, '1');
+
+      async function reloadLinkedStylesheets() {
+        const links = [...document.querySelectorAll('link[rel="stylesheet"][href]')];
+        if (!links.length) return false;
+        const stamp = Date.now().toString(36);
+        await Promise.all(links.map(link => new Promise(resolve => {
+          const replacement = link.cloneNode(true);
+          const href = new URL(link.href, location.href);
+          href.searchParams.set('style-recovery', stamp);
+          replacement.href = href.toString();
+          replacement.addEventListener('load', () => {
+            link.remove();
+            resolve();
+          }, { once: true });
+          replacement.addEventListener('error', () => {
+            replacement.remove();
+            resolve();
+          }, { once: true });
+          link.after(replacement);
+        })));
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        return shellIsStyled();
+      }
+
       try {
+        if (await reloadLinkedStylesheets()) {
+          sessionStorage.removeItem(recoveryKey);
+          return;
+        }
+
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
           await Promise.all(regs.map(reg => reg.unregister()));
         }
         if ('caches' in window) {
           const keys = await caches.keys();
-          await Promise.all(keys.filter(name => name.startsWith('pricereport-shell-')).map(name => caches.delete(name)));
+          await Promise.all(keys
+            .filter(name => name.startsWith('pricereport-shell-'))
+            .map(name => caches.delete(name)));
         }
       } finally {
-        const url = new URL(location.href);
-        url.searchParams.set('asset-recovery', Date.now().toString(36));
-        location.replace(url.toString());
+        if (shellIsStyled()) {
+          sessionStorage.removeItem(recoveryKey);
+          return;
+        }
+
+        const nextAttempt = recoveryAttempt + 1;
+        if (nextAttempt > 3) {
+          console.error('TGB UI recovery stopped after 3 attempts because stylesheet assets are still unavailable.');
+          return;
+        }
+
+        sessionStorage.setItem(recoveryKey, String(nextAttempt));
+        const delay = [500, 1200, 2500][recoveryAttempt] || 2500;
+        window.setTimeout(() => {
+          const url = new URL(location.href);
+          url.searchParams.set('asset-recovery', String(nextAttempt));
+          url.searchParams.set('asset-recovery-ts', Date.now().toString(36));
+          location.replace(url.toString());
+        }, delay);
       }
     }, { once: true });
   </script>
