@@ -47,6 +47,8 @@ jobs:
         run: npx vitest run tests/app.test.js -t "V5.5 completion state distinguishes unresolved warnings from reviewed data"
       - name: V5.5 keyboard safeguards regression
         run: npx vitest run tests/app.test.js -t "V5.5 keyboard-only import review starts in work and traps Tab inside the modal"
+      - name: V5.5 Pass 6 safety boundary regression
+        run: npx vitest run tests/app.test.js -t "V5.5 operator history|V5.5 expired import recovery"
       - name: V5.5 operator safety regression
         run: npx vitest run tests/app.test.js -t "V5.5"
       - name: Full app DOM regression tests
