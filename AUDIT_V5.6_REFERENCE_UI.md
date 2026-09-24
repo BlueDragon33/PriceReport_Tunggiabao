@@ -152,3 +152,25 @@ Release metadata is aligned:
 - Service Worker cache: **pricereport-shell-v56-reference-ui**.
 
 The feature must pass the complete exact-head CI gate once more after release alignment. Only then may PR #54 leave draft, merge to `main`, and publish through the Pages workflow.
+
+
+## Pass 4 — Contextual navigation hierarchy
+
+### Finding
+
+The 118px rail still rendered all 14 route buttons in every desktop context. Even though the rail was visually aligned to the reference layout, management destinations and quotation-editing steps were mixed together. On shorter desktop viewports this forced long vertical rail scrolling and made the application hierarchy look denser than the approved clear/clean direction.
+
+### Correction
+
+- Management workspaces now keep only application-level destinations visible: Dashboard, Studio entry, Quotation Management, Data, Publishing/Data Center, System and Settings.
+- Studio workspaces now keep quotation workflow destinations visible and remove management-only History/Data/System/Settings entries from the rail.
+- No route, state, business logic or mobile action-sheet destination is deleted. The change is presentation-only and the existing openTab() routing remains the single navigation engine.
+- Studio rail buttons are reduced to a 60px minimum height so the complete quotation workflow fits more comfortably on ordinary desktop heights without returning to micro-type.
+
+### Gate
+
+- The contextual rules are scoped to body.v5-ui.reference-ui-v56.
+- No new media query, !important, report/A4 selector or duplicate navigation engine is introduced.
+- scripts/ui-v5.test.mjs now guards both management and Studio contextual-navigation boundaries.
+
+Run the full exact-head CI gate before merge. Do not publish until CI and Pages deployment both complete successfully.

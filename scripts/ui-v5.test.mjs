@@ -20,6 +20,9 @@ if (!css.includes('body.v5-ui.reference-ui-v56 .history-workspace .history-table
 if (!css.includes('width:min(1020px,96vw)') || !css.includes('width:min(1040px,96vw)')) fail('V5.6 modal hierarchy sizing is missing'); // V5.6 workspace proportion polish
 if (!css.includes('min-height:112px') || !css.includes('body.v5-ui.reference-ui-v56 .export-action-card b')) fail('V5.6 Publishing/Data Center action-card refactor is missing');
 if (!css.includes('body.v5-ui.reference-ui-v56 .tpl span') || !css.includes('font-size:12px')) fail('V5.6 readable template-card typography is missing');
+if (!css.includes('V5.6 Pass 4: contextual navigation hierarchy')) fail('V5.6 contextual navigation pass is missing');
+if (!css.includes('.shell.app-workspace .nav button[data-tab="customer"]') || !css.includes('.shell.app-workspace .nav button[data-tab="presets"]')) fail('V5.6 management navigation still exposes quotation-step clutter');
+if (!css.includes('.shell:not(.app-workspace) .nav button[data-tab="history"]') || !css.includes('.shell:not(.app-workspace) .nav button[data-tab="settings"]')) fail('V5.6 Studio navigation still exposes management-only destinations');
 if (css.includes('!important')) fail('V5 stylesheet must not introduce !important');
 if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(css)) fail('V5 application stylesheet must not target the report document');
 if (/@media\s+print/i.test(css)) fail('V5 application stylesheet must not contain print rules');
