@@ -11,7 +11,7 @@ import {
   localDateISO
 } from './core.js';
 import { parseCustomerSpreadsheetRows, parseHandwritingText, parseMappedSpreadsheetRows, parsePastedTable, parseSpreadsheetRows, mergeImportDraft } from './importers.js';
-import { csvFromRows, productRowsForExport as buildProductExportRows } from './exporters.js';
+import { csvFromRows, productRowsForExport as buildProductExportRows, quotationWorkbookModel } from './exporters.js';
 import {
   TUNGGIABAO_PRODUCTS,
   TUNGGIABAO_PROFILE,
@@ -2534,26 +2534,52 @@ function productRowsForExport() {
   return buildProductExportRows(state.products);
 }
 
-function excelRowsForCurrentQuote() {
-  const rows = [];
-  rows.push([state.companyName || '']);
-  if (state.companyAddressDetail) rows.push(['Địa chỉ chi tiết:', state.companyAddressDetail]);
-  if (companyRegionLine(state)) rows.push(['Khu vực:', companyRegionLine(state)]);
-  if (state.phone) rows.push(['Điện thoại:', state.phone]);
-  if (state.taxCode) rows.push(['MST:', state.taxCode]);
-  rows.push([]);
-  rows.push([state.quoteTitle || 'BẢNG BÁO GIÁ']);
-  if (state.quoteSubtitle) rows.push([state.quoteSubtitle]);
-  if (state.quoteNo) rows.push(['Mã báo giá:', state.quoteNo]);
-  if (state.quoteDate) rows.push(['Ngày báo giá:', state.quoteDate]);
-  if (state.recipientLine) rows.push([state.recipientLine]);
-  if (state.intro) rows.push([state.intro]);
-  rows.push([]);
-  rows.push(...productRowsForExport());
-  rows.push([]);
-  if (state.dateLine) rows.push(['', state.dateLine]);
-  if (state.rightName) rows.push(['', state.rightName]);
-  return rows;
+function productRowsForExport() {
+  return buildProductExportRows(state.products);
+}
+
+function excelNumberFormat(currency) {
+  if (currency === 'USD') return '$#,##0.00';
+  if (currency === 'RUB') return '#,##0.00 "₽"';
+  return '#,##0';
+}
+
+function applyProfessionalQuotationSheet(XLSX, sheet, model) {
+  sheet['!cols'] = [
+    { wch: 8 }, { wch: 24 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
+    { wch: 12 }, { wch: 17 }, { wch: 18 }, { wch: 28 }
+  ];
+  sheet['!merges'] = model.mergeRows.map((row) => ({
+    s: { r: row, c: 0 },
+    e: { r: row, c: 8 }
+  }));
+  if (model.productLastDataRow >= model.productHeaderRow) {
+    sheet['!autofilter'] = {
+      ref: `A${model.productHeaderRow + 1}:I${Math.max(model.productHeaderRow + 1, model.productLastDataRow + 1)}`
+    };
+  }
+  sheet['!margins'] = { left: 0.3, right: 0.3, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 };
+  sheet['!pageSetup'] = { orientation: 'landscape', fitToWidth: 1, fitToHeight: 0, paperSize: 9 };
+
+  const numberFormat = excelNumberFormat(model.currency);
+  model.moneyCells.forEach(({ row, col }) => {
+    const address = XLSX.utils.encode_cell({ r: row, c: col });
+    if (sheet[address]) sheet[address].z = numberFormat;
+  });
+}
+
+function applyProfessionalDataSheet(XLSX, sheet, rowCount) {
+  sheet['!cols'] = [
+    { wch: 8 }, { wch: 22 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
+    { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
+  ];
+  if (rowCount > 0) sheet['!autofilter'] = { ref: `A1:I${rowCount}` };
+  for (let row = 1; row < rowCount; row += 1) {
+    [6, 7].forEach((col) => {
+      const address = XLSX.utils.encode_cell({ r: row, c: col });
+      if (sheet[address]) sheet[address].z = '#,##0.00';
+    });
+  }
 }
 
 function exportCurrentQuoteCsv() {
@@ -2564,27 +2590,33 @@ function exportCurrentQuoteCsv() {
 }
 
 async function exportCurrentQuoteExcel() {
+  if (!runPreflight({ forExport: true })) return;
   try {
     const XLSX = await import('xlsx');
-    const sheet = XLSX.utils.aoa_to_sheet(excelRowsForCurrentQuote());
-    sheet['!cols'] = [
-      { wch: 8 }, { wch: 20 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
-      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
-    ];
+    const model = quotationWorkbookModel(state);
+    const sheet = XLSX.utils.aoa_to_sheet(model.rows);
+    applyProfessionalQuotationSheet(XLSX, sheet, model);
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, sheet, 'Bảng báo giá');
 
-    const dataSheet = XLSX.utils.aoa_to_sheet(productRowsForExport());
-    dataSheet['!cols'] = [
-      { wch: 8 }, { wch: 20 }, { wch: 38 }, { wch: 20 }, { wch: 12 },
-      { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 28 }
-    ];
+    const dataRows = productRowsForExport();
+    const dataSheet = XLSX.utils.aoa_to_sheet(dataRows);
+    applyProfessionalDataSheet(XLSX, dataSheet, dataRows.length);
     XLSX.utils.book_append_sheet(workbook, dataSheet, 'Dữ liệu sản phẩm');
 
-    const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+    workbook.Props = {
+      Title: state.quoteTitle || 'Bảng báo giá',
+      Subject: state.quoteNo ? `Báo giá ${state.quoteNo}` : 'Bảng báo giá',
+      Author: state.companyName || 'PriceReport',
+      Company: state.companyName || '',
+      Comments: 'Xuất từ PriceReport · dữ liệu sản phẩm và báo cáo được tách thành hai sheet.'
+    };
+
+    const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx', cellStyles: true });
     const name = sanitizePcFileName(state.quoteNo || state.quoteTitle || 'bao-gia', 'bao-gia') + '.xlsx';
     downloadBlob(name, new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-    toast('Đã xuất Excel đầy đủ dữ liệu');
+    toast('Đã xuất Excel báo giá chuyên nghiệp');
   } catch (error) {
     console.error('Excel export failed:', error);
     alert('Không thể xuất Excel. Hãy thử tải lại trang rồi thực hiện lại.');
@@ -5410,15 +5442,16 @@ function updateDocumentHealth() {
   });
 }
 
-function runPreflight({ forPrint = false } = {}) {
+function runPreflight({ forPrint = false, forExport = false } = {}) {
   const result = validateQuote();
   updateDocumentHealth();
+  const action = forPrint ? 'in/xuất PDF' : forExport ? 'xuất báo cáo' : 'hoàn tất';
   if (result.errors.length) {
-    alert('Chưa thể ' + (forPrint ? 'in/xuất PDF' : 'hoàn tất') + ':\n\n• ' + result.errors.join('\n• '));
+    alert('Chưa thể ' + action + ':\n\n• ' + result.errors.join('\n• '));
     return false;
   }
-  if (forPrint && result.warnings.length) {
-    return confirm('Báo giá có ' + result.warnings.length + ' mục cần kiểm tra:\n\n• ' + result.warnings.join('\n• ') + '\n\nVẫn tiếp tục in/xuất PDF?');
+  if ((forPrint || forExport) && result.warnings.length) {
+    return confirm('Báo giá có ' + result.warnings.length + ' mục cần kiểm tra:\n\n• ' + result.warnings.join('\n• ') + '\n\nVẫn tiếp tục ' + action + '?');
   }
   return true;
 }
