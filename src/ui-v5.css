@@ -4068,6 +4068,8 @@ body.v5-ui .master-section-card.master-section-highlight{
   body.v5-ui .data-library-import-preview{min-width:0;overflow-x:auto}
   body.v5-ui .data-library-import-preview-head,
   body.v5-ui .data-library-import-preview-row{min-width:720px}
+  body.v5-ui .data-library-import-issues-head{grid-template-columns:1fr}
+  body.v5-ui .data-library-import-issues-tools{justify-content:flex-start}
 }
 
 body.v5-ui .color.color-teal{background:#0b8f83}
@@ -4639,7 +4641,45 @@ body.v5-ui .data-library-import-issues{
 body.v5-ui .data-library-import-issues[hidden]{display:none}
 body.v5-ui .data-library-import-issues-head{
   display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:start;
+}
+body.v5-ui .data-library-import-issues-head>div:first-child{
+  display:grid;
   gap:3px;
+}
+body.v5-ui .data-library-import-issues-tools{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-items:center;
+  gap:7px;
+}
+body.v5-ui .data-library-import-issues-tools>span{
+  padding:5px 7px;
+  border:1px solid var(--v5-border);
+  border-radius:999px;
+  background:var(--v5-surface);
+  color:var(--v5-data-heading);
+  font-size:8px;
+  font-weight:800;
+  white-space:nowrap;
+}
+body.v5-ui .data-library-import-issues-tools .btn{
+  min-height:30px;
+  padding:5px 8px;
+  font-size:8.5px;
+}
+body.v5-ui .data-library-import-issues-tools .check{
+  min-height:30px;
+  margin:0;
+  padding:5px 8px;
+  border:1px solid var(--v5-border);
+  border-radius:8px;
+  background:var(--v5-surface);
+  font-size:8.5px;
+  white-space:nowrap;
 }
 body.v5-ui .data-library-import-issues-head strong{
   color:var(--v5-data-heading);
@@ -4664,6 +4704,16 @@ body.v5-ui .data-library-import-issue-card{
 }
 body.v5-ui .data-library-import-issue-card.invalid{
   border-style:dashed;
+}
+body.v5-ui .data-library-import-issue-card[data-review-resolved="true"]{
+  border-color:rgba(38,139,99,.28);
+  background:var(--v5-success-soft);
+  opacity:.84;
+}
+body.v5-ui .data-library-import-issue-card[data-review-unresolved="true"]:focus-within,
+body.v5-ui .data-library-import-issue-card[data-review-unresolved="true"]:focus{
+  outline:2px solid rgba(36,119,232,.28);
+  outline-offset:2px;
 }
 body.v5-ui .data-library-import-issue-title{
   display:flex;
