@@ -61,3 +61,33 @@ Run exact-head CI. If green, perform the second visual pass on:
 - remaining 8–10px operational text that is still visible in normal workflows.
 
 Do not merge or publish after Pass 1.
+
+
+## Pass 2 — Operational readability and responsive containment
+
+### Trigger
+
+Pass 1 static audit found more than 170 legacy declarations at 10.5px or below. Many are historical declarations that are now overridden, but normal user workflows still exposed micro-type in Dashboard, History, Data Management, Settings, System, Smart Import and Data Library import/review.
+
+CI #665 also found a smoke guard that incorrectly required the exact literal body class `class="v5-ui"`. V5.6 correctly adds a second scoping class, so the guard was too brittle. The application DOM and all functional tests passed; only that literal smoke assertion failed.
+
+### Corrections
+
+- Raised Dashboard quick-action, KPI, recent quote, search-result and side-action text.
+- Raised History KPI, toolbar, table cell, helper and action-button text.
+- Raised Data Management summary, search, table and action text.
+- Raised Settings/System detail, readiness, policy and helper text.
+- Raised product-grid operational text without changing A4 table typography.
+- Raised Smart Import mapping, review, warning and preview text.
+- Raised Data Library activity and import-review text, including completion state and issue cards.
+- Added explicit tablet/phone density overrides so desktop typography/layout rules do not defeat the existing responsive navigation model.
+- Replaced the brittle exact body-class smoke assertion with a semantic check that the body class list contains `v5-ui`.
+
+### Next pass
+
+Run CI on the Pass 2 head. If green, inspect remaining visual structure rather than adding more logic:
+- Dashboard card proportions;
+- History/Data Management whitespace and toolbar hierarchy;
+- Settings/System visual grouping;
+- modal widths/padding;
+- release cache/version alignment only after visual gates are complete.
