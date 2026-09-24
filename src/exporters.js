@@ -140,18 +140,20 @@ export function quotationWorkbookModel(data = {}) {
   const otherFee = money(data.otherFee);
   const total = taxable + vat + otherFee;
 
-  rows.push([]);
-  const pushTotal = (label, value) => {
-    const rowIndex = rows.length;
-    rows.push(['','','','','','',label,value]);
-    moneyCells.push({ row: rowIndex, col: 7 });
-    totalRows.push(rowIndex);
-  };
-  pushTotal(`Tạm tính (${currency})`, subtotal);
-  if (discountPct > 0 || discount > 0) pushTotal(`Chiết khấu ${discountPct}% (${currency})`, -discount);
-  if (vatPct > 0 || vat > 0) pushTotal(`VAT ${vatPct}% (${currency})`, vat);
-  if (otherFee > 0) pushTotal(`Phí khác (${currency})`, otherFee);
-  pushTotal(`TỔNG CỘNG (${currency})`, total);
+  if (data.showTotals !== false) {
+    rows.push([]);
+    const pushTotal = (label, value) => {
+      const rowIndex = rows.length;
+      rows.push(['','','','','','',label,value]);
+      moneyCells.push({ row: rowIndex, col: 7 });
+      totalRows.push(rowIndex);
+    };
+    pushTotal(`Tạm tính (${currency})`, subtotal);
+    if (discountPct > 0 || discount > 0) pushTotal(`Chiết khấu ${discountPct}% (${currency})`, -discount);
+    if (vatPct > 0 || vat > 0) pushTotal(`VAT ${vatPct}% (${currency})`, vat);
+    if (otherFee > 0) pushTotal(`Phí khác (${currency})`, otherFee);
+    pushTotal(`TỔNG CỘNG (${currency})`, total);
+  }
 
   if (data.showPaymentBlock !== false) {
     const paymentLines = [
