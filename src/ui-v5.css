@@ -4626,6 +4626,88 @@ body.v5-ui .data-library-import-notice[data-tone="warning"]{
   border-color:var(--v5-warning);
   background:var(--v5-warning-soft);
 }
+
+body.v5-ui .data-library-import-issues{
+  display:grid;
+  gap:10px;
+  margin-bottom:12px;
+  padding:12px;
+  border:1px solid var(--v5-warning);
+  border-radius:var(--v5-radius-sm);
+  background:var(--v5-warning-soft);
+}
+body.v5-ui .data-library-import-issues[hidden]{display:none}
+body.v5-ui .data-library-import-issues-head{
+  display:grid;
+  gap:3px;
+}
+body.v5-ui .data-library-import-issues-head strong{
+  color:var(--v5-data-heading);
+  font-size:10px;
+}
+body.v5-ui .data-library-import-issues-head span{
+  color:var(--v5-muted);
+  font-size:8.5px;
+  line-height:1.45;
+}
+body.v5-ui .data-library-import-issue-list{
+  display:grid;
+  gap:8px;
+}
+body.v5-ui .data-library-import-issue-card{
+  display:grid;
+  gap:8px;
+  padding:10px;
+  border:1px solid var(--v5-border);
+  border-radius:10px;
+  background:var(--v5-surface);
+}
+body.v5-ui .data-library-import-issue-card.invalid{
+  border-style:dashed;
+}
+body.v5-ui .data-library-import-issue-title{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+}
+body.v5-ui .data-library-import-issue-title strong{
+  color:var(--v5-data-heading);
+  font-size:9px;
+}
+body.v5-ui .data-library-import-issue-title span{
+  color:var(--v5-muted);
+  font-size:8px;
+  text-align:right;
+}
+body.v5-ui .data-library-import-issue-option{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:7px 8px;
+  border:1px solid var(--v5-border);
+  border-radius:8px;
+  background:var(--v5-surface-soft);
+}
+body.v5-ui .data-library-import-issue-option>span,
+body.v5-ui .data-library-import-invalid-raw{
+  min-width:0;
+  color:var(--v5-data-text);
+  font-size:8.5px;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+body.v5-ui .data-library-import-issue-option .btn[aria-pressed="true"]{
+  border-color:var(--v5-success);
+  background:var(--v5-success-soft);
+  color:var(--v5-success);
+}
+body.v5-ui .data-library-import-invalid-raw{
+  padding:7px 8px;
+  border-radius:8px;
+  background:var(--v5-surface-soft);
+}
 body.v5-ui .data-library-import-preview{
   min-width:720px;
   overflow:hidden;

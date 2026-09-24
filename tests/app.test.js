@@ -826,6 +826,91 @@ test('V5.5 starting a new import clears stale review while the new file is parsi
   document.querySelector('[data-tab="master"]').click();
 });
 
+test('V5.5 duplicate review requires an explicit winner and persists the decision', async () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([]));
+  sessionStorage.removeItem(recoveryKey);
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Nhóm hàng,Tên SP,Quy cách,ĐVT,Đơn giá,Tiền tệ,Ghi chú',
+    'Trứng,Trứng chọn,Hộp 10,Hộp,28000,VND,Bản A',
+    'Trứng,Trứng chọn,Hộp 10,Hộp,29000,VND,Bản B',
+    'Trứng,Trứng chọn,Hộp 10,Hộp,1.2,USD,Bản USD'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'chon-trung.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('productLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportDuplicateCount').textContent).toBe('1');
+    expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+  });
+
+  const issue = document.querySelector('#dataLibraryImportIssueList .data-library-import-issue-card');
+  expect(issue?.textContent).toContain('Chọn đúng 1 dòng');
+  const choices = issue.querySelectorAll('.data-library-import-issue-option .btn');
+  expect(choices).toHaveLength(2);
+  choices[1].click();
+
+  expect(document.getElementById('dataLibraryImportDuplicateCount').textContent).toBe('0');
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('2');
+  expect(issue.isConnected).toBe(false);
+  const stored = JSON.parse(sessionStorage.getItem(recoveryKey) || 'null');
+  expect(Object.keys(stored?.duplicateChoices?.['Sheet1'] || {})).toHaveLength(1);
+
+  document.getElementById('applyDataLibraryImport').click();
+  const imported = JSON.parse(localStorage.getItem(key) || '[]');
+  expect(imported).toHaveLength(2);
+  expect(imported.some(item => item.currency === 'VND' && item.price === 29000 && item.note === 'Bản B')).toBe(true);
+  expect(imported.some(item => item.currency === 'USD')).toBe(true);
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  sessionStorage.removeItem(recoveryKey);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.5 invalid import rows stay visible until the operator confirms skip', async () => {
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  sessionStorage.removeItem(recoveryKey);
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Khách hợp lệ,Công ty A,0966666666,ok@example.com,Nha Trang,Anh A',
+    ',,,,Hà Nội,Người liên hệ không có định danh'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'dong-loi.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportInvalidCount').textContent).toBe('1');
+    expect(document.getElementById('dataLibraryImportIssues').hidden).toBe(false);
+  });
+
+  const invalidCard = document.querySelector('#dataLibraryImportIssueList .data-library-import-issue-card.invalid');
+  expect(invalidCard?.textContent).toContain('Dòng 3');
+  expect(invalidCard?.textContent).toContain('Hà Nội');
+  invalidCard.querySelector('.btn').click();
+
+  expect(document.getElementById('dataLibraryImportInvalidCount').textContent).toBe('0');
+  expect(document.getElementById('dataLibraryImportValidCount').textContent).toBe('1');
+  const stored = JSON.parse(sessionStorage.getItem(recoveryKey) || 'null');
+  expect(stored?.ignoredInvalidRows?.['Sheet1']).toContain(3);
+
+  document.getElementById('cancelDataLibraryImport').click();
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+});
+
+
 test('V5.4 customer library CSV import reviews and applies valid rows transactionally', async () => {
   const key = 'tunggiabao-price-report-customers-v1';
   const before = localStorage.getItem(key);

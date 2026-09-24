@@ -105,3 +105,42 @@ When one Data Library import finished and a second import started immediately, t
 - A read token invalidates an in-flight workbook parse when the modal is closed or a newer read begins, so a late result cannot repopulate a discarded review.
 - Invalid recovery schema/mode is now removed from session storage instead of being left behind indefinitely.
 - Regression covers stale count/preview reset while the next file's ArrayBuffer is deliberately held pending.
+
+
+## Pass 3 — Explicit duplicate and invalid-row review decisions
+
+### Findings
+
+The transactional import review still forced operators back to the source spreadsheet for two common cleanup cases:
+- duplicate source rows were visible but could only be skipped as a whole group;
+- invalid source rows were counted but there was no explicit acknowledgement path in the review itself.
+
+For repetitive data-entry work, that creates needless context switching. Automatically choosing a duplicate winner would be worse because price, note and contact differences can be meaningful.
+
+### Corrections
+
+- Added one operator-decision panel inside the existing Data Library import modal.
+- Duplicate groups remain excluded by default.
+- Each duplicate candidate exposes an explicit **Giữ dòng này** action.
+- Selecting a winner admits exactly that source row into the pending transaction and leaves the other rows excluded.
+- The operator may switch the selected winner before Apply.
+- Invalid rows expose their source row number and raw visible cell values.
+- Invalid rows remain unresolved until the operator explicitly chooses **Xác nhận bỏ qua dòng này**.
+- Acknowledging an invalid row changes review state only; it does not rewrite the source row or invent missing data.
+- Summary counts and Apply count are derived from the current review decisions instead of stale parser totals.
+- Duplicate choices and invalid-row acknowledgements are stored with the existing session recovery payload, so accidental close/reload does not lose operator decisions.
+- Apply still writes through the existing customer/product storage engines only.
+- No automatic merge, fuzzy winner selection, second parser or second data store is introduced.
+
+### Regression coverage
+
+- unresolved duplicate group contributes no duplicate rows to Apply;
+- explicitly choosing one duplicate winner increases the accepted count by exactly one;
+- the selected duplicate row, including its price/note, is the one persisted;
+- invalid rows remain visible until explicitly acknowledged;
+- invalid-row acknowledgement is preserved in session recovery;
+- existing V5.4 behavior remains safe when the operator makes no duplicate choice.
+
+### Next pass
+
+Audit large review ergonomics: collapsing resolved issue groups, navigating directly between unresolved issues, and keeping the decision panel usable with hundreds of imported rows without adding another pagination/state engine.

@@ -4142,6 +4142,8 @@ function writeDataLibraryImportRecovery() {
       mode: dataLibraryImportDraft.mode,
       fileName: String(dataLibraryImportDraft.fileName || ''),
       sheetName: String(dataLibraryImportDraft.sheetName || ''),
+      duplicateChoices: clone(dataLibraryImportDraft.duplicateChoices || {}),
+      ignoredInvalidRows: clone(dataLibraryImportDraft.ignoredInvalidRows || {}),
       candidates: dataLibraryImportDraft.candidates.map(candidate => ({
         sheetName: String(candidate.sheetName || ''),
         rows: Array.isArray(candidate.rows) ? candidate.rows : []
@@ -4193,7 +4195,13 @@ function readDataLibraryImportRecovery() {
       mode: parsed.mode,
       fileName: String(parsed.fileName || 'Phiên nhập dữ liệu'),
       sheetName,
-      candidates
+      candidates,
+      duplicateChoices: parsed.duplicateChoices && typeof parsed.duplicateChoices === 'object'
+        ? parsed.duplicateChoices
+        : {},
+      ignoredInvalidRows: parsed.ignoredInvalidRows && typeof parsed.ignoredInvalidRows === 'object'
+        ? parsed.ignoredInvalidRows
+        : {}
     };
   } catch (error) {
     console.warn('Data Library import recovery is invalid and will be discarded.', error);
@@ -4208,7 +4216,9 @@ function restoreDataLibraryImportRecovery(recovery) {
     mode: recovery.mode,
     fileName: recovery.fileName,
     sheetName: recovery.sheetName,
-    candidates: recovery.candidates
+    candidates: recovery.candidates,
+    duplicateChoices: clone(recovery.duplicateChoices || {}),
+    ignoredInvalidRows: clone(recovery.ignoredInvalidRows || {})
   };
   dataLibraryImportLastFocus = document.querySelector('[data-tab="master"]');
   const modal = document.getElementById('dataLibraryImportModal');
@@ -4345,6 +4355,75 @@ function currentDataLibraryImportCandidate() {
   ) || dataLibraryImportDraft.candidates[0];
 }
 
+function dataLibraryImportReviewState(candidate) {
+  if (!candidate) return {
+    accepted: [],
+    unresolvedDuplicateGroups: [],
+    unresolvedInvalidRows: [],
+    ignoredInvalidRows: [],
+    updateCount: 0
+  };
+  const sheetName = candidate.sheetName;
+  const choices = dataLibraryImportDraft?.duplicateChoices?.[sheetName] || {};
+  const ignoredRows = new Set(
+    (dataLibraryImportDraft?.ignoredInvalidRows?.[sheetName] || [])
+      .map(value => Number(value))
+      .filter(Number.isFinite)
+  );
+  const accepted = candidate.items.filter((item, index) => {
+    const key = dataLibraryImportKey(candidate.mode, item);
+    if (!key) return false;
+    if (!candidate.duplicateKeys.has(key)) return true;
+    const selectedIndex = Number(choices[key]);
+    return Number.isInteger(selectedIndex) && selectedIndex === index;
+  });
+  const unresolvedDuplicateGroups = candidate.duplicateGroups.filter(group => {
+    const selectedIndex = Number(choices[group.key]);
+    return !Number.isInteger(selectedIndex) || !group.indexes.includes(selectedIndex);
+  });
+  const unresolvedInvalidRows = candidate.invalidRows.filter(row => !ignoredRows.has(Number(row.rowNumber)));
+  const ignoredInvalidRows = candidate.invalidRows.filter(row => ignoredRows.has(Number(row.rowNumber)));
+  const existing = candidate.mode === 'customer' ? getCustomerLibrary() : getProductCatalog();
+  const existingKeys = new Set(existing.map(item => dataLibraryImportKey(candidate.mode, item)).filter(Boolean));
+  const updateCount = accepted.filter(item => existingKeys.has(dataLibraryImportKey(candidate.mode, item))).length;
+  return { accepted, unresolvedDuplicateGroups, unresolvedInvalidRows, ignoredInvalidRows, updateCount };
+}
+
+function chooseDataLibraryImportDuplicate(sheetName, key, itemIndex) {
+  if (!dataLibraryImportDraft) return;
+  if (!dataLibraryImportDraft.duplicateChoices) dataLibraryImportDraft.duplicateChoices = {};
+  if (!dataLibraryImportDraft.duplicateChoices[sheetName]) dataLibraryImportDraft.duplicateChoices[sheetName] = {};
+  dataLibraryImportDraft.duplicateChoices[sheetName][key] = Number(itemIndex);
+  writeDataLibraryImportRecovery();
+  renderDataLibraryImport();
+}
+
+function ignoreDataLibraryImportInvalidRow(sheetName, rowNumber) {
+  if (!dataLibraryImportDraft) return;
+  if (!dataLibraryImportDraft.ignoredInvalidRows) dataLibraryImportDraft.ignoredInvalidRows = {};
+  const current = new Set(
+    (dataLibraryImportDraft.ignoredInvalidRows[sheetName] || [])
+      .map(value => Number(value))
+      .filter(Number.isFinite)
+  );
+  current.add(Number(rowNumber));
+  dataLibraryImportDraft.ignoredInvalidRows[sheetName] = [...current];
+  writeDataLibraryImportRecovery();
+  renderDataLibraryImport();
+}
+
+function dataLibraryImportItemSummary(mode, item) {
+  if (mode === 'customer') {
+    return [item.name, item.company, item.phone, item.email].filter(Boolean).join(' • ') || 'Khách hàng chưa đủ thông tin';
+  }
+  return [
+    item.name,
+    item.group,
+    [item.unit, item.pack].filter(Boolean).join(' / '),
+    moneyForCurrency(item.price, item.currency)
+  ].filter(Boolean).join(' • ') || 'Sản phẩm chưa đủ thông tin';
+}
+
 function closeDataLibraryImport({ restoreFocus = true, discardRecovery = false } = {}) {
   dataLibraryImportReadToken += 1;
   const modal = document.getElementById('dataLibraryImportModal');
@@ -4363,12 +4442,13 @@ function renderDataLibraryImport() {
   if (!candidate || !modal) return;
 
   const isCustomer = candidate.mode === 'customer';
+  const reviewState = dataLibraryImportReviewState(candidate);
   setText('dataLibraryImportTitle', isCustomer ? 'KIỂM TRA DANH BẠ TRƯỚC KHI NHẬP' : 'KIỂM TRA DANH MỤC TRƯỚC KHI NHẬP');
   setText('dataLibraryImportSubtitle', (dataLibraryImportDraft.fileName || 'File dữ liệu') + ' • ' + candidate.sheetName);
-  setText('dataLibraryImportValidCount', candidate.accepted.length);
-  setText('dataLibraryImportUpdateCount', candidate.updateCount);
-  setText('dataLibraryImportInvalidCount', candidate.invalidRows.length);
-  setText('dataLibraryImportDuplicateCount', candidate.duplicateGroups.length);
+  setText('dataLibraryImportValidCount', reviewState.accepted.length);
+  setText('dataLibraryImportUpdateCount', reviewState.updateCount);
+  setText('dataLibraryImportInvalidCount', reviewState.unresolvedInvalidRows.length);
+  setText('dataLibraryImportDuplicateCount', reviewState.unresolvedDuplicateGroups.length);
 
   const sheetRow = document.getElementById('dataLibraryImportSheetRow');
   const sheetSelect = document.getElementById('dataLibraryImportSheetSelect');
@@ -4378,7 +4458,7 @@ function renderDataLibraryImport() {
     dataLibraryImportDraft.candidates.forEach(item => {
       const option = document.createElement('option');
       option.value = item.sheetName;
-      option.textContent = item.sheetName + ' • ' + item.accepted.length + ' dòng áp dụng';
+      option.textContent = item.sheetName + ' • ' + dataLibraryImportReviewState(item).accepted.length + ' dòng áp dụng';
       option.selected = item.sheetName === candidate.sheetName;
       sheetSelect.appendChild(option);
     });
@@ -4387,13 +4467,70 @@ function renderDataLibraryImport() {
   const notice = document.getElementById('dataLibraryImportNotice');
   if (notice) {
     const messages = [];
-    if (candidate.invalidRows.length) messages.push(candidate.invalidRows.length + ' dòng lỗi sẽ được bỏ qua');
-    if (candidate.duplicateGroups.length) messages.push(candidate.duplicateGroups.length + ' nhóm trùng trong file sẽ không được tự gộp');
-    if (candidate.updateCount) messages.push(candidate.updateCount + ' bản ghi có sẵn sẽ được cập nhật');
+    if (reviewState.unresolvedInvalidRows.length) messages.push(reviewState.unresolvedInvalidRows.length + ' dòng lỗi chưa xác nhận bỏ qua');
+    if (reviewState.unresolvedDuplicateGroups.length) messages.push(reviewState.unresolvedDuplicateGroups.length + ' nhóm trùng không được tự gộp, đang chờ bạn chọn bản giữ');
+    if (reviewState.ignoredInvalidRows.length) messages.push(reviewState.ignoredInvalidRows.length + ' dòng lỗi đã xác nhận bỏ qua');
+    if (reviewState.updateCount) messages.push(reviewState.updateCount + ' bản ghi có sẵn sẽ được cập nhật');
     notice.textContent = messages.length
-      ? messages.join(' • ') + '. Chỉ các dòng hợp lệ, không trùng trong file mới được áp dụng.'
+      ? messages.join(' • ') + '. Hệ thống chỉ áp dụng các dòng bạn đã xác nhận an toàn.'
       : 'Dữ liệu hợp lệ. Bạn có thể áp dụng vào thư viện.';
-    notice.dataset.tone = candidate.invalidRows.length || candidate.duplicateGroups.length ? 'warning' : 'ready';
+    notice.dataset.tone = reviewState.unresolvedInvalidRows.length || reviewState.unresolvedDuplicateGroups.length ? 'warning' : 'ready';
+  }
+
+  const issues = document.getElementById('dataLibraryImportIssues');
+  const issueList = document.getElementById('dataLibraryImportIssueList');
+  if (issues && issueList) {
+    issueList.innerHTML = '';
+    const choices = dataLibraryImportDraft?.duplicateChoices?.[candidate.sheetName] || {};
+    candidate.duplicateGroups.forEach((group, groupIndex) => {
+      const card = document.createElement('article');
+      card.className = 'data-library-import-issue-card';
+      const title = document.createElement('div');
+      title.className = 'data-library-import-issue-title';
+      const selectedIndex = Number(choices[group.key]);
+      const resolved = Number.isInteger(selectedIndex) && group.indexes.includes(selectedIndex);
+      title.innerHTML = '<strong>Nhóm trùng ' + (groupIndex + 1) + '</strong><span>' + (resolved ? 'Đã chọn bản giữ' : 'Chọn đúng 1 dòng để tiếp tục') + '</span>';
+      card.appendChild(title);
+      group.indexes.forEach(itemIndex => {
+        const item = candidate.items[itemIndex];
+        if (!item) return;
+        const option = document.createElement('div');
+        option.className = 'data-library-import-issue-option';
+        const summary = document.createElement('span');
+        summary.textContent = dataLibraryImportItemSummary(candidate.mode, item);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.textContent = selectedIndex === itemIndex ? 'Đang giữ dòng này' : 'Giữ dòng này';
+        button.setAttribute('aria-pressed', selectedIndex === itemIndex ? 'true' : 'false');
+        button.addEventListener('click', () => chooseDataLibraryImportDuplicate(candidate.sheetName, group.key, itemIndex));
+        option.append(summary, button);
+        card.appendChild(option);
+      });
+      issueList.appendChild(card);
+    });
+    reviewState.unresolvedInvalidRows.forEach(row => {
+      const card = document.createElement('article');
+      card.className = 'data-library-import-issue-card invalid';
+      const sourceRow = Array.isArray(candidate.rows?.[Number(row.rowNumber) - 1])
+        ? candidate.rows[Number(row.rowNumber) - 1]
+        : [];
+      const title = document.createElement('div');
+      title.className = 'data-library-import-issue-title';
+      const reasons = Array.isArray(row.reasons) ? row.reasons.join(', ') : (row.reason || 'Dữ liệu không hợp lệ');
+      title.innerHTML = '<strong>Dòng ' + row.rowNumber + ' chưa hợp lệ</strong><span>' + reasons + '</span>';
+      const raw = document.createElement('div');
+      raw.className = 'data-library-import-invalid-raw';
+      raw.textContent = sourceRow.map(value => String(value ?? '')).filter(Boolean).join(' • ') || 'Dòng trống hoặc không đủ dữ liệu nhận diện.';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.textContent = 'Xác nhận bỏ qua dòng này';
+      button.addEventListener('click', () => ignoreDataLibraryImportInvalidRow(candidate.sheetName, row.rowNumber));
+      card.append(title, raw, button);
+      issueList.appendChild(card);
+    });
+    issues.hidden = candidate.duplicateGroups.length === 0 && reviewState.unresolvedInvalidRows.length === 0;
   }
 
   const head = document.getElementById('dataLibraryImportPreviewHead');
@@ -4417,8 +4554,13 @@ function renderDataLibraryImport() {
       const row = document.createElement('div');
       row.className = 'data-library-import-preview-row';
       const duplicate = candidate.duplicateKeys.has(key);
-      const status = duplicate ? 'Trùng trong file' : existingKeys.has(key) ? 'Cập nhật' : 'Mới';
-      row.dataset.state = duplicate ? 'duplicate' : existingKeys.has(key) ? 'update' : 'new';
+      const selectedIndex = Number(dataLibraryImportDraft?.duplicateChoices?.[candidate.sheetName]?.[key]);
+      const duplicateSelected = duplicate && Number.isInteger(selectedIndex) && selectedIndex === candidate.items.indexOf(item);
+      const duplicateResolved = duplicate && Number.isInteger(selectedIndex);
+      const status = duplicate
+        ? (duplicateSelected ? 'Đã chọn' : duplicateResolved ? 'Bỏ qua' : 'Cần chọn')
+        : existingKeys.has(key) ? 'Cập nhật' : 'Mới';
+      row.dataset.state = duplicate ? (duplicateSelected ? 'update' : 'duplicate') : existingKeys.has(key) ? 'update' : 'new';
       const values = isCustomer
         ? [status, item.name || '—', item.company || '—', item.phone || '—', item.email || '—']
         : [status, item.name || '—', item.group || '—', [item.unit, item.pack].filter(Boolean).join(' / ') || '—', moneyForCurrency(item.price, item.currency)];
@@ -4439,10 +4581,10 @@ function renderDataLibraryImport() {
 
   const apply = document.getElementById('applyDataLibraryImport');
   if (apply) {
-    apply.disabled = candidate.accepted.length === 0;
-    apply.textContent = candidate.accepted.length
-      ? 'Áp dụng ' + candidate.accepted.length + ' dòng hợp lệ'
-      : 'Không có dòng hợp lệ để áp dụng';
+    apply.disabled = reviewState.accepted.length === 0;
+    apply.textContent = reviewState.accepted.length
+      ? 'Áp dụng ' + reviewState.accepted.length + ' dòng đã xác nhận'
+      : 'Không có dòng đã xác nhận để áp dụng';
   }
 }
 
@@ -4468,6 +4610,10 @@ function resetDataLibraryImportReviewForLoading(fileName) {
   const body = document.getElementById('dataLibraryImportPreviewBody');
   if (head) head.innerHTML = '';
   if (body) body.innerHTML = '';
+  const issues = document.getElementById('dataLibraryImportIssues');
+  const issueList = document.getElementById('dataLibraryImportIssueList');
+  if (issues) issues.hidden = true;
+  if (issueList) issueList.innerHTML = '';
 
   const apply = document.getElementById('applyDataLibraryImport');
   if (apply) {
@@ -4493,7 +4639,9 @@ async function openDataLibraryImport(file, mode, trigger) {
       mode,
       fileName: file.name,
       candidates,
-      sheetName: candidates[0]?.sheetName || ''
+      sheetName: candidates[0]?.sheetName || '',
+      duplicateChoices: {},
+      ignoredInvalidRows: {}
     };
     if (!candidates[0] || (!candidates[0].items.length && !candidates[0].invalidRows.length)) {
       throw new Error('Không nhận diện được dữ liệu phù hợp trong file.');
@@ -4512,14 +4660,16 @@ async function openDataLibraryImport(file, mode, trigger) {
 
 function applyDataLibraryImport() {
   const candidate = currentDataLibraryImportCandidate();
-  if (!candidate?.accepted?.length) return;
+  const reviewState = dataLibraryImportReviewState(candidate);
+  if (!candidate || !reviewState.accepted.length) return;
+  const acceptedItems = reviewState.accepted;
 
   let previousItems = [];
   if (candidate.mode === 'customer') {
     const next = getCustomerLibrary();
     previousItems = clone(next);
     const indexByKey = new Map(next.map((item, index) => [customerKey(item), index]));
-    candidate.accepted.forEach(customer => {
+    acceptedItems.forEach(customer => {
       const key = customerKey(customer);
       const existingIndex = indexByKey.get(key);
       const item = {
@@ -4541,7 +4691,7 @@ function applyDataLibraryImport() {
     const next = getProductCatalog();
     previousItems = clone(next);
     const indexByKey = new Map(next.map((item, index) => [catalogKey(item), index]));
-    candidate.accepted.forEach(product => {
+    acceptedItems.forEach(product => {
       const normalized = {
         group: product.group || '',
         name: product.name || '',
@@ -4570,8 +4720,8 @@ function applyDataLibraryImport() {
     refreshProductEntrySuggestions();
   }
 
-  const applied = candidate.accepted.length;
-  const updated = candidate.updateCount;
+  const applied = acceptedItems.length;
+  const updated = reviewState.updateCount;
   clearDataLibraryImportRecovery();
   closeDataLibraryImport({ restoreFocus: false });
   renderMasterData();
