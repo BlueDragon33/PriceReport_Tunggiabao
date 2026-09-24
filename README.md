@@ -2,21 +2,20 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.5 Operator Safety
+## Trạng thái hiện tại — V5.6 Reference UI/UX
 
-- Quotation Studio giữ quy trình 6 bước: **Thông tin → Sản phẩm → Thanh toán → Điều khoản → Thiết kế → Xuất**, với Smart Data Entry V5.2 và Guided Data Entry V5.3 làm nền tảng.
-- Data Library tiếp tục dùng đúng hai collection local-first hiện có cho **danh bạ khách hàng** và **danh mục sản phẩm**; không có engine dữ liệu song song.
-- Nhập Excel/XLS/CSV vẫn đi theo luồng **đọc → review → áp dụng**, có chọn sheet, thống kê dòng hợp lệ/lỗi/trùng và cập nhật bản ghi hiện có mà giữ ID.
-- Duplicate review không tự đoán người thắng: người vận hành phải chọn rõ dòng giữ; dòng lỗi phải được xác nhận bỏ qua trước khi review được coi là hoàn tất.
-- Review lớn ẩn mục đã xử lý theo mặc định, có **Vấn đề tiếp theo**, hỗ trợ bàn phím và giữ focus trong modal.
-- Trạng thái review phân biệt rõ dữ liệu **đang kiểm tra / còn vấn đề / đã sẵn sàng**; Apply nói rõ phần an toàn được nhập và vấn đề chưa xử lý sẽ bị bỏ qua.
-- Xóa một/bulk khách hàng hoặc sản phẩm và giao dịch import/update đều có **Hoàn tác 8 giây** bằng snapshot của collection hiện có.
-- Khu **Hoạt động gần đây** chỉ giữ tối đa 8 thao tác trong bộ nhớ của phiên trang để hiển thị trạng thái **Có thể hoàn tác / Đã hoàn tất / Đã hoàn tác**; không tạo persistent audit store.
-- Phiên review import bị gián đoạn chỉ lưu dữ liệu đã parse trong `sessionStorage`, không lưu raw workbook/blob, có giới hạn kích thước và tự hết hạn sau **6 giờ**.
-- CSV tiếp tục decode UTF-8 trước khi SheetJS parse; export Excel/CSV giữ cấu trúc có thể nhập lại và catalog giữ nguyên currency.
-- Preview A4, print/PDF, 8 template, PC storage, backup/restore, Device Gate và Application Management contract tiếp tục giữ kiến trúc hiện có.
-- PWA/offline dùng cache generation riêng **V5.5 Operator Safety** để buộc client nhận đúng asset của release.
-- Package release được đồng bộ ở **5.5.0**.
+- Giao diện V5.6 lấy **ảnh mẫu đã duyệt trước đó** làm source of truth; các ràng buộc được lưu tại `UI_REFERENCE_V5.6.md` thay vì chỉ tồn tại trong hội thoại.
+- Quotation Studio desktop dùng lại tỷ lệ chuẩn **118px sidebar → 350px editor → 315px Template/Design → Preview linh hoạt**.
+- Sidebar quản trị và Studio dùng cùng ngôn ngữ navy/blue, hit-area lớn và trạng thái active rõ; các workspace không còn chuyển sang rail 224px tách biệt.
+- Typography ứng dụng được nâng lên theo mức đọc của một ứng dụng productivity hiện đại: baseline 15px, form 12.5–14px, button 13.5px, workspace heading 30px. Chữ 8–10px chỉ còn ở metadata/badge/table header nhỏ có chủ đích.
+- Editor, Template/Design, Dashboard, Quản lý báo giá, Data Management, Export/Data Center, Settings và System dùng cùng hệ surface trắng, border lạnh nhẹ, radius 10–12px và spacing thống nhất.
+- **Trung tâm xuất bản & dữ liệu** đã bỏ kiểu card xám lớn nhưng chữ nhỏ; action card dùng nền trắng/soft-blue, title 14px, mô tả 11.5px và hover rõ.
+- Dashboard, History và Data Management được tăng chiều cao card/toolbar/table row để chữ lớn không bị nhồi; Settings/System được nhóm lại theo nhịp 20px.
+- Smart Import và Data Library review được mở rộng trên desktop, đồng thời giữ containment riêng cho tablet/phone.
+- Preview dùng canvas sáng trung tính, toolbar dễ đọc và tách A4 khỏi application chrome; stylesheet báo cáo A4 vẫn được cô lập, không bị UI refactor can thiệp.
+- V5.5 Operator Safety, import/recovery/undo, backup/restore, Device Gate và Application Management contract tiếp tục giữ nguyên logic đã kiểm thử.
+- PWA/offline dùng cache generation **pricereport-shell-v56-reference-ui** để client không giữ asset V5.5.
+- Package release được đồng bộ ở **5.6.0**.
 
 ## Kiểm thử
 
