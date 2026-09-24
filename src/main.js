@@ -1,5 +1,3 @@
-import './styles.css';
-import './ui-v5.css';
 import {
   calcQuoteTotal,
   historyTotalsByCurrency,
