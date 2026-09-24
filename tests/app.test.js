@@ -597,6 +597,67 @@ test('V5.4 Data Management filters, currency-aware duplicates and bulk selection
 
 
 
+test('V5.5 operator history makes the undo window and outcome visible', () => {
+  const key = 'tunggiabao-price-report-customers-v1';
+  const before = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([
+    { id:'v55-history-c1', name:'Khách Lịch Sử', company:'A', phone:'0909000001', email:'', address:'', contact:'' }
+  ]));
+  document.getElementById('customerLibrarySearch').value = '';
+  document.getElementById('customerLibraryFilter').value = '';
+  document.querySelector('[data-tab="master"]').click();
+
+  const row = document.querySelector('#customerLibraryList .master-item');
+  expect(row?.textContent).toContain('Khách Lịch Sử');
+  row.querySelector('.btn.danger').click();
+
+  const activity = document.getElementById('dataLibraryActivity');
+  const activityList = document.getElementById('dataLibraryActivityList');
+  expect(activity.hidden).toBe(false);
+  expect(activityList.textContent).toContain('Đã xóa 1 khách hàng');
+  expect(activityList.textContent).toContain('Có thể hoàn tác');
+  expect(document.getElementById('toast').textContent).toContain('Có thể hoàn tác trong 8 giây');
+
+  const undo = document.querySelector('#toast .toast-action');
+  expect(undo?.textContent).toBe('Hoàn tác');
+  undo.click();
+
+  expect(activityList.textContent).toContain('Đã hoàn tác');
+  expect(JSON.parse(localStorage.getItem(key) || '[]')).toHaveLength(1);
+
+  if (before == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+test('V5.5 expired import recovery is cleaned instead of being offered', () => {
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  const staleRecovery = {
+    schemaVersion: 1,
+    savedAt: Date.now() - (6 * 60 * 60 * 1000 + 60 * 1000),
+    mode: 'customer',
+    fileName: 'stale-review.csv',
+    sheetName: 'Sheet1',
+    duplicateChoices: {},
+    ignoredInvalidRows: {},
+    candidates: [{
+      sheetName: 'Sheet1',
+      rows: [
+        ['Tên khách hàng','Công ty','SĐT','Email','Địa chỉ','Người liên hệ'],
+        ['Khách Quá Hạn','Công ty Cũ','0909000002','','','']
+      ]
+    }]
+  };
+  sessionStorage.setItem(recoveryKey, JSON.stringify(staleRecovery));
+
+  document.querySelector('[data-tab="dashboard"]').click();
+  document.querySelector('[data-tab="master"]').click();
+
+  expect(sessionStorage.getItem(recoveryKey)).toBeNull();
+  expect(document.getElementById('dataLibraryImportModal').hidden).toBe(true);
+  expect(document.querySelector('#toast .toast-action')?.textContent).not.toBe('Khôi phục');
+});
+
 test('V5.5 row-level customer deletion is reversible and refreshes autocomplete', () => {
   const key = 'tunggiabao-price-report-customers-v1';
   const before = localStorage.getItem(key);
@@ -761,6 +822,7 @@ test('V5.5 interrupted Data Library review can be recovered and explicit cancel 
   document.querySelector('[data-tab="master"]').click();
   const recover = document.querySelector('#toast .toast-action');
   expect(recover?.textContent).toBe('Khôi phục');
+  expect(document.getElementById('toast').textContent).toContain('Tự xóa sau khoảng');
   recover.click();
 
   expect(document.getElementById('dataLibraryImportModal').hidden).toBe(false);
