@@ -2,20 +2,20 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.6 Reference UI/UX
+## Trạng thái hiện tại — V5.7 Reference Fidelity UI/UX
 
-- Giao diện V5.6 lấy **ảnh mẫu đã duyệt trước đó** làm source of truth; các ràng buộc được lưu tại `UI_REFERENCE_V5.6.md` thay vì chỉ tồn tại trong hội thoại.
-- Quotation Studio desktop dùng lại tỷ lệ chuẩn **118px sidebar → 350px editor → 315px Template/Design → Preview linh hoạt**.
+- Giao diện V5.7 tiếp tục lấy **ảnh mẫu người dùng đính kèm ngày 24/09/2026** làm source of truth; đặc tả mới nằm tại `UI_REFERENCE_V5.7.md` và không tạo thêm ảnh mockup.
+- Quotation Studio desktop đổi đúng trật tự thị giác của ảnh mẫu: **118px app rail → 320px editor → Preview A4 linh hoạt → 368px inspector Thiết kế**. Preview nằm ở giữa; inspector nằm ngoài cùng bên phải.
 - Sidebar quản trị và Studio dùng cùng ngôn ngữ navy/blue, hit-area lớn và trạng thái active rõ; các workspace không còn chuyển sang rail 224px tách biệt.
 - Typography ứng dụng được nâng lên theo mức đọc của một ứng dụng productivity hiện đại: baseline 15px, form 12.5–14px, button 13.5px, workspace heading 30px. Chữ 8–10px chỉ còn ở metadata/badge/table header nhỏ có chủ đích.
-- Editor, Template/Design, Dashboard, Quản lý báo giá, Data Management, Export/Data Center, Settings và System dùng cùng hệ surface trắng, border lạnh nhẹ, radius 10–12px và spacing thống nhất.
+- Studio dùng chrome navy đồng nhất cho rail/editor/inspector, trong khi A4 nằm trên canvas xanh xám trung tính. Các workspace quản trị vẫn giữ surface sáng để dễ đọc bảng/dữ liệu.
 - **Trung tâm xuất bản & dữ liệu** đã bỏ kiểu card xám lớn nhưng chữ nhỏ; action card dùng nền trắng/soft-blue, title 14px, mô tả 11.5px và hover rõ.
 - Dashboard, History và Data Management được tăng chiều cao card/toolbar/table row để chữ lớn không bị nhồi; Settings/System được nhóm lại theo nhịp 20px.
 - Smart Import và Data Library review được mở rộng trên desktop, đồng thời giữ containment riêng cho tablet/phone.
-- Preview dùng canvas sáng trung tính, toolbar dễ đọc và tách A4 khỏi application chrome; stylesheet báo cáo A4 vẫn được cô lập, không bị UI refactor can thiệp.
+- Preview dùng canvas xanh xám trung tính, toolbar navy cùng trục với editor/inspector; stylesheet báo cáo A4 vẫn được cô lập, không bị UI refactor can thiệp.
 - V5.5 Operator Safety, import/recovery/undo, backup/restore, Device Gate và Application Management contract tiếp tục giữ nguyên logic đã kiểm thử.
-- PWA/offline dùng cache generation **pricereport-shell-v56-reference-ui** để client không giữ asset V5.5.
-- Package release được đồng bộ ở **5.6.0**.
+- PWA/offline dùng cache generation **pricereport-shell-v57-reference-fidelity** để client không giữ asset V5.5.
+- Package release được đồng bộ ở **5.7.0**.
 
 ## Kiểm thử
 
