@@ -6118,7 +6118,7 @@ body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero{
 body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero h2{
   margin:8px 0 10px;
   max-width:760px;
-  color:#18385f;
+  color:var(--v5-heading);
   font-size:29px;
   line-height:1.18;
   letter-spacing:-.015em;
