@@ -175,7 +175,6 @@ export function quotationWorkbookModel(data = {}) {
       terms.forEach((line, index) => {
         const rowIndex = rows.length;
         rows.push([index + 1, line]);
-        mergeRows.push(rowIndex);
       });
     }
   }
