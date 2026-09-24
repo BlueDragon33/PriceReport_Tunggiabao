@@ -3889,7 +3889,36 @@ $$('.color').forEach((el) => {
   });
 });
 
+function setDesignInspectorTab(tab) {
+  const panel = document.getElementById('designPanel');
+  if (!panel) return;
+  const next = ['design','content','check'].includes(tab) ? tab : 'design';
+  panel.dataset.inspectorTab = next;
+  panel.querySelectorAll('[data-inspector-tab]').forEach((button) => {
+    const active = button.dataset.inspectorTab === next;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  panel.querySelectorAll('[data-inspector-view]').forEach((view) => {
+    view.hidden = view.dataset.inspectorView !== next;
+  });
+  if (next === 'check') updateDocumentHealth();
+}
+
+document.querySelectorAll('#designPanel [data-inspector-tab]').forEach((button) => {
+  button.addEventListener('click', () => setDesignInspectorTab(button.dataset.inspectorTab));
+});
+document.querySelectorAll('#designPanel [data-inspector-open-tab]').forEach((button) => {
+  button.addEventListener('click', () => openTab(button.dataset.inspectorOpenTab));
+});
+document.getElementById('inspectorRunCheck')?.addEventListener('click', () => {
+  document.getElementById('preflightCheck')?.click();
+  updateDocumentHealth();
+});
+document.getElementById('inspectorPreviewQuote')?.addEventListener('click', () => openTab('view'));
+
 document.getElementById('openDesign').addEventListener('click', () => {
+  setDesignInspectorTab('design');
   document.getElementById('designPanel').classList.add('open');
   setMajorPanelState('design', false);
 });
@@ -5341,7 +5370,8 @@ function updateDocumentHealth() {
   const result = validateQuote();
   const badges = [
     document.getElementById('documentHealth'),
-    document.getElementById('studioDocumentHealth')
+    document.getElementById('studioDocumentHealth'),
+    document.getElementById('inspectorHealthStatus')
   ].filter(Boolean);
 
   let tone = 'ok';
