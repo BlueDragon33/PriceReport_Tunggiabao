@@ -2,22 +2,21 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.4 Data Management
+## Trạng thái hiện tại — V5.5 Operator Safety
 
-- Quotation Studio giữ quy trình 6 bước: **Thông tin → Sản phẩm → Thanh toán → Điều khoản → Thiết kế → Xuất**, với validation/guidance liên tục từ V5.3.
-- Data Library hiện quản lý **danh bạ khách hàng** và **danh mục sản phẩm** bằng cùng storage local-first hiện có, không tạo engine dữ liệu song song.
-- Tìm kiếm thư viện không phân biệt dấu tiếng Việt, hoa/thường và khoảng trắng; tập dữ liệu 100 / 300 / 500 dòng có regression riêng để tránh cắt ngầm.
-- Khách hàng có bộ lọc theo SĐT/email; sản phẩm có lọc nhóm, tiền tệ và bản ghi trùng.
-- Duplicate review dùng canonical identity; biến thể cùng sản phẩm khác tiền tệ không bị báo trùng giả.
-- Có bulk selection cho khách hàng/sản phẩm; sản phẩm đã chọn có thể thêm vào báo giá trong một chu kỳ state/save/render.
-- Data Library hỗ trợ **nhập Excel/XLS/CSV** theo luồng đọc → review → áp dụng, có chọn sheet, thống kê dòng hợp lệ/lỗi/trùng và cập nhật bản ghi hiện có mà giữ ID.
-- Nhóm trùng trong cùng file nhập bị loại khỏi Apply thay vì hệ thống tự chọn hoặc tự gộp một cách mơ hồ.
-- CSV được decode UTF-8 trước khi SheetJS parse để giữ chính xác tiêu đề/dữ liệu tiếng Việt.
-- Data Library hỗ trợ **xuất Excel và CSV** theo cấu trúc có thể nhập lại; catalog giữ nguyên currency.
-- V5.2 Smart Data Entry và V5.3 Guided Data Entry tiếp tục là nền tảng nhập liệu/guidance cho Quotation Studio.
+- Quotation Studio giữ quy trình 6 bước: **Thông tin → Sản phẩm → Thanh toán → Điều khoản → Thiết kế → Xuất**, với Smart Data Entry V5.2 và Guided Data Entry V5.3 làm nền tảng.
+- Data Library tiếp tục dùng đúng hai collection local-first hiện có cho **danh bạ khách hàng** và **danh mục sản phẩm**; không có engine dữ liệu song song.
+- Nhập Excel/XLS/CSV vẫn đi theo luồng **đọc → review → áp dụng**, có chọn sheet, thống kê dòng hợp lệ/lỗi/trùng và cập nhật bản ghi hiện có mà giữ ID.
+- Duplicate review không tự đoán người thắng: người vận hành phải chọn rõ dòng giữ; dòng lỗi phải được xác nhận bỏ qua trước khi review được coi là hoàn tất.
+- Review lớn ẩn mục đã xử lý theo mặc định, có **Vấn đề tiếp theo**, hỗ trợ bàn phím và giữ focus trong modal.
+- Trạng thái review phân biệt rõ dữ liệu **đang kiểm tra / còn vấn đề / đã sẵn sàng**; Apply nói rõ phần an toàn được nhập và vấn đề chưa xử lý sẽ bị bỏ qua.
+- Xóa một/bulk khách hàng hoặc sản phẩm và giao dịch import/update đều có **Hoàn tác 8 giây** bằng snapshot của collection hiện có.
+- Khu **Hoạt động gần đây** chỉ giữ tối đa 8 thao tác trong bộ nhớ của phiên trang để hiển thị trạng thái **Có thể hoàn tác / Đã hoàn tất / Đã hoàn tác**; không tạo persistent audit store.
+- Phiên review import bị gián đoạn chỉ lưu dữ liệu đã parse trong `sessionStorage`, không lưu raw workbook/blob, có giới hạn kích thước và tự hết hạn sau **6 giờ**.
+- CSV tiếp tục decode UTF-8 trước khi SheetJS parse; export Excel/CSV giữ cấu trúc có thể nhập lại và catalog giữ nguyên currency.
 - Preview A4, print/PDF, 8 template, PC storage, backup/restore, Device Gate và Application Management contract tiếp tục giữ kiến trúc hiện có.
-- PWA/offline dùng cache generation riêng **V5.4 Data Management** để không giữ asset cũ từ V5.3.
-- Package release hiện được đồng bộ ở **5.4.0**.
+- PWA/offline dùng cache generation riêng **V5.5 Operator Safety** để buộc client nhận đúng asset của release.
+- Package release được đồng bộ ở **5.5.0**.
 
 ## Kiểm thử
 
