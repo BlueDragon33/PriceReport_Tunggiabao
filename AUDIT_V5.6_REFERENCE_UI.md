@@ -125,3 +125,8 @@ The UI stylesheet still has:
 - no A4 report selectors.
 
 Run the full exact-head gate before the next visual pass.
+
+
+### Pass 3 gate correction
+
+CI #671 stopped at the V5 UI guard because the Dashboard hero reused the literal `#18385f`, which is already owned by `--v5-heading`. The visual value was correct; token ownership was not. The selector now uses the semantic token instead, preserving one source of truth for heading color.
