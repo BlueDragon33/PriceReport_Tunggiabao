@@ -178,3 +178,54 @@ Introducing a separate paginator or review store would duplicate state that alre
 ### Next pass
 
 Audit import review completion semantics and operator safeguards: make the all-resolved state unmistakable, ensure Apply messaging distinguishes unresolved warnings from acknowledged skips, and verify keyboard-only operation across the complete review flow.
+
+
+## Pass 5 — Review completion semantics and operator safeguards
+
+### Findings
+
+Pass 4 made large review queues easier to navigate, but the completion state was still implicit:
+- the Apply button could remain enabled while unresolved duplicate/invalid issues existed, without explicitly stating that those unresolved items would not be imported;
+- after the final issue was resolved, focus could fall out of the review work instead of moving to the next safe action;
+- single-sheet imports always attempted to focus the sheet selector even when that control was not visible;
+- Tab navigation had no modal boundary safeguard.
+
+Changing transactional import semantics or blocking safe rows would break the established V5.4 contract, so Pass 5 keeps partial-safe Apply while making the consequences explicit.
+
+### Corrections
+
+- Added a dedicated completion status surface with three derived states:
+  - pending while parsing;
+  - warning while unresolved review work remains;
+  - ready when the review is clear.
+- Warning state explicitly states how many unresolved issues will not be imported.
+- All-resolved state explicitly confirms that duplicate selections and acknowledged invalid-row skips are complete.
+- Clean files with no review issues show a distinct **Dữ liệu đã sẵn sàng** state.
+- Apply copy now distinguishes:
+  - safe partial apply with unresolved issues;
+  - fully reviewed apply;
+  - empty/no-applicable-data state.
+- Apply exposes a review-state data attribute for consistent UI and regression guards.
+- Initial keyboard focus now goes to:
+  1. visible sheet selector when multi-sheet selection is required;
+  2. first unresolved review action;
+  3. Apply when no review work remains;
+  4. Cancel only as the final fallback.
+- After resolving the final issue, focus advances to Apply.
+- Tab/Shift+Tab are trapped within the import modal boundary while it is open.
+- Escape behavior remains unchanged.
+- No additional import engine, review store or persistence schema is introduced.
+
+### Regression coverage
+
+- unresolved review shows a warning completion state and Apply text that explicitly says unresolved issues are skipped;
+- resolving the last duplicate/invalid issue changes completion state to ready;
+- acknowledged invalid-row skips are distinguished from unresolved warnings;
+- final resolution moves focus to Apply;
+- single-sheet review starts keyboard focus in unresolved work instead of a hidden selector;
+- Tab and Shift+Tab wrap within the modal;
+- existing V5.4/V5.5 transactional, recovery, large-review and undo behavior remains under the full gate.
+
+### Next pass
+
+Audit destructive/reversible boundaries after import: confirm undo messaging, recovery expiration/cleanup and operator-visible history are consistent enough to close V5.5 Operator Safety without adding persistent audit infrastructure.
