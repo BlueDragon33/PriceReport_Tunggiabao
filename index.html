@@ -1358,8 +1358,15 @@
         <div class="data-library-import-notice" id="dataLibraryImportNotice" role="status"></div>
         <section class="data-library-import-issues" id="dataLibraryImportIssues" hidden aria-label="Dữ liệu cần xác nhận">
           <div class="data-library-import-issues-head">
-            <strong>Cần bạn xác nhận</strong>
-            <span>Chọn bản giữ cho dữ liệu trùng hoặc xác nhận bỏ qua dòng lỗi. Hệ thống không tự quyết thay bạn.</span>
+            <div>
+              <strong>Cần bạn xác nhận</strong>
+              <span>Chọn bản giữ cho dữ liệu trùng hoặc xác nhận bỏ qua dòng lỗi. Hệ thống không tự quyết thay bạn.</span>
+            </div>
+            <div class="data-library-import-issues-tools">
+              <span id="dataLibraryImportUnresolvedCount">0 chưa xử lý</span>
+              <button class="btn" id="dataLibraryImportNextIssue" type="button">Vấn đề tiếp theo</button>
+              <label class="check"><input id="dataLibraryImportShowResolved" type="checkbox"> Hiện đã xử lý</label>
+            </div>
           </div>
           <div class="data-library-import-issue-list" id="dataLibraryImportIssueList"></div>
         </section>

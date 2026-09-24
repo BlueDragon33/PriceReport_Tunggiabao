@@ -366,5 +366,8 @@ if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Libr
 if (!html.includes('id="dataLibraryImportIssues"') || !html.includes('id="dataLibraryImportIssueList"')) fail('V5.5 Data Library decision review panel is missing');
 if (!js.includes('function dataLibraryImportReviewState') || !js.includes('function chooseDataLibraryImportDuplicate')) fail('V5.5 explicit duplicate review decision flow is missing');
 if (!js.includes('function ignoreDataLibraryImportInvalidRow')) fail('V5.5 invalid-row acknowledgement flow is missing');
+if (!html.includes('id="dataLibraryImportNextIssue"') || !html.includes('id="dataLibraryImportShowResolved"')) fail('V5.5 large-review navigation controls are missing');
+if (!js.includes('function focusNextDataLibraryImportIssue')) fail('V5.5 next unresolved import issue navigation is missing');
+if (!js.includes('dataset.reviewUnresolved') || !js.includes('dataset.reviewResolved')) fail('V5.5 resolved/unresolved review state rendering is missing');
 if (!js.includes('function offerDataLibraryUndo')) fail('V5.5 Data Library undo helper is missing');
 if (!js.includes("label: 'Hoàn tác'") || !js.includes('duration: 8000')) fail('V5.5 Data Library undo action contract is missing');
