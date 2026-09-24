@@ -614,7 +614,7 @@ test('V5.5 operator history makes the undo window and outcome visible', () => {
   const activity = document.getElementById('dataLibraryActivity');
   const activityList = document.getElementById('dataLibraryActivityList');
   expect(activity.hidden).toBe(false);
-  expect(activityList.textContent).toContain('Đã xóa 1 khách hàng');
+  expect(activityList.textContent).toContain('Đã xóa khách hàng khỏi danh bạ');
   expect(activityList.textContent).toContain('Có thể hoàn tác');
   expect(document.getElementById('toast').textContent).toContain('Có thể hoàn tác trong 8 giây');
 
