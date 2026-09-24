@@ -15,7 +15,9 @@ The desktop quotation Studio must read from left to right as:
 
 The A4 preview belongs in the center of the composition. The Design inspector belongs at the far right. The DOM may remain in its existing order if CSS grid placement preserves this visible order without duplicating engines or business logic.
 
-Wide Preview mode collapses the two tool columns and restores a two-column shell: 118px application rail + flexible preview.
+A 68px Studio command bar spans Editor + Preview + Inspector on desktop. It carries the current quotation identity, document-health state and the highest-frequency actions (Save Draft, Preview, Export PDF), while delegating to the existing save/view/print engines.
+
+Wide Preview mode collapses the two tool columns and restores a two-column shell: 118px application rail + flexible preview, while retaining the 68px Studio command bar above the preview.
 
 ## 2. Application chrome
 
