@@ -143,6 +143,24 @@
       <div class="tip"><b>Chế độ ứng dụng</b><br>Trang chủ để quản lý. Tạo báo giá để vào studio A4.</div>
     </nav>
 
+    <header class="studio-global-bar" aria-label="Thanh công cụ báo giá">
+      <div class="studio-global-context">
+        <span class="studio-global-doc-icon" aria-hidden="true">▧</span>
+        <div>
+          <strong id="studioGlobalTitle">Báo giá mới</strong>
+          <small>Mã báo giá: <span id="studioGlobalQuoteNo">—</span><i aria-hidden="true">•</i><span id="studioGlobalHistoryState">Chưa lưu lịch sử</span></small>
+        </div>
+      </div>
+      <div class="studio-global-middle">
+        <span class="document-health" id="studioGlobalHealth">Đang kiểm tra</span>
+      </div>
+      <div class="studio-global-actions">
+        <button class="studio-global-action" id="studioGlobalSave" type="button">Lưu nháp</button>
+        <button class="studio-global-action" id="studioGlobalPreview" type="button">◉ Xem trước</button>
+        <button class="studio-global-action primary print-action" id="studioGlobalPdf" type="button">⇩ Xuất PDF</button>
+      </div>
+    </header>
+
     <section class="editor">
       <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
       <div class="panel-head studio-panel-head">
