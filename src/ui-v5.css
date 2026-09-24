@@ -6558,3 +6558,143 @@ body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="sys
 body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab]{
   min-height:66px;
 }
+
+
+/* ---------- V5.7 Pass 5: right inspector tabs ---------- */
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs{
+  position:sticky;
+  top:0;
+  z-index:40;
+  min-height:52px;
+  padding:7px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:#0a213d;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs button{
+  min-height:38px;
+  padding:0 8px;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:#a9bdd6;
+  font-size:12.5px;
+  font-weight:750;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs button:hover{
+  background:#14365c;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs button.active{
+  border-color:#2f7de1;
+  background:var(--v5-primary);
+  color:#fff;
+  box-shadow:0 5px 14px rgba(36,119,232,.18);
+}
+body.v5-ui.reference-ui-v57 .design>.panel-head{
+  top:52px;
+}
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="content"]>.panel-head,
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="content"]>.panel-body,
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="check"]>.panel-head,
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="check"]>.panel-body{
+  display:none;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view{
+  padding:18px 15px 32px;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view>header{
+  margin-bottom:16px;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view>header h2{
+  margin:0;
+  color:#f5f9ff;
+  font-size:16px;
+  line-height:1.3;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view>header p{
+  margin:5px 0 0;
+  color:#9fb4cf;
+  font-size:12px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list{
+  display:grid;
+  gap:8px;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button{
+  width:100%;
+  min-height:64px;
+  padding:10px 11px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:10px;
+  background:#102f53;
+  color:#e8f1fc;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  column-gap:10px;
+  text-align:left;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button:hover{
+  border-color:#3b79bd;
+  background:#15385f;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button>span{
+  grid-row:1/3;
+  width:32px;
+  height:32px;
+  align-self:center;
+  border-radius:8px;
+  background:#173f6b;
+  color:#8fbae9;
+  display:grid;
+  place-items:center;
+  font-size:10.5px;
+  font-weight:850;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button>b{
+  align-self:end;
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button>small{
+  align-self:start;
+  margin-top:2px;
+  color:#9fb4cf;
+  font-size:11px;
+  line-height:1.35;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card{
+  margin-bottom:12px;
+  padding:15px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:11px;
+  background:#102f53;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card>span{
+  display:block;
+  margin-bottom:7px;
+  color:#9fb4cf;
+  font-size:11.5px;
+  font-weight:700;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card>.document-health{
+  display:inline-flex;
+  min-height:30px;
+  align-items:center;
+  margin-bottom:8px;
+  padding:5px 9px;
+  border-radius:8px;
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card>small{
+  display:block;
+  color:#9fb4cf;
+  font-size:11px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v57 .inspector-check-view>.btn{
+  margin-top:9px;
+}
