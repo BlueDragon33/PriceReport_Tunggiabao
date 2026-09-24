@@ -2534,10 +2534,6 @@ function productRowsForExport() {
   return buildProductExportRows(state.products);
 }
 
-function productRowsForExport() {
-  return buildProductExportRows(state.products);
-}
-
 function excelNumberFormat(currency) {
   if (currency === 'USD') return '$#,##0.00';
   if (currency === 'RUB') return '#,##0.00 "₽"';
