@@ -43,6 +43,10 @@ jobs:
         run: npx vitest run tests/app.test.js -t "V5.4 customer library CSV import reviews and applies valid rows transactionally"
       - name: V5.4 product import DOM regression
         run: npx vitest run tests/app.test.js -t "V5.4 product import excludes duplicate groups and preserves currency variants"
+      - name: V5.5 completion semantics regression
+        run: npx vitest run tests/app.test.js -t "V5.5 completion state distinguishes unresolved warnings from reviewed data"
+      - name: V5.5 keyboard safeguards regression
+        run: npx vitest run tests/app.test.js -t "V5.5 keyboard-only import review starts in work and traps Tab inside the modal"
       - name: V5.5 operator safety regression
         run: npx vitest run tests/app.test.js -t "V5.5"
       - name: Full app DOM regression tests
