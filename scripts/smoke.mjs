@@ -326,7 +326,11 @@ if (!js.includes("const initialAppPage = getAppPreferences().startPage")) fail('
 if (!js.includes("if (getAppPreferences().autoPcSave)")) fail('V4.9 PC autosave preference is not enforced');
 if (!v5Css.includes('.nav button[data-tab="settings"]')) fail('Mobile settings navigation rule is missing from V5 UI');
 
-if (!js.includes("import './ui-v5.css';")) fail('V5 application stylesheet is not loaded after legacy CSS');
+const legacyStyleLink = '<link rel="stylesheet" href="./src/styles.css">';
+const v5StyleLink = '<link rel="stylesheet" href="./src/ui-v5.css">';
+if (!html.includes(legacyStyleLink) || !html.includes(v5StyleLink)) fail('Source HTML must load both application stylesheets directly');
+if (html.indexOf(legacyStyleLink) > html.indexOf(v5StyleLink)) fail('V5 stylesheet must load after legacy stylesheet');
+if (js.includes("import './styles.css';") || js.includes("import './ui-v5.css';")) fail('Stylesheet ownership must stay in HTML so raw/static source hosting cannot render unstyled');
 if (!html.includes('<body class="v5-ui">')) fail('V5 UI scope is missing from body');
 
 for (const primitive of ['app-workspace-pane','app-workspace-header','app-surface-panel','app-status-card','app-data-table']) {
