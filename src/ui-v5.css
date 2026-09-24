@@ -6432,3 +6432,26 @@ body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace .sett
   align-items:stretch;
   flex-direction:column;
 }
+
+
+/* ---------- V5.6 Pass 4: contextual navigation hierarchy ---------- */
+/* Keep the 118px rail focused on the task at hand. Management workspaces show
+   application-level destinations; Studio shows quotation workflow destinations. */
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="customer"],
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="products"],
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="payment"],
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="terms"],
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="design"],
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="view"],
+body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="presets"]{
+  display:none;
+}
+body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="history"],
+body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="master"],
+body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="system"],
+body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="settings"]{
+  display:none;
+}
+body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab]{
+  min-height:60px;
+}
