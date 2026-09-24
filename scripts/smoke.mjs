@@ -78,7 +78,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v55-stylesheet-compat")) fail('Service-worker cache version was not upgraded for the V5.5 stylesheet compatibility hotfix');
+if (!sw.includes("pricereport-shell-v55-operator-safety")) fail('Service-worker cache version was not aligned with the V5.5 operator-safety release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
