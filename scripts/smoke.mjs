@@ -78,7 +78,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v55-stylesheet-compat")) fail('Service-worker cache version was not upgraded for the V5.5 stylesheet compatibility hotfix');
+if (!sw.includes("pricereport-shell-v55-operator-safety")) fail('Service-worker cache version was not aligned with the V5.5 operator-safety release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -380,3 +380,7 @@ if (!js.includes("apply.dataset.reviewState = 'warning'") || !js.includes("apply
 if (!js.includes('dataset.reviewUnresolved') || !js.includes('dataset.reviewResolved')) fail('V5.5 resolved/unresolved review state rendering is missing');
 if (!js.includes('function offerDataLibraryUndo')) fail('V5.5 Data Library undo helper is missing');
 if (!js.includes("label: 'Hoàn tác'") || !js.includes('duration: 8000')) fail('V5.5 Data Library undo action contract is missing');
+if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS') || !js.includes('now - savedAt > DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS')) fail('V5.5 recovery expiration cleanup is missing');
+if (!html.includes('id="dataLibraryActivity"') || !html.includes('id="dataLibraryActivityList"')) fail('V5.5 session operation history surface is missing');
+if (!js.includes('function recordDataLibraryOperation') || !js.includes("'undo-available'") || !js.includes("'undone'")) fail('V5.5 operator-visible mutation state tracking is missing');
+if (!js.includes('Có thể hoàn tác trong 8 giây')) fail('V5.5 undo window must be explicit to the operator');
