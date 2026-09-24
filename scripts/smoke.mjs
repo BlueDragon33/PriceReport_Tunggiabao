@@ -355,6 +355,9 @@ if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nh
 if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
+if (!html.includes('reference-ui-v56')) fail('V5.6 reference-image UI scope is missing');
+if (!v5Css.includes('V5.6 reference-image UI/UX refactor')) fail('V5.6 reference-image UI refactor is missing');
+if (!v5Css.includes('--v5-sidebar-width:118px') || !v5Css.includes('--edit:350px') || !v5Css.includes('--design:315px')) fail('V5.6 reference desktop geometry is missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
