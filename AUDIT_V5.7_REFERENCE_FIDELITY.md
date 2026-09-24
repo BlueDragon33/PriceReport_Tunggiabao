@@ -39,7 +39,8 @@ Implemented on `feature/v5-7-reference-fidelity`:
 - converted the existing Studio stepper into a vertical content-block navigator;
 - removed workflow-step duplication from the Studio application rail;
 - retained the existing light management-workspace visual system for Dashboard, History, Data, Publishing, Settings and System;
-- added the reference inspector's Design / Content / Check tabs without creating duplicate editors: Content routes into existing Studio steps and Check reuses the existing document-health / preflight engine.
+- added the reference inspector's Design / Content / Check tabs without creating duplicate editors: Content routes into existing Studio steps and Check reuses the existing document-health / preflight engine;
+- added a 68px Studio-wide command bar above Editor / Preview / Inspector, synchronized to current quote identity and document health, with Save / Preview / PDF actions forwarding to the existing engines.
 
 ## Release alignment
 
