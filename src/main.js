@@ -4424,6 +4424,23 @@ function dataLibraryImportItemSummary(mode, item) {
   ].filter(Boolean).join(' • ') || 'Sản phẩm chưa đủ thông tin';
 }
 
+function focusNextDataLibraryImportIssue({ fromStart = false } = {}) {
+  const list = document.getElementById('dataLibraryImportIssueList');
+  if (!list) return false;
+  const unresolved = [...list.querySelectorAll('[data-review-unresolved="true"]')];
+  if (!unresolved.length) return false;
+  const current = document.activeElement?.closest?.('[data-review-unresolved="true"]');
+  const currentIndex = current ? unresolved.indexOf(current) : -1;
+  const next = fromStart || currentIndex < 0
+    ? unresolved[0]
+    : unresolved[(currentIndex + 1) % unresolved.length];
+  const target = next.querySelector('button:not([disabled]), input:not([disabled])') || next;
+  if (!next.hasAttribute('tabindex')) next.tabIndex = -1;
+  target.focus?.({ preventScroll: true });
+  next.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  return true;
+}
+
 function closeDataLibraryImport({ restoreFocus = true, discardRecovery = false } = {}) {
   dataLibraryImportReadToken += 1;
   const modal = document.getElementById('dataLibraryImportModal');
@@ -4482,6 +4499,16 @@ function renderDataLibraryImport() {
   if (issues && issueList) {
     issueList.innerHTML = '';
     const choices = dataLibraryImportDraft?.duplicateChoices?.[candidate.sheetName] || {};
+    const ignoredRows = new Set(
+      (dataLibraryImportDraft?.ignoredInvalidRows?.[candidate.sheetName] || [])
+        .map(value => Number(value))
+        .filter(Number.isFinite)
+    );
+    const showResolved = Boolean(document.getElementById('dataLibraryImportShowResolved')?.checked);
+    const unresolvedTotal = reviewState.unresolvedDuplicateGroups.length + reviewState.unresolvedInvalidRows.length;
+    setText('dataLibraryImportUnresolvedCount', unresolvedTotal + ' chưa xử lý');
+    const nextIssueButton = document.getElementById('dataLibraryImportNextIssue');
+    if (nextIssueButton) nextIssueButton.disabled = unresolvedTotal === 0;
     candidate.duplicateGroups.forEach((group, groupIndex) => {
       const card = document.createElement('article');
       card.className = 'data-library-import-issue-card';
@@ -4489,6 +4516,9 @@ function renderDataLibraryImport() {
       title.className = 'data-library-import-issue-title';
       const selectedIndex = Number(choices[group.key]);
       const resolved = Number.isInteger(selectedIndex) && group.indexes.includes(selectedIndex);
+      if (resolved && !showResolved) return;
+      card.dataset.reviewUnresolved = resolved ? 'false' : 'true';
+      card.dataset.reviewResolved = resolved ? 'true' : 'false';
       title.innerHTML = '<strong>Nhóm trùng ' + (groupIndex + 1) + '</strong><span>' + (resolved ? 'Đã chọn bản giữ' : 'Chọn đúng 1 dòng để tiếp tục') + '</span>';
       card.appendChild(title);
       group.indexes.forEach(itemIndex => {
@@ -4509,28 +4539,35 @@ function renderDataLibraryImport() {
       });
       issueList.appendChild(card);
     });
-    reviewState.unresolvedInvalidRows.forEach(row => {
+    candidate.invalidRows.forEach(row => {
+      const resolved = ignoredRows.has(Number(row.rowNumber));
+      if (resolved && !showResolved) return;
       const card = document.createElement('article');
       card.className = 'data-library-import-issue-card invalid';
+      card.dataset.reviewUnresolved = resolved ? 'false' : 'true';
+      card.dataset.reviewResolved = resolved ? 'true' : 'false';
       const sourceRow = Array.isArray(candidate.rows?.[Number(row.rowNumber) - 1])
         ? candidate.rows[Number(row.rowNumber) - 1]
         : [];
       const title = document.createElement('div');
       title.className = 'data-library-import-issue-title';
       const reasons = Array.isArray(row.reasons) ? row.reasons.join(', ') : (row.reason || 'Dữ liệu không hợp lệ');
-      title.innerHTML = '<strong>Dòng ' + row.rowNumber + ' chưa hợp lệ</strong><span>' + reasons + '</span>';
+      title.innerHTML = '<strong>Dòng ' + row.rowNumber + (resolved ? ' đã bỏ qua' : ' chưa hợp lệ') + '</strong><span>' + reasons + '</span>';
       const raw = document.createElement('div');
       raw.className = 'data-library-import-invalid-raw';
       raw.textContent = sourceRow.map(value => String(value ?? '')).filter(Boolean).join(' • ') || 'Dòng trống hoặc không đủ dữ liệu nhận diện.';
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'btn';
-      button.textContent = 'Xác nhận bỏ qua dòng này';
-      button.addEventListener('click', () => ignoreDataLibraryImportInvalidRow(candidate.sheetName, row.rowNumber));
-      card.append(title, raw, button);
+      card.append(title, raw);
+      if (!resolved) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.textContent = 'Xác nhận bỏ qua dòng này';
+        button.addEventListener('click', () => ignoreDataLibraryImportInvalidRow(candidate.sheetName, row.rowNumber));
+        card.appendChild(button);
+      }
       issueList.appendChild(card);
     });
-    issues.hidden = candidate.duplicateGroups.length === 0 && reviewState.unresolvedInvalidRows.length === 0;
+    issues.hidden = candidate.duplicateGroups.length === 0 && candidate.invalidRows.length === 0;
   }
 
   const head = document.getElementById('dataLibraryImportPreviewHead');
@@ -4612,8 +4649,13 @@ function resetDataLibraryImportReviewForLoading(fileName) {
   if (body) body.innerHTML = '';
   const issues = document.getElementById('dataLibraryImportIssues');
   const issueList = document.getElementById('dataLibraryImportIssueList');
+  const showResolved = document.getElementById('dataLibraryImportShowResolved');
   if (issues) issues.hidden = true;
   if (issueList) issueList.innerHTML = '';
+  if (showResolved) showResolved.checked = false;
+  setText('dataLibraryImportUnresolvedCount', '0 chưa xử lý');
+  const nextIssueButton = document.getElementById('dataLibraryImportNextIssue');
+  if (nextIssueButton) nextIssueButton.disabled = true;
 
   const apply = document.getElementById('applyDataLibraryImport');
   if (apply) {
@@ -4850,6 +4892,15 @@ document.getElementById('dataLibraryImportSheetSelect')?.addEventListener('chang
   dataLibraryImportDraft.sheetName = event.currentTarget.value;
   writeDataLibraryImportRecovery();
   renderDataLibraryImport();
+});
+document.getElementById('dataLibraryImportNextIssue')?.addEventListener('click', () => {
+  focusNextDataLibraryImportIssue();
+});
+document.getElementById('dataLibraryImportShowResolved')?.addEventListener('change', () => {
+  renderDataLibraryImport();
+  if (!document.getElementById('dataLibraryImportShowResolved')?.checked) {
+    focusNextDataLibraryImportIssue({ fromStart: true });
+  }
 });
 document.getElementById('applyDataLibraryImport')?.addEventListener('click', applyDataLibraryImport);
 document.getElementById('cancelDataLibraryImport')?.addEventListener('click', () => closeDataLibraryImport({ discardRecovery: true }));
