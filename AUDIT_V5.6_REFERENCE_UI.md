@@ -91,3 +91,37 @@ Run CI on the Pass 2 head. If green, inspect remaining visual structure rather t
 - Settings/System visual grouping;
 - modal widths/padding;
 - release cache/version alignment only after visual gates are complete.
+
+
+## Pass 3 — Workspace proportions and modal hierarchy
+
+### Findings
+
+After typography normalization, several workspaces still inherited V5.5 proportions:
+- Dashboard hero and quick cards were visually shallow compared with the larger readable text;
+- History/Data tables retained 58px rows and compact 38px toolbars;
+- Settings/System panels still used compact 15px padding;
+- Smart Import and Data Library review had readable text but retained their old compact modal geometry.
+
+### Corrections
+
+- Dashboard hero is now a 204px reference surface with a larger 29px message, a balanced 300px progress card and restrained blue atmospheric background.
+- Quick actions and KPI cards gained real card height, padding and hover depth.
+- Dashboard primary/recent/side regions now use 16px structural gaps.
+- History status cards are larger; search/filter controls use 42px height; table rows use 70px working height.
+- Data Management panels use 20px padding, 40px panel icons, 42px toolbars and 70px rows.
+- Settings and System panels use 20px card padding and larger internal grouping.
+- Settings danger/reset area spans the workspace rather than appearing as an unrelated small card.
+- System detail cells and readiness rows gained readable vertical rhythm.
+- Smart Import expanded to 1020px and Data Library review to 1040px on desktop, with larger header/body padding.
+- Tablet/phone containment is preserved through existing device-class overrides without adding another media-query layer.
+
+### Gate
+
+The UI stylesheet still has:
+- zero root-cascade conflicts;
+- zero `!important` declarations;
+- exactly four existing media-query blocks;
+- no A4 report selectors.
+
+Run the full exact-head gate before the next visual pass.
