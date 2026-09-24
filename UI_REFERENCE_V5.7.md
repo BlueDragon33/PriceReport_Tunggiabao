@@ -79,7 +79,7 @@ The far-right column is the equivalent of the screenshot's inspector.
 - Inputs and selects use the same dark control language as the Editor.
 - The panel's collapse handle belongs on its inner edge, adjacent to the preview.
 
-A later inspector-tab enhancement may expose Design / Content / Check views, but it must reuse the existing workflow and preflight engines rather than creating duplicate state.
+The inspector exposes three real tabs — Design / Content / Check — while reusing the existing workflow and preflight engines. Content is navigation into the existing Editor steps; Check mirrors the existing document-health result and triggers the existing preflight action. No duplicate quotation state is created.
 
 ## 7. Typography
 
