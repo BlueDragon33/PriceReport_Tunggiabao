@@ -144,3 +144,37 @@ For repetitive data-entry work, that creates needless context switching. Automat
 ### Next pass
 
 Audit large review ergonomics: collapsing resolved issue groups, navigating directly between unresolved issues, and keeping the decision panel usable with hundreds of imported rows without adding another pagination/state engine.
+
+
+## Pass 4 — Large review ergonomics
+
+### Findings
+
+Pass 3 made duplicate and invalid-row decisions explicit, but a large import could still leave the operator scanning a long mixed list of resolved and unresolved cards. With dozens or hundreds of issues, already-completed work remained visual noise and there was no direct keyboard/focus path to the next pending decision.
+
+Introducing a separate paginator or review store would duplicate state that already exists in the import draft, so the large-review pass stays derived from the current duplicate choices and invalid-row acknowledgements.
+
+### Corrections
+
+- The decision panel now derives one unresolved count from the existing review state.
+- Resolved duplicate groups and acknowledged invalid rows are hidden by default.
+- Added **Vấn đề tiếp theo** to focus and scroll directly to the next unresolved review card.
+- After choosing a duplicate winner or acknowledging an invalid row, focus advances to the next unresolved item automatically.
+- Added **Hiện đã xử lý** for operators who need to audit previous decisions without mixing them into the default work queue.
+- Resolved duplicate cards remain editable when shown, so the selected winner can still be changed before Apply.
+- Acknowledged invalid rows are shown as read-only resolved records when the resolved view is enabled.
+- Loading a new file resets the resolved-view toggle and navigation count, preventing stale review UI from leaking across imports.
+- No additional pagination state, database, parser or storage engine is introduced.
+
+### Regression coverage
+
+- a review containing multiple duplicate groups plus an invalid row exposes the correct unresolved count;
+- default issue rendering contains only unresolved cards;
+- **Vấn đề tiếp theo** moves focus into unresolved work;
+- resolving one duplicate decreases the unresolved count and removes the resolved card from the default queue;
+- enabling **Hiện đã xử lý** reveals the resolved card while preserving the unresolved cards;
+- existing V5.4/V5.5 import, recovery and transactional behaviors remain under the full gate.
+
+### Next pass
+
+Audit import review completion semantics and operator safeguards: make the all-resolved state unmistakable, ensure Apply messaging distinguishes unresolved warnings from acknowledged skips, and verify keyboard-only operation across the complete review flow.
