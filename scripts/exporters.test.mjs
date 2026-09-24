@@ -50,6 +50,7 @@ const workbook = quotationWorkbookModel({
   currency: 'VND',
   discountPct: 10,
   vatPct: 8,
+  showTotals: true,
   otherFee: 12000,
   showPaymentBlock: true,
   paymentMethod: 'Chuyển khoản',
@@ -69,7 +70,7 @@ const workbook = quotationWorkbookModel({
 });
 
 assert.equal(workbook.currency, 'VND');
-assert.equal(workbook.total, 288624);
+assert.equal(workbook.total, 288048);
 assert.ok(workbook.productHeaderRow >= 1);
 assert.equal(workbook.productFirstDataRow, workbook.productHeaderRow + 1);
 assert.equal(workbook.productLastDataRow, workbook.productHeaderRow + 2);
@@ -103,3 +104,18 @@ assert.deepEqual(termRows.slice(-2), [
 ]);
 
 console.log('PROFESSIONAL WORKBOOK MODEL PASS');
+
+
+const priceListWorkbook = quotationWorkbookModel({
+  companyName: 'HKD Tùng Gia Bảo',
+  quoteTitle: 'BẢNG GIÁ',
+  currency: 'VND',
+  showTotals: false,
+  showPaymentBlock: false,
+  showTerms: false,
+  products: [{ name: 'Trứng gà', unit: 'quả', qty: 1, price: 3500 }]
+});
+const priceListText = priceListWorkbook.rows.flat().join(' | ');
+assert.equal(priceListWorkbook.totalRows.length, 0);
+assert.equal(priceListText.includes('TỔNG CỘNG'), false);
+assert.equal(priceListText.includes('THÔNG TIN THANH TOÁN'), false);
