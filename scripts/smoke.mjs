@@ -48,7 +48,9 @@ const requiredIds = [
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
   'studioSaveQuote','studioCheckQuote','studioPreviewQuote','studioPrevStep','studioNextStep',
   'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal',
-  'inspectorHealthStatus','inspectorRunCheck','inspectorPreviewQuote'
+  'inspectorHealthStatus','inspectorRunCheck','inspectorPreviewQuote',
+  'studioGlobalTitle','studioGlobalQuoteNo','studioGlobalHistoryState','studioGlobalHealth',
+  'studioGlobalSave','studioGlobalPreview','studioGlobalPdf'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -365,6 +367,7 @@ if (!v5Css.includes('V5.7 reference-fidelity UI/UX refactor')) fail('V5.7 refere
 if (!v5Css.includes('--v5-sidebar-width:118px') || !v5Css.includes('--edit:320px') || !v5Css.includes('--design:368px')) fail('V5.7 reference desktop geometry is missing');
 if (!html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.7 inspector tabs are missing');
 if (!js.includes('setDesignInspectorTab')) fail('V5.7 inspector tab controller is missing');
+if (!html.includes('class="studio-global-bar"') || !js.includes('studioGlobalSave')) fail('V5.7 Studio global command bar is not wired');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
