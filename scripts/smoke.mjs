@@ -368,6 +368,6 @@ if (!js.includes('function dataLibraryImportReviewState') || !js.includes('funct
 if (!js.includes('function ignoreDataLibraryImportInvalidRow')) fail('V5.5 invalid-row acknowledgement flow is missing');
 if (!html.includes('id="dataLibraryImportNextIssue"') || !html.includes('id="dataLibraryImportShowResolved"')) fail('V5.5 large-review navigation controls are missing');
 if (!js.includes('function focusNextDataLibraryImportIssue')) fail('V5.5 next unresolved import issue navigation is missing');
-if (!js.includes('data-review-unresolved') || !js.includes('data-review-resolved')) fail('V5.5 resolved/unresolved review state rendering is missing');
+if (!js.includes('dataset.reviewUnresolved') || !js.includes('dataset.reviewResolved')) fail('V5.5 resolved/unresolved review state rendering is missing');
 if (!js.includes('function offerDataLibraryUndo')) fail('V5.5 Data Library undo helper is missing');
 if (!js.includes("label: 'Hoàn tác'") || !js.includes('duration: 8000')) fail('V5.5 Data Library undo action contract is missing');
