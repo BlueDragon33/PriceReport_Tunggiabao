@@ -45,6 +45,8 @@ const LOGO_STORAGE = 'tunggiabao-price-report-logo-v1';
 const RECOVERY_STORAGE = 'tunggiabao-price-report-recovery-v1';
 const DATA_LIBRARY_IMPORT_RECOVERY = 'tunggiabao-price-report-data-library-import-recovery-v1';
 const DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS = 1000000;
+const DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS = 6 * 60 * 60 * 1000;
+const DATA_LIBRARY_OPERATION_HISTORY_LIMIT = 8;
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -4083,6 +4085,70 @@ document.getElementById('quoteStatusFilter').addEventListener('change', renderHi
 let dataLibraryImportDraft = null;
 let dataLibraryImportLastFocus = null;
 let dataLibraryImportReadToken = 0;
+let dataLibraryOperationHistory = [];
+
+function dataLibraryModeLabel(mode) {
+  return mode === 'customer' ? 'Khách hàng' : 'Sản phẩm';
+}
+
+function dataLibraryOperationStateLabel(state) {
+  if (state === 'undo-available') return 'Có thể hoàn tác';
+  if (state === 'undone') return 'Đã hoàn tác';
+  return 'Đã hoàn tất';
+}
+
+function renderDataLibraryOperationHistory() {
+  const panel = document.getElementById('dataLibraryActivity');
+  const list = document.getElementById('dataLibraryActivityList');
+  if (!panel || !list) return;
+  panel.hidden = dataLibraryOperationHistory.length === 0;
+  list.innerHTML = '';
+  dataLibraryOperationHistory.forEach(entry => {
+    const row = document.createElement('article');
+    row.className = 'data-library-activity-item';
+    row.dataset.state = entry.state;
+
+    const meta = document.createElement('div');
+    meta.className = 'data-library-activity-meta';
+    const scope = document.createElement('strong');
+    scope.textContent = dataLibraryModeLabel(entry.mode);
+    const time = document.createElement('span');
+    time.textContent = new Date(entry.at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    meta.append(scope, time);
+
+    const summary = document.createElement('p');
+    summary.textContent = entry.summary;
+
+    const state = document.createElement('span');
+    state.className = 'data-library-activity-state';
+    state.textContent = dataLibraryOperationStateLabel(entry.state);
+
+    row.append(meta, summary, state);
+    list.appendChild(row);
+  });
+}
+
+function recordDataLibraryOperation(mode, summary, state = 'committed') {
+  const entry = {
+    id: String(Date.now()) + '-' + String(Math.random()).slice(2),
+    mode,
+    summary: String(summary || ''),
+    state,
+    at: Date.now()
+  };
+  dataLibraryOperationHistory = [entry, ...dataLibraryOperationHistory]
+    .slice(0, DATA_LIBRARY_OPERATION_HISTORY_LIMIT);
+  renderDataLibraryOperationHistory();
+  return entry.id;
+}
+
+function setDataLibraryOperationState(id, state) {
+  const entry = dataLibraryOperationHistory.find(item => item.id === id);
+  if (!entry) return false;
+  entry.state = state;
+  renderDataLibraryOperationHistory();
+  return true;
+}
 
 function refreshDataLibraryAfterMutation(mode) {
   if (mode === 'customer') {
@@ -4108,11 +4174,22 @@ function restoreDataLibrarySnapshot(mode, items) {
 
 function offerDataLibraryUndo(mode, previousItems, message) {
   const snapshot = clone(Array.isArray(previousItems) ? previousItems : []);
-  toast(message, {
+  const operationId = recordDataLibraryOperation(mode, message, 'undo-available');
+  let settled = false;
+  const settleTimer = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    setDataLibraryOperationState(operationId, 'committed');
+  }, 8000);
+
+  toast(message + ' • Có thể hoàn tác trong 8 giây.', {
     label: 'Hoàn tác',
     duration: 8000,
     onClick: () => {
-      if (!restoreDataLibrarySnapshot(mode, snapshot)) return;
+      if (settled || !restoreDataLibrarySnapshot(mode, snapshot)) return;
+      settled = true;
+      clearTimeout(settleTimer);
+      setDataLibraryOperationState(operationId, 'undone');
       toast(mode === 'customer'
         ? 'Đã hoàn tác thay đổi danh bạ khách hàng'
         : 'Đã hoàn tác thay đổi danh mục sản phẩm');
@@ -4170,6 +4247,18 @@ function readDataLibraryImportRecovery() {
       clearDataLibraryImportRecovery();
       return null;
     }
+    const savedAt = Number(parsed.savedAt);
+    const now = Date.now();
+    const clockSkewLimit = 5 * 60 * 1000;
+    if (
+      !Number.isFinite(savedAt) ||
+      savedAt <= 0 ||
+      savedAt > now + clockSkewLimit ||
+      now - savedAt > DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS
+    ) {
+      clearDataLibraryImportRecovery();
+      return null;
+    }
     const candidates = (Array.isArray(parsed.candidates) ? parsed.candidates : [])
       .flatMap(candidate => {
         if (!candidate || !Array.isArray(candidate.rows)) return [];
@@ -4189,7 +4278,7 @@ function readDataLibraryImportRecovery() {
       ? requestedSheet
       : candidates[0].sheetName;
     return {
-      savedAt: Number(parsed.savedAt) || Date.now(),
+      savedAt,
       mode: parsed.mode,
       fileName: String(parsed.fileName || 'Phiên nhập dữ liệu'),
       sheetName,
@@ -4240,7 +4329,11 @@ function offerDataLibraryImportRecovery() {
     hour: '2-digit',
     minute: '2-digit'
   });
-  toast('Có phiên nhập dữ liệu chưa áp dụng từ ' + savedTime + '.', {
+  const remainingMs = Math.max(0, DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS - (Date.now() - recovery.savedAt));
+  const remainingText = remainingMs >= 60 * 60 * 1000
+    ? Math.max(1, Math.ceil(remainingMs / (60 * 60 * 1000))) + ' giờ'
+    : Math.max(1, Math.ceil(remainingMs / (60 * 1000))) + ' phút';
+  toast('Có phiên nhập dữ liệu chưa áp dụng từ ' + savedTime + '. Tự xóa sau khoảng ' + remainingText + '.', {
     label: 'Khôi phục',
     duration: 12000,
     onClick: () => restoreDataLibraryImportRecovery(recovery)
