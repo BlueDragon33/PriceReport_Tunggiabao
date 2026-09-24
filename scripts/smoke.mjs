@@ -81,6 +81,10 @@ if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo
 if (!sw.includes("pricereport-shell-v56-reference-ui")) fail('Service-worker cache version was not aligned with the V5.6 reference-UI release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v2'")) fail('Bounded V5.6 stylesheet recovery key is missing');
+if (!html.includes('reloadLinkedStylesheets')) fail('Runtime stylesheet reload helper is missing');
+if (!html.includes('nextAttempt > 3')) fail('Runtime stylesheet recovery must be bounded');
+if (!html.includes("url.searchParams.set('asset-recovery-ts'")) fail('Runtime stylesheet recovery must cache-bust page retries');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
 if (!js.includes('normalizeCustomerLibrary')) fail('Customer import/local-data normalization is missing');
 if (!js.includes('normalizeProductCatalog')) fail('Catalog import/local-data normalization is missing');
@@ -370,7 +374,7 @@ if (!js.includes('dataLibraryImportReadToken')) fail('V5.5 Data Library stale-re
 if (!js.includes('function offerDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery prompt is missing');
 if (!js.includes('function writeDataLibraryImportRecovery') || !js.includes('function readDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery persistence is missing');
 if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Library import recovery size guard is missing');
-if (!html.includes('tgb-style-recovery-v1') || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v2'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
 if (!js.includes("updateViaCache: 'none'")) fail('Service worker update must bypass stale HTTP cache');
 if (!html.includes('id="dataLibraryImportIssues"') || !html.includes('id="dataLibraryImportIssueList"')) fail('V5.5 Data Library decision review panel is missing');
 if (!js.includes('function dataLibraryImportReviewState') || !js.includes('function chooseDataLibraryImportDuplicate')) fail('V5.5 explicit duplicate review decision flow is missing');
