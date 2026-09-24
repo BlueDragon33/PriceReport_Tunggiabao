@@ -5667,3 +5667,427 @@ body.v5-ui.reference-ui-v56 .logo-mode-status{
   font-size:11.5px;
   line-height:1.5;
 }
+
+
+/* ---------- V5.6 Pass 2: readable operational surfaces ---------- */
+body.v5-ui.reference-ui-v56 .hero-kicker{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .hero-progress-label,
+body.v5-ui.reference-ui-v56 .hero-progress-card small{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .quick-app-card small{
+  font-size:12px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v56 .kpi-card small{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .kpi-card em{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .recent-quote-head{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .recent-quote-row{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .dashboard-status{
+  padding:5px 8px;
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .dashboard-empty{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .side-actions b{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .side-actions small{
+  font-size:11px;
+  line-height:1.4;
+}
+body.v5-ui.reference-ui-v56 .system-card small,
+body.v5-ui.reference-ui-v56 .system-card p{
+  font-size:11.5px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v56 .system-card-open{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .history-stats-app .history-kpi span{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .history-stats-app .history-kpi small{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .history-toolbar label{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .history-search-box input{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .history-result-summary small{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .history-cell{
+  font-size:12.5px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v56 .history-cell strong{
+  font-size:13.5px;
+}
+body.v5-ui.reference-ui-v56 .history-cell small{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .history-action-cell .btn{
+  min-height:34px;
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .master-workspace-summary small{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .master-panel-head>.btn{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .master-search-box input{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .master-result-summary small{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .master-cell{
+  font-size:12.5px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v56 .master-cell strong{
+  font-size:13.5px;
+}
+body.v5-ui.reference-ui-v56 .master-cell small{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .master-action-cell .btn{
+  min-height:34px;
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .history-table-head,
+body.v5-ui.reference-ui-v56 .master-table-head{
+  min-height:42px;
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .export-danger-zone strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .export-danger-zone p{
+  font-size:11.5px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v56 .system-detail-grid small{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .system-detail-grid strong{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .system-readiness-list span,
+body.v5-ui.reference-ui-v56 .system-boundary-list span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .system-readiness-list strong,
+body.v5-ui.reference-ui-v56 .system-boundary-list strong{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .system-contract-note b{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .system-contract-note span{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .system-policy-note strong{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .system-policy-note p{
+  font-size:11.5px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v56 .settings-field b,
+body.v5-ui.reference-ui-v56 .settings-switch-row b,
+body.v5-ui.reference-ui-v56 .settings-info-row b{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .settings-field small,
+body.v5-ui.reference-ui-v56 .settings-switch-row small,
+body.v5-ui.reference-ui-v56 .settings-info-row small{
+  font-size:11.5px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v56 .settings-info-row>strong{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .dashboard-search-result-copy small{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .dashboard-search-result-copy strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .dashboard-search-result-copy em{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .dashboard-search-empty{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .draft-recovery-banner strong{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .draft-recovery-banner span{
+  font-size:11px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v56 .template-description{
+  padding:10px 11px;
+  font-size:11.5px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v56 .logo-backdrop-title{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .product-live-total{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .product-field>span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .product-data-grid-head,
+body.v5-ui.reference-ui-v56 .product-select-all{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .product-bulk-bar strong{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .product-bulk-bar select,
+body.v5-ui.reference-ui-v56 .product-bulk-bar input{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .product-bulk-bar .btn{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .product-data-grid .product-field input,
+body.v5-ui.reference-ui-v56 .product-data-grid .product-field textarea{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .product-cell-validation{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .range-value{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .history-empty{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .status-badge,
+body.v5-ui.reference-ui-v56 .document-health,
+body.v5-ui.reference-ui-v56 .layout-selection{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .import-source-card input{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .import-source-icon{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .import-source-card small{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .smart-paste-head strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .smart-paste-head span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .smart-paste-actions small{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .import-progress{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .import-review-head strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .import-review-head span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .import-field-grid label{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .import-products-summary{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .import-mapping-head strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .import-mapping-head span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .import-mapping-labels{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .import-mapping-source strong{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .import-mapping-source small{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .import-mapping-row select{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .import-product-preview-head{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .import-product-preview-row{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .import-product-preview-more{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .import-warning-list{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .ocr-raw-box summary{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .pc-folder-status{
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-activity-head p{
+  font-size:11.5px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v56 .data-library-activity-session{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-activity-meta strong{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-activity-meta span,
+body.v5-ui.reference-ui-v56 .data-library-activity-item p{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .data-library-activity-state{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-head span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-sheet-row label{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-summary small{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-notice{
+  font-size:11.5px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-completion strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-completion span{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issues-tools>span{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issues-tools .btn,
+body.v5-ui.reference-ui-v56 .data-library-import-issues-tools .check{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issues-head strong{
+  font-size:13px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issues-head span{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issue-title strong{
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issue-title span{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-issue-option>span,
+body.v5-ui.reference-ui-v56 .data-library-import-invalid-raw{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-preview-head{
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-preview-row{
+  font-size:11.5px;
+}
+body.v5-ui.reference-ui-v56 .data-library-import-more{
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell:not(.app-workspace) .nav button,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell:not(.app-workspace) .nav button,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell:not(.app-workspace) .nav button.nav-secondary,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell:not(.app-workspace) .nav button.nav-secondary{
+  min-width:82px;
+  min-height:54px;
+  padding:5px;
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .nav button,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .nav button,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .nav button.nav-secondary,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .nav button.nav-secondary{
+  min-width:70px;
+  width:auto;
+  min-height:52px;
+  padding:5px 6px;
+  font-size:10.5px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .nav,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .nav{
+  min-height:60px;
+  padding:7px 8px;
+  gap:4px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .brand,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .brand{
+  width:38px;
+  min-width:38px;
+  height:38px;
+  border-radius:10px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-workspace-pane,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-dashboard,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .history-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .master-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .export-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .settings-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .system-workspace{
+  padding:22px 20px 36px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-workspace-pane,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-dashboard,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .history-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .master-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .export-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .system-workspace{
+  padding:18px 14px 30px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .dashboard-topbar h1,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .history-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .master-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .export-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .settings-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="tablet"] .system-workspace-header h2{
+  font-size:26px;
+}
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .dashboard-topbar h1,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .history-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .master-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .export-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace-header h2,
+body.v5-ui.reference-ui-v56[data-device-class="phone"] .system-workspace-header h2{
+  font-size:22px;
+}
