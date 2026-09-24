@@ -787,6 +787,7 @@ function openTab(tab) {
   if (tab === 'system') renderSystemWorkspace();
   if (tab === 'settings') renderSettingsWorkspace();
   if (tab === 'design') {
+    setDesignInspectorTab('design');
     document.getElementById('designPanel').classList.add('open');
     setMajorPanelState('design', false);
   }
