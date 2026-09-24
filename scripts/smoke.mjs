@@ -368,6 +368,9 @@ if (!js.includes('function dataLibraryImportReviewState') || !js.includes('funct
 if (!js.includes('function ignoreDataLibraryImportInvalidRow')) fail('V5.5 invalid-row acknowledgement flow is missing');
 if (!html.includes('id="dataLibraryImportNextIssue"') || !html.includes('id="dataLibraryImportShowResolved"')) fail('V5.5 large-review navigation controls are missing');
 if (!js.includes('function focusNextDataLibraryImportIssue')) fail('V5.5 next unresolved import issue navigation is missing');
+if (!html.includes('id="dataLibraryImportCompletion"') || !html.includes('id="dataLibraryImportCompletionTitle"')) fail('V5.5 review completion status is missing');
+if (!js.includes('function focusInitialDataLibraryImportReview') || !js.includes('function trapDataLibraryImportTab')) fail('V5.5 keyboard-only review safeguards are missing');
+if (!js.includes("apply.dataset.reviewState = 'warning'") || !js.includes("apply.dataset.reviewState = 'ready'")) fail('V5.5 Apply review-state messaging is missing');
 if (!js.includes('dataset.reviewUnresolved') || !js.includes('dataset.reviewResolved')) fail('V5.5 resolved/unresolved review state rendering is missing');
 if (!js.includes('function offerDataLibraryUndo')) fail('V5.5 Data Library undo helper is missing');
 if (!js.includes("label: 'Hoàn tác'") || !js.includes('duration: 8000')) fail('V5.5 Data Library undo action contract is missing');
