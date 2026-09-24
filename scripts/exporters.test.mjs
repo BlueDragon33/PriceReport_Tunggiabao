@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { csvFromRows, productRowsForExport } from '../src/exporters.js';
+import { csvFromRows, productRowsForExport, quotationWorkbookModel } from '../src/exporters.js';
 
 const rows = productRowsForExport([
   { group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', qty:2, price:28000, note:'Giao sáng' },
@@ -25,3 +25,97 @@ assert.match(csv, /"Hàng ""đặc biệt"""/);
 assert.match(csv, /"Dòng 1\nDòng 2"/);
 
 console.log('EXPORTER LOGIC PASS');
+
+
+const workbook = quotationWorkbookModel({
+  companyName: 'HKD Tùng Gia Bảo',
+  companyAddressDetail: 'Lô BT02-25 đường số 29',
+  companyProvince: 'Khánh Hòa',
+  phone: '0962944688',
+  taxCode: '4200000000',
+  quoteTitle: 'BẢNG BÁO GIÁ',
+  quoteSubtitle: 'Tháng 09/2026',
+  quoteNo: 'BG-2026-009',
+  quoteDate: '2026-09-24',
+  validity: '7 ngày',
+  recipientLine: 'Kính gửi: Công ty ABC',
+  showCustomer: true,
+  customerName: 'Nguyễn Văn A',
+  customerCompany: 'Công ty ABC',
+  customerAddress: 'Nha Trang',
+  customerPhone: '0900000000',
+  customerEmail: 'a@example.com',
+  customerContact: 'Phòng mua hàng',
+  intro: 'Trân trọng gửi báo giá:',
+  currency: 'VND',
+  discountPct: 10,
+  vatPct: 8,
+  showTotals: true,
+  otherFee: 12000,
+  showPaymentBlock: true,
+  paymentMethod: 'Chuyển khoản',
+  bankName: 'Vietcombank',
+  bankAccount: '123456789',
+  bankOwner: 'HKD Tùng Gia Bảo',
+  showTerms: true,
+  termsTitle: 'ĐIỀU KHOẢN',
+  termsText: '1. Giao hàng trong 2 ngày\n• Thanh toán trong 7 ngày',
+  dateLine: 'Nha Trang, ngày 24 tháng 09 năm 2026',
+  rightTitle: 'ĐẠI DIỆN HKD',
+  rightName: 'HKD TÙNG GIA BẢO',
+  products: [
+    { group:'Trứng', name:'Trứng gà', pack:'Hộp 10', unit:'Hộp', qty:2, price:28000, note:'Giao sáng' },
+    { group:'Thịt', name:'Ức gà', pack:'500g', unit:'Gói', qty:3, price:76000, note:'Lạnh' }
+  ]
+});
+
+assert.equal(workbook.currency, 'VND');
+assert.equal(workbook.total, 288048);
+assert.ok(workbook.productHeaderRow >= 1);
+assert.equal(workbook.productFirstDataRow, workbook.productHeaderRow + 1);
+assert.equal(workbook.productLastDataRow, workbook.productHeaderRow + 2);
+assert.ok(workbook.mergeRows.length >= 5);
+assert.ok(workbook.moneyCells.some(cell => cell.row === workbook.productFirstDataRow && cell.col === 6));
+assert.ok(workbook.moneyCells.some(cell => cell.row === workbook.productFirstDataRow && cell.col === 7));
+assert.ok(workbook.totalRows.length >= 4);
+
+const workbookText = workbook.rows.flat().join(' | ');
+for (const expected of [
+  'HKD Tùng Gia Bảo',
+  'BG-2026-009',
+  'Nguyễn Văn A',
+  'Công ty ABC',
+  'Tạm tính (VND)',
+  'Chiết khấu 10% (VND)',
+  'VAT 8% (VND)',
+  'TỔNG CỘNG (VND)',
+  'THÔNG TIN THANH TOÁN',
+  'Vietcombank',
+  'ĐIỀU KHOẢN',
+  'Giao hàng trong 2 ngày',
+  'Thanh toán trong 7 ngày',
+  'HKD TÙNG GIA BẢO'
+]) assert.ok(workbookText.includes(expected), 'missing workbook content: ' + expected);
+
+const termRows = workbook.rows.filter(row => row[0] === 1 || row[0] === 2);
+assert.deepEqual(termRows.slice(-2), [
+  [1, 'Giao hàng trong 2 ngày'],
+  [2, 'Thanh toán trong 7 ngày']
+]);
+
+console.log('PROFESSIONAL WORKBOOK MODEL PASS');
+
+
+const priceListWorkbook = quotationWorkbookModel({
+  companyName: 'HKD Tùng Gia Bảo',
+  quoteTitle: 'BẢNG GIÁ',
+  currency: 'VND',
+  showTotals: false,
+  showPaymentBlock: false,
+  showTerms: false,
+  products: [{ name: 'Trứng gà', unit: 'quả', qty: 1, price: 3500 }]
+});
+const priceListText = priceListWorkbook.rows.flat().join(' | ');
+assert.equal(priceListWorkbook.totalRows.length, 0);
+assert.equal(priceListText.includes('TỔNG CỘNG'), false);
+assert.equal(priceListText.includes('THÔNG TIN THANH TOÁN'), false);
