@@ -4468,7 +4468,7 @@ function renderDataLibraryImport() {
   if (notice) {
     const messages = [];
     if (reviewState.unresolvedInvalidRows.length) messages.push(reviewState.unresolvedInvalidRows.length + ' dòng lỗi chưa xác nhận bỏ qua');
-    if (reviewState.unresolvedDuplicateGroups.length) messages.push(reviewState.unresolvedDuplicateGroups.length + ' nhóm trùng đang chờ bạn chọn bản giữ');
+    if (reviewState.unresolvedDuplicateGroups.length) messages.push(reviewState.unresolvedDuplicateGroups.length + ' nhóm trùng không được tự gộp, đang chờ bạn chọn bản giữ');
     if (reviewState.ignoredInvalidRows.length) messages.push(reviewState.ignoredInvalidRows.length + ' dòng lỗi đã xác nhận bỏ qua');
     if (reviewState.updateCount) messages.push(reviewState.updateCount + ' bản ghi có sẵn sẽ được cập nhật');
     notice.textContent = messages.length
