@@ -67,7 +67,7 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
-if (!js.includes("serviceWorker.register('./sw.js')")) fail('Service worker registration is missing');
+if (!js.includes("serviceWorker.register('./sw.js'")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
 if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
