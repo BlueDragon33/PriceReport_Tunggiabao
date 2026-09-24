@@ -4431,11 +4431,17 @@ function focusNextDataLibraryImportIssue({ fromStart = false } = {}) {
   if (!list) return false;
   const unresolved = [...list.querySelectorAll('[data-review-unresolved="true"]')];
   if (!unresolved.length) return false;
-  const current = document.activeElement?.closest?.('[data-review-unresolved="true"]');
+  const focused = document.activeElement?.closest?.('[data-review-unresolved="true"]');
+  const marked = list.querySelector('[data-review-current="true"]');
+  const current = fromStart ? null : (focused || marked);
   const currentIndex = current ? unresolved.indexOf(current) : -1;
-  const next = fromStart || currentIndex < 0
+  const next = currentIndex < 0
     ? unresolved[0]
     : unresolved[(currentIndex + 1) % unresolved.length];
+  unresolved.forEach(card => {
+    delete card.dataset.reviewCurrent;
+  });
+  next.dataset.reviewCurrent = 'true';
   const target = next.querySelector('button:not([disabled]), input:not([disabled])') || next;
   if (!next.hasAttribute('tabindex')) next.tabIndex = -1;
   target.focus?.({ preventScroll: true });
