@@ -958,8 +958,13 @@
       </div>
     </section>
 
-    <aside class="design" id="designPanel">
+    <aside class="design" id="designPanel" data-inspector-tab="design">
       <button class="panel-edge-toggle design-edge-toggle" id="toggleDesignPanel" type="button" aria-label="Thu gọn bảng thiết kế" title="Thu gọn / mở bảng thiết kế">‹</button>
+      <div class="inspector-tabs" role="tablist" aria-label="Công cụ báo giá">
+        <button class="active" type="button" role="tab" aria-selected="true" data-inspector-tab="design">Thiết kế</button>
+        <button type="button" role="tab" aria-selected="false" data-inspector-tab="content">Nội dung</button>
+        <button type="button" role="tab" aria-selected="false" data-inspector-tab="check">Kiểm tra</button>
+      </div>
       <div class="panel-head"><h2>CHỌN MẪU TEMPLATE</h2><p>Đổi phong cách mà không làm mất dữ liệu.</p></div>
       <div class="panel-body">
         <div class="card">
@@ -1091,6 +1096,35 @@
         </div>
         <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
       </div>
+
+      <section class="inspector-view inspector-content-view" data-inspector-view="content" hidden>
+        <header>
+          <h2>NỘI DUNG BÁO GIÁ</h2>
+          <p>Đi tới đúng nhóm nhập liệu; dữ liệu vẫn dùng chung với trình soạn bên trái.</p>
+        </header>
+        <div class="inspector-content-list">
+          <button type="button" data-inspector-open-tab="general"><span>01</span><b>Thông tin chung</b><small>Doanh nghiệp, mã báo giá, ngày lập</small></button>
+          <button type="button" data-inspector-open-tab="products"><span>02</span><b>Sản phẩm / Dịch vụ</b><small>Danh sách hàng hóa và đơn giá</small></button>
+          <button type="button" data-inspector-open-tab="payment"><span>03</span><b>Thanh toán</b><small>VAT, giảm giá và phương thức</small></button>
+          <button type="button" data-inspector-open-tab="terms"><span>04</span><b>Điều khoản</b><small>Hiệu lực, chính sách và ghi chú</small></button>
+          <button type="button" data-inspector-open-tab="design"><span>05</span><b>Thiết kế</b><small>Mẫu, logo, màu và định dạng</small></button>
+          <button type="button" data-inspector-open-tab="export"><span>06</span><b>Xuất bản & dữ liệu</b><small>PDF, Excel, sao lưu và khôi phục</small></button>
+        </div>
+      </section>
+
+      <section class="inspector-view inspector-check-view" data-inspector-view="check" hidden>
+        <header>
+          <h2>KIỂM TRA BÁO GIÁ</h2>
+          <p>Đọc trực tiếp kết quả từ bộ kiểm tra hiện có trước khi in hoặc xuất PDF.</p>
+        </header>
+        <div class="inspector-health-card">
+          <span>Tình trạng tài liệu</span>
+          <strong id="inspectorHealthStatus" class="document-health">Đang kiểm tra</strong>
+          <small>Kiểm tra dữ liệu bắt buộc, sản phẩm, ngày và các cảnh báo in.</small>
+        </div>
+        <button class="btn primary block" id="inspectorRunCheck" type="button">✓ Chạy kiểm tra</button>
+        <button class="btn block" id="inspectorPreviewQuote" type="button">◉ Xem A4 toàn màn hình</button>
+      </section>
     </aside>
 
     <main class="preview">
