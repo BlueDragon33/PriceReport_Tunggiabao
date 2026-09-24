@@ -4396,6 +4396,7 @@ function chooseDataLibraryImportDuplicate(sheetName, key, itemIndex) {
   dataLibraryImportDraft.duplicateChoices[sheetName][key] = Number(itemIndex);
   writeDataLibraryImportRecovery();
   renderDataLibraryImport();
+  requestAnimationFrame(() => focusNextDataLibraryImportIssue({ fromStart: true }));
 }
 
 function ignoreDataLibraryImportInvalidRow(sheetName, rowNumber) {
@@ -4410,6 +4411,7 @@ function ignoreDataLibraryImportInvalidRow(sheetName, rowNumber) {
   dataLibraryImportDraft.ignoredInvalidRows[sheetName] = [...current];
   writeDataLibraryImportRecovery();
   renderDataLibraryImport();
+  requestAnimationFrame(() => focusNextDataLibraryImportIssue({ fromStart: true }));
 }
 
 function dataLibraryImportItemSummary(mode, item) {
