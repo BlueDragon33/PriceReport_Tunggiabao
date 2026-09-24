@@ -15,6 +15,9 @@ if (!html.includes('class="v5-ui reference-ui-v56"')) fail('V5.6 reference UI sc
 if (!css.includes('V5.6 reference-image UI/UX refactor')) fail('V5.6 reference-image refactor block is missing');
 if (!css.includes('--v5-sidebar-width:118px') || !css.includes('--nav:118px') || !css.includes('--edit:350px') || !css.includes('--design:315px')) fail('V5.6 reference desktop geometry 118/350/315 is missing');
 if (!css.includes('body.v5-ui.reference-ui-v56{') || !css.includes('font-size:15px')) fail('V5.6 readable application typography baseline is missing');
+if (!css.includes('min-height:204px') || !css.includes('grid-template-columns:minmax(0,1fr) 300px')) fail('V5.6 workspace proportion polish is missing');
+if (!css.includes('body.v5-ui.reference-ui-v56 .history-workspace .history-table-row') || !css.includes('min-height:70px')) fail('V5.6 readable management-row density is missing');
+if (!css.includes('width:min(1020px,96vw)') || !css.includes('width:min(1040px,96vw)')) fail('V5.6 modal hierarchy sizing is missing'); // V5.6 workspace proportion polish
 if (!css.includes('min-height:112px') || !css.includes('body.v5-ui.reference-ui-v56 .export-action-card b')) fail('V5.6 Publishing/Data Center action-card refactor is missing');
 if (!css.includes('body.v5-ui.reference-ui-v56 .tpl span') || !css.includes('font-size:12px')) fail('V5.6 readable template-card typography is missing');
 if (css.includes('!important')) fail('V5 stylesheet must not introduce !important');
