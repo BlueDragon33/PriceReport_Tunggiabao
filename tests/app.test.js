@@ -911,6 +911,66 @@ test('V5.5 invalid import rows stay visible until the operator confirms skip', a
 });
 
 
+test('V5.5 large import review hides resolved items and navigates unresolved work', async () => {
+  const recoveryKey = 'tunggiabao-price-report-data-library-import-recovery-v1';
+  const customerKey = 'tunggiabao-price-report-customers-v1';
+  const before = localStorage.getItem(customerKey);
+  localStorage.setItem(customerKey, JSON.stringify([]));
+  sessionStorage.removeItem(recoveryKey);
+  document.querySelector('[data-tab="master"]').click();
+
+  const csv = [
+    'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
+    'Khách A1,Công ty A,0911111111,a1@example.com,Nha Trang,A1',
+    'Khách A2,Công ty A,0911111111,a2@example.com,Nha Trang,A2',
+    'Khách B1,Công ty B,0922222222,b1@example.com,Hà Nội,B1',
+    'Khách B2,Công ty B,0922222222,b2@example.com,Hà Nội,B2',
+    'Khách C,Công ty C,0933333333,c@example.com,Đà Nẵng,C',
+    ',,,,Huế,Thiếu định danh'
+  ].join('\n');
+  const bytes = new TextEncoder().encode(csv);
+  const file = { name: 'review-lon.csv', arrayBuffer: async () => bytes.buffer };
+  const input = document.getElementById('customerLibraryExcelInput');
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportDuplicateCount').textContent).toBe('2');
+    expect(document.getElementById('dataLibraryImportInvalidCount').textContent).toBe('1');
+  });
+
+  expect(document.getElementById('dataLibraryImportUnresolvedCount').textContent).toContain('3');
+  expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-unresolved="true"]')).toHaveLength(3);
+  expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-resolved="true"]')).toHaveLength(0);
+
+  document.getElementById('dataLibraryImportNextIssue').click();
+  expect(document.activeElement?.closest?.('[data-review-unresolved="true"]')).toBeTruthy();
+
+  const firstDuplicate = document.querySelector('#dataLibraryImportIssueList .data-library-import-issue-card:not(.invalid)');
+  firstDuplicate.querySelector('.data-library-import-issue-option .btn').click();
+
+  await vi.waitFor(() => {
+    expect(document.getElementById('dataLibraryImportUnresolvedCount').textContent).toContain('2');
+    expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-unresolved="true"]')).toHaveLength(2);
+  });
+  expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-resolved="true"]')).toHaveLength(0);
+
+  const showResolved = document.getElementById('dataLibraryImportShowResolved');
+  showResolved.checked = true;
+  showResolved.dispatchEvent(new Event('change', { bubbles: true }));
+
+  expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-resolved="true"]')).toHaveLength(1);
+  expect(document.querySelectorAll('#dataLibraryImportIssueList [data-review-unresolved="true"]')).toHaveLength(2);
+  expect(document.getElementById('dataLibraryImportNextIssue').disabled).toBe(false);
+
+  document.getElementById('cancelDataLibraryImport').click();
+  sessionStorage.removeItem(recoveryKey);
+  if (before == null) localStorage.removeItem(customerKey);
+  else localStorage.setItem(customerKey, before);
+  document.querySelector('[data-tab="master"]').click();
+});
+
+
 test('V5.4 customer library CSV import reviews and applies valid rows transactionally', async () => {
   const key = 'tunggiabao-price-report-customers-v1';
   const before = localStorage.getItem(key);
