@@ -5014,6 +5014,13 @@ body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-c
 body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.app-workspace{
   grid-template-columns:118px minmax(0,1fr);
 }
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.wide-preview:not(.app-workspace){
+  grid-template-columns:118px minmax(0,1fr);
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.wide-preview:not(.app-workspace) .preview{
+  grid-column:2;
+  grid-row:1;
+}
 body.v5-ui.reference-ui-v57 .nav{
   padding:10px 9px 12px;
   gap:6px;
