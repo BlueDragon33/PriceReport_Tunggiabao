@@ -67,7 +67,7 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
-if (!js.includes("serviceWorker.register('./sw.js')")) fail('Service worker registration is missing');
+if (!js.includes("serviceWorker.register('./sw.js'")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
 if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
@@ -367,6 +367,8 @@ if (!js.includes('dataLibraryImportReadToken')) fail('V5.5 Data Library stale-re
 if (!js.includes('function offerDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery prompt is missing');
 if (!js.includes('function writeDataLibraryImportRecovery') || !js.includes('function readDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery persistence is missing');
 if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Library import recovery size guard is missing');
+if (!html.includes('tgb-style-recovery-v1') || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
+if (!js.includes("updateViaCache: 'none'")) fail('Service worker update must bypass stale HTTP cache');
 if (!html.includes('id="dataLibraryImportIssues"') || !html.includes('id="dataLibraryImportIssueList"')) fail('V5.5 Data Library decision review panel is missing');
 if (!js.includes('function dataLibraryImportReviewState') || !js.includes('function chooseDataLibraryImportDuplicate')) fail('V5.5 explicit duplicate review decision flow is missing');
 if (!js.includes('function ignoreDataLibraryImportInvalidRow')) fail('V5.5 invalid-row acknowledgement flow is missing');
