@@ -47,7 +47,10 @@ const requiredIds = [
   'smartImportIssues','smartImportIssueList','saveProductsToCatalogTop',
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
   'studioSaveQuote','studioCheckQuote','studioPreviewQuote','studioPrevStep','studioNextStep',
-  'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal'
+  'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal',
+  'inspectorHealthStatus','inspectorRunCheck','inspectorPreviewQuote',
+  'studioGlobalTitle','studioGlobalQuoteNo','studioGlobalHistoryState','studioGlobalHealth',
+  'studioGlobalSave','studioGlobalPreview','studioGlobalPdf'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -78,10 +81,10 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v56-reference-ui")) fail('Service-worker cache version was not aligned with the V5.6 reference-UI release');
+if (!sw.includes("pricereport-shell-v57-reference-fidelity")) fail('Service-worker cache version was not aligned with the V5.7 reference-fidelity release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
-if (!html.includes("const recoveryKey = 'tgb-style-recovery-v2'")) fail('Bounded V5.6 stylesheet recovery key is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v3'")) fail('Bounded V5.7 stylesheet recovery key is missing');
 if (!html.includes('reloadLinkedStylesheets')) fail('Runtime stylesheet reload helper is missing');
 if (!html.includes('nextAttempt > 3')) fail('Runtime stylesheet recovery must be bounded');
 if (!html.includes("url.searchParams.set('asset-recovery-ts'")) fail('Runtime stylesheet recovery must cache-bust page retries');
@@ -359,9 +362,12 @@ if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nh
 if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
-if (!html.includes('reference-ui-v56')) fail('V5.6 reference-image UI scope is missing');
-if (!v5Css.includes('V5.6 reference-image UI/UX refactor')) fail('V5.6 reference-image UI refactor is missing');
-if (!v5Css.includes('--v5-sidebar-width:118px') || !v5Css.includes('--edit:350px') || !v5Css.includes('--design:315px')) fail('V5.6 reference desktop geometry is missing');
+if (!html.includes('reference-ui-v57')) fail('V5.7 reference-fidelity UI scope is missing');
+if (!v5Css.includes('V5.7 reference-fidelity UI/UX refactor')) fail('V5.7 reference-fidelity UI refactor is missing');
+if (!v5Css.includes('--v5-sidebar-width:118px') || !v5Css.includes('--edit:320px') || !v5Css.includes('--design:368px')) fail('V5.7 reference desktop geometry is missing');
+if (!html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.7 inspector tabs are missing');
+if (!js.includes('setDesignInspectorTab')) fail('V5.7 inspector tab controller is missing');
+if (!html.includes('class="studio-global-bar"') || !js.includes('studioGlobalSave')) fail('V5.7 Studio global command bar is not wired');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
@@ -374,7 +380,7 @@ if (!js.includes('dataLibraryImportReadToken')) fail('V5.5 Data Library stale-re
 if (!js.includes('function offerDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery prompt is missing');
 if (!js.includes('function writeDataLibraryImportRecovery') || !js.includes('function readDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery persistence is missing');
 if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Library import recovery size guard is missing');
-if (!html.includes("const recoveryKey = 'tgb-style-recovery-v2'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v3'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
 if (!js.includes("updateViaCache: 'none'")) fail('Service worker update must bypass stale HTTP cache');
 if (!html.includes('id="dataLibraryImportIssues"') || !html.includes('id="dataLibraryImportIssueList"')) fail('V5.5 Data Library decision review panel is missing');
 if (!js.includes('function dataLibraryImportReviewState') || !js.includes('function chooseDataLibraryImportDuplicate')) fail('V5.5 explicit duplicate review decision flow is missing');

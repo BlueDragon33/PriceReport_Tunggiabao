@@ -11,18 +11,26 @@ function fail(message) {
 
 if (!css.includes('--v5-primary:')) fail('V5 design tokens are missing');
 if (!css.includes('body.v5-ui')) fail('V5 stylesheet is not body-scoped');
-if (!html.includes('class="v5-ui reference-ui-v56"')) fail('V5.6 reference UI scope is not active on the application body');
-if (!css.includes('V5.6 reference-image UI/UX refactor')) fail('V5.6 reference-image refactor block is missing');
-if (!css.includes('--v5-sidebar-width:118px') || !css.includes('--nav:118px') || !css.includes('--edit:350px') || !css.includes('--design:315px')) fail('V5.6 reference desktop geometry 118/350/315 is missing');
-if (!css.includes('body.v5-ui.reference-ui-v56{') || !css.includes('font-size:15px')) fail('V5.6 readable application typography baseline is missing');
-if (!css.includes('min-height:204px') || !css.includes('grid-template-columns:minmax(0,1fr) 300px')) fail('V5.6 workspace proportion polish is missing');
-if (!css.includes('body.v5-ui.reference-ui-v56 .history-workspace .history-table-row') || !css.includes('min-height:70px')) fail('V5.6 readable management-row density is missing');
-if (!css.includes('width:min(1020px,96vw)') || !css.includes('width:min(1040px,96vw)')) fail('V5.6 modal hierarchy sizing is missing'); // V5.6 workspace proportion polish
-if (!css.includes('min-height:112px') || !css.includes('body.v5-ui.reference-ui-v56 .export-action-card b')) fail('V5.6 Publishing/Data Center action-card refactor is missing');
-if (!css.includes('body.v5-ui.reference-ui-v56 .tpl span') || !css.includes('font-size:12px')) fail('V5.6 readable template-card typography is missing');
-if (!css.includes('V5.6 Pass 4: contextual navigation hierarchy')) fail('V5.6 contextual navigation pass is missing');
-if (!css.includes('.shell.app-workspace .nav button[data-tab="customer"]') || !css.includes('.shell.app-workspace .nav button[data-tab="presets"]')) fail('V5.6 management navigation still exposes quotation-step clutter');
-if (!css.includes('.shell:not(.app-workspace) .nav button[data-tab="history"]') || !css.includes('.shell:not(.app-workspace) .nav button[data-tab="settings"]')) fail('V5.6 Studio navigation still exposes management-only destinations');
+if (!html.includes('class="v5-ui reference-ui-v57"')) fail('V5.7 reference UI scope is not active on the application body');
+if (!css.includes('V5.7 reference-fidelity UI/UX refactor')) fail('V5.7 reference-fidelity refactor block is missing');
+if (!css.includes('--v5-sidebar-width:118px') || !css.includes('--nav:118px') || !css.includes('--edit:320px') || !css.includes('--design:368px')) fail('V5.7 reference desktop geometry 118/320/flexible/368 is missing');
+if (!css.includes('body.v5-ui.reference-ui-v57{') || !css.includes('font-size:15px')) fail('V5.7 readable application typography baseline is missing');
+if (!css.includes('min-height:204px') || !css.includes('grid-template-columns:minmax(0,1fr) 300px')) fail('V5.7 workspace proportion polish is missing');
+if (!css.includes('body.v5-ui.reference-ui-v57 .history-workspace .history-table-row') || !css.includes('min-height:70px')) fail('V5.7 readable management-row density is missing');
+if (!css.includes('width:min(1020px,96vw)') || !css.includes('width:min(1040px,96vw)')) fail('V5.7 modal hierarchy sizing is missing'); // V5.7 workspace proportion polish
+if (!css.includes('min-height:112px') || !css.includes('body.v5-ui.reference-ui-v57 .export-action-card b')) fail('V5.7 Publishing/Data Center action-card refactor is missing');
+if (!css.includes('body.v5-ui.reference-ui-v57 .tpl span') || !css.includes('font-size:12px')) fail('V5.7 readable template-card typography is missing');
+if (!css.includes('V5.7 Pass 4: contextual navigation hierarchy')) fail('V5.7 contextual navigation pass is missing');
+if (!css.includes('grid-template-columns:118px 320px minmax(620px,1fr) 368px')) fail('V5.7 Studio must place preview between editor and inspector');
+if (!css.includes('.shell:not(.app-workspace) .preview{') || !css.includes('grid-column:3')) fail('V5.7 preview grid placement is missing');
+if (!css.includes('.shell:not(.app-workspace) .design{') || !css.includes('grid-column:4')) fail('V5.7 inspector grid placement is missing');
+if (!css.includes('background:#0b2442') || !css.includes('background:#263a54')) fail('V5.7 dark studio chrome / neutral preview canvas is missing');
+if (!html.includes('data-inspector-tab="design"') || !html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.7 Design/Content/Check inspector tabs are missing');
+if (!css.includes('V5.7 Pass 5: right inspector tabs') || !css.includes('.design>.inspector-tabs')) fail('V5.7 inspector tab styling is missing');
+if (!html.includes('class="studio-global-bar"') || !css.includes('V5.7 Pass 6: global Studio command bar')) fail('V5.7 global Studio command bar is missing');
+if (!css.includes('grid-template-rows:68px minmax(0,1fr)')) fail('V5.7 Studio command-bar row geometry is missing');
+if (!css.includes('.shell.app-workspace .nav button[data-tab="customer"]') || !css.includes('.shell.app-workspace .nav button[data-tab="presets"]')) fail('V5.7 management navigation still exposes quotation-step clutter');
+if (!css.includes('.shell:not(.app-workspace) .nav button[data-tab="payment"]') || !css.includes('.shell:not(.app-workspace) .nav button[data-tab="export"]')) fail('V5.7 Studio rail still exposes workflow-step clutter');
 if (css.includes('!important')) fail('V5 stylesheet must not introduce !important');
 if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(css)) fail('V5 application stylesheet must not target the report document');
 if (/@media\s+print/i.test(css)) fail('V5 application stylesheet must not contain print rules');

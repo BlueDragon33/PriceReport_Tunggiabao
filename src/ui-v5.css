@@ -89,7 +89,7 @@ body.v5-ui .shell.wide-preview{
 }
 body.v5-ui .shell.wide-preview .editor,
 body.v5-ui .shell.wide-preview .design{display:none}
-body.v5-ui .shell.wide-preview .preview{grid-column:2}
+body.v5-ui .shell.wide-preview .preview{grid-column:2;grid-row:1}
 
 body.v5-ui .nav{
   position:relative;
@@ -1884,13 +1884,13 @@ body.v5-ui .panel-edge-toggle:hover{
   color:var(--v5-primary);
 }
 body.v5-ui .shell.editor-collapsed{
-  grid-template-columns:var(--nav) 34px var(--design) minmax(0,1fr);
+  grid-template-columns:var(--nav) 34px minmax(0,1fr) var(--design);
 }
 body.v5-ui .shell.design-collapsed{
-  grid-template-columns:var(--nav) var(--edit) 34px minmax(0,1fr);
+  grid-template-columns:var(--nav) var(--edit) minmax(0,1fr) 34px;
 }
 body.v5-ui .shell.editor-collapsed.design-collapsed{
-  grid-template-columns:var(--nav) 34px 34px minmax(0,1fr);
+  grid-template-columns:var(--nav) 34px minmax(0,1fr) 34px;
 }
 body.v5-ui .shell.editor-collapsed .editor,
 body.v5-ui .shell.design-collapsed .design{
@@ -1937,6 +1937,20 @@ body.v5-ui .card-collapse-handle:hover{
   color:var(--v5-primary);
 }
 body.v5-ui .design .card-collapse-handle{right:5px}
+body.v5-ui.reference-ui-v57 .design>.panel-edge-toggle{
+  left:2px;
+  right:auto;
+  border-right:1px solid rgba(255,255,255,.14);
+  border-left:0;
+  border-radius:0 10px 10px 0;
+  background:#102f53;
+  color:#afc7e3;
+  box-shadow:4px 0 14px rgba(0,0,0,.12);
+}
+body.v5-ui.reference-ui-v57 .design>.panel-edge-toggle:hover{
+  background:#173f6b;
+  color:#fff;
+}
 body.v5-ui .card.card-collapsed{min-height:46px;padding-bottom:10px}
 body.v5-ui .card.card-collapsed> :not(h3):not(.card-collapse-handle):not(.product-workspace-head),
 body.v5-ui .section-block.quick-customer.card-collapsed> :not(.section-title):not(.card-collapse-handle){display:none}
@@ -4946,8 +4960,8 @@ body.v5-ui .data-library-import-more{
 
 
 
-/* ---------- V5.6 reference-image UI/UX refactor ---------- */
-body.v5-ui.reference-ui-v56{
+/* ---------- V5.7 reference-fidelity UI/UX refactor ---------- */
+body.v5-ui.reference-ui-v57{
   --v5-bg:#eef3f8;
   --v5-surface:#ffffff;
   --v5-surface-soft:#f6f9fc;
@@ -4971,34 +4985,81 @@ body.v5-ui.reference-ui-v56{
   --v5-control:42px;
   --v5-sidebar-width:118px;
   --nav:118px;
-  --edit:350px;
-  --design:315px;
+  --edit:320px;
+  --design:368px;
   background:var(--v5-bg);
   color:var(--v5-text);
   color-scheme:light;
   font-size:15px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .shell{
+body.v5-ui.reference-ui-v57 .shell{
   background:var(--v5-bg);
 }
-body.v5-ui.reference-ui-v56:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace){
-  grid-template-columns:118px 350px 315px minmax(0,1fr);
+body.v5-ui .studio-global-bar{
+  display:none;
 }
-body.v5-ui.reference-ui-v56:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.app-workspace{
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace){
+  grid-template-columns:118px 320px minmax(620px,1fr) 368px;
+  grid-template-rows:68px minmax(0,1fr);
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace) .nav{
+  grid-column:1;
+  grid-row:1/3;
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace) .studio-global-bar{
+  grid-column:2/5;
+  grid-row:1;
+  min-width:0;
+  padding:0 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:#091f3a;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  color:#eef5ff;
+  box-shadow:0 3px 14px rgba(0,0,0,.14);
+  z-index:55;
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace) .editor{
+  grid-column:2;
+  grid-row:2;
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace) .preview{
+  grid-column:3;
+  grid-row:2;
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace) .design{
+  grid-column:4;
+  grid-row:2;
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.app-workspace{
   grid-template-columns:118px minmax(0,1fr);
 }
-body.v5-ui.reference-ui-v56 .nav{
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.wide-preview:not(.app-workspace){
+  grid-template-columns:118px minmax(0,1fr);
+  grid-template-rows:68px minmax(0,1fr);
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.wide-preview:not(.app-workspace) .studio-global-bar{
+  grid-column:2;
+  grid-row:1;
+}
+body.v5-ui.reference-ui-v57:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell.wide-preview:not(.app-workspace) .preview{
+  grid-column:2;
+  grid-row:2;
+}
+body.v5-ui.reference-ui-v57 .nav{
   padding:10px 9px 12px;
   gap:6px;
   background:var(--v5-sidebar);
   border-right:1px solid rgba(255,255,255,.055);
 }
-body.v5-ui.reference-ui-v56 .app-brand{
+body.v5-ui.reference-ui-v57 .app-brand{
   justify-content:center;
   margin:0 0 4px;
 }
-body.v5-ui.reference-ui-v56 .brand{
+body.v5-ui.reference-ui-v57 .brand{
   width:46px;
   min-width:46px;
   height:46px;
@@ -5008,14 +5069,14 @@ body.v5-ui.reference-ui-v56 .brand{
   box-shadow:0 8px 20px rgba(36,119,232,.22);
   font-size:17px;
 }
-body.v5-ui.reference-ui-v56 .brand-copy,
-body.v5-ui.reference-ui-v56 .nav-section-label,
-body.v5-ui.reference-ui-v56 .device-profile-chip,
-body.v5-ui.reference-ui-v56 .tip{
+body.v5-ui.reference-ui-v57 .brand-copy,
+body.v5-ui.reference-ui-v57 .nav-section-label,
+body.v5-ui.reference-ui-v57 .device-profile-chip,
+body.v5-ui.reference-ui-v57 .tip{
   display:none;
 }
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button,
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button.nav-secondary{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button,
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button.nav-secondary{
   width:100%;
   min-height:66px;
   padding:8px 5px;
@@ -5032,43 +5093,43 @@ body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button.nav-secondary
   font-weight:650;
   line-height:1.25;
 }
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button:hover{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button:hover{
   background:var(--v5-sidebar-hover);
   color:#fff;
 }
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button.active{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button.active{
   background:var(--v5-sidebar-active);
   border-color:rgba(255,255,255,.08);
   color:#fff;
   box-shadow:0 8px 18px rgba(8,31,60,.2);
 }
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav-glyph{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav-glyph{
   width:auto;
   min-width:0;
   font-size:18px;
   line-height:1;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav{
   padding:10px 9px 12px;
   gap:6px;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .app-brand{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .app-brand{
   padding:0;
   margin:0 0 4px;
   border-bottom:0;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .brand{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .brand{
   width:46px;
   min-width:46px;
   height:46px;
   border-radius:12px;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .brand-copy,
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav-section-label{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .brand-copy,
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav-section-label{
   display:none;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button,
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button.nav-secondary{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button,
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button.nav-secondary{
   width:100%;
   min-height:66px;
   padding:8px 5px;
@@ -5085,103 +5146,119 @@ body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button.nav-secondary{
   font-weight:650;
   line-height:1.25;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button:hover{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button:hover{
   background:var(--v5-sidebar-hover);
   color:#fff;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button.active{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button.active{
   background:var(--v5-sidebar-active);
   border-color:rgba(255,255,255,.08);
   color:#fff;
   box-shadow:0 8px 18px rgba(8,31,60,.2);
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav-glyph{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav-glyph{
   width:auto;
   min-width:0;
   font-size:18px;
   line-height:1;
 }
-body.v5-ui.reference-ui-v56 .editor,
-body.v5-ui.reference-ui-v56 .design{
-  border-right:1px solid var(--v5-border);
-  background:var(--v5-surface-soft);
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .editor{
+  border-right:1px solid rgba(255,255,255,.08);
+  background:#0b2442;
+  color:#eaf2ff;
 }
-body.v5-ui.reference-ui-v56 .panel-head{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .design{
+  border-left:1px solid rgba(255,255,255,.08);
+  border-right:0;
+  background:#0b2442;
+  color:#eaf2ff;
+}
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .panel-head{
   padding:14px 16px 13px;
-  border-bottom:1px solid var(--v5-border);
-  background:rgba(255,255,255,.97);
-  box-shadow:0 2px 10px rgba(20,47,79,.035);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(10,34,63,.98);
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
 }
-body.v5-ui.reference-ui-v56 .panel-head h2{
-  color:var(--v5-text);
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .panel-head h2{
+  color:#f5f9ff;
   font-size:18px;
   line-height:1.25;
   font-weight:800;
 }
-body.v5-ui.reference-ui-v56 .panel-head p{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .panel-head p{
   margin-top:5px;
-  color:var(--v5-muted);
+  color:#9fb4cf;
   font-size:12.5px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .panel-body{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .panel-body{
   padding:15px 14px 42px;
-  background:var(--v5-surface-soft);
+  background:#0b2442;
 }
-body.v5-ui.reference-ui-v56 .card{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .card{
   margin-bottom:14px;
   padding:16px;
-  border:1px solid var(--v5-border);
+  border:1px solid rgba(255,255,255,.09);
   border-radius:12px;
-  background:var(--v5-surface);
-  box-shadow:var(--v5-shadow-sm);
+  background:#102f53;
+  box-shadow:0 8px 22px rgba(0,0,0,.10);
 }
-body.v5-ui.reference-ui-v56 .card h3,
-body.v5-ui.reference-ui-v56 .section-title{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .card h3,
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .section-title{
   margin-bottom:13px;
-  color:var(--v5-text);
+  color:#f5f9ff;
   font-size:14.5px;
   font-weight:800;
   line-height:1.3;
   letter-spacing:0;
 }
-body.v5-ui.reference-ui-v56 .row{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .row{
   margin-bottom:13px;
 }
-body.v5-ui.reference-ui-v56 label{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) label{
   margin-bottom:6px;
-  color:#314963;
+  color:#c7d6e8;
   font-size:12.5px;
   font-weight:650;
   line-height:1.35;
 }
-body.v5-ui.reference-ui-v56 input,
-body.v5-ui.reference-ui-v56 select{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) input,
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) select{
   height:41px;
   padding:8px 11px;
+  border-color:rgba(255,255,255,.12);
   border-radius:9px;
+  background:#0a213d;
+  color:#eef5ff;
   font-size:14px;
 }
-body.v5-ui.reference-ui-v56 textarea{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) textarea{
   min-height:92px;
   padding:9px 11px;
+  border-color:rgba(255,255,255,.12);
   border-radius:9px;
+  background:#0a213d;
+  color:#eef5ff;
   font-size:14px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .help{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) input::placeholder,
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) textarea::placeholder{
+  color:#7890ad;
+}
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .help{
   margin-top:7px;
-  color:var(--v5-muted);
+  color:#9fb4cf;
   font-size:12px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .check{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .check{
   min-height:34px;
-  color:#334a65;
+  color:#c7d6e8;
   gap:10px;
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .btn{
+body.v5-ui.reference-ui-v57 .btn{
   min-height:40px;
   padding:8px 13px;
   border-radius:9px;
@@ -5189,370 +5266,419 @@ body.v5-ui.reference-ui-v56 .btn{
   font-weight:700;
   line-height:1.2;
 }
-body.v5-ui.reference-ui-v56 .mini-action{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .btn:not(.primary):not(.green):not(.danger){
+  border-color:rgba(255,255,255,.12);
+  background:#14365c;
+  color:#e3edf9;
+  box-shadow:none;
+}
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .btn:not(.primary):not(.green):not(.danger):hover{
+  border-color:#3b79bd;
+  background:#173f6b;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v57 .mini-action{
   min-width:34px;
   min-height:34px;
   border-radius:8px;
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .studio-panel-head{
+body.v5-ui.reference-ui-v57 .studio-panel-head{
   padding:12px 14px 11px;
 }
-body.v5-ui.reference-ui-v56 .studio-context-row{
+body.v5-ui.reference-ui-v57 .studio-context-row{
   grid-template-columns:36px minmax(0,1fr);
   gap:10px;
 }
-body.v5-ui.reference-ui-v56 .studio-home-button{
+body.v5-ui.reference-ui-v57 .studio-home-button{
   width:36px;
   height:36px;
   border-radius:9px;
   font-size:17px;
 }
-body.v5-ui.reference-ui-v56 .studio-current-quote small{
+body.v5-ui.reference-ui-v57 .studio-current-quote small{
+  color:#7fa1c8;
   font-size:10px;
   line-height:1.3;
   letter-spacing:.1em;
 }
-body.v5-ui.reference-ui-v56 .studio-current-quote strong{
+body.v5-ui.reference-ui-v57 .studio-current-quote strong{
   margin-top:3px;
+  color:#f4f8ff;
   font-size:14px;
   line-height:1.3;
 }
-body.v5-ui.reference-ui-v56 .studio-context-badges{
+body.v5-ui.reference-ui-v57 .studio-context-badges{
   gap:6px;
   padding-left:46px;
 }
-body.v5-ui.reference-ui-v56 .studio-status-badge,
-body.v5-ui.reference-ui-v56 .studio-history-state,
-body.v5-ui.reference-ui-v56 .studio-autosave-state{
+body.v5-ui.reference-ui-v57 .studio-status-badge,
+body.v5-ui.reference-ui-v57 .studio-history-state,
+body.v5-ui.reference-ui-v57 .studio-autosave-state{
   min-height:24px;
   padding:4px 8px;
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .studio-pane-title h2{
+body.v5-ui.reference-ui-v57 .studio-pane-title h2{
+  color:#f5f9ff;
   font-size:18px;
 }
-body.v5-ui.reference-ui-v56 .studio-pane-title p{
+body.v5-ui.reference-ui-v57 .studio-pane-title p{
   margin-top:4px;
-  color:var(--v5-muted);
+  color:#9fb4cf;
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .studio-stepper{
-  gap:6px;
-  margin-top:11px;
+body.v5-ui.reference-ui-v57 .studio-stepper{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  margin-top:13px;
 }
-body.v5-ui.reference-ui-v56 .studio-stepper button{
-  height:46px;
-  padding:5px 3px;
-  border-radius:9px;
-  gap:3px;
+body.v5-ui.reference-ui-v57 .studio-stepper button{
+  width:100%;
+  height:52px;
+  padding:7px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  background:#102f53;
+  color:#dce8f6;
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  align-items:center;
+  justify-items:start;
+  gap:10px;
+  text-align:left;
 }
-body.v5-ui.reference-ui-v56 .studio-stepper button b{
-  width:19px;
-  height:19px;
-  font-size:9px;
+body.v5-ui.reference-ui-v57 .studio-stepper button:hover{
+  border-color:#3b79bd;
+  background:#15385f;
 }
-body.v5-ui.reference-ui-v56 .studio-stepper button span{
-  font-size:10.5px;
+body.v5-ui.reference-ui-v57 .studio-stepper button.active{
+  border-color:#2f7de1;
+  background:#153c68;
+  box-shadow:inset 3px 0 0 var(--v5-primary);
 }
-body.v5-ui.reference-ui-v56 .studio-commandbar{
+body.v5-ui.reference-ui-v57 .studio-stepper button b{
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  background:#173f6b;
+  color:#a9c8ed;
+  display:grid;
+  place-items:center;
+  font-size:11px;
+}
+body.v5-ui.reference-ui-v57 .studio-stepper button span{
+  color:inherit;
+  font-size:12.5px;
+  font-weight:700;
+}
+body.v5-ui.reference-ui-v57 .studio-commandbar{
   gap:9px;
   margin-top:10px;
   padding-top:10px;
 }
-body.v5-ui.reference-ui-v56 .studio-command-main{
+body.v5-ui.reference-ui-v57 .studio-command-main{
   gap:7px;
 }
-body.v5-ui.reference-ui-v56 .studio-command-main .btn{
+body.v5-ui.reference-ui-v57 .studio-command-main .btn{
   min-height:38px;
   padding:7px 8px;
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .studio-flow-controls{
+body.v5-ui.reference-ui-v57 .studio-flow-controls{
   grid-template-columns:40px minmax(0,1fr) 40px;
   gap:7px;
 }
-body.v5-ui.reference-ui-v56 .studio-flow-button{
+body.v5-ui.reference-ui-v57 .studio-flow-button{
   height:36px;
   font-size:15px;
 }
-body.v5-ui.reference-ui-v56 .studio-workflow-position{
+body.v5-ui.reference-ui-v57 .studio-workflow-position{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .studio-document-health{
+body.v5-ui.reference-ui-v57 .studio-document-health{
   min-height:32px;
   border-radius:9px;
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .draft-recovery-actions .btn{
+body.v5-ui.reference-ui-v57 .draft-recovery-actions .btn{
   min-height:36px;
   height:36px;
   padding:0 11px;
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .design .panel-head{
+body.v5-ui.reference-ui-v57 .design .panel-head{
   padding:14px 15px 12px;
 }
-body.v5-ui.reference-ui-v56 .design .panel-head h2{
+body.v5-ui.reference-ui-v57 .design .panel-head h2{
   font-size:17px;
 }
-body.v5-ui.reference-ui-v56 .design .panel-body{
+body.v5-ui.reference-ui-v57 .design .panel-body{
   padding:14px 14px 32px;
-  background:var(--v5-surface-soft);
+  background:#0b2442;
 }
-body.v5-ui.reference-ui-v56 .design .card{
+body.v5-ui.reference-ui-v57 .design .card{
   margin:0 0 14px;
   padding:15px;
-  border:1px solid var(--v5-border);
+  border:1px solid rgba(255,255,255,.09);
   border-radius:12px;
-  background:var(--v5-surface);
-  box-shadow:var(--v5-shadow-sm);
+  background:#102f53;
+  box-shadow:0 8px 22px rgba(0,0,0,.10);
 }
-body.v5-ui.reference-ui-v56 .design .card h3{
+body.v5-ui.reference-ui-v57 .design .card h3{
   margin-bottom:13px;
+  color:#f4f8ff;
   font-size:14px;
 }
-body.v5-ui.reference-ui-v56 .template-grid{
+body.v5-ui.reference-ui-v57 .template-grid{
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
-body.v5-ui.reference-ui-v56 .tpl{
+body.v5-ui.reference-ui-v57 .tpl{
   padding:6px 6px 9px;
-  border-color:var(--v5-border-strong);
+  border-color:rgba(255,255,255,.12);
   border-radius:10px;
-  background:#fff;
-  box-shadow:0 1px 2px rgba(20,47,79,.03);
+  background:#0a213d;
+  box-shadow:0 1px 2px rgba(0,0,0,.12);
 }
-body.v5-ui.reference-ui-v56 .tpl:hover{
+body.v5-ui.reference-ui-v57 .tpl:hover{
   border-color:#90bbed;
   box-shadow:0 8px 20px rgba(36,119,232,.09);
   transform:translateY(-1px);
 }
-body.v5-ui.reference-ui-v56 .tpl.active{
+body.v5-ui.reference-ui-v57 .tpl.active{
   padding:5px 5px 8px;
   border-color:var(--v5-primary);
   box-shadow:0 0 0 2px rgba(36,119,232,.09);
 }
-body.v5-ui.reference-ui-v56 .tpl span{
+body.v5-ui.reference-ui-v57 .tpl span{
   margin-top:7px;
-  color:#334b67;
+  color:#dce8f6;
   font-size:12px;
   font-weight:650;
 }
-body.v5-ui.reference-ui-v56 .tpl[data-theme="modern"]:before{
+body.v5-ui.reference-ui-v57 .tpl[data-theme="modern"]:before{
   padding:3px 6px;
   font-size:8px;
 }
-body.v5-ui.reference-ui-v56 .thumb{
+body.v5-ui.reference-ui-v57 .thumb{
   height:112px;
   border-radius:6px;
 }
-body.v5-ui.reference-ui-v56 .preview{
-  padding:0 16px 64px;
-  background:#e8eef5;
+body.v5-ui.reference-ui-v57 .preview{
+  padding:0 18px 64px;
+  background:#263a54;
 }
-body.v5-ui.reference-ui-v56 .preview-tools{
-  min-height:58px;
-  margin:0 -16px 14px;
-  padding:8px 14px;
-  border-bottom-color:#d6e0ea;
-  background:rgba(250,252,255,.98);
-  box-shadow:0 3px 12px rgba(20,47,79,.055);
+body.v5-ui.reference-ui-v57 .preview-tools{
+  min-height:70px;
+  margin:0 -18px 16px;
+  padding:10px 16px;
+  border-bottom-color:rgba(255,255,255,.08);
+  background:#0b2442;
+  box-shadow:0 4px 16px rgba(0,0,0,.16);
 }
-body.v5-ui.reference-ui-v56 .preview-left-tools,
-body.v5-ui.reference-ui-v56 .preview-right-tools{
+body.v5-ui.reference-ui-v57 .preview-left-tools,
+body.v5-ui.reference-ui-v57 .preview-right-tools{
   gap:8px;
 }
-body.v5-ui.reference-ui-v56 .toolbar-btn{
+body.v5-ui.reference-ui-v57 .toolbar-btn{
   height:40px;
   padding:0 13px;
+  border-color:rgba(255,255,255,.10);
   border-radius:9px;
-  background:#fff;
-  color:#344d69;
+  background:#102f53;
+  color:#dce8f6;
   font-size:12.5px;
   font-weight:700;
 }
-body.v5-ui.reference-ui-v56 .toolbar-btn:hover{
-  background:var(--v5-primary-soft);
-  border-color:#a9c9ed;
+body.v5-ui.reference-ui-v57 .toolbar-btn:hover{
+  background:#173f6b;
+  border-color:#3b79bd;
+  color:#fff;
 }
-body.v5-ui.reference-ui-v56 .toolbar-btn.menu{
+body.v5-ui.reference-ui-v57 .toolbar-btn.pdf{
+  border-color:var(--v5-primary);
+  background:var(--v5-primary);
+  color:#fff;
+}
+body.v5-ui.reference-ui-v57 .toolbar-btn.menu{
   width:40px;
   font-size:20px;
 }
-body.v5-ui.reference-ui-v56 .zoom-control{
+body.v5-ui.reference-ui-v57 .zoom-control{
   height:40px;
   border-radius:9px;
 }
-body.v5-ui.reference-ui-v56 .zoom-btn,
-body.v5-ui.reference-ui-v56 .zoom-value{
+body.v5-ui.reference-ui-v57 .zoom-btn,
+body.v5-ui.reference-ui-v57 .zoom-value{
   height:38px;
 }
-body.v5-ui.reference-ui-v56 .zoom-value{
+body.v5-ui.reference-ui-v57 .zoom-value{
   width:60px;
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .page-estimate{
+body.v5-ui.reference-ui-v57 .page-estimate{
   padding:6px 9px;
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 #paperWrap{
+body.v5-ui.reference-ui-v57 #paperWrap{
   margin-left:auto;
   margin-right:auto;
   filter:drop-shadow(0 14px 28px rgba(25,48,76,.13));
 }
-body.v5-ui.reference-ui-v56 .app-workspace-pane,
-body.v5-ui.reference-ui-v56 .app-dashboard,
-body.v5-ui.reference-ui-v56 .history-workspace,
-body.v5-ui.reference-ui-v56 .master-workspace,
-body.v5-ui.reference-ui-v56 .export-workspace,
-body.v5-ui.reference-ui-v56 .settings-workspace,
-body.v5-ui.reference-ui-v56 .system-workspace{
+body.v5-ui.reference-ui-v57 .app-workspace-pane,
+body.v5-ui.reference-ui-v57 .app-dashboard,
+body.v5-ui.reference-ui-v57 .history-workspace,
+body.v5-ui.reference-ui-v57 .master-workspace,
+body.v5-ui.reference-ui-v57 .export-workspace,
+body.v5-ui.reference-ui-v57 .settings-workspace,
+body.v5-ui.reference-ui-v57 .system-workspace{
   width:min(100%,1500px);
   max-width:1500px;
   padding:32px 34px 48px;
 }
-body.v5-ui.reference-ui-v56 .shell.app-workspace .editor{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .editor{
   background:
     radial-gradient(circle at 92% 4%,rgba(36,119,232,.055),transparent 25%),
     radial-gradient(circle at 8% 96%,rgba(27,181,193,.035),transparent 22%),
     var(--v5-bg);
 }
-body.v5-ui.reference-ui-v56 .app-workspace-header,
-body.v5-ui.reference-ui-v56 .history-workspace-header,
-body.v5-ui.reference-ui-v56 .master-workspace-header,
-body.v5-ui.reference-ui-v56 .export-workspace-header,
-body.v5-ui.reference-ui-v56 .settings-workspace-header,
-body.v5-ui.reference-ui-v56 .system-workspace-header{
+body.v5-ui.reference-ui-v57 .app-workspace-header,
+body.v5-ui.reference-ui-v57 .history-workspace-header,
+body.v5-ui.reference-ui-v57 .master-workspace-header,
+body.v5-ui.reference-ui-v57 .export-workspace-header,
+body.v5-ui.reference-ui-v57 .settings-workspace-header,
+body.v5-ui.reference-ui-v57 .system-workspace-header{
   gap:24px;
   margin-bottom:22px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-topbar h1,
-body.v5-ui.reference-ui-v56 .history-workspace-header h2,
-body.v5-ui.reference-ui-v56 .master-workspace-header h2,
-body.v5-ui.reference-ui-v56 .export-workspace-header h2,
-body.v5-ui.reference-ui-v56 .settings-workspace-header h2,
-body.v5-ui.reference-ui-v56 .system-workspace-header h2{
+body.v5-ui.reference-ui-v57 .dashboard-topbar h1,
+body.v5-ui.reference-ui-v57 .history-workspace-header h2,
+body.v5-ui.reference-ui-v57 .master-workspace-header h2,
+body.v5-ui.reference-ui-v57 .export-workspace-header h2,
+body.v5-ui.reference-ui-v57 .settings-workspace-header h2,
+body.v5-ui.reference-ui-v57 .system-workspace-header h2{
   color:var(--v5-text);
   font-size:30px;
   line-height:1.16;
   font-weight:800;
   letter-spacing:-.02em;
 }
-body.v5-ui.reference-ui-v56 .dashboard-topbar p,
-body.v5-ui.reference-ui-v56 .history-workspace-header p,
-body.v5-ui.reference-ui-v56 .master-workspace-header p,
-body.v5-ui.reference-ui-v56 .export-workspace-header p,
-body.v5-ui.reference-ui-v56 .settings-workspace-header p,
-body.v5-ui.reference-ui-v56 .system-workspace-header p{
+body.v5-ui.reference-ui-v57 .dashboard-topbar p,
+body.v5-ui.reference-ui-v57 .history-workspace-header p,
+body.v5-ui.reference-ui-v57 .master-workspace-header p,
+body.v5-ui.reference-ui-v57 .export-workspace-header p,
+body.v5-ui.reference-ui-v57 .settings-workspace-header p,
+body.v5-ui.reference-ui-v57 .system-workspace-header p{
   margin-top:7px;
   color:var(--v5-muted);
   font-size:14px;
   line-height:1.55;
 }
-body.v5-ui.reference-ui-v56 .eyebrow,
-body.v5-ui.reference-ui-v56 .workspace-eyebrow{
+body.v5-ui.reference-ui-v57 .eyebrow,
+body.v5-ui.reference-ui-v57 .workspace-eyebrow{
   margin-bottom:7px;
   font-size:10.5px;
   letter-spacing:.12em;
 }
-body.v5-ui.reference-ui-v56 .app-surface-panel,
-body.v5-ui.reference-ui-v56 .app-status-card,
-body.v5-ui.reference-ui-v56 .dashboard-panel,
-body.v5-ui.reference-ui-v56 .history-management-panel,
-body.v5-ui.reference-ui-v56 .master-management-panel,
-body.v5-ui.reference-ui-v56 .export-center-panel,
-body.v5-ui.reference-ui-v56 .settings-panel,
-body.v5-ui.reference-ui-v56 .system-center-panel{
+body.v5-ui.reference-ui-v57 .app-surface-panel,
+body.v5-ui.reference-ui-v57 .app-status-card,
+body.v5-ui.reference-ui-v57 .dashboard-panel,
+body.v5-ui.reference-ui-v57 .history-management-panel,
+body.v5-ui.reference-ui-v57 .master-management-panel,
+body.v5-ui.reference-ui-v57 .export-center-panel,
+body.v5-ui.reference-ui-v57 .settings-panel,
+body.v5-ui.reference-ui-v57 .system-center-panel{
   border-color:var(--v5-border);
   border-radius:12px;
   background:#fff;
   box-shadow:var(--v5-shadow-sm);
 }
-body.v5-ui.reference-ui-v56 .dashboard-panel-head h3,
-body.v5-ui.reference-ui-v56 .master-panel-head h3,
-body.v5-ui.reference-ui-v56 .export-panel-head h3,
-body.v5-ui.reference-ui-v56 .settings-panel-head h3,
-body.v5-ui.reference-ui-v56 .system-panel-head h3{
+body.v5-ui.reference-ui-v57 .dashboard-panel-head h3,
+body.v5-ui.reference-ui-v57 .master-panel-head h3,
+body.v5-ui.reference-ui-v57 .export-panel-head h3,
+body.v5-ui.reference-ui-v57 .settings-panel-head h3,
+body.v5-ui.reference-ui-v57 .system-panel-head h3{
   color:var(--v5-text);
   font-size:15px;
   line-height:1.3;
   font-weight:800;
 }
-body.v5-ui.reference-ui-v56 .dashboard-panel-head p,
-body.v5-ui.reference-ui-v56 .master-panel-head p,
-body.v5-ui.reference-ui-v56 .export-panel-head p,
-body.v5-ui.reference-ui-v56 .settings-panel-head p,
-body.v5-ui.reference-ui-v56 .system-panel-head p{
+body.v5-ui.reference-ui-v57 .dashboard-panel-head p,
+body.v5-ui.reference-ui-v57 .master-panel-head p,
+body.v5-ui.reference-ui-v57 .export-panel-head p,
+body.v5-ui.reference-ui-v57 .settings-panel-head p,
+body.v5-ui.reference-ui-v57 .system-panel-head p{
   color:var(--v5-muted);
   font-size:12.5px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .export-status-grid,
-body.v5-ui.reference-ui-v56 .system-status-grid,
-body.v5-ui.reference-ui-v56 .settings-status-grid{
+body.v5-ui.reference-ui-v57 .export-status-grid,
+body.v5-ui.reference-ui-v57 .system-status-grid,
+body.v5-ui.reference-ui-v57 .settings-status-grid{
   gap:12px;
   margin-bottom:18px;
 }
-body.v5-ui.reference-ui-v56 .export-status-card,
-body.v5-ui.reference-ui-v56 .system-status-card,
-body.v5-ui.reference-ui-v56 .settings-status-card{
+body.v5-ui.reference-ui-v57 .export-status-card,
+body.v5-ui.reference-ui-v57 .system-status-card,
+body.v5-ui.reference-ui-v57 .settings-status-card{
   min-height:96px;
   padding:16px;
   gap:12px;
 }
-body.v5-ui.reference-ui-v56 .export-status-icon,
-body.v5-ui.reference-ui-v56 .system-status-icon,
-body.v5-ui.reference-ui-v56 .settings-status-card>span{
+body.v5-ui.reference-ui-v57 .export-status-icon,
+body.v5-ui.reference-ui-v57 .system-status-icon,
+body.v5-ui.reference-ui-v57 .settings-status-card>span{
   width:42px;
   min-width:42px;
   height:42px;
   border-radius:11px;
   font-size:17px;
 }
-body.v5-ui.reference-ui-v56 .export-status-card small,
-body.v5-ui.reference-ui-v56 .system-status-card small,
-body.v5-ui.reference-ui-v56 .settings-status-card small{
+body.v5-ui.reference-ui-v57 .export-status-card small,
+body.v5-ui.reference-ui-v57 .system-status-card small,
+body.v5-ui.reference-ui-v57 .settings-status-card small{
   color:var(--v5-muted);
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .export-status-card strong,
-body.v5-ui.reference-ui-v56 .system-status-card strong,
-body.v5-ui.reference-ui-v56 .settings-status-card strong{
+body.v5-ui.reference-ui-v57 .export-status-card strong,
+body.v5-ui.reference-ui-v57 .system-status-card strong,
+body.v5-ui.reference-ui-v57 .settings-status-card strong{
   margin:3px 0;
   color:var(--v5-text);
   font-size:15px;
 }
-body.v5-ui.reference-ui-v56 .export-status-card em,
-body.v5-ui.reference-ui-v56 .system-status-card em{
+body.v5-ui.reference-ui-v57 .export-status-card em,
+body.v5-ui.reference-ui-v57 .system-status-card em{
   color:var(--v5-subtle);
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .export-center-grid,
-body.v5-ui.reference-ui-v56 .system-center-grid,
-body.v5-ui.reference-ui-v56 .settings-grid{
+body.v5-ui.reference-ui-v57 .export-center-grid,
+body.v5-ui.reference-ui-v57 .system-center-grid,
+body.v5-ui.reference-ui-v57 .settings-grid{
   gap:18px;
 }
-body.v5-ui.reference-ui-v56 .export-center-panel,
-body.v5-ui.reference-ui-v56 .system-center-panel,
-body.v5-ui.reference-ui-v56 .settings-panel{
+body.v5-ui.reference-ui-v57 .export-center-panel,
+body.v5-ui.reference-ui-v57 .system-center-panel,
+body.v5-ui.reference-ui-v57 .settings-panel{
   padding:20px;
 }
-body.v5-ui.reference-ui-v56 .export-panel-head{
+body.v5-ui.reference-ui-v57 .export-panel-head{
   gap:12px;
   margin-bottom:17px;
 }
-body.v5-ui.reference-ui-v56 .export-panel-icon{
+body.v5-ui.reference-ui-v57 .export-panel-icon{
   width:40px;
   min-width:40px;
   height:40px;
   border-radius:11px;
   font-size:17px;
 }
-body.v5-ui.reference-ui-v56 .export-action-grid{
+body.v5-ui.reference-ui-v57 .export-action-grid{
   gap:12px;
 }
-body.v5-ui.reference-ui-v56 .export-action-card{
+body.v5-ui.reference-ui-v57 .export-action-card{
   min-height:112px;
   padding:16px;
   grid-template-columns:42px minmax(0,1fr);
@@ -5564,36 +5690,36 @@ body.v5-ui.reference-ui-v56 .export-action-card{
   box-shadow:0 1px 2px rgba(20,47,79,.035);
   transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease,background .16s ease;
 }
-body.v5-ui.reference-ui-v56 .export-action-card:hover{
+body.v5-ui.reference-ui-v57 .export-action-card:hover{
   border-color:#9fc2ea;
   background:#f9fcff;
   box-shadow:0 10px 24px rgba(36,119,232,.08);
   transform:translateY(-1px);
 }
-body.v5-ui.reference-ui-v56 .export-action-card>span{
+body.v5-ui.reference-ui-v57 .export-action-card>span{
   width:42px;
   height:42px;
   border-radius:11px;
   font-size:16px;
 }
-body.v5-ui.reference-ui-v56 .export-action-card b{
+body.v5-ui.reference-ui-v57 .export-action-card b{
   color:#203c5d;
   font-size:14px;
   line-height:1.3;
 }
-body.v5-ui.reference-ui-v56 .export-action-card small{
+body.v5-ui.reference-ui-v57 .export-action-card small{
   margin-top:5px;
   color:var(--v5-muted);
   font-size:11.5px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .export-action-primary{
+body.v5-ui.reference-ui-v57 .export-action-primary{
   border-color:#a9c8ed;
   background:var(--v5-primary-soft);
   color:#174f92;
   box-shadow:0 6px 18px rgba(36,119,232,.08);
 }
-body.v5-ui.reference-ui-v56 .export-pc-status{
+body.v5-ui.reference-ui-v57 .export-pc-status{
   margin-bottom:13px;
   padding:12px 13px;
   border-radius:10px;
@@ -5602,508 +5728,508 @@ body.v5-ui.reference-ui-v56 .export-pc-status{
   font-size:12px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .export-info-note{
+body.v5-ui.reference-ui-v57 .export-info-note{
   color:var(--v5-muted);
   font-size:11.5px;
   line-height:1.55;
 }
-body.v5-ui.reference-ui-v56 .backup-scope{
+body.v5-ui.reference-ui-v57 .backup-scope{
   gap:8px;
   margin-bottom:14px;
 }
-body.v5-ui.reference-ui-v56 .backup-scope span{
+body.v5-ui.reference-ui-v57 .backup-scope span{
   min-height:28px;
   padding:5px 9px;
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .master-toolbar,
-body.v5-ui.reference-ui-v56 .history-toolbar{
+body.v5-ui.reference-ui-v57 .master-toolbar,
+body.v5-ui.reference-ui-v57 .history-toolbar{
   gap:10px;
 }
-body.v5-ui.reference-ui-v56 .master-search-box,
-body.v5-ui.reference-ui-v56 .history-search-box{
+body.v5-ui.reference-ui-v57 .master-search-box,
+body.v5-ui.reference-ui-v57 .history-search-box{
   min-height:42px;
 }
-body.v5-ui.reference-ui-v56 .master-result-summary,
-body.v5-ui.reference-ui-v56 .history-result-summary{
+body.v5-ui.reference-ui-v57 .master-result-summary,
+body.v5-ui.reference-ui-v57 .history-result-summary{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .app-data-table{
+body.v5-ui.reference-ui-v57 .app-data-table{
   border-radius:12px;
 }
-body.v5-ui.reference-ui-v56 .preview-customizer-head strong{
+body.v5-ui.reference-ui-v57 .preview-customizer-head strong{
   font-size:14px;
 }
-body.v5-ui.reference-ui-v56 .preview-customizer-head span{
+body.v5-ui.reference-ui-v57 .preview-customizer-head span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .custom-group>label{
+body.v5-ui.reference-ui-v57 .custom-group>label{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .segmented button{
+body.v5-ui.reference-ui-v57 .segmented button{
   height:38px;
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .product-workspace-head p{
+body.v5-ui.reference-ui-v57 .product-workspace-head p{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .product-card-identity strong{
+body.v5-ui.reference-ui-v57 .product-card-identity strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .product-index{
+body.v5-ui.reference-ui-v57 .product-index{
   width:32px;
   height:32px;
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .smart-import-head strong{
+body.v5-ui.reference-ui-v57 .smart-import-head strong{
   font-size:15px;
 }
-body.v5-ui.reference-ui-v56 .smart-import-head span{
+body.v5-ui.reference-ui-v57 .smart-import-head span{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .logo-upload-note,
-body.v5-ui.reference-ui-v56 .logo-mode-status{
+body.v5-ui.reference-ui-v57 .logo-upload-note,
+body.v5-ui.reference-ui-v57 .logo-mode-status{
   padding:9px 10px;
   font-size:11.5px;
   line-height:1.5;
 }
 
 
-/* ---------- V5.6 Pass 2: readable operational surfaces ---------- */
-body.v5-ui.reference-ui-v56 .hero-kicker{
+/* ---------- V5.7 Pass 2: readable operational surfaces ---------- */
+body.v5-ui.reference-ui-v57 .hero-kicker{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .hero-progress-label,
-body.v5-ui.reference-ui-v56 .hero-progress-card small{
+body.v5-ui.reference-ui-v57 .hero-progress-label,
+body.v5-ui.reference-ui-v57 .hero-progress-card small{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .quick-app-card small{
+body.v5-ui.reference-ui-v57 .quick-app-card small{
   font-size:12px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .kpi-card small{
+body.v5-ui.reference-ui-v57 .kpi-card small{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .kpi-card em{
+body.v5-ui.reference-ui-v57 .kpi-card em{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .recent-quote-head{
+body.v5-ui.reference-ui-v57 .recent-quote-head{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .recent-quote-row{
+body.v5-ui.reference-ui-v57 .recent-quote-row{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-status{
+body.v5-ui.reference-ui-v57 .dashboard-status{
   padding:5px 8px;
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-empty{
+body.v5-ui.reference-ui-v57 .dashboard-empty{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .side-actions b{
+body.v5-ui.reference-ui-v57 .side-actions b{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .side-actions small{
+body.v5-ui.reference-ui-v57 .side-actions small{
   font-size:11px;
   line-height:1.4;
 }
-body.v5-ui.reference-ui-v56 .system-card small,
-body.v5-ui.reference-ui-v56 .system-card p{
+body.v5-ui.reference-ui-v57 .system-card small,
+body.v5-ui.reference-ui-v57 .system-card p{
   font-size:11.5px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .system-card-open{
+body.v5-ui.reference-ui-v57 .system-card-open{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .history-stats-app .history-kpi span{
+body.v5-ui.reference-ui-v57 .history-stats-app .history-kpi span{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .history-stats-app .history-kpi small{
+body.v5-ui.reference-ui-v57 .history-stats-app .history-kpi small{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .history-toolbar label{
+body.v5-ui.reference-ui-v57 .history-toolbar label{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .history-search-box input{
+body.v5-ui.reference-ui-v57 .history-search-box input{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .history-result-summary small{
+body.v5-ui.reference-ui-v57 .history-result-summary small{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .history-cell{
+body.v5-ui.reference-ui-v57 .history-cell{
   font-size:12.5px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .history-cell strong{
+body.v5-ui.reference-ui-v57 .history-cell strong{
   font-size:13.5px;
 }
-body.v5-ui.reference-ui-v56 .history-cell small{
+body.v5-ui.reference-ui-v57 .history-cell small{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .history-action-cell .btn{
+body.v5-ui.reference-ui-v57 .history-action-cell .btn{
   min-height:34px;
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace-summary small{
+body.v5-ui.reference-ui-v57 .master-workspace-summary small{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .master-panel-head>.btn{
+body.v5-ui.reference-ui-v57 .master-panel-head>.btn{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .master-search-box input{
+body.v5-ui.reference-ui-v57 .master-search-box input{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .master-result-summary small{
+body.v5-ui.reference-ui-v57 .master-result-summary small{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .master-cell{
+body.v5-ui.reference-ui-v57 .master-cell{
   font-size:12.5px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .master-cell strong{
+body.v5-ui.reference-ui-v57 .master-cell strong{
   font-size:13.5px;
 }
-body.v5-ui.reference-ui-v56 .master-cell small{
+body.v5-ui.reference-ui-v57 .master-cell small{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .master-action-cell .btn{
+body.v5-ui.reference-ui-v57 .master-action-cell .btn{
   min-height:34px;
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .history-table-head,
-body.v5-ui.reference-ui-v56 .master-table-head{
+body.v5-ui.reference-ui-v57 .history-table-head,
+body.v5-ui.reference-ui-v57 .master-table-head{
   min-height:42px;
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .export-danger-zone strong{
+body.v5-ui.reference-ui-v57 .export-danger-zone strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .export-danger-zone p{
+body.v5-ui.reference-ui-v57 .export-danger-zone p{
   font-size:11.5px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .system-detail-grid small{
+body.v5-ui.reference-ui-v57 .system-detail-grid small{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .system-detail-grid strong{
+body.v5-ui.reference-ui-v57 .system-detail-grid strong{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .system-readiness-list span,
-body.v5-ui.reference-ui-v56 .system-boundary-list span{
+body.v5-ui.reference-ui-v57 .system-readiness-list span,
+body.v5-ui.reference-ui-v57 .system-boundary-list span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .system-readiness-list strong,
-body.v5-ui.reference-ui-v56 .system-boundary-list strong{
+body.v5-ui.reference-ui-v57 .system-readiness-list strong,
+body.v5-ui.reference-ui-v57 .system-boundary-list strong{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .system-contract-note b{
+body.v5-ui.reference-ui-v57 .system-contract-note b{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .system-contract-note span{
+body.v5-ui.reference-ui-v57 .system-contract-note span{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .system-policy-note strong{
+body.v5-ui.reference-ui-v57 .system-policy-note strong{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .system-policy-note p{
+body.v5-ui.reference-ui-v57 .system-policy-note p{
   font-size:11.5px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .settings-field b,
-body.v5-ui.reference-ui-v56 .settings-switch-row b,
-body.v5-ui.reference-ui-v56 .settings-info-row b{
+body.v5-ui.reference-ui-v57 .settings-field b,
+body.v5-ui.reference-ui-v57 .settings-switch-row b,
+body.v5-ui.reference-ui-v57 .settings-info-row b{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .settings-field small,
-body.v5-ui.reference-ui-v56 .settings-switch-row small,
-body.v5-ui.reference-ui-v56 .settings-info-row small{
+body.v5-ui.reference-ui-v57 .settings-field small,
+body.v5-ui.reference-ui-v57 .settings-switch-row small,
+body.v5-ui.reference-ui-v57 .settings-info-row small{
   font-size:11.5px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .settings-info-row>strong{
+body.v5-ui.reference-ui-v57 .settings-info-row>strong{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-search-result-copy small{
+body.v5-ui.reference-ui-v57 .dashboard-search-result-copy small{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-search-result-copy strong{
+body.v5-ui.reference-ui-v57 .dashboard-search-result-copy strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-search-result-copy em{
+body.v5-ui.reference-ui-v57 .dashboard-search-result-copy em{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .dashboard-search-empty{
+body.v5-ui.reference-ui-v57 .dashboard-search-empty{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .draft-recovery-banner strong{
+body.v5-ui.reference-ui-v57 .draft-recovery-banner strong{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .draft-recovery-banner span{
+body.v5-ui.reference-ui-v57 .draft-recovery-banner span{
   font-size:11px;
   line-height:1.45;
 }
-body.v5-ui.reference-ui-v56 .template-description{
+body.v5-ui.reference-ui-v57 .template-description{
   padding:10px 11px;
   font-size:11.5px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .logo-backdrop-title{
+body.v5-ui.reference-ui-v57 .logo-backdrop-title{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .product-live-total{
+body.v5-ui.reference-ui-v57 .product-live-total{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .product-field>span{
+body.v5-ui.reference-ui-v57 .product-field>span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .product-data-grid-head,
-body.v5-ui.reference-ui-v56 .product-select-all{
+body.v5-ui.reference-ui-v57 .product-data-grid-head,
+body.v5-ui.reference-ui-v57 .product-select-all{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .product-bulk-bar strong{
+body.v5-ui.reference-ui-v57 .product-bulk-bar strong{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .product-bulk-bar select,
-body.v5-ui.reference-ui-v56 .product-bulk-bar input{
+body.v5-ui.reference-ui-v57 .product-bulk-bar select,
+body.v5-ui.reference-ui-v57 .product-bulk-bar input{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .product-bulk-bar .btn{
+body.v5-ui.reference-ui-v57 .product-bulk-bar .btn{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .product-data-grid .product-field input,
-body.v5-ui.reference-ui-v56 .product-data-grid .product-field textarea{
+body.v5-ui.reference-ui-v57 .product-data-grid .product-field input,
+body.v5-ui.reference-ui-v57 .product-data-grid .product-field textarea{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .product-cell-validation{
+body.v5-ui.reference-ui-v57 .product-cell-validation{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .range-value{
+body.v5-ui.reference-ui-v57 .range-value{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .history-empty{
+body.v5-ui.reference-ui-v57 .history-empty{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .status-badge,
-body.v5-ui.reference-ui-v56 .document-health,
-body.v5-ui.reference-ui-v56 .layout-selection{
+body.v5-ui.reference-ui-v57 .status-badge,
+body.v5-ui.reference-ui-v57 .document-health,
+body.v5-ui.reference-ui-v57 .layout-selection{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .import-source-card input{
+body.v5-ui.reference-ui-v57 .import-source-card input{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .import-source-icon{
+body.v5-ui.reference-ui-v57 .import-source-icon{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .import-source-card small{
+body.v5-ui.reference-ui-v57 .import-source-card small{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .smart-paste-head strong{
+body.v5-ui.reference-ui-v57 .smart-paste-head strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .smart-paste-head span{
+body.v5-ui.reference-ui-v57 .smart-paste-head span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .smart-paste-actions small{
+body.v5-ui.reference-ui-v57 .smart-paste-actions small{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .import-progress{
+body.v5-ui.reference-ui-v57 .import-progress{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .import-review-head strong{
+body.v5-ui.reference-ui-v57 .import-review-head strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .import-review-head span{
+body.v5-ui.reference-ui-v57 .import-review-head span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .import-field-grid label{
+body.v5-ui.reference-ui-v57 .import-field-grid label{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .import-products-summary{
+body.v5-ui.reference-ui-v57 .import-products-summary{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .import-mapping-head strong{
+body.v5-ui.reference-ui-v57 .import-mapping-head strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .import-mapping-head span{
+body.v5-ui.reference-ui-v57 .import-mapping-head span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .import-mapping-labels{
+body.v5-ui.reference-ui-v57 .import-mapping-labels{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .import-mapping-source strong{
+body.v5-ui.reference-ui-v57 .import-mapping-source strong{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .import-mapping-source small{
+body.v5-ui.reference-ui-v57 .import-mapping-source small{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .import-mapping-row select{
+body.v5-ui.reference-ui-v57 .import-mapping-row select{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .import-product-preview-head{
+body.v5-ui.reference-ui-v57 .import-product-preview-head{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .import-product-preview-row{
+body.v5-ui.reference-ui-v57 .import-product-preview-row{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .import-product-preview-more{
+body.v5-ui.reference-ui-v57 .import-product-preview-more{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .import-warning-list{
+body.v5-ui.reference-ui-v57 .import-warning-list{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .ocr-raw-box summary{
+body.v5-ui.reference-ui-v57 .ocr-raw-box summary{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .pc-folder-status{
+body.v5-ui.reference-ui-v57 .pc-folder-status{
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-activity-head p{
+body.v5-ui.reference-ui-v57 .data-library-activity-head p{
   font-size:11.5px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .data-library-activity-session{
+body.v5-ui.reference-ui-v57 .data-library-activity-session{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-activity-meta strong{
+body.v5-ui.reference-ui-v57 .data-library-activity-meta strong{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-activity-meta span,
-body.v5-ui.reference-ui-v56 .data-library-activity-item p{
+body.v5-ui.reference-ui-v57 .data-library-activity-meta span,
+body.v5-ui.reference-ui-v57 .data-library-activity-item p{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .data-library-activity-state{
+body.v5-ui.reference-ui-v57 .data-library-activity-state{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-head span{
+body.v5-ui.reference-ui-v57 .data-library-import-head span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-sheet-row label{
+body.v5-ui.reference-ui-v57 .data-library-import-sheet-row label{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-summary small{
+body.v5-ui.reference-ui-v57 .data-library-import-summary small{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-notice{
+body.v5-ui.reference-ui-v57 .data-library-import-notice{
   font-size:11.5px;
   line-height:1.5;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-completion strong{
+body.v5-ui.reference-ui-v57 .data-library-import-completion strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-completion span{
+body.v5-ui.reference-ui-v57 .data-library-import-completion span{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issues-tools>span{
+body.v5-ui.reference-ui-v57 .data-library-import-issues-tools>span{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issues-tools .btn,
-body.v5-ui.reference-ui-v56 .data-library-import-issues-tools .check{
+body.v5-ui.reference-ui-v57 .data-library-import-issues-tools .btn,
+body.v5-ui.reference-ui-v57 .data-library-import-issues-tools .check{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issues-head strong{
+body.v5-ui.reference-ui-v57 .data-library-import-issues-head strong{
   font-size:13px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issues-head span{
+body.v5-ui.reference-ui-v57 .data-library-import-issues-head span{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issue-title strong{
+body.v5-ui.reference-ui-v57 .data-library-import-issue-title strong{
   font-size:12px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issue-title span{
+body.v5-ui.reference-ui-v57 .data-library-import-issue-title span{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-issue-option>span,
-body.v5-ui.reference-ui-v56 .data-library-import-invalid-raw{
+body.v5-ui.reference-ui-v57 .data-library-import-issue-option>span,
+body.v5-ui.reference-ui-v57 .data-library-import-invalid-raw{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-preview-head{
+body.v5-ui.reference-ui-v57 .data-library-import-preview-head{
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-preview-row{
+body.v5-ui.reference-ui-v57 .data-library-import-preview-row{
   font-size:11.5px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-more{
+body.v5-ui.reference-ui-v57 .data-library-import-more{
   font-size:11px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell:not(.app-workspace) .nav button,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell:not(.app-workspace) .nav button,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell:not(.app-workspace) .nav button.nav-secondary,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell:not(.app-workspace) .nav button.nav-secondary{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .shell:not(.app-workspace) .nav button,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .shell:not(.app-workspace) .nav button,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .shell:not(.app-workspace) .nav button.nav-secondary,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .shell:not(.app-workspace) .nav button.nav-secondary{
   min-width:82px;
   min-height:54px;
   padding:5px;
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .nav button,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .nav button,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .nav button.nav-secondary,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .nav button.nav-secondary{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .shell.app-workspace .nav button,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .shell.app-workspace .nav button,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .shell.app-workspace .nav button.nav-secondary,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .shell.app-workspace .nav button.nav-secondary{
   min-width:70px;
   width:auto;
   min-height:52px;
   padding:5px 6px;
   font-size:10.5px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .nav,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .nav{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .shell.app-workspace .nav,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .shell.app-workspace .nav{
   min-height:60px;
   padding:7px 8px;
   gap:4px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .shell.app-workspace .brand,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .shell.app-workspace .brand{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .shell.app-workspace .brand,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .shell.app-workspace .brand{
   width:38px;
   min-width:38px;
   height:38px;
   border-radius:10px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-workspace-pane,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-dashboard,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .history-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .master-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .export-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .settings-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .system-workspace{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .app-workspace-pane,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .app-dashboard,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .history-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .master-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .export-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .settings-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .system-workspace{
   padding:22px 20px 36px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-workspace-pane,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-dashboard,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .history-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .master-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .export-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .system-workspace{
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .app-workspace-pane,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .app-dashboard,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .history-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .master-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .export-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .settings-workspace,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .system-workspace{
   padding:18px 14px 30px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .dashboard-topbar h1,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .history-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .master-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .export-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .settings-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .system-workspace-header h2{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .dashboard-topbar h1,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .history-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .master-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .export-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .settings-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .system-workspace-header h2{
   font-size:26px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .dashboard-topbar h1,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .history-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .master-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .export-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace-header h2,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .system-workspace-header h2{
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .dashboard-topbar h1,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .history-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .master-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .export-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .settings-workspace-header h2,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .system-workspace-header h2{
   font-size:22px;
 }
 
 
-/* ---------- V5.6 Pass 3: workspace proportions and modal hierarchy ---------- */
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-search{
+/* ---------- V5.7 Pass 3: workspace proportions and modal hierarchy ---------- */
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-search{
   height:44px;
   padding:0 13px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-search input{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-search input{
   height:40px;
   font-size:13.5px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-hero{
   min-height:204px;
   padding:28px 30px;
   grid-template-columns:minmax(0,1fr) 300px;
@@ -6115,7 +6241,7 @@ body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero{
     linear-gradient(135deg,#ffffff 0%,#f7fbff 100%);
   box-shadow:var(--v5-shadow-sm);
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero h2{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-hero h2{
   margin:8px 0 10px;
   max-width:760px;
   color:var(--v5-heading);
@@ -6123,28 +6249,28 @@ body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero h2{
   line-height:1.18;
   letter-spacing:-.015em;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-hero p{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-hero p{
   max-width:720px;
   color:var(--v5-muted);
   font-size:13.5px;
   line-height:1.6;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .hero-actions{
+body.v5-ui.reference-ui-v57 .app-dashboard .hero-actions{
   gap:10px;
   margin-top:20px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .hero-progress-card{
+body.v5-ui.reference-ui-v57 .app-dashboard .hero-progress-card{
   padding:19px;
   border:1px solid #d8e5f2;
   border-radius:13px;
   background:rgba(255,255,255,.84);
   box-shadow:0 8px 24px rgba(20,47,79,.055);
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-quick-grid{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-quick-grid{
   gap:12px;
   margin:16px 0;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .quick-app-card{
+body.v5-ui.reference-ui-v57 .app-dashboard .quick-app-card{
   min-height:94px;
   padding:16px;
   grid-template-columns:42px minmax(0,1fr);
@@ -6155,303 +6281,535 @@ body.v5-ui.reference-ui-v56 .app-dashboard .quick-app-card{
   box-shadow:var(--v5-shadow-sm);
   transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .quick-app-card:hover{
+body.v5-ui.reference-ui-v57 .app-dashboard .quick-app-card:hover{
   border-color:#a9c8ed;
   box-shadow:0 10px 24px rgba(36,119,232,.08);
   transform:translateY(-1px);
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .quick-app-card .quick-icon{
+body.v5-ui.reference-ui-v57 .app-dashboard .quick-app-card .quick-icon{
   width:42px;
   height:42px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .quick-app-card b{
+body.v5-ui.reference-ui-v57 .app-dashboard .quick-app-card b{
   font-size:13.5px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-kpis{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-kpis{
   gap:12px;
   margin-bottom:16px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .kpi-card{
+body.v5-ui.reference-ui-v57 .app-dashboard .kpi-card{
   min-height:86px;
   padding:15px;
   gap:11px;
   border-radius:12px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .kpi-icon{
+body.v5-ui.reference-ui-v57 .app-dashboard .kpi-icon{
   width:40px;
   min-width:40px;
   height:40px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-main-grid{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-main-grid{
   gap:16px;
   grid-template-columns:minmax(0,1.72fr) minmax(300px,.68fr);
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-side-stack{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-side-stack{
   gap:16px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-panel{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-panel{
   padding:18px;
 }
-body.v5-ui.reference-ui-v56 .app-dashboard .dashboard-panel-head{
+body.v5-ui.reference-ui-v57 .app-dashboard .dashboard-panel-head{
   margin-bottom:14px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-stats-app{
+body.v5-ui.reference-ui-v57 .history-workspace .history-stats-app{
   gap:12px;
   margin-bottom:18px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-stats-app .history-kpi{
+body.v5-ui.reference-ui-v57 .history-workspace .history-stats-app .history-kpi{
   min-height:96px;
   padding:16px;
   border-radius:12px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-stats-app .history-kpi strong{
+body.v5-ui.reference-ui-v57 .history-workspace .history-stats-app .history-kpi strong{
   margin:5px 0;
   font-size:22px;
   line-height:1.2;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-stats-app #historyRevenue{
+body.v5-ui.reference-ui-v57 .history-workspace .history-stats-app #historyRevenue{
   font-size:16px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-management-panel{
+body.v5-ui.reference-ui-v57 .history-workspace .history-management-panel{
   padding:20px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-toolbar{
+body.v5-ui.reference-ui-v57 .history-workspace .history-toolbar{
   grid-template-columns:minmax(300px,1fr) 220px auto;
   gap:12px;
   margin-bottom:16px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-search-box,
-body.v5-ui.reference-ui-v56 .history-workspace .history-filter-field select,
-body.v5-ui.reference-ui-v56 .history-workspace .history-result-summary{
+body.v5-ui.reference-ui-v57 .history-workspace .history-search-box,
+body.v5-ui.reference-ui-v57 .history-workspace .history-filter-field select,
+body.v5-ui.reference-ui-v57 .history-workspace .history-result-summary{
   height:42px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-search-box input{
+body.v5-ui.reference-ui-v57 .history-workspace .history-search-box input{
   height:38px;
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-table-head{
+body.v5-ui.reference-ui-v57 .history-workspace .history-table-head{
   min-height:44px;
   padding:0 13px;
   background:var(--v5-surface-soft);
 }
-body.v5-ui.reference-ui-v56 .history-workspace .history-table-row{
+body.v5-ui.reference-ui-v57 .history-workspace .history-table-row{
   min-height:70px;
   padding:12px 13px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .data-library-activity{
+body.v5-ui.reference-ui-v57 .master-workspace .data-library-activity{
   margin-bottom:16px;
   padding:16px 18px;
   border-radius:12px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-management-panel{
+body.v5-ui.reference-ui-v57 .master-workspace .master-management-panel{
   margin-bottom:18px;
   padding:20px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-panel-head{
+body.v5-ui.reference-ui-v57 .master-workspace .master-panel-head{
   align-items:flex-start;
   gap:18px;
   margin-bottom:16px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-panel-icon{
+body.v5-ui.reference-ui-v57 .master-workspace .master-panel-icon{
   width:40px;
   min-width:40px;
   height:40px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-head-actions{
+body.v5-ui.reference-ui-v57 .master-workspace .master-head-actions{
   display:flex;
   flex-wrap:wrap;
   justify-content:flex-end;
   gap:8px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-toolbar{
+body.v5-ui.reference-ui-v57 .master-workspace .master-toolbar{
   gap:10px;
   margin-bottom:16px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-search-box,
-body.v5-ui.reference-ui-v56 .master-workspace .master-filter,
-body.v5-ui.reference-ui-v56 .master-workspace .master-result-summary{
+body.v5-ui.reference-ui-v57 .master-workspace .master-search-box,
+body.v5-ui.reference-ui-v57 .master-workspace .master-filter,
+body.v5-ui.reference-ui-v57 .master-workspace .master-result-summary{
   min-height:42px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-search-box input{
+body.v5-ui.reference-ui-v57 .master-workspace .master-search-box input{
   height:38px;
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-table-head{
+body.v5-ui.reference-ui-v57 .master-workspace .master-table-head{
   min-height:44px;
   padding:0 13px;
   background:var(--v5-surface-soft);
 }
-body.v5-ui.reference-ui-v56 .master-workspace .master-table-row{
+body.v5-ui.reference-ui-v57 .master-workspace .master-table-row{
   min-height:70px;
   padding:12px 13px;
 }
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-grid{
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-grid{
   gap:18px;
 }
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-panel{
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-panel{
   padding:20px;
 }
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-panel-head{
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-panel-head{
   padding-bottom:15px;
   margin-bottom:2px;
 }
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-field,
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-switch-row,
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-info-row{
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-field,
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-switch-row,
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-info-row{
   padding:16px 0;
   gap:20px;
 }
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-reset-panel{
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-reset-panel{
   grid-column:1/-1;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:20px;
 }
-body.v5-ui.reference-ui-v56 .settings-workspace .settings-reset-panel .settings-panel-head{
+body.v5-ui.reference-ui-v57 .settings-workspace .settings-reset-panel .settings-panel-head{
   flex:1;
   margin:0;
   padding:0;
   border-bottom:0;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-center-grid{
+body.v5-ui.reference-ui-v57 .system-workspace .system-center-grid{
   gap:18px;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-center-panel{
+body.v5-ui.reference-ui-v57 .system-workspace .system-center-panel{
   padding:20px;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-panel-head{
+body.v5-ui.reference-ui-v57 .system-workspace .system-panel-head{
   margin-bottom:15px;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-detail-grid{
+body.v5-ui.reference-ui-v57 .system-workspace .system-detail-grid{
   gap:10px;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-detail-grid>div{
+body.v5-ui.reference-ui-v57 .system-workspace .system-detail-grid>div{
   min-height:68px;
   padding:12px 13px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-readiness-list>div,
-body.v5-ui.reference-ui-v56 .system-workspace .system-boundary-list>div{
+body.v5-ui.reference-ui-v57 .system-workspace .system-readiness-list>div,
+body.v5-ui.reference-ui-v57 .system-workspace .system-boundary-list>div{
   min-height:48px;
   padding:11px 12px;
 }
-body.v5-ui.reference-ui-v56 .system-workspace .system-contract-note,
-body.v5-ui.reference-ui-v56 .system-workspace .system-policy-note{
+body.v5-ui.reference-ui-v57 .system-workspace .system-contract-note,
+body.v5-ui.reference-ui-v57 .system-workspace .system-policy-note{
   padding:13px 14px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .smart-import-dialog{
+body.v5-ui.reference-ui-v57 .smart-import-dialog{
   width:min(1020px,96vw);
   max-height:92vh;
   border-radius:18px;
 }
-body.v5-ui.reference-ui-v56 .smart-import-head{
+body.v5-ui.reference-ui-v57 .smart-import-head{
   padding:18px 20px;
 }
-body.v5-ui.reference-ui-v56 .smart-import-body{
+body.v5-ui.reference-ui-v57 .smart-import-body{
   padding:20px;
 }
-body.v5-ui.reference-ui-v56 .import-source-grid{
+body.v5-ui.reference-ui-v57 .import-source-grid{
   gap:14px;
 }
-body.v5-ui.reference-ui-v56 .import-source-card{
+body.v5-ui.reference-ui-v57 .import-source-card{
   min-height:92px;
   padding:16px;
   grid-template-columns:48px 1fr;
   column-gap:12px;
   border-radius:12px;
 }
-body.v5-ui.reference-ui-v56 .import-source-icon{
+body.v5-ui.reference-ui-v57 .import-source-icon{
   width:48px;
   height:48px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-dialog{
+body.v5-ui.reference-ui-v57 .data-library-import-dialog{
   width:min(1040px,96vw);
   max-height:min(860px,92vh);
   border-radius:18px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-head,
-body.v5-ui.reference-ui-v56 .data-library-import-actions{
+body.v5-ui.reference-ui-v57 .data-library-import-head,
+body.v5-ui.reference-ui-v57 .data-library-import-actions{
   padding:17px 19px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-body{
+body.v5-ui.reference-ui-v57 .data-library-import-body{
   padding:19px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-summary{
+body.v5-ui.reference-ui-v57 .data-library-import-summary{
   gap:12px;
   margin-bottom:14px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-summary article{
+body.v5-ui.reference-ui-v57 .data-library-import-summary article{
   padding:13px 14px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56 .data-library-import-notice,
-body.v5-ui.reference-ui-v56 .data-library-import-completion{
+body.v5-ui.reference-ui-v57 .data-library-import-notice,
+body.v5-ui.reference-ui-v57 .data-library-import-completion{
   margin-bottom:14px;
   padding:13px 14px;
   border-radius:11px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-dashboard .dashboard-hero,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-dashboard .dashboard-hero{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .app-dashboard .dashboard-hero,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .app-dashboard .dashboard-hero{
   grid-template-columns:1fr;
   min-height:0;
   padding:22px;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-dashboard .dashboard-kpis{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .app-dashboard .dashboard-kpis{
   grid-template-columns:repeat(3,minmax(0,1fr));
 }
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-dashboard .dashboard-kpis{
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .app-dashboard .dashboard-kpis{
   grid-template-columns:repeat(2,minmax(0,1fr));
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .app-dashboard .dashboard-main-grid,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .app-dashboard .dashboard-main-grid{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .app-dashboard .dashboard-main-grid,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .app-dashboard .dashboard-main-grid{
   grid-template-columns:1fr;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .history-workspace .history-toolbar,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .history-workspace .history-toolbar{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .history-workspace .history-toolbar,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .history-workspace .history-toolbar{
   grid-template-columns:1fr 1fr;
 }
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .history-workspace .history-result-summary{
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .history-workspace .history-result-summary{
   grid-column:1/-1;
   justify-self:start;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .settings-workspace .settings-grid,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace .settings-grid,
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .system-workspace .system-center-grid,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .system-workspace .system-center-grid{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .settings-workspace .settings-grid,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .settings-workspace .settings-grid,
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .system-workspace .system-center-grid,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .system-workspace .system-center-grid{
   grid-template-columns:1fr;
 }
-body.v5-ui.reference-ui-v56[data-device-class="tablet"] .settings-workspace .settings-reset-panel,
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace .settings-reset-panel{
+body.v5-ui.reference-ui-v57[data-device-class="tablet"] .settings-workspace .settings-reset-panel,
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .settings-workspace .settings-reset-panel{
   grid-column:auto;
 }
-body.v5-ui.reference-ui-v56[data-device-class="phone"] .settings-workspace .settings-reset-panel{
+body.v5-ui.reference-ui-v57[data-device-class="phone"] .settings-workspace .settings-reset-panel{
   align-items:stretch;
   flex-direction:column;
 }
 
 
-/* ---------- V5.6 Pass 4: contextual navigation hierarchy ---------- */
+/* ---------- V5.7 Pass 4: contextual navigation hierarchy ---------- */
 /* Keep the 118px rail focused on the task at hand. Management workspaces show
    application-level destinations; Studio shows quotation workflow destinations. */
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="customer"],
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="products"],
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="payment"],
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="terms"],
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="design"],
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="view"],
-body.v5-ui.reference-ui-v56 .shell.app-workspace .nav button[data-tab="presets"]{
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="customer"],
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="products"],
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="payment"],
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="terms"],
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="design"],
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="view"],
+body.v5-ui.reference-ui-v57 .shell.app-workspace .nav button[data-tab="presets"]{
   display:none;
 }
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="history"],
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="master"],
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="system"],
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab="settings"]{
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="customer"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="products"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="payment"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="terms"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="design"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="view"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="export"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="presets"],
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab="system"]{
   display:none;
 }
-body.v5-ui.reference-ui-v56 .shell:not(.app-workspace) .nav button[data-tab]{
-  min-height:60px;
+body.v5-ui.reference-ui-v57 .shell:not(.app-workspace) .nav button[data-tab]{
+  min-height:66px;
+}
+
+
+/* ---------- V5.7 Pass 5: right inspector tabs ---------- */
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs{
+  position:sticky;
+  top:0;
+  z-index:40;
+  min-height:52px;
+  padding:7px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:#0a213d;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs button{
+  min-height:38px;
+  padding:0 8px;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:#a9bdd6;
+  font-size:12.5px;
+  font-weight:750;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs button:hover{
+  background:#14365c;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-tabs button.active{
+  border-color:#2f7de1;
+  background:var(--v5-primary);
+  color:#fff;
+  box-shadow:0 5px 14px rgba(36,119,232,.18);
+}
+body.v5-ui.reference-ui-v57 .design>.panel-head{
+  top:52px;
+}
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="content"]>.panel-head,
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="content"]>.panel-body,
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="check"]>.panel-head,
+body.v5-ui.reference-ui-v57 .design[data-inspector-tab="check"]>.panel-body{
+  display:none;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view{
+  padding:18px 15px 32px;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view>header{
+  margin-bottom:16px;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view>header h2{
+  margin:0;
+  color:#f5f9ff;
+  font-size:16px;
+  line-height:1.3;
+}
+body.v5-ui.reference-ui-v57 .design>.inspector-view>header p{
+  margin:5px 0 0;
+  color:#9fb4cf;
+  font-size:12px;
+  line-height:1.5;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list{
+  display:grid;
+  gap:8px;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button{
+  width:100%;
+  min-height:64px;
+  padding:10px 11px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:10px;
+  background:#102f53;
+  color:#e8f1fc;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  column-gap:10px;
+  text-align:left;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button:hover{
+  border-color:#3b79bd;
+  background:#15385f;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button>span{
+  grid-row:1/3;
+  width:32px;
+  height:32px;
+  align-self:center;
+  border-radius:8px;
+  background:#173f6b;
+  color:#8fbae9;
+  display:grid;
+  place-items:center;
+  font-size:10.5px;
+  font-weight:850;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button>b{
+  align-self:end;
+  font-size:12.5px;
+}
+body.v5-ui.reference-ui-v57 .inspector-content-list button>small{
+  align-self:start;
+  margin-top:2px;
+  color:#9fb4cf;
+  font-size:11px;
+  line-height:1.35;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card{
+  margin-bottom:12px;
+  padding:15px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:11px;
+  background:#102f53;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card>span{
+  display:block;
+  margin-bottom:7px;
+  color:#9fb4cf;
+  font-size:11.5px;
+  font-weight:700;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card>.document-health{
+  display:inline-flex;
+  min-height:30px;
+  align-items:center;
+  margin-bottom:8px;
+  padding:5px 9px;
+  border-radius:8px;
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v57 .inspector-health-card>small{
+  display:block;
+  color:#9fb4cf;
+  font-size:11px;
+  line-height:1.45;
+}
+body.v5-ui.reference-ui-v57 .inspector-check-view>.btn{
+  margin-top:9px;
+}
+
+
+/* ---------- V5.7 Pass 6: global Studio command bar ---------- */
+body.v5-ui.reference-ui-v57 .studio-global-context{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+body.v5-ui.reference-ui-v57 .studio-global-doc-icon{
+  width:38px;
+  min-width:38px;
+  height:38px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:9px;
+  background:#102f53;
+  color:#91b9e7;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+}
+body.v5-ui.reference-ui-v57 .studio-global-context>div{
+  min-width:0;
+}
+body.v5-ui.reference-ui-v57 .studio-global-context strong{
+  display:block;
+  max-width:360px;
+  overflow:hidden;
+  color:#f6f9ff;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.25;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v57 .studio-global-context small{
+  margin-top:4px;
+  color:#8fa8c5;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:10.5px;
+  line-height:1.2;
+}
+body.v5-ui.reference-ui-v57 .studio-global-context small i{
+  color:#3f5f82;
+  font-style:normal;
+}
+body.v5-ui.reference-ui-v57 .studio-global-middle{
+  flex:1;
+  min-width:80px;
+  display:flex;
+  justify-content:center;
+}
+body.v5-ui.reference-ui-v57 .studio-global-middle>.document-health{
+  min-height:30px;
+  padding:5px 9px;
+  border-radius:8px;
+  font-size:11px;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v57 .studio-global-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+body.v5-ui.reference-ui-v57 .studio-global-action{
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:9px;
+  background:#102f53;
+  color:#dce8f6;
+  font-size:12px;
+  font-weight:750;
+}
+body.v5-ui.reference-ui-v57 .studio-global-action:hover{
+  border-color:#3b79bd;
+  background:#173f6b;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v57 .studio-global-action.primary{
+  border-color:var(--v5-primary);
+  background:var(--v5-primary);
+  color:#fff;
+  box-shadow:0 5px 14px rgba(36,119,232,.18);
 }

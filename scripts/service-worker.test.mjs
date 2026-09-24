@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v56-reference-ui', 'V5.6 reference-UI release must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v57-reference-fidelity', 'V5.7 reference-fidelity release must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
