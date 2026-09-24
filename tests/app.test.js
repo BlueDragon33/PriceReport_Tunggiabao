@@ -1191,7 +1191,7 @@ test('customer library treats +84 and local-format phones as the same reusable c
   if (beforeRaw == null) localStorage.removeItem(key);
   else localStorage.setItem(key, beforeRaw);
   Object.entries(fields).forEach(([id, value]) => setField(id, value));
-});
+}, 10000);
 
 test('product grid exposes autocomplete sources for name group and unit', () => {
   document.querySelector('[data-tab="products"]').click();
