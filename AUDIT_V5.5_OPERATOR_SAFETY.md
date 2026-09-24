@@ -229,3 +229,58 @@ Changing transactional import semantics or blocking safe rows would break the es
 ### Next pass
 
 Audit destructive/reversible boundaries after import: confirm undo messaging, recovery expiration/cleanup and operator-visible history are consistent enough to close V5.5 Operator Safety without adding persistent audit infrastructure.
+
+
+## Pass 6 — Destructive/reversible boundary closeout
+
+### Findings
+
+Pass 1 made Data Library mutations reversible, but the final operator-safety audit found three remaining clarity gaps:
+- the Undo toast exposed an action for 8 seconds without stating that time boundary in the message;
+- a parsed import review could remain recoverable indefinitely inside a long-lived browser session because recovery had size/schema cleanup but no age limit;
+- after the toast disappeared, the operator had no lightweight way to confirm whether a recent destructive/import operation was still reversible, committed, or already undone.
+
+A persistent audit database would be disproportionate for this local-first application and would duplicate storage responsibilities, so the closeout keeps history strictly in memory for the current page session.
+
+### Corrections
+
+- Undo messages now state explicitly that the action is available for **8 seconds**.
+- Each reversible Data Library mutation records one session-only activity entry with:
+  - customer/product scope;
+  - operator-facing summary;
+  - local time;
+  - state: **Có thể hoàn tác**, **Đã hoàn tất**, or **Đã hoàn tác**.
+- The activity surface keeps only the latest 8 entries and is never written to localStorage, sessionStorage, IndexedDB, backend, or Control Plane.
+- When the 8-second Undo window expires, the matching activity entry moves from reversible to completed.
+- Successful Undo changes that same entry to **Đã hoàn tác** instead of creating a misleading second mutation.
+- Import-review recovery now expires after **6 hours** in the current browser session.
+- Missing/invalid timestamps, timestamps too far in the future, malformed schema/mode, and expired recovery are removed instead of being offered.
+- The recovery prompt tells the operator approximately how much time remains before automatic cleanup.
+- Existing explicit Cancel and successful Apply cleanup remain unchanged.
+- Raw workbook/blob data is still never persisted.
+
+### Regression coverage
+
+- row deletion creates a visible session activity entry in **Có thể hoàn tác** state;
+- the Undo toast explicitly states the 8-second window;
+- using Undo restores the collection and changes the activity entry to **Đã hoàn tác**;
+- a recovery older than 6 hours is removed and is not offered;
+- a current recovery prompt exposes its automatic-cleanup horizon;
+- existing V5.4/V5.5 import transaction, duplicate resolution, invalid-row acknowledgement, recovery, large-review and keyboard regressions remain in the full gate.
+
+### Closeout decision
+
+The V5.5 Operator Safety feature scope is complete at source level after Pass 6. No persistent audit infrastructure, second Data Library engine or additional recovery store was introduced.
+
+Release is still blocked until the exact Pass 6 head passes:
+1. runtime dependency audit;
+2. syntax and V5 UI/debt guards;
+3. core/import/export/storage/service-worker tests;
+4. focused Pass 6 DOM regression;
+5. full V5.5 operator-safety regression;
+6. full app + migration DOM regression;
+7. smoke;
+8. production build;
+9. GitHub Actions green on the exact head.
+
+After that gate, align release metadata/cache documentation for V5.5 and run the complete gate once more before merge and publish.
