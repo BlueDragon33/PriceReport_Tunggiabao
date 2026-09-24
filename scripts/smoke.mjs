@@ -78,7 +78,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v55-operator-safety")) fail('Service-worker cache version was not aligned with the V5.5 operator-safety release');
+if (!sw.includes("pricereport-shell-v56-reference-ui")) fail('Service-worker cache version was not aligned with the V5.6 reference-UI release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!js.includes('normalizeHistoryRecords')) fail('History import/local-data normalization is missing');
@@ -331,7 +331,7 @@ const v5StyleLink = '<link rel="stylesheet" href="./src/ui-v5.css">';
 if (!html.includes(legacyStyleLink) || !html.includes(v5StyleLink)) fail('Source HTML must load both application stylesheets directly');
 if (html.indexOf(legacyStyleLink) > html.indexOf(v5StyleLink)) fail('V5 stylesheet must load after legacy stylesheet');
 if (js.includes("import './styles.css';") || js.includes("import './ui-v5.css';")) fail('Stylesheet ownership must stay in HTML so raw/static source hosting cannot render unstyled');
-if (!html.includes('<body class="v5-ui">')) fail('V5 UI scope is missing from body');
+if (!/<body class="[^"]*\bv5-ui\b[^"]*">/.test(html)) fail('V5 UI scope is missing from body');
 
 for (const primitive of ['app-workspace-pane','app-workspace-header','app-surface-panel','app-status-card','app-data-table']) {
   if (!html.includes(primitive)) fail('V5 shared UI primitive missing from markup: ' + primitive);
@@ -355,6 +355,9 @@ if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nh
 if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
+if (!html.includes('reference-ui-v56')) fail('V5.6 reference-image UI scope is missing');
+if (!v5Css.includes('V5.6 reference-image UI/UX refactor')) fail('V5.6 reference-image UI refactor is missing');
+if (!v5Css.includes('--v5-sidebar-width:118px') || !v5Css.includes('--edit:350px') || !v5Css.includes('--design:315px')) fail('V5.6 reference desktop geometry is missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
