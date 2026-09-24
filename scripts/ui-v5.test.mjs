@@ -27,6 +27,8 @@ if (!css.includes('.shell:not(.app-workspace) .design{') || !css.includes('grid-
 if (!css.includes('background:#0b2442') || !css.includes('background:#263a54')) fail('V5.7 dark studio chrome / neutral preview canvas is missing');
 if (!html.includes('data-inspector-tab="design"') || !html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.7 Design/Content/Check inspector tabs are missing');
 if (!css.includes('V5.7 Pass 5: right inspector tabs') || !css.includes('.design>.inspector-tabs')) fail('V5.7 inspector tab styling is missing');
+if (!html.includes('class="studio-global-bar"') || !css.includes('V5.7 Pass 6: global Studio command bar')) fail('V5.7 global Studio command bar is missing');
+if (!css.includes('grid-template-rows:68px minmax(0,1fr)')) fail('V5.7 Studio command-bar row geometry is missing');
 if (!css.includes('.shell.app-workspace .nav button[data-tab="customer"]') || !css.includes('.shell.app-workspace .nav button[data-tab="presets"]')) fail('V5.7 management navigation still exposes quotation-step clutter');
 if (!css.includes('.shell:not(.app-workspace) .nav button[data-tab="payment"]') || !css.includes('.shell:not(.app-workspace) .nav button[data-tab="export"]')) fail('V5.7 Studio rail still exposes workflow-step clutter');
 if (css.includes('!important')) fail('V5 stylesheet must not introduce !important');
