@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v55-stylesheet-compat', 'stylesheet compatibility hotfix must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v55-operator-safety', 'V5.5 operator-safety release must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
