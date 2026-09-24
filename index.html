@@ -9,6 +9,34 @@
   <link rel="stylesheet" href="./src/styles.css">
   <link rel="stylesheet" href="./src/ui-v5.css">
   <title>PriceReport Tùng Gia Bảo</title>
+  <script>
+    window.addEventListener('load', async () => {
+      const shell = document.querySelector('.shell');
+      if (!shell) return;
+      const styled = getComputedStyle(shell).display === 'grid';
+      const key = 'tgb-style-recovery-v1';
+      if (styled) {
+        sessionStorage.removeItem(key);
+        return;
+      }
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(reg => reg.unregister()));
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.filter(name => name.startsWith('pricereport-shell-')).map(name => caches.delete(name)));
+        }
+      } finally {
+        const url = new URL(location.href);
+        url.searchParams.set('asset-recovery', Date.now().toString(36));
+        location.replace(url.toString());
+      }
+    }, { once: true });
+  </script>
 </head>
 <body class="v5-ui">
 <div id="app">
