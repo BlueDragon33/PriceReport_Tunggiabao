@@ -663,6 +663,21 @@ function syncStudioContext(tab = '') {
       (historyMode === 'saved' ? ' saved' : historyMode === 'dirty' ? ' dirty' : '');
   }
 
+  const globalTitle = document.getElementById('studioGlobalTitle');
+  const globalQuoteNo = document.getElementById('studioGlobalQuoteNo');
+  const globalHistoryState = document.getElementById('studioGlobalHistoryState');
+  const quoteNo = String(state.quoteNo || '').trim();
+  if (globalTitle) globalTitle.textContent = quoteNo ? 'Báo giá ' + quoteNo : 'Báo giá mới';
+  if (globalQuoteNo) globalQuoteNo.textContent = quoteNo || '—';
+  if (globalHistoryState) {
+    const historyMode = currentQuoteHistoryState();
+    globalHistoryState.textContent = historyMode === 'saved'
+      ? 'Đã lưu lịch sử'
+      : historyMode === 'dirty'
+        ? 'Có thay đổi chưa lưu'
+        : 'Chưa lưu lịch sử';
+  }
+
   const stage = STUDIO_STAGE_BY_TAB[tab] || '';
   document.querySelectorAll('[data-studio-step]').forEach((button) => {
     const active = Boolean(stage) && button.dataset.studioStep === stage;
@@ -825,6 +840,8 @@ function moveStudioWorkflow(direction) {
 document.getElementById('studioPrevStep')?.addEventListener('click', () => moveStudioWorkflow(-1));
 document.getElementById('studioNextStep')?.addEventListener('click', () => moveStudioWorkflow(1));
 document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurrentQuote);
+document.getElementById('studioGlobalSave')?.addEventListener('click', saveCurrentQuote);
+document.getElementById('studioGlobalPreview')?.addEventListener('click', () => openTab('view'));
 document.getElementById('studioCheckQuote')?.addEventListener('click', () => {
   updateDocumentHealth();
   renderStudioGuidance();
@@ -5372,6 +5389,7 @@ function updateDocumentHealth() {
   const badges = [
     document.getElementById('documentHealth'),
     document.getElementById('studioDocumentHealth'),
+    document.getElementById('studioGlobalHealth'),
     document.getElementById('inspectorHealthStatus')
   ].filter(Boolean);
 
