@@ -4715,6 +4715,9 @@ body.v5-ui .data-library-import-issue-card[data-review-unresolved="true"]:focus{
   outline:2px solid rgba(36,119,232,.28);
   outline-offset:2px;
 }
+body.v5-ui .data-library-import-issue-card[data-review-current="true"]{
+  box-shadow:0 0 0 2px rgba(36,119,232,.16);
+}
 body.v5-ui .data-library-import-issue-title{
   display:flex;
   justify-content:space-between;
