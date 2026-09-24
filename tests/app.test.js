@@ -1043,7 +1043,8 @@ test('V5.5 keyboard-only import review starts in work and traps Tab inside the m
   const csv = [
     'Tên khách hàng,Công ty,SĐT,Email,Địa chỉ,Người liên hệ',
     'Khách K1,Công ty K,0977777777,k1@example.com,Hà Nội,K1',
-    'Khách K2,Công ty K,0977777777,k2@example.com,Hà Nội,K2'
+    'Khách K2,Công ty K,0977777777,k2@example.com,Hà Nội,K2',
+    'Khách Hợp Lệ,Công ty H,0988888888,h@example.com,Đà Nẵng,H'
   ].join('\n');
   const bytes = new TextEncoder().encode(csv);
   const file = { name: 'keyboard-review.csv', arrayBuffer: async () => bytes.buffer };
