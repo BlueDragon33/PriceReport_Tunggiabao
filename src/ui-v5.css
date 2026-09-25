@@ -3044,7 +3044,7 @@ body.v5-ui .import-editable-grid-head{
 body.v5-ui .import-editable-grid-row{
   min-height:42px;
   padding:4px 8px;
-  border-bottom:1px solid #edf1f5;
+  border-bottom:1px solid var(--v5-divider);
   background:#fff;
 }
 body.v5-ui .import-editable-grid-row:last-child{border-bottom:0}
