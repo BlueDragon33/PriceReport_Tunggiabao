@@ -2512,6 +2512,8 @@ function renderLogo() {
   if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
   const tableFontSizeValue = document.getElementById('tableFontSizeValue');
   if (tableFontSizeValue) tableFontSizeValue.textContent = Number(state.tableFontSize || 9).toFixed(1) + ' px';
+  const inspectorTableFontSizeValue = document.getElementById('inspectorTableFontSizeValue');
+  if (inspectorTableFontSizeValue) inspectorTableFontSizeValue.textContent = Number(state.tableFontSize || 9).toFixed(1) + ' px';
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
@@ -2672,13 +2674,17 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $('[data-content-theme]').forEach((el) => el.classList.toggle('active', el.dataset.contentTheme === state.theme));
-  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  document.querySelectorAll('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  document.querySelectorAll('[data-content-theme]').forEach((el) => el.classList.toggle('active', el.dataset.contentTheme === state.theme));
+  document.querySelectorAll('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
   $$('[data-title-align]').forEach((el) => el.classList.toggle('active', el.dataset.titleAlign === (state.previewTitleAlign || 'center')));
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
+  const inspectorThemeName = document.getElementById('inspectorThemeName');
+  if (inspectorThemeName) inspectorThemeName.textContent = THEME_LABELS[state.theme] || state.theme || 'Chuẩn công ty';
+  const inspectorThemePreview = document.getElementById('inspectorThemePreview');
+  if (inspectorThemePreview) inspectorThemePreview.style.setProperty('--theme-accent', state.accent || '#0b8f83');
   updateDocumentHealth();
   syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
   refreshOpenStudioGuidance();
@@ -4101,6 +4107,17 @@ const THEME_FONTS = {
   mono: 'Arial'
 };
 
+const THEME_LABELS = {
+  modern: 'Chuẩn công ty',
+  corporate: 'Doanh nghiệp',
+  minimal: 'Tối giản',
+  classic: 'Trang trọng',
+  emerald: 'Xanh thương hiệu',
+  warm: 'Ấm nhẹ',
+  premium: 'Cao cấp sáng',
+  mono: 'Đen trắng'
+};
+
 const THEME_PROFILES = {
   modern: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
   corporate: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
@@ -4124,7 +4141,7 @@ function applyTheme(themeName) {
   render();
 }
 
-$('.tpl').forEach((el) => {
+document.querySelectorAll('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
     if (description) description.textContent = el.dataset.description || '';
@@ -4137,8 +4154,17 @@ $('.tpl').forEach((el) => {
   el.addEventListener('click', () => applyTheme(el.dataset.theme));
 });
 
-$('[data-content-theme]').forEach((el) => {
+document.querySelectorAll('[data-content-theme]').forEach((el) => {
   el.addEventListener('click', () => applyTheme(el.dataset.contentTheme));
+});
+
+document.getElementById('toggleInspectorTemplates')?.addEventListener('click', () => {
+  const panel = document.getElementById('inspectorTemplatePicker');
+  const button = document.getElementById('toggleInspectorTemplates');
+  if (!panel || !button) return;
+  const open = panel.hidden;
+  panel.hidden = !open;
+  button.setAttribute('aria-expanded', open ? 'true' : 'false');
 });
 
 $$('.color').forEach((el) => {
