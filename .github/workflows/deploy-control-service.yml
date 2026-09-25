@@ -35,6 +35,7 @@ jobs:
 
     steps:
       - name: Require explicit deployment confirmation
+        working-directory: .
         run: |
           set -euo pipefail
           test "${{ inputs.confirm }}" = "DEPLOY_KT_CONTROL"
