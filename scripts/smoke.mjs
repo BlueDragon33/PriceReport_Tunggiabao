@@ -50,7 +50,10 @@ const requiredIds = [
   'openSmartImport','smartImportModal','excelSmartImportInput','handwritingSmartImportInput',
   'smartImportReview','smartImportProgress','applySmartImport','cancelSmartImport','ocrRawText','reparseOcrText',
   'smartPastePanel','smartPasteText','parseSmartPaste','smartImportSheetPicker','smartImportSheetSelect',
-  'smartImportIssues','smartImportIssueList','saveProductsToCatalogTop',
+  'smartImportIssues','smartImportIssueList','smartImportNextIssue',
+  'smartImportDashboard','smartImportBeforeCount','smartImportValidCount','smartImportNeedsReviewCount','smartImportAfterCount','smartImportAfterHint',
+  'smartImportEditableProducts','smartImportProductSearch','smartImportProductFilter','smartImportEditableCount','smartImportEditableProductRows','smartImportApplyNote',
+  'saveProductsToCatalogTop',
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
   'studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal',
   'inspectorHealthStatus','inspectorRunCheck','inspectorPreviewQuote',
@@ -97,7 +100,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v65-product-entry-accelerator")) fail('Service-worker cache version was not aligned with the V6.5 product entry accelerator release');
+if (!sw.includes("pricereport-shell-v66-import-review-2")) fail('Service-worker cache version was not aligned with the V6.6 import review 2 release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -140,6 +143,11 @@ if (!js.includes('function mergeSafeDuplicateProducts') || !html.includes('id="m
 if (!js.includes('function renderProductWorkspaceCatalogResults') || !html.includes('id="productWorkspaceCatalogSearch"')) fail('V6.5 in-workspace catalog search is missing');
 if (!js.includes('function applyProductWorkspaceQuickField') || !html.includes('id="productQuickUnitChips"')) fail('V6.5 quick-fill suggestions are missing');
 if (!html.includes('Dán & kiểm tra')) fail('V6.5 paste action must advertise review-before-apply behavior');
+if (!js.includes('function renderSmartImportDashboard') || !html.includes('id="smartImportAfterCount"')) fail('V6.6 before-after import dashboard is missing');
+if (!js.includes('function renderSmartImportEditableProducts') || !js.includes('function updateSmartImportEditableProduct')) fail('V6.6 editable spreadsheet review controller is missing');
+if (!html.includes('id="smartImportEditableProductRows"') || !html.includes('SỬA TRỰC TIẾP TRƯỚC KHI NHẬP')) fail('V6.6 editable import grid surface is missing');
+if (!js.includes('function focusNextSmartImportIssue') || !html.includes('id="smartImportNextIssue"')) fail('V6.6 issue navigation is missing');
+if (!uiCss.includes('width:min(1320px,96vw)')) fail('V6.6 Smart Import must use the wider review workspace');
 if (!contentWorkspaceCss.includes('min-width:min(1040px') || !contentWorkspaceCss.includes('--content-workspace-width:1200px')) fail('V6.3 workspace must keep a ChatGPT-like desktop minimum and 1200px default');
 if (!contentWorkspaceCss.includes('@media (max-width:760px)') || !contentWorkspaceCss.includes('height:100dvh')) fail('V6.3 mobile full-screen workspace fallback is missing');
 if (!js.includes('function openProductWorkspace') || !js.includes('function closeProductWorkspace')) fail('V5.9 fixed product modal controller is missing');
