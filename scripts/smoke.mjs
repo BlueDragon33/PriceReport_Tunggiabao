@@ -5,8 +5,9 @@ const js = fs.readFileSync('src/main.js', 'utf8');
 const css = fs.readFileSync('src/styles.css', 'utf8');
 const v5Css = fs.readFileSync('src/ui-v5.css', 'utf8');
 const studioCss = fs.readFileSync('src/studio-v59.css', 'utf8');
+const contentWorkspaceCss = fs.readFileSync('src/content-workspace-v63.css', 'utf8');
 const themeCss = fs.readFileSync('src/quotation-themes-v60.css', 'utf8');
-const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss;
+const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 
@@ -57,7 +58,11 @@ const requiredIds = [
   'contentBlockList','contentTemplateGrid','runLayoutSuggestion',
   'studioCommandSearch','studioCommandResults','studioTopMenu','previewOverflowMenu',
   'openTemplateLibraryFromContent','templateLibraryModal','templateLibrarySearch','templateLibraryGrid','templateLibraryCount','templateLibraryEmpty',
-  'closeTemplateLibrary','templatePreviewBack','templatePreviewApply'
+  'closeTemplateLibrary','templatePreviewBack','templatePreviewApply',
+  'contentCompletionCard','contentCompletionLabel','contentCompletionBar','contentCompletionHint',
+  'contentWorkspaceModal','contentWorkspaceDialog','contentWorkspaceMount','contentWorkspaceTitle','contentWorkspaceSubtitle',
+  'contentWorkspaceWidthDown','contentWorkspaceWidthReset','contentWorkspaceWidthLabel','contentWorkspaceWidthUp',
+  'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -73,7 +78,7 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
@@ -88,7 +93,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v62-reference-layout-pack")) fail('Service-worker cache version was not aligned with the V6.2 reference layout release');
+if (!sw.includes("pricereport-shell-v63-unified-content-workspaces")) fail('Service-worker cache version was not aligned with the V6.3 unified content workspace release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -119,6 +124,12 @@ if (!studioCss.includes('V6.1 template library gallery + report-view hardening')
 if (!themeCss.includes('.theme-reference-blue-corporate') || !themeCss.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)')) fail('V6.2 attached-reference quotation layout is missing');
 if (!themeCss.includes('.theme-blue-sidebar') || !themeCss.includes('.theme-executive-navy') || !themeCss.includes('.theme-sky-minimal')) fail('V6.2 layout pack is incomplete');
 if (!html.includes('data-template-library-theme="reference-blue-corporate"') || !html.includes('Giống ảnh mẫu')) fail('V6.2 reference layout card is missing from the gallery');
+if (!html.includes('src/content-workspace-v63.css')) fail('V6.3 content workspace stylesheet is not linked');
+if (!js.includes('const CONTENT_WORKSPACE_WIDTHS = [1040, 1200, 1360, 1480]')) fail('V6.3 ChatGPT-like adjustable workspace widths are missing');
+if (!js.includes('function openContentWorkspace') || !js.includes('function closeContentWorkspace') || !js.includes('function mountContentWorkspaceNodes')) fail('V6.3 shared content workspace controller is missing');
+if (!js.includes('function renderContentBlockSummaries') || !html.includes('id="contentCompletionCard"')) fail('V6.3 content completion/status system is missing');
+if (!contentWorkspaceCss.includes('min-width:min(1040px') || !contentWorkspaceCss.includes('--content-workspace-width:1200px')) fail('V6.3 workspace must keep a ChatGPT-like desktop minimum and 1200px default');
+if (!contentWorkspaceCss.includes('@media (max-width:760px)') || !contentWorkspaceCss.includes('height:100dvh')) fail('V6.3 mobile full-screen workspace fallback is missing');
 if (!js.includes('function openProductWorkspace') || !js.includes('function closeProductWorkspace')) fail('V5.9 fixed product modal controller is missing');
 if (!html.includes('id="productWorkspaceModal"') || !html.includes('id="productLaunchList"')) fail('V5.9 product modal/launcher surface is missing');
 if (!studioCss.includes('.product-workspace-dialog') || !studioCss.includes('.product-launch-card')) fail('V5.9 product modal/launcher styling is missing');
