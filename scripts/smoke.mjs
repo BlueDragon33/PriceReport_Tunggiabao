@@ -4,7 +4,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
 const css = fs.readFileSync('src/styles.css', 'utf8');
 const v5Css = fs.readFileSync('src/ui-v5.css', 'utf8');
-const studioCss = fs.readFileSync('src/studio-v58.css', 'utf8');
+const studioCss = fs.readFileSync('src/studio-v59.css', 'utf8');
 const appCss = css + '\n' + v5Css + '\n' + studioCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
@@ -34,7 +34,7 @@ const requiredIds = [
   'dataLibraryImportNotice','dataLibraryImportPreviewHead','dataLibraryImportPreviewBody','cancelDataLibraryImport','applyDataLibraryImport','closeDataLibraryImport',
   'quickCustomerName','designShowStt','designShowPrice','designShowAmount','designShowTotals',
   'wideView','zoomOut','zoomIn','toolbarMenu',
-  'productFocusToggle','collapseAllProducts','logoDesignPreview','logoWidthRange',
+  'productWorkspaceModal','openProductWorkspace','closeProductWorkspace','doneProductWorkspace','collapseAllProducts','logoDesignPreview','logoWidthRange',
   'logoWidthDesign','logoPadding','logoOffsetX','logoOffsetY','logoShrink','logoGrow','logoTreatment','resetLogoPosition',
   'logoBlendMode','logoBackdropColor','logoBackdropOpacity','logoBackdropRadius',
   'logoBackdropBorder','toggleEditorPanel','toggleDesignPanel','templateDescription',
@@ -70,7 +70,7 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/ui-v5.css','src/studio-v58.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/ui-v5.css','src/studio-v59.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
@@ -85,10 +85,10 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v58-pixel-lock")) fail('Service-worker cache version was not aligned with the V5.8 pixel-lock release');
+if (!sw.includes("pricereport-shell-v59-unified-shell")) fail('Service-worker cache version was not aligned with the V5.9 unified shell release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
-if (!html.includes("const recoveryKey = 'tgb-style-recovery-v4'")) fail('Bounded V5.8 stylesheet recovery key is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
 if (!html.includes('reloadLinkedStylesheets')) fail('Runtime stylesheet reload helper is missing');
 if (!html.includes('nextAttempt > 3')) fail('Runtime stylesheet recovery must be bounded');
 if (!html.includes("url.searchParams.set('asset-recovery-ts'")) fail('Runtime stylesheet recovery must cache-bust page retries');
@@ -109,7 +109,10 @@ if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
 if (!html.includes("THÔNG TIN KHÁCH HÀNG")) fail('General-tab quick customer section is missing');
 if ((html.match(/data-theme=/g) || []).length < 8) fail('Template library must provide at least 8 usable themes');
 if (!js.includes("THEME_ACCENTS")) fail('Template accent presets are missing');
-if (!js.includes("product-focus")) fail('Comfortable product focus mode is missing');
+if (!js.includes('function openProductWorkspace') || !js.includes('function closeProductWorkspace')) fail('V5.9 fixed product modal controller is missing');
+if (!html.includes('id="productWorkspaceModal"') || !html.includes('id="productLaunchList"')) fail('V5.9 product modal/launcher surface is missing');
+if (!studioCss.includes('.product-workspace-dialog') || !studioCss.includes('.product-launch-card')) fail('V5.9 product modal/launcher styling is missing');
+if (html.includes('id="productFocusToggle"') || js.includes("classList.toggle('product-focus')")) fail('Legacy product-focus shell mode must be removed');
 if (!js.includes("logoTreatment")) fail('Logo treatment controls are missing');
 if (js.includes("const logoColumn =")) fail('Logo size must not push the company block sideways');
 if (!css.includes("grid-template-columns:minmax(0,41.5%) minmax(0,58.5%)")) fail('Balanced logo/company header grid is missing');
@@ -304,11 +307,11 @@ if (!js.includes("row.className = 'master-item master-table-row customer-table-g
 if (!js.includes("row.className = 'master-item master-table-row product-table-grid'")) fail('V4.4 product table renderer is missing');
 if (!appCss.includes('.master-workspace-header') || !appCss.includes('.master-table-row')) fail('Master-data workspace styles are missing');
 
-if (!html.includes('id="studioBackHome"') || !html.includes('id="contentLibraryHome"') || !html.includes('class="editor content-library"')) fail('V5.8 quotation Studio content library is missing');
+if (!html.includes('id="studioBackHome"') || !html.includes('id="contentLibraryHome"') || !html.includes('class="editor content-library"')) fail('V5.9 quotation Studio content library is missing');
 if (!js.includes('function syncStudioContext()')) fail('Studio context synchronizer is missing');
-if (!js.includes('function openContentBlock(block)') || !js.includes('function showContentLibraryHome')) fail('V5.8 content-library controller is missing');
-if (!js.includes('function openStudioCommandPalette') || !js.includes('function applyTheme')) fail('V5.8 shared Studio command/theme controllers are missing');
-if (!studioCss.includes('.content-library-home') || !studioCss.includes('.studio-topbar') || !studioCss.includes('.inspector-section')) fail('V5.8 Studio pixel-lock styling is missing');
+if (!js.includes('function openContentBlock(block)') || !js.includes('function showContentLibraryHome')) fail('V5.9 content-library controller is missing');
+if (!js.includes('function openStudioCommandPalette') || !js.includes('function applyTheme')) fail('V5.9 shared Studio command/theme controllers are missing');
+if (!studioCss.includes('.content-library-home') || !studioCss.includes('.studio-topbar') || !studioCss.includes('.inspector-section')) fail('V5.9 Studio pixel-lock styling is missing');
 
 if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-search-wrap')) fail('V4.6 dashboard global-search result surface is missing');
 if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
@@ -359,9 +362,9 @@ for (const studioPane of ['general','customer','products','payment','terms','des
     fail('V5 Pass 18 studio pane scope missing: ' + studioPane);
   }
 }
-if ((html.match(/data-content-block=/g) || []).length < 14) fail('V5.8 content navigation must expose seven blocks in both library and inspector');
+if ((html.match(/data-content-block=/g) || []).length < 14) fail('V5.9 content navigation must expose seven blocks in both library and inspector');
 for (const block of ['general','customer','products','payment','terms','signature','custom-text']) {
-  if (!html.includes('data-content-block="' + block + '"')) fail('V5.8 content library is missing block: ' + block);
+  if (!html.includes('data-content-block="' + block + '"')) fail('V5.9 content library is missing block: ' + block);
 }
 if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
@@ -369,14 +372,16 @@ if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nh
 if (!v5Css.includes('Shared Studio form / health utilities')) fail('Shared Studio form/health utilities are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 shared Studio primitives are missing');
-if (!html.includes('reference-ui-v58')) fail('V5.8 pixel-lock UI scope is missing');
-if (!html.includes('href="./src/studio-v58.css"')) fail('V5.8 dedicated Studio stylesheet is not loaded');
-if (!studioCss.includes('--studio-header-h:72px') || !studioCss.includes('--studio-rail-w:118px') || !studioCss.includes('--studio-left-w:320px') || !studioCss.includes('--studio-right-w:384px')) fail('V5.8 canonical Studio geometry is missing');
-if (!html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.8 inspector tabs are missing');
-if (!js.includes('setDesignInspectorTab') || !js.includes('renderInspectorCheckSummary')) fail('V5.8 inspector controllers are missing');
-if (!html.includes('class="studio-topbar"') || !js.includes('studioGlobalSave')) fail('V5.8 single Studio topbar is not wired');
+if (!html.includes('reference-ui-v59')) fail('V5.9 unified shell UI scope is missing');
+if (!html.includes('href="./src/studio-v59.css"')) fail('V5.9 unified shell stylesheet is not loaded');
+if (!html.includes('data-shell-workspace-only') || !html.includes('data-shell-quote-only')) fail('V5.9 unified topbar shell mode markers are missing');
+if (!studioCss.includes('.shell.app-workspace>.studio-topbar') || !js.includes('WORKSPACE_SHELL_META')) fail('V5.9 management views do not share the main topbar shell');
+if (!studioCss.includes('--studio-header-h:72px') || !studioCss.includes('--studio-rail-w:118px') || !studioCss.includes('--studio-left-w:320px') || !studioCss.includes('--studio-right-w:384px')) fail('V5.9 canonical Studio geometry is missing');
+if (!html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.9 inspector tabs are missing');
+if (!js.includes('setDesignInspectorTab') || !js.includes('renderInspectorCheckSummary')) fail('V5.9 inspector controllers are missing');
+if (!html.includes('class="studio-topbar"') || !js.includes('studioGlobalSave')) fail('V5.9 single Studio topbar is not wired');
 if (html.includes('class="studio-stepper"') || html.includes('class="studio-commandbar"')) fail('V5.7 visible Studio workflow chrome returned');
-if (!js.includes('const targetPaperWidth = Math.min(706, available)')) fail('V5.8 canonical A4 fit target is missing');
+if (!js.includes('const targetPaperWidth = Math.min(706, available)')) fail('V5.9 canonical A4 fit target is missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
@@ -389,7 +394,7 @@ if (!js.includes('dataLibraryImportReadToken')) fail('V5.5 Data Library stale-re
 if (!js.includes('function offerDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery prompt is missing');
 if (!js.includes('function writeDataLibraryImportRecovery') || !js.includes('function readDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery persistence is missing');
 if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Library import recovery size guard is missing');
-if (!html.includes("const recoveryKey = 'tgb-style-recovery-v4'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
 if (!js.includes("updateViaCache: 'none'")) fail('Service worker update must bypass stale HTTP cache');
 if (!html.includes('id="dataLibraryImportIssues"') || !html.includes('id="dataLibraryImportIssueList"')) fail('V5.5 Data Library decision review panel is missing');
 if (!js.includes('function dataLibraryImportReviewState') || !js.includes('function chooseDataLibraryImportDuplicate')) fail('V5.5 explicit duplicate review decision flow is missing');
