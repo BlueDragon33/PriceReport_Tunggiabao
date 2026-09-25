@@ -47,7 +47,7 @@ test('V4 boots into application dashboard and exposes separate new-quote and edi
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 });
 
-test('V5.9 unified shell keeps one chrome and opens products in a fixed modal workspace', () => {
+test('V6.3 unified shell keeps Studio geometry stable while content launchers open modal workspaces', () => {
   const shell = document.querySelector('.shell');
   expect(shell.classList.contains('app-workspace')).toBe(true);
   expect(document.querySelector('.studio-topbar')).toBeTruthy();
@@ -69,16 +69,16 @@ test('V5.9 unified shell keeps one chrome and opens products in a fixed modal wo
     .map(button => button.dataset.tab);
   expect(studioTabs).toEqual(workspaceTabs);
 
+  const activePaneBefore = document.querySelector('.pane.active')?.id;
   document.querySelector('#contentBlockList [data-content-block="products"]').click();
-  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
-  expect(document.querySelector('.content-library').dataset.contentMode).toBe('detail');
+  expect(document.querySelector('.pane.active')?.id).toBe(activePaneBefore);
+  expect(document.querySelector('.content-library').dataset.contentMode).toBe('home');
   expect(document.getElementById('productWorkspaceModal').hidden).toBe(false);
   expect(document.getElementById('productEditor').closest('#productWorkspaceModal')).toBeTruthy();
   expect(document.querySelector('#pane-products #productEditor')).toBeFalsy();
 
   document.getElementById('closeProductWorkspace').click();
   expect(document.getElementById('productWorkspaceModal').hidden).toBe(true);
-  document.getElementById('contentLibraryBack').click();
   expect(document.querySelector('.content-library').dataset.contentMode).toBe('home');
 
   document.querySelector('[data-open-inspector="design"]').click();
@@ -92,7 +92,7 @@ test('V5.9 unified shell keeps one chrome and opens products in a fixed modal wo
   document.querySelector('[data-tab="general"]').click();
 });
 
-test('V5.9 quotation studio exposes seven content blocks and one command hierarchy', () => {
+test('V6.3 quotation studio exposes seven content blocks through one modal editing hierarchy', () => {
   document.querySelector('[data-tab="general"]').click();
   const blocks = Array.from(document.querySelectorAll('#contentBlockList [data-content-block]'));
   expect(blocks.map(button => button.dataset.contentBlock)).toEqual([
@@ -106,13 +106,56 @@ test('V5.9 quotation studio exposes seven content blocks and one command hierarc
   expect(document.querySelector('.studio-commandbar')).toBeFalsy();
 
   document.querySelector('#contentBlockList [data-content-block="terms"]').click();
-  expect(document.getElementById('pane-terms').classList.contains('active')).toBe(true);
-  document.getElementById('contentLibraryBack').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('terms');
+  expect(document.getElementById('termsTitle').closest('#contentWorkspaceModal')).toBeTruthy();
+  document.getElementById('doneContentWorkspace').click();
 
   document.querySelector('#contentBlockList [data-content-block="payment"]').click();
-  expect(document.getElementById('pane-payment').classList.contains('active')).toBe(true);
-  document.getElementById('contentLibraryBack').click();
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('payment');
+  expect(document.getElementById('discountPct').closest('#contentWorkspaceModal')).toBeTruthy();
+  document.getElementById('doneContentWorkspace').click();
   document.querySelector('[data-tab="general"]').click();
+});
+
+test('V6.3 all non-product content blocks reuse the original bound fields in the shared workspace and restore them cleanly', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const cases = [
+    ['general','companyName','#pane-general'],
+    ['customer','customerName','#pane-customer'],
+    ['payment','discountPct','#pane-payment'],
+    ['terms','termsTitle','#pane-terms'],
+    ['signature','dateLine','#pane-terms'],
+    ['custom-text','intro','#pane-general']
+  ];
+
+  for (const [block, fieldId, sourcePane] of cases) {
+    document.querySelector('#contentBlockList [data-content-block="' + block + '"]').click();
+    const modal = document.getElementById('contentWorkspaceModal');
+    expect(modal.hidden).toBe(false);
+    expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe(block);
+    expect(document.getElementById(fieldId).closest('#contentWorkspaceModal')).toBeTruthy();
+    expect(document.querySelectorAll('#' + fieldId).length).toBe(1);
+    document.getElementById('doneContentWorkspace').click();
+    expect(modal.hidden).toBe(true);
+    expect(document.getElementById(fieldId).closest(sourcePane)).toBeTruthy();
+  }
+});
+
+test('V6.3 content workspace starts wider than a typical chat column and supports persisted width stepping', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+  const dialog = document.getElementById('contentWorkspaceDialog');
+  expect(dialog.style.getPropertyValue('--content-workspace-width')).toBe('1200px');
+  expect(document.getElementById('contentWorkspaceWidthLabel').textContent).toBe('1200 px');
+
+  document.getElementById('contentWorkspaceWidthUp').click();
+  expect(dialog.style.getPropertyValue('--content-workspace-width')).toBe('1360px');
+  expect(document.getElementById('contentWorkspaceWidthLabel').textContent).toBe('1360 px');
+
+  document.getElementById('contentWorkspaceWidthDown').click();
+  expect(dialog.style.getPropertyValue('--content-workspace-width')).toBe('1200px');
+  document.getElementById('doneContentWorkspace').click();
 });
 
 test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
