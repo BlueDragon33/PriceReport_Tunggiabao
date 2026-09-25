@@ -709,62 +709,110 @@ const tabMeta = {
   settings: ['CÀI ĐẶT ỨNG DỤNG', 'Khởi động, giao diện và hành vi lưu dữ liệu.']
 };
 
+const CONTENT_BLOCK_ORDER = ['general','customer','products','payment','terms','signature','custom-text'];
+
 const CONTENT_BLOCKS = {
   general: {
     tab: 'general',
     title: 'THÔNG TIN CHUNG',
+    displayTitle: 'Thông tin chung',
     subtitle: 'Logo, doanh nghiệp, mã báo giá và ngày lập.',
-    focusId: 'companyName'
+    focusId: 'companyName',
+    icon: '▤',
+    defaultSummary: 'Doanh nghiệp, mã báo giá, ngày lập',
+    selectors: ['#pane-general > [data-content-workspace-section="general"]']
   },
   customer: {
     tab: 'customer',
     title: 'KHÁCH HÀNG',
+    displayTitle: 'Khách hàng',
     subtitle: 'Người nhận và đơn vị mua hàng.',
-    focusId: 'customerName'
+    focusId: 'customerName',
+    icon: '●',
+    defaultSummary: 'Người nhận và đơn vị mua hàng',
+    selectors: ['#pane-customer > [data-content-workspace-section="customer"]']
   },
   products: {
     tab: 'products',
     title: 'SẢN PHẨM / DỊCH VỤ',
+    displayTitle: 'Sản phẩm / Dịch vụ',
     subtitle: 'Danh sách hàng hóa, quy cách, số lượng và đơn giá.',
-    focusId: 'productEditor'
+    focusId: 'productEditor',
+    icon: '◆',
+    defaultSummary: 'Danh sách, quy cách, số lượng và giá'
   },
   payment: {
     tab: 'payment',
     title: 'THANH TOÁN',
+    displayTitle: 'Thanh toán',
     subtitle: 'VAT, giảm giá, tổng tiền và tài khoản.',
-    focusId: 'discountPct'
+    focusId: 'discountPct',
+    icon: '₫',
+    defaultSummary: 'VAT, giảm giá, tổng tiền và tài khoản',
+    selectors: ['#pane-payment > [data-content-workspace-section="payment"]']
   },
   terms: {
     tab: 'terms',
     title: 'ĐIỀU KHOẢN',
-    subtitle: 'Nội dung thương mại và lời kết.',
-    focusId: 'termsTitle'
+    displayTitle: 'Điều khoản',
+    subtitle: 'Nội dung thương mại và chính sách áp dụng.',
+    focusId: 'termsTitle',
+    icon: '≡',
+    defaultSummary: 'Chính sách và nội dung thương mại',
+    selectors: ['#pane-terms > [data-content-workspace-section="terms"]']
   },
   signature: {
     tab: 'terms',
     title: 'CHỮ KÝ',
+    displayTitle: 'Chữ ký',
     subtitle: 'Ngày tháng, chức danh, ghi chú và người ký.',
-    focusId: 'dateLine'
+    focusId: 'dateLine',
+    icon: '✎',
+    defaultSummary: 'Ngày tháng, chức danh và người ký',
+    selectors: ['#pane-terms > [data-content-workspace-section="signature"]']
   },
   'custom-text': {
     tab: 'general',
     title: 'VĂN BẢN TÙY CHỈNH',
-    subtitle: 'Lời mở đầu, lời kết và chân trang dùng lại dữ liệu hiện có.',
-    focusId: 'intro'
+    displayTitle: 'Văn bản tùy chỉnh',
+    subtitle: 'Lời mở đầu, lời kết và chân trang.',
+    focusId: 'intro',
+    icon: 'T',
+    defaultSummary: 'Lời mở đầu, lời kết và chân trang',
+    selectors: [
+      '[data-custom-text-source="intro"]',
+      '[data-custom-text-source="closing"]',
+      '[data-custom-text-source="footer"]'
+    ]
   }
 };
 
+const CUSTOM_TEXT_SECTION_META = {
+  intro: ['Lời mở đầu', 'Nội dung giới thiệu xuất hiện trước bảng sản phẩm.'],
+  closing: ['Lời kết', 'Thông điệp kết thúc phần điều khoản thương mại.'],
+  footer: ['Chân trang', 'Thông tin ngắn ở cuối mỗi bản báo giá.']
+};
+
+const CONTENT_WORKSPACE_WIDTHS = [1040, 1200, 1360, 1480];
+const DEFAULT_CONTENT_WORKSPACE_WIDTH = 1200;
+
 let activeContentBlock = '';
+let contentWorkspaceLastFocus = null;
+let contentWorkspaceMounted = [];
+
+function setActiveContentBlock(block = '') {
+  activeContentBlock = CONTENT_BLOCKS[block] ? block : '';
+  document.querySelectorAll('[data-content-block]').forEach((button) => {
+    button.classList.toggle('active', Boolean(activeContentBlock) && button.dataset.contentBlock === activeContentBlock);
+  });
+}
 
 function setContentLibraryMode(mode, block = '') {
   const editor = document.querySelector('.content-library');
   if (!editor) return;
   const next = mode === 'detail' ? 'detail' : 'home';
   editor.dataset.contentMode = next;
-  activeContentBlock = next === 'detail' ? block : '';
-  document.querySelectorAll('[data-content-block]').forEach((button) => {
-    button.classList.toggle('active', Boolean(activeContentBlock) && button.dataset.contentBlock === activeContentBlock);
-  });
+  setActiveContentBlock(next === 'detail' ? block : '');
   const detailHead = document.getElementById('contentLibraryDetailHead');
   if (detailHead) detailHead.hidden = next !== 'detail';
 }
@@ -776,32 +824,350 @@ function showContentLibraryHome({ focusSearch = false } = {}) {
   }
 }
 
-function focusContentBlockTarget(block) {
-  const config = CONTENT_BLOCKS[block];
-  if (!config) return;
-  requestAnimationFrame(() => {
-    const target = document.getElementById(config.focusId);
-    target?.scrollIntoView?.({ block: 'center' });
-    if (target && typeof target.focus === 'function' && target.matches?.('input,textarea,select,button,[tabindex]')) target.focus();
+function contentBlockStatus(block) {
+  const clean = (value) => String(value || '').trim();
+  const namedProducts = (Array.isArray(state?.products) ? state.products : []).filter(product => clean(product?.name));
+  const termCount = clean(state?.termsText).split(/\n+/).map(line => line.trim()).filter(Boolean).length;
+
+  if (block === 'general') {
+    const company = clean(state?.companyName);
+    const quoteNo = clean(state?.quoteNo);
+    const quoteDate = clean(state?.quoteDate);
+    const filled = [company, quoteNo, quoteDate].filter(Boolean).length;
+    return {
+      state: filled === 3 ? 'complete' : filled ? 'partial' : 'empty',
+      complete: filled === 3,
+      summary: company && quoteNo ? company + ' · ' + quoteNo : quoteNo || company || CONTENT_BLOCKS.general.defaultSummary
+    };
+  }
+  if (block === 'customer') {
+    const primary = clean(state?.customerCompany) || clean(state?.customerName);
+    const contact = clean(state?.customerContact) || clean(state?.customerPhone);
+    const any = [primary, contact, clean(state?.customerAddress), clean(state?.customerEmail)].some(Boolean);
+    return {
+      state: primary ? 'complete' : any ? 'partial' : 'empty',
+      complete: Boolean(primary),
+      summary: primary ? primary + (contact ? ' · ' + contact : '') : CONTENT_BLOCKS.customer.defaultSummary
+    };
+  }
+  if (block === 'products') {
+    return {
+      state: namedProducts.length ? 'complete' : 'empty',
+      complete: namedProducts.length > 0,
+      summary: namedProducts.length ? namedProducts.length + ' sản phẩm / dịch vụ có dữ liệu' : CONTENT_BLOCKS.products.defaultSummary
+    };
+  }
+  if (block === 'payment') {
+    const payment = clean(state?.paymentMethod);
+    const bank = clean(state?.bankName) || clean(state?.bankAccount);
+    const configured = Boolean(state?.showTotals || state?.showPaymentBlock || payment || bank || Number(state?.vatPct) || Number(state?.discountPct) || Number(state?.otherFee));
+    const details = [];
+    if (Number(state?.vatPct)) details.push('VAT ' + Number(state.vatPct) + '%');
+    if (Number(state?.discountPct)) details.push('Giảm ' + Number(state.discountPct) + '%');
+    if (payment) details.push(payment);
+    return {
+      state: configured ? 'complete' : 'empty',
+      complete: configured,
+      summary: details.slice(0, 2).join(' · ') || (configured ? (clean(state?.currency) || 'Đã thiết lập') : CONTENT_BLOCKS.payment.defaultSummary)
+    };
+  }
+  if (block === 'terms') {
+    return {
+      state: termCount ? 'complete' : 'empty',
+      complete: termCount > 0,
+      summary: termCount ? termCount + ' điều khoản thương mại' : CONTENT_BLOCKS.terms.defaultSummary
+    };
+  }
+  if (block === 'signature') {
+    const date = clean(state?.dateLine);
+    const signer = clean(state?.rightName) || clean(state?.rightTitle) || clean(state?.leftName) || clean(state?.leftTitle);
+    const any = Boolean(date || signer);
+    return {
+      state: date && signer ? 'complete' : any ? 'partial' : 'empty',
+      complete: Boolean(date && signer),
+      summary: signer ? signer + (date ? ' · Đã có ngày ký' : '') : CONTENT_BLOCKS.signature.defaultSummary
+    };
+  }
+  if (block === 'custom-text') {
+    const values = [clean(state?.intro), clean(state?.closingText), clean(state?.footerText)];
+    const count = values.filter(Boolean).length;
+    return {
+      state: count >= 2 ? 'complete' : count ? 'partial' : 'empty',
+      complete: count >= 2,
+      summary: count ? count + '/3 vùng văn bản đã có nội dung' : CONTENT_BLOCKS['custom-text'].defaultSummary
+    };
+  }
+  return { state: 'empty', complete: false, summary: CONTENT_BLOCKS[block]?.defaultSummary || '' };
+}
+
+function renderContentBlockSummaries() {
+  let completed = 0;
+  const incomplete = [];
+
+  CONTENT_BLOCK_ORDER.forEach((block) => {
+    const status = contentBlockStatus(block);
+    if (status.complete) completed += 1;
+    else incomplete.push(CONTENT_BLOCKS[block]?.displayTitle || block);
+
+    const button = document.querySelector('#contentBlockList [data-content-block="' + block + '"]');
+    if (!button) return;
+    const summary = button.querySelector('small');
+    const marker = button.querySelector('em');
+    if (summary) summary.textContent = status.summary;
+    button.dataset.contentState = status.state;
+    button.classList.toggle('is-complete', status.state === 'complete');
+    button.classList.toggle('is-partial', status.state === 'partial');
+    if (marker) marker.textContent = status.state === 'complete' ? '✓' : status.state === 'partial' ? '•' : '›';
   });
+
+  setText('contentCompletionLabel', completed + '/7 khối');
+  const bar = document.getElementById('contentCompletionBar');
+  if (bar) bar.style.width = Math.round((completed / CONTENT_BLOCK_ORDER.length) * 100) + '%';
+  const hint = document.getElementById('contentCompletionHint');
+  if (hint) {
+    hint.textContent = incomplete.length
+      ? 'Tiếp theo: ' + incomplete.slice(0, 2).join(' · ')
+      : 'Nội dung chính đã hoàn thiện; có thể kiểm tra và xuất PDF.';
+  }
+}
+
+function normalizedContentWorkspaceWidth(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return DEFAULT_CONTENT_WORKSPACE_WIDTH;
+  return CONTENT_WORKSPACE_WIDTHS.reduce((closest, candidate) =>
+    Math.abs(candidate - numeric) < Math.abs(closest - numeric) ? candidate : closest
+  , DEFAULT_CONTENT_WORKSPACE_WIDTH);
+}
+
+function currentContentWorkspaceWidth() {
+  const ui = getUiState();
+  return normalizedContentWorkspaceWidth(ui.contentWorkspaceWidth);
+}
+
+function applyContentWorkspaceWidth(width, { persist = false } = {}) {
+  const next = normalizedContentWorkspaceWidth(width);
+  const dialog = document.getElementById('contentWorkspaceDialog');
+  if (dialog) dialog.style.setProperty('--content-workspace-width', next + 'px');
+  setText('contentWorkspaceWidthLabel', next + ' px');
+  if (persist) {
+    const ui = getUiState();
+    ui.contentWorkspaceWidth = next;
+    saveUiState(ui);
+  }
+  return next;
+}
+
+function stepContentWorkspaceWidth(direction) {
+  const current = currentContentWorkspaceWidth();
+  const index = Math.max(0, CONTENT_WORKSPACE_WIDTHS.indexOf(current));
+  const nextIndex = Math.max(0, Math.min(CONTENT_WORKSPACE_WIDTHS.length - 1, index + direction));
+  return applyContentWorkspaceWidth(CONTENT_WORKSPACE_WIDTHS[nextIndex], { persist: true });
+}
+
+function contentWorkspaceFocusable() {
+  const modal = document.getElementById('contentWorkspaceModal');
+  if (!modal || modal.hidden) return [];
+  return Array.from(modal.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+  )).filter(element => !element.hidden && element.getAttribute('aria-hidden') !== 'true' && getComputedStyle(element).display !== 'none');
+}
+
+function restoreContentWorkspaceNodes() {
+  for (let index = contentWorkspaceMounted.length - 1; index >= 0; index -= 1) {
+    const item = contentWorkspaceMounted[index];
+    if (item.placeholder?.parentNode) item.placeholder.parentNode.insertBefore(item.node, item.placeholder);
+    item.placeholder?.remove?.();
+    if (item.wasCollapsed) item.node.classList?.add?.('card-collapsed');
+    item.node.removeAttribute?.('data-workspace-mounted');
+  }
+  contentWorkspaceMounted = [];
+  const mount = document.getElementById('contentWorkspaceMount');
+  if (mount) mount.innerHTML = '';
+}
+
+function mountContentWorkspaceNodes(block) {
+  const mount = document.getElementById('contentWorkspaceMount');
+  const config = CONTENT_BLOCKS[block];
+  if (!mount || !config?.selectors) return 0;
+  mount.innerHTML = '';
+
+  let mounted = 0;
+  config.selectors.forEach((selector) => {
+    Array.from(document.querySelectorAll(selector)).forEach((node) => {
+      const parent = node.parentNode;
+      if (!parent || node.closest('#contentWorkspaceModal')) return;
+      const placeholder = document.createComment('content-workspace:' + block);
+      parent.insertBefore(placeholder, node);
+      const wasCollapsed = Boolean(node.classList?.contains?.('card-collapsed'));
+      if (wasCollapsed) node.classList.remove('card-collapsed');
+      node.setAttribute?.('data-workspace-mounted', 'true');
+      contentWorkspaceMounted.push({ node, placeholder, wasCollapsed });
+
+      if (block === 'custom-text') {
+        const key = node.dataset.customTextSource || '';
+        const meta = CUSTOM_TEXT_SECTION_META[key] || ['Văn bản', 'Nội dung tùy chỉnh của báo giá.'];
+        const section = document.createElement('section');
+        section.className = 'content-workspace-custom-section';
+        const title = document.createElement('h3');
+        title.textContent = meta[0];
+        const help = document.createElement('p');
+        help.textContent = meta[1];
+        section.append(title, help, node);
+        mount.appendChild(section);
+      } else {
+        mount.appendChild(node);
+      }
+      mounted += 1;
+    });
+  });
+  return mounted;
+}
+
+function updateContentWorkspaceStatus(block = activeContentBlock) {
+  const status = contentBlockStatus(block);
+  const titleMap = {
+    complete: 'Khối nội dung đã sẵn sàng',
+    partial: 'Còn thông tin có thể bổ sung',
+    empty: 'Khối này chưa có đủ dữ liệu'
+  };
+  const detailMap = {
+    complete: 'Dữ liệu đang dùng chung với báo giá và đã được cập nhật vào bản xem trước.',
+    partial: 'Bạn có thể bổ sung thêm rồi bấm Xong; bản nháp vẫn được tự động lưu.',
+    empty: 'Nhập thông tin cần thiết trong vùng làm việc lớn bên trái.'
+  };
+  setText('contentWorkspaceStatusTitle', titleMap[status.state] || titleMap.empty);
+  setText('contentWorkspaceStatusDetail', detailMap[status.state] || detailMap.empty);
+  setText('contentWorkspaceBlockState', status.state === 'complete' ? '✓ Đã đủ thông tin chính' : status.state === 'partial' ? '• Đang hoàn thiện' : '○ Chưa hoàn thiện');
+  setText('contentWorkspaceFooterStatus', '✓ Tự động lưu vào bản nháp hiện tại');
+}
+
+function closeContentWorkspace({ restoreFocus = true, clearActive = true } = {}) {
+  const modal = document.getElementById('contentWorkspaceModal');
+  if (!modal || modal.hidden) return;
+  restoreContentWorkspaceNodes();
+  modal.hidden = true;
+  document.body.classList.remove('content-workspace-open');
+  if (clearActive) setActiveContentBlock('');
+  renderContentBlockSummaries();
+  if (restoreFocus) requestAnimationFrame(() => contentWorkspaceLastFocus?.focus?.());
+}
+
+function openContentWorkspace(block, { focusFirst = true } = {}) {
+  const config = CONTENT_BLOCKS[block];
+  const modal = document.getElementById('contentWorkspaceModal');
+  const dialog = document.getElementById('contentWorkspaceDialog');
+  if (!config || !modal || !dialog || block === 'products') return false;
+
+  closeProductWorkspace({ restoreFocus: false });
+  closeContentWorkspace({ restoreFocus: false, clearActive: false });
+  contentWorkspaceLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  setActiveContentBlock(block);
+
+  dialog.dataset.block = block;
+  setText('contentWorkspaceIcon', config.icon);
+  setText('contentWorkspaceTitle', config.displayTitle || config.title);
+  setText('contentWorkspaceSubtitle', config.subtitle);
+  applyContentWorkspaceWidth(currentContentWorkspaceWidth());
+
+  const mounted = mountContentWorkspaceNodes(block);
+  if (!mounted) {
+    setActiveContentBlock('');
+    return false;
+  }
+
+  const index = CONTENT_BLOCK_ORDER.indexOf(block);
+  const prev = document.getElementById('contentWorkspacePrev');
+  const next = document.getElementById('contentWorkspaceNext');
+  if (prev) prev.disabled = index <= 0;
+  if (next) next.disabled = index < 0 || index >= CONTENT_BLOCK_ORDER.length - 1;
+
+  modal.hidden = false;
+  document.body.classList.add('content-workspace-open');
+  updateContentWorkspaceStatus(block);
+
+  requestAnimationFrame(() => {
+    const mount = document.getElementById('contentWorkspaceMount');
+    if (mount) mount.scrollTop = 0;
+    const target = focusFirst ? document.getElementById(config.focusId) : dialog;
+    target?.focus?.();
+  });
+  return true;
 }
 
 function openContentBlock(block) {
   const config = CONTENT_BLOCKS[block];
   if (!config) return false;
-  setContentLibraryMode('detail', block);
-  openTab(config.tab, { contentBlock: block, keepContentMode: true });
-  const title = document.getElementById('paneTitle');
-  const subtitle = document.getElementById('paneSub');
-  if (title) title.textContent = config.title;
-  if (subtitle) subtitle.textContent = config.subtitle;
-  if (block === 'products') {
-    openProductWorkspace({ focusFirst: false });
-  } else {
-    focusContentBlockTarget(block);
+
+  if (document.querySelector('.shell')?.classList.contains('app-workspace')) {
+    openTab('general', { keepContentMode: true, keepContentWorkspace: true });
   }
-  return true;
+  showContentLibraryHome();
+  setActiveContentBlock(block);
+
+  if (block === 'products') {
+    closeContentWorkspace({ restoreFocus: false, clearActive: false });
+    openProductWorkspace({ focusFirst: false });
+    return true;
+  }
+  return openContentWorkspace(block);
 }
+
+document.getElementById('contentWorkspaceModal')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeContentWorkspace();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    event.preventDefault();
+    closeContentWorkspace();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const items = contentWorkspaceFocusable();
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+
+document.getElementById('contentWorkspaceModal')?.addEventListener('pointerdown', (event) => {
+  if (event.target === event.currentTarget) closeContentWorkspace();
+});
+
+document.getElementById('contentWorkspaceModal')?.addEventListener('input', () => {
+  requestAnimationFrame(() => {
+    renderContentBlockSummaries();
+    updateContentWorkspaceStatus();
+  });
+});
+document.getElementById('contentWorkspaceModal')?.addEventListener('change', () => {
+  requestAnimationFrame(() => {
+    renderContentBlockSummaries();
+    updateContentWorkspaceStatus();
+  });
+});
+
+document.getElementById('closeContentWorkspace')?.addEventListener('click', () => closeContentWorkspace());
+document.getElementById('doneContentWorkspace')?.addEventListener('click', () => closeContentWorkspace());
+document.getElementById('contentWorkspaceOpenPreview')?.addEventListener('click', () => openTab('view'));
+document.getElementById('contentWorkspaceWidthDown')?.addEventListener('click', () => stepContentWorkspaceWidth(-1));
+document.getElementById('contentWorkspaceWidthUp')?.addEventListener('click', () => stepContentWorkspaceWidth(1));
+document.getElementById('contentWorkspaceWidthReset')?.addEventListener('click', () => applyContentWorkspaceWidth(DEFAULT_CONTENT_WORKSPACE_WIDTH, { persist: true }));
+document.getElementById('contentWorkspacePrev')?.addEventListener('click', () => {
+  const index = CONTENT_BLOCK_ORDER.indexOf(activeContentBlock);
+  if (index > 0) openContentBlock(CONTENT_BLOCK_ORDER[index - 1]);
+});
+document.getElementById('contentWorkspaceNext')?.addEventListener('click', () => {
+  const index = CONTENT_BLOCK_ORDER.indexOf(activeContentBlock);
+  if (index >= 0 && index < CONTENT_BLOCK_ORDER.length - 1) openContentBlock(CONTENT_BLOCK_ORDER[index + 1]);
+});
 
 let mobileMoreLastFocus = null;
 
@@ -849,6 +1215,7 @@ document.getElementById('mobileMoreMenu')?.addEventListener('keydown', (event) =
 
 function openTab(tab, options = {}) {
   setMobileMoreMenu(false);
+  if (!options.keepContentWorkspace) closeContentWorkspace({ restoreFocus: false });
   if (tab !== 'products') closeProductWorkspace({ restoreFocus: false });
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
@@ -947,6 +1314,7 @@ const STUDIO_COMMANDS = [
   { label: 'Thanh toán', hint: 'Khối nội dung', run: () => openContentBlock('payment') },
   { label: 'Điều khoản', hint: 'Khối nội dung', run: () => openContentBlock('terms') },
   { label: 'Chữ ký', hint: 'Khối nội dung', run: () => openContentBlock('signature') },
+  { label: 'Văn bản tùy chỉnh', hint: 'Khối nội dung', run: () => openContentBlock('custom-text') },
   { label: 'Lưu nháp', hint: 'Thao tác', run: () => saveCurrentQuote() },
   { label: 'Xem trước A4', hint: 'Thao tác', run: () => openTab('view') },
   { label: 'Kiểm tra báo giá', hint: 'Thao tác', run: () => { updateDocumentHealth(); renderStudioGuidance(); } },
@@ -2716,6 +3084,8 @@ function render() {
   const inspectorThemePreview = document.getElementById('inspectorThemePreview');
   if (inspectorThemePreview) inspectorThemePreview.style.setProperty('--theme-accent', state.accent || '#0b8f83');
   updateDocumentHealth();
+  renderContentBlockSummaries();
+  if (!document.getElementById('contentWorkspaceModal')?.hidden) updateContentWorkspaceStatus();
   syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
   refreshOpenStudioGuidance();
   syncLayoutEditModeUI();
@@ -4005,6 +4375,8 @@ function closeProductWorkspace({ restoreFocus = true } = {}) {
   modal.hidden = true;
   document.body.classList.remove('product-workspace-open');
   renderProductLaunchSummary();
+  if (activeContentBlock === 'products') setActiveContentBlock('');
+  renderContentBlockSummaries();
   if (restoreFocus) requestAnimationFrame(() => productWorkspaceLastFocus?.focus?.());
 }
 
