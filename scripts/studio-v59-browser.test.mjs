@@ -464,6 +464,48 @@ try {
   if (tabletErrors.length) fail('V6.10 tablet portrait runtime page error(s): ' + tabletErrors.join(' | '));
   await tabletContext.close();
 
+  // V6.11 regression: portrait iPad Pro must stay editing-first even when CSS width reaches 1024px.
+  const tabletProPortraitContext = await browser.newContext({
+    viewport: { width: 1024, height: 1366 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  });
+  const tabletProPortraitPage = await tabletProPortraitContext.newPage();
+  await tabletProPortraitPage.goto(URL, { waitUntil: 'networkidle' });
+  await tabletProPortraitPage.waitForFunction(() => document.body.dataset.deviceClass === 'tablet');
+  await tabletProPortraitPage.locator('.shell > .nav > button[data-tab="general"]').click();
+  await tabletProPortraitPage.locator('.shell:not(.app-workspace)').waitFor();
+  const tabletProPortraitEditor = await tabletProPortraitPage.locator('.shell:not(.app-workspace) > .content-library').boundingBox();
+  if (!tabletProPortraitEditor || tabletProPortraitEditor.width < 990) {
+    fail('V6.11 iPad Pro portrait must keep the editor near full width');
+  }
+  if (await tabletProPortraitPage.locator('.shell:not(.app-workspace) > .preview').isVisible()) {
+    fail('V6.11 iPad Pro portrait must hide live A4 while editing');
+  }
+  await tabletProPortraitContext.close();
+
+  // V6.11 regression: compact landscape tablets must not force an unreadable split preview.
+  const compactTabletLandscapeContext = await browser.newContext({
+    viewport: { width: 900, height: 700 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  });
+  const compactTabletLandscapePage = await compactTabletLandscapeContext.newPage();
+  await compactTabletLandscapePage.goto(URL, { waitUntil: 'networkidle' });
+  await compactTabletLandscapePage.waitForFunction(() => document.body.dataset.deviceClass === 'tablet');
+  await compactTabletLandscapePage.locator('.shell > .nav > button[data-tab="general"]').click();
+  await compactTabletLandscapePage.locator('.shell:not(.app-workspace)').waitFor();
+  const compactTabletEditor = await compactTabletLandscapePage.locator('.shell:not(.app-workspace) > .content-library').boundingBox();
+  if (!compactTabletEditor || compactTabletEditor.width < 875) {
+    fail('V6.11 compact landscape tablet must keep the editor nearly full width');
+  }
+  if (await compactTabletLandscapePage.locator('.shell:not(.app-workspace) > .preview').isVisible()) {
+    fail('V6.11 compact landscape tablet must hide the too-narrow live A4 preview');
+  }
+  await compactTabletLandscapeContext.close();
+
   // V6.10: landscape iPad has enough width for editor + live A4 split.
   const tabletLandscapeContext = await browser.newContext({
     viewport: { width: 1112, height: 834 },
