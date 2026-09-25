@@ -1879,6 +1879,21 @@ body.v5-ui.reference-ui-v59 .product-workspace-dialog select{
     grid-template-columns:minmax(0,1fr);
   }
   body.v5-ui.reference-ui-v59 .product-workspace-side{display:none}
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-footer{
+    padding:7px 9px;
+    align-items:stretch;
+  }
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-footer>span{display:none}
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-flow-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1.3fr 1fr;
+  }
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-flow-actions .btn{
+    min-width:0;
+    padding:0 5px;
+    font-size:8.6px;
+  }
 }
 
 
@@ -2307,20 +2322,3 @@ body.v5-ui.reference-ui-v59 .library-thumb.sky-minimal{
   --lib-accent:#4b9be8;--lib-soft:#e3f0fa;background:radial-gradient(88px 62px at 108% -2%,#d8edff 0 55%,transparent 56%),#fff
 }
 
-@media (max-width:760px){
-  body.v5-ui.reference-ui-v59 .product-workspace-modal-footer{
-    padding:7px 9px;
-    align-items:stretch;
-  }
-  body.v5-ui.reference-ui-v59 .product-workspace-modal-footer>span{display:none}
-  body.v5-ui.reference-ui-v59 .product-workspace-flow-actions{
-    width:100%;
-    display:grid;
-    grid-template-columns:1fr 1.3fr 1fr;
-  }
-  body.v5-ui.reference-ui-v59 .product-workspace-flow-actions .btn{
-    min-width:0;
-    padding:0 5px;
-    font-size:8.6px;
-  }
-}
