@@ -2,22 +2,20 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.4 Guided Content Workspaces
+## Trạng thái hiện tại — V6.5 Product Entry Accelerator
 
-V6.4 giữ nguyên nền **V6.3 Unified Content Workspaces** nhưng biến cột trợ giúp bên phải thành **trợ lý thao tác theo từng khối**, để người chỉ cần nhập dữ liệu có thể hoàn thành báo giá nhanh hơn mà không phải tìm chức năng ở nơi khác.
+V6.5 tập trung vào nơi người nhập liệu thao tác nhiều nhất: **Sản phẩm / Dịch vụ**. Product Workspace vẫn giữ cửa sổ lớn cố định của V5.9, nhưng sidebar bên phải giờ trở thành một **trợ lý nhập liệu trực tiếp** thay vì chỉ chứa thiết lập hiển thị.
 
-- **Thông tin chung**: cập nhật ngày hôm nay, tạo mã báo giá mới và bật số/ngày trên A4.
-- **Khách hàng**: tìm tối đa 5 khách gần nhất/phù hợp theo tên, công ty, SĐT, email; nạp trực tiếp vào báo giá; lưu khách hiện tại vào danh bạ ngay trong popup.
-- **Thanh toán**: preset VAT 0/5/8/10%, giảm giá 0/5/10%, phương thức Tiền mặt / Chuyển khoản / TM-CK và nút bật tổng tiền + thanh toán trên A4.
-- **Điều khoản**: chèn bộ chuẩn hoặc từng điều khoản giao hàng, thanh toán, hiệu lực; chống chèn trùng và không ghi đè nội dung đã có.
-- **Chữ ký**: tạo dòng ngày tháng hiện tại, chuẩn hóa bố cục ký hai bên nhưng giữ nguyên họ tên đã nhập.
-- **Văn bản tùy chỉnh**: dùng nhanh lời mở đầu, lời kết và chân trang chuẩn.
-- Nút **Lưu nháp & tiếp tục →** lưu state hiện tại rồi chuyển sang khối kế tiếp mà không đóng workspace.
-- Toàn bộ quick tools vẫn thao tác trên **single source of truth** hiện có; không clone input, không tạo state thứ hai.
-- Desktop vẫn giữ các mức **1040 / 1200 / 1360 / 1480 px**, mặc định **1200 px**; mobile vẫn full-screen.
-- Package: **6.4.0**.
-- PWA cache generation: **pricereport-shell-v64-guided-content-workspaces**.
-- Nền V6.2/V6.3 vẫn được giữ: 16 mẫu báo giá native, launcher cố định và popup nhập sản phẩm lớn.
+- **Tìm sản phẩm ngay trong danh mục** theo tên, nhóm, quy cách, đơn vị, ghi chú hoặc tiền tệ; hiển thị tối đa 6 kết quả và thêm trực tiếp vào báo giá mà không đóng popup.
+- **Data Health theo thời gian thực**: số dòng có dữ liệu, số dòng thiếu giá, số lượng bằng 0 và số nhóm sản phẩm trùng.
+- **Phát hiện dòng trùng** theo danh tính sản phẩm (nhóm + tên + quy cách + ĐVT). Các dòng trùng được đánh dấu trực tiếp trên bảng.
+- Nút **Gộp dòng trùng cùng đơn giá** chỉ tự gộp khi giá và ghi chú giống nhau; nếu khác giá/ghi chú thì hệ thống giữ nguyên và yêu cầu kiểm tra thủ công.
+- **Điền nhanh dòng đang chọn**: gợi ý nhóm hàng và đơn vị tính được lấy từ danh mục + dữ liệu hiện tại; click chip để điền vào đúng dòng đang focus.
+- Nút dán dữ liệu đổi thành **Dán & kiểm tra** để thể hiện rõ luồng Smart Import có bước review trước khi áp dụng.
+- Tìm kiếm danh mục và quick-fill không tạo form/state thứ hai; vẫn dùng trực tiếp `state.products`, autosave và render A4 hiện có.
+- V6.4 Guided Content Workspaces, 16 mẫu báo giá và toàn bộ geometry desktop/mobile trước đó được giữ nguyên.
+- Package: **6.5.0**.
+- PWA cache generation: **pricereport-shell-v65-product-entry-accelerator**.
 
 
 ## Kiểm thử

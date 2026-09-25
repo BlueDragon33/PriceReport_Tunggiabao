@@ -1647,6 +1647,182 @@ body.v5-ui.reference-ui-v59 .product-modal-help ul{
   line-height:1.7;
 }
 body.v5-ui.reference-ui-v59 .product-modal-help b{color:#eef5fd}
+
+/* ---------- V6.5 product-entry accelerator ---------- */
+body.v5-ui.reference-ui-v59 .product-entry-assistant{
+  border-color:rgba(76,146,229,.22);
+  background:linear-gradient(160deg,#0c2a4d,#0a213d);
+}
+body.v5-ui.reference-ui-v59 .product-assistant-search{
+  min-height:36px;
+  margin:8px 0 9px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;
+  background:#081e38;
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  align-items:center;
+  gap:6px;
+  color:#6f9ed0;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-search input{
+  min-width:0;
+  height:34px;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#edf6ff;
+  font-size:10.5px;
+  box-shadow:none;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-results{
+  max-height:178px;
+  overflow:auto;
+  display:grid;
+  gap:6px;
+  scrollbar-width:thin;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-result{
+  min-width:0;
+  padding:8px 9px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background:#103257;
+  color:#eef6ff;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-result:hover{
+  border-color:rgba(95,167,247,.35);
+  background:#17436f;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-result>span{
+  min-width:0;
+  display:grid;
+  gap:2px;
+  text-align:left;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-result b{
+  overflow:hidden;
+  font-size:10.2px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-result small{
+  overflow:hidden;
+  color:#8da8c6;
+  font-size:8.8px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-result em{
+  color:#a9cdf7;
+  font-size:9px;
+  font-style:normal;
+  font-weight:800;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-empty{
+  padding:9px;
+  border:1px dashed rgba(255,255,255,.10);
+  border-radius:8px;
+  color:#809ab7;
+  font-size:9.2px;
+  line-height:13px;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-health{
+  margin-top:9px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-health article{
+  min-height:48px;
+  padding:7px 8px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:8px;
+  background:#081f39;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-health small{
+  display:block;
+  color:#7995b4;
+  font-size:8.4px;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-health strong{
+  display:block;
+  margin-top:3px;
+  color:#f0f7ff;
+  font-size:12px;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-merge{
+  width:100%;
+  min-height:34px;
+  margin-top:8px;
+  border-color:rgba(83,157,238,.28);
+  background:#143d69;
+  color:#dfeeff;
+  font-size:9.6px;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-merge:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+body.v5-ui.reference-ui-v59 .product-assistant-note{
+  margin-top:7px;
+  color:#7894b1;
+  font-size:8.8px;
+  line-height:13px;
+}
+body.v5-ui.reference-ui-v59 .product-quickfill-status{
+  min-height:30px;
+  padding:7px 8px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:7px;
+  background:#081f39;
+  color:#9bb4cf;
+  font-size:9.2px;
+}
+body.v5-ui.reference-ui-v59 .product-quickfill-block{
+  margin-top:8px;
+}
+body.v5-ui.reference-ui-v59 .product-quickfill-block>small{
+  display:block;
+  margin-bottom:5px;
+  color:#748eaa;
+  font-size:8.6px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+body.v5-ui.reference-ui-v59 .product-quickfill-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+body.v5-ui.reference-ui-v59 .product-quickfill-chip{
+  min-height:28px;
+  padding:0 8px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;
+  background:#12375f;
+  color:#d8e8f8;
+  font-size:9px;
+  font-weight:750;
+}
+body.v5-ui.reference-ui-v59 .product-quickfill-chip:hover{
+  border-color:#4a94e7;
+  background:#194978;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v59 .product-card.has-duplicate{
+  border-color:#e7b65b;
+  box-shadow:inset 3px 0 0 #e7b65b;
+}
+
 body.v5-ui.reference-ui-v59 .product-workspace-modal-footer{
   padding:0 16px;
   border-top:1px solid rgba(255,255,255,.08);

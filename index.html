@@ -1674,7 +1674,7 @@
         <div class="product-workspace-main">
           <div class="product-workspace-toolbar">
             <button class="btn primary" id="addProductTop" type="button">＋ Thêm dòng</button>
-            <button class="btn" id="pasteProducts" type="button">▤ Dán dữ liệu</button>
+            <button class="btn" id="pasteProducts" type="button">▤ Dán & kiểm tra</button>
             <button class="btn" id="importProductsExcel" type="button">XL Nhập từ Excel</button>
             <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
             <button class="btn" id="saveProductsToCatalogTop" type="button">★ Lưu danh mục</button>
@@ -1715,6 +1715,40 @@
         </div>
 
         <aside class="product-workspace-side" aria-label="Thiết lập bảng sản phẩm">
+          <section class="product-entry-assistant">
+            <span class="eyebrow">TRỢ LÝ NHẬP NHANH</span>
+            <h3>Danh mục & kiểm tra dữ liệu</h3>
+            <p>Tìm sản phẩm đã lưu, thêm ngay vào báo giá và phát hiện các dòng cần xử lý trước khi xuất.</p>
+            <label class="product-assistant-search">
+              <span>⌕</span>
+              <input id="productWorkspaceCatalogSearch" type="search" placeholder="Tìm tên, nhóm, quy cách…" autocomplete="off" aria-label="Tìm sản phẩm trong danh mục">
+            </label>
+            <div class="product-assistant-results" id="productWorkspaceCatalogResults" aria-live="polite"></div>
+            <div class="product-assistant-health" aria-label="Tình trạng dữ liệu sản phẩm">
+              <article><small>Có dữ liệu</small><strong id="productWorkspaceFilledCount">0</strong></article>
+              <article><small>Thiếu giá</small><strong id="productWorkspaceMissingPrice">0</strong></article>
+              <article><small>SL bằng 0</small><strong id="productWorkspaceZeroQty">0</strong></article>
+              <article><small>Nhóm trùng</small><strong id="productWorkspaceDuplicateCount">0</strong></article>
+            </div>
+            <button class="btn product-assistant-merge" id="mergeDuplicateProducts" type="button">Gộp dòng trùng cùng đơn giá</button>
+            <div class="product-assistant-note" id="productWorkspaceAssistantNote">Dữ liệu dán/Excel luôn đi qua màn hình kiểm tra trước khi áp dụng.</div>
+          </section>
+
+          <section class="product-entry-quickfill">
+            <span class="eyebrow">ĐIỀN NHANH DÒNG ĐANG CHỌN</span>
+            <h3>Nhóm hàng & đơn vị tính</h3>
+            <p>Click vào một ô trong bảng rồi dùng gợi ý dưới đây để điền nhanh.</p>
+            <div class="product-quickfill-status" id="productQuickFillStatus">Chưa chọn dòng</div>
+            <div class="product-quickfill-block">
+              <small>Nhóm hàng</small>
+              <div class="product-quickfill-chips" id="productQuickGroupChips"></div>
+            </div>
+            <div class="product-quickfill-block">
+              <small>Đơn vị tính</small>
+              <div class="product-quickfill-chips" id="productQuickUnitChips"></div>
+            </div>
+          </section>
+
           <section>
             <span class="eyebrow">HIỂN THỊ TRÊN A4</span>
             <h3>Cột hiển thị</h3>

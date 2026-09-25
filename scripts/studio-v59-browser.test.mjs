@@ -219,6 +219,23 @@ try {
   near('product dialog height', productDialog.height, 820, 8);
   if (await page.locator('#productWorkspaceModal #productEditor').count() !== 1) fail('product editor is not single-source inside the product dialog');
   if (await page.locator('#pane-products #productEditor').count()) fail('product editor leaked back into the narrow Studio pane');
+  if (!(await page.locator('#productWorkspaceCatalogSearch').isVisible())) fail('V6.5 product catalog search is not visible in the product dialog');
+  if (!(await page.locator('#productWorkspaceFilledCount').isVisible())) fail('V6.5 product health metrics are not visible');
+  if (await page.locator('#productQuickUnitChips .product-quickfill-chip').count() < 1) fail('V6.5 unit quick-fill suggestions are missing');
+
+  const productCountBeforeDuplicate = await page.locator('#productEditor .product-card').count();
+  await page.locator('#productEditor .product-card').first().locator('button[title="Nhân bản"]').click();
+  if (await page.locator('#productEditor .product-card').count() !== productCountBeforeDuplicate + 1) {
+    fail('V6.5 duplicate-row detector setup could not duplicate the first product');
+  }
+  const duplicateCount = Number((await page.locator('#productWorkspaceDuplicateCount').textContent() || '0').trim());
+  if (duplicateCount < 1) fail('V6.5 product duplicate detector did not flag an exact duplicate');
+  if (await page.locator('#mergeDuplicateProducts').isDisabled()) fail('V6.5 safe duplicate merge action stayed disabled');
+  await page.locator('#mergeDuplicateProducts').click();
+  if (await page.locator('#productEditor .product-card').count() !== productCountBeforeDuplicate) {
+    fail('V6.5 safe duplicate merge did not restore the original product-row count');
+  }
+
   await page.locator('#closeProductWorkspace').click();
   if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
 
@@ -292,7 +309,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.4 BROWSER PASS: unified shell, guided wide content workspaces, product modal, 16-theme library and reference A4 geometry verified');
+  console.log('V6.5 BROWSER PASS: unified shell, guided content workspaces, accelerated product entry, 16-theme library and reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
