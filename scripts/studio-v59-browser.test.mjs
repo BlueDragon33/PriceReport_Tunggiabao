@@ -236,6 +236,31 @@ try {
     fail('V6.5 safe duplicate merge did not restore the original product-row count');
   }
 
+  // V6.6: pasted/Excel data must open a wide, spreadsheet-style review before apply.
+  await page.locator('#pasteProducts').click();
+  await page.locator('#smartImportModal:not([hidden])').waitFor();
+  const importDialog = await box('#smartImportModal:not([hidden]) .smart-import-dialog');
+  near('V6.6 smart import dialog width', importDialog.width, 1320, 10);
+  await page.locator('#smartPasteText').fill(
+    'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nV66 Browser A\tHộp\t2\t28000\nV66 Browser B\tKhay\t3\t85000'
+  );
+  await page.locator('#parseSmartPaste').click();
+  if (!(await page.locator('#smartImportEditableProducts').isVisible())) fail('V6.6 editable import grid is not visible after paste review');
+  if (await page.locator('#smartImportEditableProductRows .import-editable-grid-row').count() !== 2) {
+    fail('V6.6 editable import grid did not render the two reviewed rows');
+  }
+  if (!(await page.locator('#smartImportDashboard').isVisible())) fail('V6.6 before-after import dashboard is missing');
+  if ((await page.locator('#smartImportValidCount').textContent() || '').trim() !== '2') fail('V6.6 valid import count is incorrect');
+
+  const editName = page.locator('#smartImportEditableProductRows .import-editable-grid-row').first().locator('[data-import-product-field="name"]');
+  await editName.fill('V66 Browser Edited');
+  await editName.press('Tab');
+  if (!(await page.locator('#smartImportProductPreview').textContent() || '').includes('V66 Browser Edited')) {
+    fail('V6.6 editable import grid did not write the reviewed name back into preview data');
+  }
+  await page.locator('#cancelSmartImport').click();
+  if (!(await page.locator('#smartImportModal').evaluate(node => node.hidden))) fail('V6.6 smart import modal did not close after cancel');
+
   await page.locator('#closeProductWorkspace').click();
   if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
 
@@ -309,7 +334,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.5 BROWSER PASS: unified shell, guided content workspaces, accelerated product entry, 16-theme library and reference A4 geometry verified');
+  console.log('V6.6 BROWSER PASS: unified shell, guided content workspaces, accelerated product entry, spreadsheet-style import review, 16-theme library and reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
