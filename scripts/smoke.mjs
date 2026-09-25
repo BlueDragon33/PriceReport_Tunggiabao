@@ -62,7 +62,8 @@ const requiredIds = [
   'contentCompletionCard','contentCompletionLabel','contentCompletionBar','contentCompletionHint',
   'contentWorkspaceModal','contentWorkspaceDialog','contentWorkspaceMount','contentWorkspaceTitle','contentWorkspaceSubtitle',
   'contentWorkspaceWidthDown','contentWorkspaceWidthReset','contentWorkspaceWidthLabel','contentWorkspaceWidthUp',
-  'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace',\n  'contentWorkspaceGuideTitle','contentWorkspaceGuideDetail','contentWorkspaceQuickTools'
+  'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace',
+  'contentWorkspaceGuideTitle','contentWorkspaceGuideDetail','contentWorkspaceQuickTools'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
