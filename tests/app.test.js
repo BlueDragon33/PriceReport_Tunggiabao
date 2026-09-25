@@ -206,6 +206,86 @@ test('V6.4 save-and-continue keeps the wide workspace open and advances to the n
   document.getElementById('doneContentWorkspace').click();
 });
 
+test('V6.5 product workspace exposes catalog search, data health and quick-fill assistance', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="products"]').click();
+
+  const modal = document.getElementById('productWorkspaceModal');
+  expect(modal.hidden).toBe(false);
+  expect(document.getElementById('productWorkspaceCatalogSearch')).toBeTruthy();
+  expect(document.getElementById('productWorkspaceCatalogResults')).toBeTruthy();
+  expect(document.getElementById('productWorkspaceFilledCount')).toBeTruthy();
+  expect(document.getElementById('productWorkspaceMissingPrice')).toBeTruthy();
+  expect(document.getElementById('productWorkspaceZeroQty')).toBeTruthy();
+  expect(document.getElementById('productWorkspaceDuplicateCount')).toBeTruthy();
+  expect(document.getElementById('mergeDuplicateProducts')).toBeTruthy();
+
+  const firstCard = document.querySelector('#productEditor .product-card');
+  const unitInput = firstCard?.querySelector('[data-product-key="unit"]');
+  expect(unitInput).toBeTruthy();
+  const previousUnit = unitInput.value;
+  unitInput.focus();
+  expect(document.getElementById('productQuickFillStatus').textContent).toContain('Dòng 1');
+  const unitChip = document.querySelector('#productQuickUnitChips .product-quickfill-chip:not([disabled])');
+  expect(unitChip).toBeTruthy();
+  unitChip.click();
+  const updatedUnit = document.querySelector('#productEditor .product-card [data-product-key="unit"]');
+  expect(updatedUnit.value).toBe(unitChip.textContent);
+
+  updatedUnit.value = previousUnit;
+  updatedUnit.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneProductWorkspace').click();
+});
+
+test('V6.5 product assistant detects and safely merges exact duplicate product rows', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="products"]').click();
+
+  const before = document.querySelectorAll('#productEditor .product-card').length;
+  const firstCard = document.querySelector('#productEditor .product-card');
+  const duplicate = Array.from(firstCard.querySelectorAll('button')).find(button => button.title === 'Nhân bản');
+  expect(duplicate).toBeTruthy();
+  duplicate.click();
+
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before + 1);
+  expect(Number(document.getElementById('productWorkspaceDuplicateCount').textContent)).toBeGreaterThan(0);
+  const merge = document.getElementById('mergeDuplicateProducts');
+  expect(merge.disabled).toBe(false);
+  merge.click();
+
+  expect(document.querySelectorAll('#productEditor .product-card').length).toBe(before);
+  document.getElementById('doneProductWorkspace').click();
+});
+
+test('V6.5 product catalog search filters saved catalog items inside the product modal', () => {
+  const key = 'tunggiabao-price-report-catalog-v1';
+  const previous = localStorage.getItem(key);
+  localStorage.setItem(key, JSON.stringify([{
+    id: 'v65-catalog-fixture',
+    group: 'Thiết bị thử nghiệm',
+    name: 'Sản phẩm V65 Catalog',
+    pack: 'Hộp mẫu',
+    unit: 'Hộp',
+    price: 123000,
+    currency: 'VND',
+    note: ''
+  }]));
+
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="products"]').click();
+  const search = document.getElementById('productWorkspaceCatalogSearch');
+  search.value = 'V65 Catalog';
+  search.dispatchEvent(new Event('input', { bubbles: true }));
+
+  const result = document.querySelector('#productWorkspaceCatalogResults [data-workspace-catalog-id="v65-catalog-fixture"]');
+  expect(result).toBeTruthy();
+  expect(result.textContent).toContain('Sản phẩm V65 Catalog');
+
+  document.getElementById('doneProductWorkspace').click();
+  if (previous == null) localStorage.removeItem(key);
+  else localStorage.setItem(key, previous);
+});
+
 test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
   const toggle = document.getElementById('mobileMoreToggle');
   const menu = document.getElementById('mobileMoreMenu');
