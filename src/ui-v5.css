@@ -1690,96 +1690,7 @@ body.v5-ui .dashboard-search-result{border-radius:9px}
 body.v5-ui .dashboard-search-result:hover,
 body.v5-ui .dashboard-search-result:focus-visible{background:var(--v5-primary-soft)}
 
-/* ---------- Studio context ---------- */
-body.v5-ui .studio-panel-head{padding:10px 12px 9px}
-body.v5-ui .studio-context-row{
-  display:grid;
-  grid-template-columns:32px minmax(0,1fr);
-  gap:8px;
-  align-items:center;
-}
-body.v5-ui .studio-home-button{
-  width:32px;
-  height:32px;
-  padding:0;
-  border:1px solid var(--v5-border);
-  border-radius:8px;
-  background:var(--v5-surface-soft);
-  color:var(--v5-primary);
-  font-size:16px;
-  font-weight:900;
-}
-body.v5-ui .studio-home-button:hover{border-color:#b7cce5;background:var(--v5-primary-soft)}
-body.v5-ui .studio-current-quote{min-width:0}
-body.v5-ui .studio-current-quote small{
-  display:block;
-  color:var(--v5-subtle);
-  font-size:7.4px;
-  font-weight:900;
-  letter-spacing:.12em;
-}
-body.v5-ui .studio-current-quote strong{
-  display:block;
-  margin-top:2px;
-  overflow:hidden;
-  color:var(--v5-heading);
-  font-size:11px;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-body.v5-ui .studio-context-badges{
-  grid-column:1/-1;
-  display:flex;
-  align-items:center;
-  gap:5px;
-  padding-left:40px;
-}
-body.v5-ui .studio-status-badge,
-body.v5-ui .studio-history-state{
-  display:inline-flex;
-  align-items:center;
-  min-height:20px;
-  padding:3px 7px;
-  border:1px solid var(--v5-border);
-  border-radius:999px;
-  font-size:7.5px;
-  font-weight:800;
-  white-space:nowrap;
-}
-body.v5-ui .studio-history-state{background:#f3f6f9;color:#758397}
-body.v5-ui .studio-history-state.saved{
-  border-color:#cbe9dc;
-  background:var(--v5-success-soft);
-  color:var(--v5-success);
-}
-body.v5-ui .studio-autosave-state{
-  display:inline-flex;
-  align-items:center;
-  min-height:20px;
-  padding:3px 7px;
-  border:1px solid var(--v5-border);
-  border-radius:999px;
-  background:var(--v5-surface-soft);
-  color:var(--v5-muted);
-  font-size:7.5px;
-  font-weight:800;
-  white-space:nowrap;
-}
-body.v5-ui .studio-autosave-state[data-state="saving"]{
-  border-color:var(--v5-primary);
-  background:var(--v5-primary-soft);
-  color:var(--v5-primary);
-}
-body.v5-ui .studio-autosave-state[data-state="saved"]{
-  border-color:var(--v5-success);
-  background:var(--v5-success-soft);
-  color:var(--v5-success);
-}
-body.v5-ui .studio-autosave-state[data-state="error"]{
-  border-color:var(--v5-danger);
-  background:var(--v5-danger-soft);
-  color:var(--v5-danger);
-}
+/* ---------- Draft recovery shared surface ---------- */
 body.v5-ui .draft-recovery-banner{
   margin:8px 14px 0;
   padding:9px 10px;
@@ -1816,44 +1727,6 @@ body.v5-ui .draft-recovery-actions .btn{
   padding:0 9px;
   font-size:8.5px;
 }
-body.v5-ui .studio-pane-title{
-  margin-top:8px;
-  padding-top:9px;
-  border-top:1px solid var(--v5-divider);
-}
-body.v5-ui .studio-pane-title h2{font-size:15px}
-body.v5-ui .studio-pane-title p{margin-top:3px;font-size:9px}
-body.v5-ui .studio-stepper{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:4px;
-  margin-top:9px;
-}
-body.v5-ui .studio-stepper button{
-  min-width:0;
-  height:38px;
-  padding:4px 2px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  color:#748399;
-}
-body.v5-ui .studio-stepper button b{
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:#e7edf4;
-  color:#6d7c90;
-  font-size:7px;
-}
-body.v5-ui .studio-stepper button span{font-size:8.5px;white-space:nowrap}
-body.v5-ui .studio-stepper button:hover{border-color:#bdd1e7;background:#f5f9fe;color:#316da9}
-body.v5-ui .studio-stepper button.active b{background:var(--v5-primary);color:#fff}
-
 /* ---------- Studio collapse & customization polish ---------- */
 body.v5-ui .editor,
 body.v5-ui .design{position:relative}
@@ -1937,20 +1810,6 @@ body.v5-ui .card-collapse-handle:hover{
   color:var(--v5-primary);
 }
 body.v5-ui .design .card-collapse-handle{right:5px}
-body.v5-ui.reference-ui-v57 .design>.panel-edge-toggle{
-  left:2px;
-  right:auto;
-  border-right:1px solid rgba(255,255,255,.14);
-  border-left:0;
-  border-radius:0 10px 10px 0;
-  background:#102f53;
-  color:#afc7e3;
-  box-shadow:4px 0 14px rgba(0,0,0,.12);
-}
-body.v5-ui.reference-ui-v57 .design>.panel-edge-toggle:hover{
-  background:#173f6b;
-  color:#fff;
-}
 body.v5-ui .card.card-collapsed{min-height:46px;padding-bottom:10px}
 body.v5-ui .card.card-collapsed> :not(h3):not(.card-collapse-handle):not(.product-workspace-head),
 body.v5-ui .section-block.quick-customer.card-collapsed> :not(.section-title):not(.card-collapse-handle){display:none}
@@ -4171,37 +4030,7 @@ body.v5-ui .mobile-more-menu:focus-within{
 }
 
 
-/* ---------- V5.1 quotation studio usability ---------- */
-body.v5-ui .studio-commandbar{
-  display:grid;
-  gap:7px;
-  margin-top:8px;
-  padding-top:8px;
-  border-top:1px solid var(--v5-divider);
-}
-body.v5-ui .studio-command-main{
-  display:grid;
-  grid-template-columns:1.15fr 1fr 1fr;
-  gap:5px;
-}
-body.v5-ui .studio-command-main .btn{min-height:32px;padding:5px 7px;font-size:9px}
-body.v5-ui .studio-flow-controls{
-  display:grid;
-  grid-template-columns:34px minmax(0,1fr) 34px;
-  gap:5px;
-  align-items:center;
-}
-body.v5-ui .studio-flow-button{min-width:0;height:30px;padding:0;font-size:13px}
-body.v5-ui .studio-workflow-position{
-  min-width:0;
-  color:var(--v5-muted);
-  font-size:8.5px;
-  font-weight:800;
-  text-align:center;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+/* ---------- Shared Studio form / health utilities ---------- */
 body.v5-ui .studio-document-health{
   min-height:25px;
   display:flex;
