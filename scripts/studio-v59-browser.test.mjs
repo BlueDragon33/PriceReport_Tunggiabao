@@ -143,6 +143,65 @@ try {
   if (colors.preview !== 'rgb(38, 58, 84)') fail('preview canvas color drifted: ' + colors.preview);
   if (colors.inspector !== 'rgb(11, 39, 72)') fail('inspector color drifted: ' + colors.inspector);
 
+  // V6.3: every non-product content card opens one shared, wide modal while keeping Studio geometry unchanged.
+  const workspaceCases = [
+    ['general','companyName'],
+    ['customer','customerName'],
+    ['payment','discountPct'],
+    ['terms','termsTitle'],
+    ['signature','dateLine'],
+    ['custom-text','intro']
+  ];
+  const studioGeometryBefore = {
+    left: await box('.shell:not(.app-workspace) > .content-library'),
+    preview: await box('.shell:not(.app-workspace) > .preview'),
+    inspector: await box('.shell:not(.app-workspace) > .design')
+  };
+
+  for (const [block, field] of workspaceCases) {
+    await page.locator('#contentBlockList [data-content-block="' + block + '"]').click();
+    await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+    const dialog = await box('#contentWorkspaceModal:not([hidden]) .content-workspace-dialog');
+    if (dialog.width < 1035) fail(block + ' content workspace is narrower than the required ChatGPT-like minimum: ' + dialog.width);
+    if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== block) {
+      fail('shared workspace opened the wrong block for ' + block);
+    }
+    if (await page.locator('#' + field).count() !== 1) fail(block + ' duplicated its bound field #' + field);
+    if (!(await page.locator('#' + field).evaluate(node => Boolean(node.closest('#contentWorkspaceModal'))))) {
+      fail(block + ' did not mount the original bound field inside the shared workspace');
+    }
+
+    if (block === 'general') {
+      near('default content workspace width', dialog.width, 1200, 8);
+      const mainSurface = await box('#contentWorkspaceMount');
+      if (mainSurface.width < 820) fail('main editing surface is narrower than the requested ChatGPT-like content width: ' + mainSurface.width);
+      await page.locator('#contentWorkspaceWidthUp').click();
+      if (await page.locator('#contentWorkspaceWidthLabel').textContent() !== '1360 px') {
+        fail('expanded content workspace width control did not commit 1360px');
+      }
+      await page.waitForTimeout(220);
+      const widerDialog = await box('#contentWorkspaceDialog');
+      near('expanded content workspace width', widerDialog.width, 1360, 8);
+      await page.locator('#contentWorkspaceWidthDown').click();
+      await page.waitForTimeout(220);
+    }
+
+    await page.locator('#doneContentWorkspace').click();
+    if (!(await page.locator('#contentWorkspaceModal').evaluate(node => node.hidden))) fail(block + ' content workspace did not close cleanly');
+    const expectedSourcePane = block === 'signature' ? 'terms' : block === 'custom-text' ? 'general' : block;
+    if (!(await page.locator('#' + field).evaluate((node, pane) => Boolean(node.closest('#pane-' + pane)), expectedSourcePane))) {
+      fail(block + ' field was not restored to its original source pane #' + expectedSourcePane);
+    }
+  }
+
+  const studioGeometryAfter = {
+    left: await box('.shell:not(.app-workspace) > .content-library'),
+    preview: await box('.shell:not(.app-workspace) > .preview'),
+    inspector: await box('.shell:not(.app-workspace) > .design')
+  };
+  near('left width after modal cycle', studioGeometryAfter.left.width, studioGeometryBefore.left.width, 1);
+  near('preview width after modal cycle', studioGeometryAfter.preview.width, studioGeometryBefore.preview.width, 1);
+  near('inspector width after modal cycle', studioGeometryAfter.inspector.width, studioGeometryBefore.inspector.width, 1);
 
   // Product entry must use a large, fixed dialog instead of stretching the left panel.
   await page.locator('#contentBlockList [data-content-block="products"]').click();
@@ -155,8 +214,10 @@ try {
   await page.locator('#closeProductWorkspace').click();
   if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
 
-  // Return from the product detail to the content library, then to management.
-  await page.locator('#contentLibraryBack').click();
+  // Content Library remains in launcher mode; return directly to management.
+  if (await page.locator('.content-library').getAttribute('data-content-mode') !== 'home') {
+    fail('content library left launcher mode after modal editing');
+  }
   await page.locator('#studioBackHome').click();
   const returnHeader = await box('.shell.app-workspace > .studio-topbar');
   near('return dashboard header height', returnHeader.height, 72, 2);
@@ -223,7 +284,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.2 BROWSER PASS: unified shell, product modal, 16-theme library and attached-reference A4 geometry verified');
+  console.log('V6.3 BROWSER PASS: unified shell, wide adjustable content workspaces, product modal, 16-theme library and reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

@@ -2,18 +2,20 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.2 Reference Layout Pack
+## Trạng thái hiện tại — V6.3 Unified Content Workspaces
 
-V6.2 mở rộng thư viện từ **12 lên 16 mẫu báo giá native** và bổ sung một bố cục bám sát ảnh tham chiếu xanh-trắng đã cung cấp, nhưng vẫn dùng HTML/CSS thật thay vì đặt ảnh nền.
+V6.3 chuyển box **Nội dung báo giá** từ nơi chứa form hẹp thành **trung tâm điều phối nội dung**. Sáu khối ngoài Sản phẩm/Dịch vụ mở trong một shared workspace modal lớn; Sản phẩm tiếp tục dùng Product Workspace lớn hiện có.
 
-- **Corporate Blue Reference**: logo/thương hiệu ở đầu trang, cụm liên hệ bên phải, tiêu đề báo giá lớn bên trái, thẻ số/ngày/hiệu lực bên phải, thông tin khách hàng bên trái, khối lời dẫn dạng quote-card bên phải, bảng xanh nhạt, khối thanh toán/tổng tiền cân đối và chữ ký hai cột.
-- **Blue Sidebar**: dải xanh dọc mạnh, phù hợp kỹ thuật/B2B.
-- **Executive Navy**: đầu trang navy đậm, điểm nhấn vàng nhạt cho hồ sơ giá trị cao.
-- **Sky Minimal**: xanh trời tối giản, nhiều khoảng trắng và nhịp card nhẹ.
-- Gallery toàn màn hình hiện có 16 mẫu, vẫn giữ tìm kiếm, lọc ngành và luồng xem thử A4 không phá dữ liệu trước khi bấm **Dùng mẫu này**.
-- Package: **6.2.0**.
-- PWA cache generation: **pricereport-shell-v62-reference-layout-pack**.
-- Nền tảng shell V5.9 vẫn được giữ nguyên: **118px rail → 320px Thêm nội dung → Preview → 384px Inspector**, topbar 72px và modal nhập sản phẩm lớn dùng cùng một state/form engine.
+- **Thông tin chung / Khách hàng / Thanh toán / Điều khoản / Chữ ký / Văn bản tùy chỉnh** đều mở popup cùng một design system.
+- Không tạo form/state thứ hai: các input gốc được mount tạm vào workspace và trả lại đúng vị trí khi đóng.
+- Desktop mặc định **1200 px**, có nút giảm/tăng theo các mức **1040 / 1200 / 1360 / 1480 px**; mức nhỏ nhất vẫn giữ bề ngang kiểu ChatGPT trên desktop lớn.
+- Vùng nhập chính trong modal ưu tiên khoảng **820 px trở lên** ở viewport chuẩn 1664×912; tablet tự co hợp lý và mobile chuyển full-screen.
+- Cột trái luôn ở launcher mode, không còn đổi thành form dài hoặc làm geometry Studio nhảy qua lại.
+- Card nội dung hiển thị summary thực tế, trạng thái hoàn thành/đang nhập và progress **x/7 khối**.
+- Có **Khối trước / Khối tiếp theo**, Ctrl/Cmd+Enter để hoàn tất, Esc để đóng và focus trap đầy đủ.
+- Package: **6.3.0**.
+- PWA cache generation: **pricereport-shell-v63-unified-content-workspaces**.
+- Nền V6.2 vẫn được giữ: thư viện **16 mẫu**, trong đó Corporate Blue Reference bám ảnh tham chiếu xanh-trắng.
 
 
 ## Kiểm thử
