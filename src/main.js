@@ -231,7 +231,7 @@ function merge(data) {
   }
 
   if (merged.theme === 'blue') merged.theme = 'corporate';
-  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono'].includes(merged.theme)) merged.theme = 'modern';
+  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono','canva-blue','mint-finance','warm-proposal','violet-studio'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
   else merged.currency = String(merged.currency).toUpperCase();
   merged.discountPct = normalizeBoundedNumber(merged.discountPct, 0, 100, defaults.discountPct);
@@ -272,7 +272,7 @@ function merge(data) {
     merged.previewLineHeight = 1.26;
     merged.showQuoteMeta = false;
     if (merged.theme === 'modern') merged.docFont = 'Times New Roman';
-    else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono'].includes(merged.theme)) merged.docFont = 'Arial';
+    else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono','canva-blue','mint-finance','warm-proposal','violet-studio'].includes(merged.theme)) merged.docFont = 'Arial';
   }
 
   const hasLogoDisplayMode = data && Object.prototype.hasOwnProperty.call(data, 'logoDisplayMode');
@@ -584,7 +584,11 @@ const THEME_LABELS = {
   emerald: 'Xanh thương hiệu',
   warm: 'Ấm nhẹ',
   premium: 'Cao cấp sáng',
-  mono: 'Đen trắng'
+  mono: 'Đen trắng',
+  'canva-blue': 'Business Wave',
+  'mint-finance': 'Mint Finance',
+  'warm-proposal': 'Warm Proposal',
+  'violet-studio': 'Violet Studio'
 };
 
 function comparableQuoteForHistory(data) {
@@ -4173,7 +4177,11 @@ const THEME_ACCENTS = {
   emerald: '#16845f',
   warm: '#d97919',
   premium: '#202c43',
-  mono: '#30343a'
+  mono: '#30343a',
+  'canva-blue': '#2563eb',
+  'mint-finance': '#13a88a',
+  'warm-proposal': '#ef7f4d',
+  'violet-studio': '#7657d6'
 };
 
 const THEME_FONTS = {
@@ -4184,7 +4192,11 @@ const THEME_FONTS = {
   emerald: 'Arial',
   warm: 'Georgia',
   premium: 'Arial',
-  mono: 'Arial'
+  mono: 'Arial',
+  'canva-blue': 'Arial',
+  'mint-finance': 'Arial',
+  'warm-proposal': 'Arial',
+  'violet-studio': 'Arial'
 };
 
 const THEME_PROFILES = {
@@ -4195,7 +4207,11 @@ const THEME_PROFILES = {
   emerald: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
   warm: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
   premium: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' }
+  mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' },
+  'canva-blue': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  'mint-finance': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'airy', previewTableDensity: 'standard' },
+  'warm-proposal': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  'violet-studio': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' }
 };
 
 function applyTheme(themeName) {
