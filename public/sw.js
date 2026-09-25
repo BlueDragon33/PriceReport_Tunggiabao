@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v68-flow-navigator';
+const CACHE = 'pricereport-shell-v69-mobile-ipad-ui';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
