@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v65-product-entry-accelerator';
+const CACHE = 'pricereport-shell-v66-import-review-2';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
