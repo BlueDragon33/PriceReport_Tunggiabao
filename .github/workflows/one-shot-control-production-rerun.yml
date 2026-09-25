@@ -1,0 +1,48 @@
+name: One-shot PriceReport Control Production rerun
+on:
+  push:
+    branches: ["ops/one-shot-control-production-rerun-20260925"]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      TARGET_SHA: 270c7e19d58e67e025fad808e90619478e540e09
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Verify exact main
+        run: |
+          node <<'NODE'
+          const repo=process.env.GITHUB_REPOSITORY,target=process.env.TARGET_SHA,token=process.env.GH_TOKEN;
+          const h={authorization:`Bearer ${token}`,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28'};
+          const r=await fetch(`https://api.github.com/repos/${repo}/git/ref/heads/main`,{headers:h});
+          const actual=(await r.json()).object.sha;
+          if(actual!==target) throw new Error(`main moved: ${actual}`);
+          NODE
+      - name: Dispatch KT Control Production and wait
+        run: |
+          node <<'NODE'
+          const repo=process.env.GITHUB_REPOSITORY,target=process.env.TARGET_SHA,token=process.env.GH_TOKEN;
+          const h={authorization:`Bearer ${token}`,accept:'application/vnd.github+json','content-type':'application/json','x-github-api-version':'2022-11-28'};
+          const started=Date.now()-15000;
+          let r=await fetch(`https://api.github.com/repos/${repo}/actions/workflows/deploy-control-service.yml/dispatches`,{method:'POST',headers:h,body:JSON.stringify({ref:'main',inputs:{confirm:'DEPLOY_KT_CONTROL'}})});
+          if(!r.ok) throw new Error(`dispatch HTTP ${r.status}: ${await r.text()}`);
+          const deadline=Date.now()+30*60*1000;
+          while(Date.now()<deadline){
+            r=await fetch(`https://api.github.com/repos/${repo}/actions/runs?branch=main&event=workflow_dispatch&per_page=20`,{headers:h});
+            const runs=(await r.json()).workflow_runs||[];
+            const run=runs.find(x=>x.head_sha===target && x.name==='Deploy PriceReport KT Control Service' && Date.parse(x.created_at)>=started);
+            if(run){
+              console.log(`run=${run.id} status=${run.status} conclusion=${run.conclusion||''}`);
+              if(run.status==='completed'){
+                if(run.conclusion!=='success') throw new Error(`Production => ${run.conclusion}`);
+                process.exit(0);
+              }
+            }
+            await new Promise(r=>setTimeout(r,10000));
+          }
+          throw new Error('timeout');
+          NODE
