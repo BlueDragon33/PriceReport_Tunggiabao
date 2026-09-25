@@ -506,6 +506,25 @@ try {
   }
   await compactTabletLandscapeContext.close();
 
+  // V6.11 regression: classic 1024px landscape is the first safe split-view boundary.
+  const classicTabletLandscapeContext = await browser.newContext({
+    viewport: { width: 1024, height: 768 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  });
+  const classicTabletLandscapePage = await classicTabletLandscapeContext.newPage();
+  await classicTabletLandscapePage.goto(URL, { waitUntil: 'networkidle' });
+  await classicTabletLandscapePage.waitForFunction(() => document.body.dataset.deviceClass === 'tablet');
+  await classicTabletLandscapePage.locator('.shell > .nav > button[data-tab="general"]').click();
+  await classicTabletLandscapePage.locator('.shell:not(.app-workspace)').waitFor();
+  const classicLandscapeEditor = await classicTabletLandscapePage.locator('.shell:not(.app-workspace) > .content-library').boundingBox();
+  const classicLandscapePreview = await classicTabletLandscapePage.locator('.shell:not(.app-workspace) > .preview').boundingBox();
+  if (!classicLandscapeEditor || !classicLandscapePreview || classicLandscapeEditor.width < 310 || classicLandscapePreview.width < 690) {
+    fail('V6.11 classic 1024px iPad landscape must preserve a readable 320px editor + >=690px preview split');
+  }
+  await classicTabletLandscapeContext.close();
+
   // V6.10: landscape iPad has enough width for editor + live A4 split.
   const tabletLandscapeContext = await browser.newContext({
     viewport: { width: 1112, height: 834 },
@@ -555,6 +574,8 @@ try {
   if (await phonePage.locator('.shell.app-workspace > .nav > button:visible').count() !== 5) {
     fail('V6.10 phone bottom navigation must expose exactly five primary actions');
   }
+  const phoneNavLabelFont = await phonePage.locator('.shell.app-workspace > .nav > button:visible span:not(.nav-glyph)').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (phoneNavLabelFont < 10) fail('V6.11 phone bottom navigation labels must be at least 10px');
 
   await phonePage.locator('.shell > .nav > button[data-tab="general"]').click();
   await phonePage.locator('.shell:not(.app-workspace)').waitFor();
@@ -564,6 +585,12 @@ try {
   }
   const phoneOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   if (phoneOverflow > 2) fail('V6.10 phone shell has horizontal page overflow: ' + phoneOverflow + 'px');
+  const phoneBlockDescriptionFont = await phonePage.locator('.content-block-row small').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (phoneBlockDescriptionFont < 11) fail('V6.11 phone content descriptions must remain readable at 11px+');
+  const phoneStatusFont = await phonePage.locator('#studioQuoteStatus').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (phoneStatusFont < 10) fail('V6.11 phone quote status badge must remain readable at 10px+');
+  const phoneMetaFont = await phonePage.locator('.studio-topbar-title>small').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (phoneMetaFont < 10) fail('V6.11 phone quote metadata must remain readable at 10px+');
 
   await phonePage.locator('#contentBlockList [data-content-block="general"]').click();
   await phonePage.locator('#contentWorkspaceModal:not([hidden])').waitFor();
@@ -575,6 +602,10 @@ try {
   }
   const companyFontSize = await phonePage.locator('#companyName').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
   if (companyFontSize < 16) fail('V6.10 phone form inputs must stay at 16px+ to prevent iOS focus zoom');
+  const phoneFlowLabelFont = await phonePage.locator('#contentWorkspaceStepList .quote-flow-step-button strong').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (phoneFlowLabelFont < 10) fail('V6.11 phone flow-step labels must be at least 10px');
+  const phoneFooterButtonFont = await phonePage.locator('#contentWorkspaceModal .content-workspace-footer .btn').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (phoneFooterButtonFont < 11) fail('V6.11 phone workspace footer actions must be at least 11px');
 
   await phonePage.locator('#contentWorkspaceStepList [data-flow-block="products"]').click();
   await phonePage.locator('#productWorkspaceModal:not([hidden])').waitFor();
