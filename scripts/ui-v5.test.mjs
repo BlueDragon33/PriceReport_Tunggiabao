@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const css = fs.readFileSync(new URL('../src/ui-v5.css', import.meta.url), 'utf8');
+const studioCss = fs.readFileSync(new URL('../src/studio-v58.css', import.meta.url), 'utf8');
 const legacyCss = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
@@ -9,32 +10,76 @@ function fail(message) {
   process.exitCode = 1;
 }
 
-if (!css.includes('--v5-primary:')) fail('V5 design tokens are missing');
-if (!css.includes('body.v5-ui')) fail('V5 stylesheet is not body-scoped');
-if (!html.includes('class="v5-ui reference-ui-v57"')) fail('V5.7 reference UI scope is not active on the application body');
-if (!css.includes('V5.7 reference-fidelity UI/UX refactor')) fail('V5.7 reference-fidelity refactor block is missing');
-if (!css.includes('--v5-sidebar-width:118px') || !css.includes('--nav:118px') || !css.includes('--edit:320px') || !css.includes('--design:368px')) fail('V5.7 reference desktop geometry 118/320/flexible/368 is missing');
-if (!css.includes('body.v5-ui.reference-ui-v57{') || !css.includes('font-size:15px')) fail('V5.7 readable application typography baseline is missing');
-if (!css.includes('min-height:204px') || !css.includes('grid-template-columns:minmax(0,1fr) 300px')) fail('V5.7 workspace proportion polish is missing');
-if (!css.includes('body.v5-ui.reference-ui-v57 .history-workspace .history-table-row') || !css.includes('min-height:70px')) fail('V5.7 readable management-row density is missing');
-if (!css.includes('width:min(1020px,96vw)') || !css.includes('width:min(1040px,96vw)')) fail('V5.7 modal hierarchy sizing is missing'); // V5.7 workspace proportion polish
-if (!css.includes('min-height:112px') || !css.includes('body.v5-ui.reference-ui-v57 .export-action-card b')) fail('V5.7 Publishing/Data Center action-card refactor is missing');
-if (!css.includes('body.v5-ui.reference-ui-v57 .tpl span') || !css.includes('font-size:12px')) fail('V5.7 readable template-card typography is missing');
-if (!css.includes('V5.7 Pass 4: contextual navigation hierarchy')) fail('V5.7 contextual navigation pass is missing');
-if (!css.includes('grid-template-columns:118px 320px minmax(620px,1fr) 368px')) fail('V5.7 Studio must place preview between editor and inspector');
-if (!css.includes('.shell:not(.app-workspace) .preview{') || !css.includes('grid-column:3')) fail('V5.7 preview grid placement is missing');
-if (!css.includes('.shell:not(.app-workspace) .design{') || !css.includes('grid-column:4')) fail('V5.7 inspector grid placement is missing');
-if (!css.includes('background:#0b2442') || !css.includes('background:#263a54')) fail('V5.7 dark studio chrome / neutral preview canvas is missing');
-if (!html.includes('data-inspector-tab="design"') || !html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.7 Design/Content/Check inspector tabs are missing');
-if (!css.includes('V5.7 Pass 5: right inspector tabs') || !css.includes('.design>.inspector-tabs')) fail('V5.7 inspector tab styling is missing');
-if (!html.includes('class="studio-global-bar"') || !css.includes('V5.7 Pass 6: global Studio command bar')) fail('V5.7 global Studio command bar is missing');
-if (!css.includes('grid-template-rows:68px minmax(0,1fr)')) fail('V5.7 Studio command-bar row geometry is missing');
-if (!css.includes('.shell.app-workspace .nav button[data-tab="customer"]') || !css.includes('.shell.app-workspace .nav button[data-tab="presets"]')) fail('V5.7 management navigation still exposes quotation-step clutter');
-if (!css.includes('.shell:not(.app-workspace) .nav button[data-tab="payment"]') || !css.includes('.shell:not(.app-workspace) .nav button[data-tab="export"]')) fail('V5.7 Studio rail still exposes workflow-step clutter');
-if (css.includes('!important')) fail('V5 stylesheet must not introduce !important');
-if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(css)) fail('V5 application stylesheet must not target the report document');
-if (/@media\s+print/i.test(css)) fail('V5 application stylesheet must not contain print rules');
-if (/V[1-4](?:\.|\b)/.test(css)) fail('V5 stylesheet must not carry legacy version blocks');
+if (!css.includes('--v5-primary:')) fail('V5 shared design tokens are missing');
+if (!css.includes('body.v5-ui')) fail('V5 shared stylesheet is not body-scoped');
+if (!html.includes('class="v5-ui reference-ui-v58"')) fail('V5.8 pixel-lock UI scope is not active on the application body');
+if (!html.includes('href="./src/studio-v58.css"')) fail('V5.8 dedicated Studio stylesheet is not loaded');
+if (!studioCss.includes('V5.8 Studio Pixel-Lock')) fail('V5.8 Studio stylesheet ownership marker is missing');
+if (!studioCss.includes('--studio-header-h:72px') ||
+    !studioCss.includes('--studio-rail-w:118px') ||
+    !studioCss.includes('--studio-left-w:320px') ||
+    !studioCss.includes('--studio-right-w:384px') ||
+    !studioCss.includes('--studio-preview-toolbar-h:52px')) {
+  fail('V5.8 canonical 72 / 118 / 320 / 384 / 52 geometry tokens are missing');
+}
+if (!studioCss.includes('grid-template-columns:var(--studio-rail-w) var(--studio-left-w) minmax(0,1fr) var(--studio-right-w)')) {
+  fail('V5.8 canonical Studio four-column grid is missing');
+}
+if (!studioCss.includes('grid-template-rows:var(--studio-header-h) minmax(0,1fr)')) fail('V5.8 Studio header row geometry is missing');
+if (!html.includes('class="studio-topbar"')) fail('V5.8 single Studio topbar is missing');
+if (html.includes('class="studio-global-bar"')) fail('V5.7 Studio global bar must not remain visible');
+if (!html.includes('class="editor content-library"') || !html.includes('id="contentLibraryHome"')) fail('V5.8 Thêm nội dung library is missing');
+if (!studioCss.includes('.content-library-home') || !studioCss.includes('.content-block-row')) fail('V5.8 content library styling is missing');
+
+const contentOrder = [
+  'data-content-block="general"',
+  'data-content-block="customer"',
+  'data-content-block="products"',
+  'data-content-block="payment"',
+  'data-content-block="terms"',
+  'data-content-block="signature"',
+  'data-content-block="custom-text"'
+];
+let contentCursor = -1;
+for (const token of contentOrder) {
+  const next = html.indexOf(token, contentCursor + 1);
+  if (next < 0) fail('V5.8 content block is missing: ' + token);
+  else if (next <= contentCursor) fail('V5.8 content block order is incorrect: ' + token);
+  contentCursor = next;
+}
+
+if (!html.includes('id="studioCommandSearch"') || !html.includes('id="studioCommandResults"')) fail('V5.8 command search surface is missing');
+if (!html.includes('id="previewOverflowMenu"')) fail('V5.8 compact preview overflow menu is missing');
+if (!html.includes('data-inspector-tab="design"') || !html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.8 Design/Content/Check inspector tabs are missing');
+
+const inspectorOrder = [
+  '>Giao diện tổng thể<',
+  '>Màu chủ đạo<',
+  '>Font chữ<',
+  '>Thiết lập hiển thị<',
+  '>Cài đặt nâng cao<',
+  '>Brand Kit<'
+];
+let inspectorCursor = html.indexOf('class="inspector-design-view"');
+if (inspectorCursor < 0) fail('V5.8 inspector Design view is missing');
+for (const token of inspectorOrder) {
+  const next = html.indexOf(token, inspectorCursor + 1);
+  if (next < 0) fail('V5.8 inspector section is missing: ' + token);
+  else if (next <= inspectorCursor) fail('V5.8 inspector section order is incorrect: ' + token);
+  inspectorCursor = next;
+}
+
+if (!studioCss.includes('background:var(--studio-bg)') || !studioCss.includes('background:var(--studio-panel)')) fail('V5.8 dark Studio chrome/canvas ownership is missing');
+if (!studioCss.includes('#paperWrap') || !studioCss.includes('drop-shadow(0 12px 32px rgba(0,0,0,.20))')) fail('V5.8 A4 presentation shadow is missing');
+if (studioCss.includes('!important')) fail('V5.8 Studio stylesheet must not introduce !important');
+if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(studioCss)) fail('V5.8 Studio stylesheet must not target the report document');
+if (/@media\s+print/i.test(studioCss)) fail('V5.8 Studio stylesheet must not contain print rules');
+if (html.includes('class="studio-stepper"') || html.includes('class="studio-commandbar"')) fail('V5.7 visible stepper/command bar must not remain in V5.8 Studio DOM');
+
+if (css.includes('!important')) fail('V5 shared stylesheet must not introduce !important');
+if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(css)) fail('V5 shared application stylesheet must not target the report document');
+if (/@media\s+print/i.test(css)) fail('V5 shared application stylesheet must not contain print rules');
+if (/V[1-4](?:\.|\b)/.test(css)) fail('V5 shared stylesheet must not carry legacy version blocks');
 
 const forbiddenLegacyApplicationFamilies = [
   'dashboard-',
@@ -78,9 +123,12 @@ for (const literal of ['#edf1f5','#18385f','#29415f','#294667','#7653d9','#f2edf
 }
 
 const mediaCount = (css.match(/@media/g) || []).length;
-if (mediaCount > 4) fail('V5 responsive layer has too many media-query blocks: ' + mediaCount);
+if (mediaCount > 4) fail('V5 shared responsive layer has too many media-query blocks: ' + mediaCount);
+const studioMediaCount = (studioCss.match(/@media/g) || []).length;
+if (studioMediaCount > 4) fail('V5.8 Studio responsive layer has too many media-query blocks: ' + studioMediaCount);
 
 const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+const studioWithoutComments = studioCss.replace(/\/\*[\s\S]*?\*\//g, '');
 
 function splitSelectorList(prelude) {
   const values = [];
@@ -207,9 +255,18 @@ const unscoped = selectorRules.filter(selector =>
 );
 
 if (unscoped.length) {
-  fail('V5 application selectors must be explicitly scoped: ' + unscoped.slice(0, 8).join(' | '));
+  fail('V5 shared application selectors must be explicitly scoped: ' + unscoped.slice(0, 8).join(' | '));
+}
+
+const studioSelectors = extractSelectors(studioWithoutComments);
+const studioUnscoped = studioSelectors.filter(selector =>
+  selector !== ':root' &&
+  !selector.startsWith('body.v5-ui.reference-ui-v58')
+);
+if (studioUnscoped.length) {
+  fail('V5.8 Studio selectors must be explicitly scoped: ' + studioUnscoped.slice(0, 8).join(' | '));
 }
 
 if (!process.exitCode) {
-  console.log('V5 UI GUARD PASS:', mediaCount, 'responsive blocks, 0 !important, report CSS isolated');
+  console.log('V5 UI GUARD PASS:', mediaCount, 'shared media blocks,', studioMediaCount, 'Studio media blocks, 0 !important, report CSS isolated');
 }
