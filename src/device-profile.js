@@ -17,7 +17,7 @@ export const DEVICE_PROFILES = {
   tablet: {
     id: 'tablet',
     label: 'Tablet / iPad',
-    viewport: '600-1023 px',
+    viewport: '600-1023 px hoặc tablet/iPad UA',
     shell: 'touch-split',
     navigation: 'rail-compact',
     density: 'medium',
