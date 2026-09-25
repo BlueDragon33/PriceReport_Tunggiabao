@@ -1,5 +1,16 @@
 const text = (value) => String(value ?? '').trim();
 
+function nonNegativeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
+}
+
+function spreadsheetSafeText(value) {
+  const raw = String(value ?? '');
+  if (typeof value !== 'string') return raw;
+  return /^[\t\r\n ]*[=+\-@]/.test(raw) ? "'" + raw : raw;
+}
+
 export function productRowsForExport(products) {
   const rows = [[
     'STT','Nhóm hàng','Tên sản phẩm','Quy cách','ĐVT','Số lượng','Đơn giá','Thành tiền','Ghi chú'
@@ -14,17 +25,17 @@ export function productRowsForExport(products) {
       return hasText || (Number.isFinite(qty) && qty !== 1) || (Number.isFinite(price) && price !== 0);
     })
     .forEach((product, index) => {
-      const qty = Number(product.qty ?? 0);
-      const price = Number(product.price ?? 0);
+      const qty = nonNegativeNumber(product.qty, 0);
+      const price = nonNegativeNumber(product.price, 0);
       rows.push([
         index + 1,
         text(product.group),
         text(product.name),
         text(product.pack),
         text(product.unit),
-        Number.isFinite(qty) ? qty : 0,
-        Number.isFinite(price) ? price : 0,
-        (Number.isFinite(qty) ? qty : 0) * (Number.isFinite(price) ? price : 0),
+        qty,
+        price,
+        qty * price,
         text(product.note)
       ]);
     });
@@ -34,7 +45,7 @@ export function productRowsForExport(products) {
 
 export function csvFromRows(rows) {
   const escape = (value) => {
-    const valueText = String(value ?? '');
+    const valueText = spreadsheetSafeText(value);
     return /[",\r\n]/.test(valueText)
       ? '"' + valueText.replace(/"/g, '""') + '"'
       : valueText;
@@ -51,7 +62,7 @@ function number(value, fallback = 0) {
 }
 
 function money(value) {
-  return Math.max(0, number(value, 0));
+  return nonNegativeNumber(value, 0);
 }
 
 function listLines(value) {
@@ -125,8 +136,8 @@ export function quotationWorkbookModel(data = {}) {
   }
 
   const subtotal = products.reduce((sum, product) => {
-    const qty = Math.max(0, number(product?.qty, 0));
-    const price = money(product?.price);
+    const qty = nonNegativeNumber(product?.qty, 0);
+    const price = nonNegativeNumber(product?.price, 0);
     const meaningful = [product?.group, product?.name, product?.pack, product?.unit, product?.note].some((value) => text(value))
       || qty !== 1
       || price !== 0;
