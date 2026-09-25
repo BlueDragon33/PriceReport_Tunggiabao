@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v61-template-library';
+const CACHE = 'pricereport-shell-v62-reference-layout-pack';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
