@@ -129,11 +129,11 @@ const safeCsv = csvFromRows([
   ['At', '@SUM(1,2)'],
   ['Số âm thật', -1200],
 ]);
-assert.match(safeCsv, /'=""HYPERLINK\(""""https:\/\/example\.com"""",""""x""""\)""/);
-assert.match(safeCsv, /"'\+SUM\(1,2\)"/);
-assert.match(safeCsv, /'-cmd\|test/);
-assert.match(safeCsv, /"'@SUM\(1,2\)"/);
-assert.match(safeCsv, /,-1200(?:\r?\n|$)/);
+assert.ok(safeCsv.includes('Công thức nguy hiểm,"\'=HYPERLINK(""https://example.com"",""x"")"'));
+assert.ok(safeCsv.includes('Cộng,"\'+SUM(1,2)"'));
+assert.ok(safeCsv.includes("Trừ dạng text,'-cmd|test"));
+assert.ok(safeCsv.includes('At,"\'@SUM(1,2)"'));
+assert.ok(safeCsv.includes('Số âm thật,-1200'));
 
 const normalizedRows = productRowsForExport([
   { name: 'Không cho âm', qty: -3, price: -5000 },
