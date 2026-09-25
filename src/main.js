@@ -2567,6 +2567,234 @@ function refreshProductEntrySuggestions() {
   ]);
 }
 
+
+let productWorkspaceActiveIndex = -1;
+
+function quoteProductDuplicateAnalysis(products = state.products) {
+  const groups = new Map();
+  (Array.isArray(products) ? products : []).forEach((product, index) => {
+    const name = String(product?.name || '').trim();
+    if (!name) return;
+    const key = productKey(product);
+    if (!key.replace(/\|/g, '')) return;
+    const entry = groups.get(key) || { key, indices: [], prices: new Set(), notes: new Set() };
+    entry.indices.push(index);
+    entry.prices.add(String(normalizeNonNegativeNumber(product?.price)));
+    entry.notes.add(canonicalLibraryText(product?.note || ''));
+    groups.set(key, entry);
+  });
+  const duplicates = [...groups.values()].filter(group => group.indices.length > 1);
+  const mergeable = duplicates.filter(group => group.prices.size === 1 && group.notes.size === 1);
+  return {
+    groups: duplicates,
+    mergeable,
+    manual: duplicates.filter(group => !mergeable.includes(group))
+  };
+}
+
+function productWorkspaceSuggestionValues(field) {
+  const catalog = getProductCatalog();
+  const fallback = field === 'unit'
+    ? ['Cái','Bộ','Hộp','Khay','Gói','Túi','Chai','Thùng','Kg','Lít']
+    : [];
+  const values = [
+    ...fallback,
+    ...catalog.map(item => item?.[field]),
+    ...state.products.map(item => item?.[field])
+  ].map(value => String(value || '').trim()).filter(Boolean);
+
+  const counts = new Map();
+  values.forEach(value => {
+    const key = canonicalLibraryText(value);
+    if (!key) return;
+    const current = counts.get(key) || { value, count: 0 };
+    current.count += 1;
+    if (value.length < current.value.length) current.value = value;
+    counts.set(key, current);
+  });
+  return [...counts.values()]
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value, 'vi'))
+    .slice(0, 7)
+    .map(item => item.value);
+}
+
+function applyProductWorkspaceQuickField(key, value) {
+  const index = Number.isInteger(productWorkspaceActiveIndex) && productWorkspaceActiveIndex >= 0
+    ? productWorkspaceActiveIndex
+    : state.products.findIndex(product => productHasDraftContent(product));
+  const targetIndex = index >= 0 ? index : 0;
+  const product = state.products[targetIndex];
+  if (!product || !['group','unit'].includes(key)) return false;
+  product[key] = String(value || '').trim();
+  productWorkspaceActiveIndex = targetIndex;
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  requestAnimationFrame(() => focusProductCell(targetIndex, key));
+  toast(persisted ? 'Đã điền ' + (key === 'group' ? 'nhóm hàng' : 'đơn vị tính') : 'Đã điền tạm thời; chưa autosave được');
+  return true;
+}
+
+function renderProductWorkspaceQuickFill() {
+  const status = document.getElementById('productQuickFillStatus');
+  const index = productWorkspaceActiveIndex;
+  const product = Number.isInteger(index) && index >= 0 ? state.products[index] : null;
+  if (status) {
+    status.textContent = product
+      ? 'Dòng ' + (index + 1) + (String(product.name || '').trim() ? ' · ' + product.name : ' · chưa đặt tên')
+      : 'Click vào một dòng trong bảng để điền nhanh.';
+  }
+
+  const renderChips = (containerId, field) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    productWorkspaceSuggestionValues(field).forEach(value => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'product-quickfill-chip';
+      button.textContent = value;
+      button.disabled = !product;
+      button.addEventListener('click', () => applyProductWorkspaceQuickField(field, value));
+      container.appendChild(button);
+    });
+    if (!container.children.length) {
+      const empty = document.createElement('span');
+      empty.className = 'product-assistant-empty';
+      empty.textContent = 'Chưa có gợi ý.';
+      container.appendChild(empty);
+    }
+  };
+
+  renderChips('productQuickGroupChips', 'group');
+  renderChips('productQuickUnitChips', 'unit');
+}
+
+function renderProductWorkspaceCatalogResults(query = '') {
+  const list = document.getElementById('productWorkspaceCatalogResults');
+  if (!list) return;
+  list.innerHTML = '';
+  const needle = canonicalSearchText(query);
+  const catalog = getProductCatalog().filter(item => {
+    if (!needle) return true;
+    const haystack = canonicalSearchText(
+      [item.group, item.name, item.pack, item.unit, item.note, item.currency].filter(Boolean).join(' ')
+    );
+    return haystack.includes(needle);
+  }).slice(0, 6);
+
+  if (!catalog.length) {
+    const empty = document.createElement('div');
+    empty.className = 'product-assistant-empty';
+    empty.textContent = getProductCatalog().length
+      ? 'Không tìm thấy sản phẩm phù hợp.'
+      : 'Danh mục sản phẩm đang trống. Có thể nhập bên trái rồi bấm “Lưu danh mục”.';
+    list.appendChild(empty);
+    return;
+  }
+
+  catalog.forEach(product => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'product-assistant-result';
+    button.dataset.workspaceCatalogId = product.id;
+    const copy = document.createElement('span');
+    const title = document.createElement('b');
+    title.textContent = product.name || 'Sản phẩm';
+    const detail = document.createElement('small');
+    detail.textContent = [product.group, product.pack, product.unit].filter(Boolean).join(' · ') || 'Danh mục';
+    const price = document.createElement('em');
+    price.textContent = moneyForCurrency(product.price, product.currency || 'VND');
+    copy.append(title, detail);
+    button.append(copy, price);
+    button.addEventListener('click', () => {
+      const beforeLength = state.products.length;
+      addCatalogProductsToQuote([product], { navigate: false, notify: true });
+      const matched = state.products.findIndex(item => productKey(item) === productKey(product));
+      productWorkspaceActiveIndex = matched >= 0 ? matched : Math.max(0, beforeLength - 1);
+      renderProductWorkspaceAssistant();
+      requestAnimationFrame(() => focusProductCell(productWorkspaceActiveIndex, 'qty'));
+    });
+    list.appendChild(button);
+  });
+}
+
+function renderProductWorkspaceAssistant() {
+  const meaningful = state.products.filter(product => String(product?.name || '').trim());
+  const missingPrice = meaningful.filter(product => normalizeNonNegativeNumber(product.price) === 0).length;
+  const zeroQty = meaningful.filter(product => normalizeNonNegativeNumber(product.qty) === 0).length;
+  const duplicates = quoteProductDuplicateAnalysis();
+
+  setText('productWorkspaceFilledCount', meaningful.length);
+  setText('productWorkspaceMissingPrice', missingPrice);
+  setText('productWorkspaceZeroQty', zeroQty);
+  setText('productWorkspaceDuplicateCount', duplicates.groups.length);
+
+  const merge = document.getElementById('mergeDuplicateProducts');
+  if (merge) {
+    merge.disabled = duplicates.mergeable.length === 0;
+    merge.textContent = duplicates.mergeable.length
+      ? 'Gộp ' + duplicates.mergeable.length + ' nhóm trùng cùng đơn giá'
+      : 'Không có dòng trùng an toàn để gộp';
+  }
+
+  const note = document.getElementById('productWorkspaceAssistantNote');
+  if (note) {
+    if (duplicates.manual.length) {
+      note.textContent = duplicates.manual.length + ' nhóm trùng có giá hoặc ghi chú khác nhau; hệ thống giữ nguyên để bạn kiểm tra thủ công.';
+    } else if (missingPrice || zeroQty) {
+      note.textContent = 'Còn ' + missingPrice + ' dòng thiếu giá và ' + zeroQty + ' dòng số lượng bằng 0.';
+    } else {
+      note.textContent = 'Dữ liệu dán/Excel luôn đi qua màn hình kiểm tra trước khi áp dụng.';
+    }
+  }
+
+  const search = document.getElementById('productWorkspaceCatalogSearch');
+  renderProductWorkspaceCatalogResults(search?.value || '');
+  renderProductWorkspaceQuickFill();
+
+  const duplicateKeys = new Set(duplicates.groups.map(group => group.key));
+  document.querySelectorAll('#productEditor .product-card').forEach(card => {
+    const index = Number(card.dataset.productIndex);
+    const product = state.products[index];
+    card.classList.toggle('has-duplicate', Boolean(product && duplicateKeys.has(productKey(product))));
+  });
+}
+
+function mergeSafeDuplicateProducts() {
+  const analysis = quoteProductDuplicateAnalysis();
+  if (!analysis.mergeable.length) {
+    toast('Không có dòng trùng cùng đơn giá và ghi chú để gộp an toàn.');
+    return 0;
+  }
+
+  const remove = new Set();
+  analysis.mergeable.forEach(group => {
+    const [firstIndex, ...rest] = group.indices;
+    const target = state.products[firstIndex];
+    if (!target) return;
+    target.qty = group.indices.reduce((sum, index) =>
+      sum + normalizeNonNegativeNumber(state.products[index]?.qty), 0);
+    rest.forEach(index => remove.add(index));
+  });
+
+  state.products = state.products.filter((_, index) => !remove.has(index));
+  if (!state.products.length) {
+    state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  }
+  productWorkspaceActiveIndex = Math.min(
+    Math.max(0, productWorkspaceActiveIndex),
+    Math.max(0, state.products.length - 1)
+  );
+  selectedProductRows.clear();
+  collapsedProducts.clear();
+  const persisted = save();
+  renderEditorProducts();
+  render();
+  toast((persisted ? 'Đã gộp ' : 'Đã gộp tạm thời ') + analysis.mergeable.length + ' nhóm sản phẩm trùng.');
+  return analysis.mergeable.length;
+}
+
 function productCellIssue(product, key) {
   const name = String(product?.name || '').trim();
   const qty = Number(product?.qty);
@@ -2813,6 +3041,7 @@ function renderEditorProducts() {
       syncStudioContext('products');
       refreshOpenStudioGuidance();
       syncProductRowValidation(card, product);
+      renderProductWorkspaceAssistant();
       requestAnimationFrame(updatePageEstimate);
     };
 
@@ -2863,6 +3092,7 @@ function renderEditorProducts() {
   }
   syncProductBulkBar();
   renderProductLaunchSummary();
+  renderProductWorkspaceAssistant();
 }
 
 function renderProductLaunchSummary() {
@@ -4624,7 +4854,9 @@ function openProductWorkspace({ focusFirst = true } = {}) {
   }
   modal.hidden = false;
   document.body.classList.add('product-workspace-open');
+  if (productWorkspaceActiveIndex < 0 && state.products.length) productWorkspaceActiveIndex = 0;
   renderProductLaunchSummary();
+  renderProductWorkspaceAssistant();
   requestAnimationFrame(() => {
     const target = focusFirst
       ? document.querySelector('#productEditor [data-product-key="name"]') || document.getElementById('addProductTop')
@@ -4671,6 +4903,18 @@ document.getElementById('openProductWorkspace')?.addEventListener('click', () =>
 document.getElementById('openProductWorkspaceBottom')?.addEventListener('click', () => openProductWorkspace());
 document.getElementById('closeProductWorkspace')?.addEventListener('click', () => closeProductWorkspace());
 document.getElementById('doneProductWorkspace')?.addEventListener('click', () => closeProductWorkspace());
+document.getElementById('productWorkspaceCatalogSearch')?.addEventListener('input', (event) => {
+  renderProductWorkspaceCatalogResults(event.currentTarget.value);
+});
+document.getElementById('mergeDuplicateProducts')?.addEventListener('click', mergeSafeDuplicateProducts);
+document.getElementById('productWorkspaceModal')?.addEventListener('focusin', (event) => {
+  const field = event.target?.closest?.('[data-product-key]');
+  const card = field?.closest?.('.product-card');
+  const index = Number(card?.dataset.productIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= state.products.length) return;
+  productWorkspaceActiveIndex = index;
+  renderProductWorkspaceQuickFill();
+});
 
 bindInputs();
 setupCustomerEntryAutocomplete();
@@ -4680,6 +4924,7 @@ enhanceCollapsibleCards();
 renderEditorProducts();
 render();
 renderProductLaunchSummary();
+renderProductWorkspaceAssistant();
 offerDraftRecovery();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
@@ -7240,7 +7485,7 @@ function applyProductBulkAction() {
   toast(persisted ? 'Đã áp dụng thao tác cho ' + indices.length + ' dòng' : 'Đã thay đổi tạm thời; chưa autosave được');
 }
 
-function addCatalogProductsToQuote(products, { notify = true } = {}) {
+function addCatalogProductsToQuote(products, { notify = true, navigate = true } = {}) {
   const items = Array.isArray(products) ? products : [];
   if (!items.length) return 0;
   const targetCurrency = normalizeCatalogCurrency(state.currency);
@@ -7276,7 +7521,8 @@ function addCatalogProductsToQuote(products, { notify = true } = {}) {
   const persisted = save();
   renderEditorProducts();
   render();
-  openTab('products');
+  if (navigate) openTab('products');
+  else renderProductWorkspaceAssistant();
   if (notify) {
     const mismatchText = currencyMismatch
       ? ' • ' + currencyMismatch + ' dòng khác tiền tệ để giá 0'
