@@ -163,6 +163,39 @@ try {
   near('return dashboard header x', returnHeader.x, 118, 2);
   await page.locator('[data-tab="general"]').click();
 
+  // V6.1 template library must be a large gallery, and its one-click preview must start directly below the shared header.
+  await page.locator('#toggleInspectorTemplates').click();
+  await page.locator('#templateLibraryModal:not([hidden])').waitFor();
+  const templateDialog = await box('#templateLibraryModal:not([hidden]) .template-library-dialog');
+  near('template library dialog width', templateDialog.width, 1480, 10);
+  near('template library dialog height', templateDialog.height, 850, 10);
+  if (await page.locator('[data-template-category]').count() !== 8) fail('template library category set is incomplete');
+  if (await page.locator('[data-template-library-theme]').count() !== 12) fail('template library does not expose all 12 themes');
+
+  await page.locator('[data-template-category="construction"]').click();
+  if (await page.locator('[data-template-library-theme]:visible').count() !== 4) {
+    fail('construction category filter did not resolve to the expected four templates');
+  }
+  await page.locator('[data-template-category="all"]').click();
+  await page.locator('[data-template-library-theme="canva-blue"]').click();
+  await page.locator('.shell.report-view').waitFor();
+
+  const reportHeader = await box('.shell.report-view > .studio-topbar');
+  const reportPreview = await box('.shell.report-view > .preview');
+  const reportToolbar = await box('.shell.report-view .preview-tools');
+  const reportPaper = await box('.shell.report-view #paperWrap');
+  near('report header y', reportHeader.y, 0, 2);
+  near('report header height', reportHeader.height, 72, 2);
+  near('report preview y', reportPreview.y, 72, 3);
+  near('report toolbar y', reportToolbar.y, 72, 3);
+  if (reportPaper.y > 145) fail('A4 preview is pushed down by an empty band: y=' + reportPaper.y);
+  if (!(await page.locator('#templatePreviewBack').isVisible())) fail('template preview back action is missing');
+  if (!(await page.locator('#templatePreviewApply').isVisible())) fail('template preview apply action is missing');
+
+  await page.locator('#templatePreviewBack').click();
+  await page.locator('#templateLibraryModal:not([hidden])').waitFor();
+  await page.locator('#closeTemplateLibrary').click();
+
   const search = page.locator('#studioCommandSearch');
   await search.focus();
   await search.fill('Sản phẩm');
