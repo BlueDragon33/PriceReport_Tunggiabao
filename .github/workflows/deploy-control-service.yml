@@ -91,6 +91,24 @@ jobs:
           NODE
 
 
+      - name: Register verified KT Control bridge on Application Management
+        shell: bash
+        run: |
+          set -euo pipefail
+          AM_HOST="$(node -e "console.log(new URL(process.env.APPLICATION_MANAGEMENT_ORIGIN).hostname)")"
+          case "$AM_HOST" in
+            *.workers.dev) ;;
+            *) echo "::error::Automatic bridge registration requires Application Management workers.dev origin."; exit 1 ;;
+          esac
+          AM_WORKER_NAME="${AM_HOST%%.*}"
+          if [[ -z "$AM_WORKER_NAME" ]]; then
+            echo "::error::Cannot derive Application Management Worker name."
+            exit 1
+          fi
+          printf '%s' "$PRICE_REPORT_CONTROL_ORIGIN" | npx wrangler secret put PRICE_REPORT_CONTROL_BASE_URL --name "$AM_WORKER_NAME"
+          printf '%s' "$PRICE_REPORT_CONTROL_SERVICE_SECRET" | npx wrangler secret put PRICE_REPORT_CONTROL_SERVICE_SECRET --name "$AM_WORKER_NAME"
+          echo "PriceReport KT Control bridge registered on Application Management Worker: $AM_WORKER_NAME"
+
       - name: Trigger PriceReport Pages rollout
         env:
           GH_TOKEN: ${{ github.token }}
