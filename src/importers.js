@@ -353,7 +353,8 @@ export function parsePastedTable(rawText) {
       confidence,
       rows,
       invalidRows: rebuilt.invalidRows,
-      duplicates: rebuilt.duplicates
+      duplicates: rebuilt.duplicates,
+      productRowNumbers: rebuilt.productRowNumbers
     }
   };
 }
