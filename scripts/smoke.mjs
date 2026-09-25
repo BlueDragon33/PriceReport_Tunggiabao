@@ -54,7 +54,9 @@ const requiredIds = [
   'studioGlobalSave','studioGlobalPreview','studioGlobalPdf',
   'contentLibraryHome','contentLibrarySearch','contentLibraryBack','contentLibraryDetailHead',
   'contentBlockList','contentTemplateGrid','runLayoutSuggestion',
-  'studioCommandSearch','studioCommandResults','studioTopMenu','previewOverflowMenu'
+  'studioCommandSearch','studioCommandResults','studioTopMenu','previewOverflowMenu',
+  'openTemplateLibraryFromContent','templateLibraryModal','templateLibrarySearch','templateLibraryGrid','templateLibraryCount','templateLibraryEmpty',
+  'closeTemplateLibrary','templatePreviewBack','templatePreviewApply'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -109,6 +111,10 @@ if (!js.includes("zoomOut")) fail('Preview zoom controls are missing');
 if (!html.includes("THÔNG TIN KHÁCH HÀNG")) fail('General-tab quick customer section is missing');
 if ((html.match(/data-theme=/g) || []).length < 8) fail('Template library must provide at least 8 usable themes');
 if (!js.includes("THEME_ACCENTS")) fail('Template accent presets are missing');
+if ((html.match(/data-template-library-theme=/g) || []).length < 12) fail('V6.1 large template library must expose all 12 quotation themes');
+if (!html.includes('data-template-category="business"') || !html.includes('data-template-category="construction"') || !html.includes('data-template-category="education"')) fail('V6.1 template category navigation is incomplete');
+if (!js.includes('function previewTemplateFromLibrary') || !js.includes('function confirmTemplateLibraryPreview')) fail('V6.1 non-destructive template preview flow is missing');
+if (!studioCss.includes('V6.1 template library gallery + report-view hardening') || !studioCss.includes('.shell.report-view>.studio-topbar')) fail('V6.1 report-view row hardening is missing');
 if (!js.includes('function openProductWorkspace') || !js.includes('function closeProductWorkspace')) fail('V5.9 fixed product modal controller is missing');
 if (!html.includes('id="productWorkspaceModal"') || !html.includes('id="productLaunchList"')) fail('V5.9 product modal/launcher surface is missing');
 if (!studioCss.includes('.product-workspace-dialog') || !studioCss.includes('.product-launch-card')) fail('V5.9 product modal/launcher styling is missing');
