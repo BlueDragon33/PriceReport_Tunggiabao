@@ -145,7 +145,6 @@ try {
 
 
   // Product entry must use a large, fixed dialog instead of stretching the left panel.
-  await page.locator('#contentLibraryBack').click();
   await page.locator('#contentBlockList [data-content-block="products"]').click();
   await page.locator('#productWorkspaceModal:not([hidden])').waitFor();
   const productDialog = await box('#productWorkspaceModal:not([hidden]) .product-workspace-dialog');
