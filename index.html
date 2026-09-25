@@ -1485,6 +1485,63 @@
             <span id="smartImportGroupCount">0 nhóm</span>
           </div>
 
+          <section class="import-review-dashboard" id="smartImportDashboard">
+            <article>
+              <small>Trước khi nhập</small>
+              <strong id="smartImportBeforeCount">0</strong>
+              <span>dòng đang có trong báo giá</span>
+            </article>
+            <article>
+              <small>Dữ liệu hợp lệ</small>
+              <strong id="smartImportValidCount">0</strong>
+              <span>dòng sẽ được xem xét áp dụng</span>
+            </article>
+            <article>
+              <small>Cần kiểm tra</small>
+              <strong id="smartImportNeedsReviewCount">0</strong>
+              <span>dòng lỗi + nhóm có thể trùng</span>
+            </article>
+            <article class="after">
+              <small>Sau khi áp dụng</small>
+              <strong id="smartImportAfterCount">0</strong>
+              <span id="smartImportAfterHint">Theo chế độ nhập hiện tại</span>
+            </article>
+          </section>
+
+          <section class="import-editable-products" id="smartImportEditableProducts" hidden>
+            <div class="import-editable-products-head">
+              <div>
+                <strong>SỬA TRỰC TIẾP TRƯỚC KHI NHẬP</strong>
+                <span>Chỉnh ngay dữ liệu nhận diện giống bảng tính; thay đổi sẽ được kiểm tra lại trước khi áp dụng.</span>
+              </div>
+              <div class="import-editable-products-tools">
+                <label class="import-grid-search">
+                  <span>⌕</span>
+                  <input id="smartImportProductSearch" type="search" placeholder="Tìm trong dữ liệu nhập…" autocomplete="off">
+                </label>
+                <select id="smartImportProductFilter" aria-label="Lọc dữ liệu nhập">
+                  <option value="all">Tất cả dòng hợp lệ</option>
+                  <option value="duplicate">Chỉ dòng có thể trùng</option>
+                </select>
+                <span id="smartImportEditableCount">0 dòng</span>
+              </div>
+            </div>
+            <div class="import-editable-grid-shell">
+              <div class="import-editable-grid-head" aria-hidden="true">
+                <span>Trạng thái</span>
+                <span>Nhóm hàng</span>
+                <span>Tên sản phẩm</span>
+                <span>Quy cách</span>
+                <span>ĐVT</span>
+                <span>SL</span>
+                <span>Đơn giá</span>
+                <span>Ghi chú</span>
+                <span></span>
+              </div>
+              <div id="smartImportEditableProductRows" class="import-editable-grid-body"></div>
+            </div>
+          </section>
+
           <section class="import-mapping" id="smartImportMapping" hidden>
             <div class="import-mapping-head">
               <div>
@@ -1514,7 +1571,10 @@
                 <strong>DÒNG CẦN KIỂM TRA</strong>
                 <span>Hệ thống không tự xóa hoặc tự gộp dữ liệu đáng ngờ.</span>
               </div>
-              <span id="smartImportIssueSummary">0 mục</span>
+              <div class="import-issue-review-tools">
+                <span id="smartImportIssueSummary">0 mục</span>
+                <button class="btn" id="smartImportNextIssue" type="button">Vấn đề tiếp theo</button>
+              </div>
             </div>
             <div id="smartImportIssueList" class="import-issue-list"></div>
           </section>
@@ -1529,6 +1589,9 @@
             <input id="replaceImportedProducts" type="checkbox" checked>
             Thay danh sách sản phẩm hiện tại khi nguồn có bảng hàng hóa
           </label>
+          <div class="import-apply-note" id="smartImportApplyNote">
+            Dữ liệu chỉ được ghi vào báo giá khi bạn bấm “Áp dụng vào báo giá”.
+          </div>
         </section>
       </div>
 

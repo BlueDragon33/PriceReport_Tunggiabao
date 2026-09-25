@@ -1962,6 +1962,73 @@ test('smart paste opens a guided review and infers ordinary Excel clipboard colu
   document.getElementById('cancelSmartImport').click();
 });
 
+test('V6.6 smart import shows before-after metrics and an editable spreadsheet grid', () => {
+  document.getElementById('pasteProducts').click();
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nV66 Alpha\tHộp\t2\t28000\nV66 Beta\tKhay\t3\t85000';
+  document.getElementById('parseSmartPaste').click();
+
+  expect(document.getElementById('smartImportEditableProducts').hidden).toBe(false);
+  expect(document.querySelectorAll('#smartImportEditableProductRows .import-editable-grid-row').length).toBe(2);
+  expect(Number(document.getElementById('smartImportBeforeCount').textContent)).toBeGreaterThan(0);
+  expect(document.getElementById('smartImportValidCount').textContent).toBe('2');
+  expect(document.getElementById('smartImportAfterCount').textContent).toBe('2');
+  expect(document.getElementById('applySmartImport').textContent).toContain('2 dòng');
+
+  const replace = document.getElementById('replaceImportedProducts');
+  replace.checked = false;
+  replace.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(Number(document.getElementById('smartImportAfterCount').textContent)).toBe(Number(document.getElementById('smartImportBeforeCount').textContent));
+  replace.checked = true;
+  replace.dispatchEvent(new Event('change', { bubbles: true }));
+
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('V6.6 editable import grid writes spreadsheet edits back into reviewed products', () => {
+  document.getElementById('pasteProducts').click();
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nV66 Edit Me\tHộp\t2\t28000\nV66 Keep\tKhay\t3\t85000';
+  document.getElementById('parseSmartPaste').click();
+
+  let row = document.querySelector('#smartImportEditableProductRows .import-editable-grid-row');
+  const name = row.querySelector('[data-import-product-field="name"]');
+  name.value = 'V66 Edited';
+  name.dispatchEvent(new Event('change', { bubbles: true }));
+
+  row = document.querySelector('#smartImportEditableProductRows .import-editable-grid-row');
+  expect(row.querySelector('[data-import-product-field="name"]').value).toBe('V66 Edited');
+  expect(document.getElementById('smartImportProductPreview').textContent).toContain('V66 Edited');
+
+  const search = document.getElementById('smartImportProductSearch');
+  search.value = 'Keep';
+  search.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(document.querySelectorAll('#smartImportEditableProductRows .import-editable-grid-row').length).toBe(1);
+  expect(document.querySelector('#smartImportEditableProductRows [data-import-product-field="name"]').value).toBe('V66 Keep');
+
+  document.getElementById('cancelSmartImport').click();
+});
+
+test('V6.6 duplicate filter and row removal operate inside review without applying automatically', () => {
+  document.getElementById('pasteProducts').click();
+  const paste = document.getElementById('smartPasteText');
+  paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nV66 Duplicate\tHộp\t1\t28000\nV66 Duplicate\tHộp\t2\t28000';
+  document.getElementById('parseSmartPaste').click();
+
+  expect(Number(document.getElementById('smartImportNeedsReviewCount').textContent)).toBeGreaterThan(0);
+  const filter = document.getElementById('smartImportProductFilter');
+  filter.value = 'duplicate';
+  filter.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(document.querySelectorAll('#smartImportEditableProductRows .import-editable-grid-row.is-duplicate').length).toBe(2);
+
+  const firstRemove = document.querySelector('#smartImportEditableProductRows .import-editable-remove');
+  firstRemove.click();
+  expect(document.getElementById('smartImportValidCount').textContent).toBe('1');
+  expect(document.getElementById('smartImportModal').hidden).toBe(false);
+
+  document.getElementById('cancelSmartImport').click();
+});
+
 test('applied smart import exposes a working one-step undo action', () => {
   const before = document.getElementById('companyName').value;
   document.getElementById('openSmartImport').click();

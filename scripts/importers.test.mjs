@@ -201,6 +201,7 @@ assert.equal(remapped.products.length, 2);
 assert.equal(remapped.products[0].price, 28000);
 assert.equal(remapped.products[1].qty, 3);
 assert.deepEqual(remapped.invalidRows, []);
+assert.deepEqual(remapped.productRowNumbers, [3, 4]);
 
 const dirtyMapped = parseMappedSpreadsheetRows([
   ['Product', 'Qty', 'Price'],
@@ -226,6 +227,7 @@ assert.equal(pastedWithHeader.products[0].name, 'Trứng gà');
 assert.equal(pastedWithHeader.products[0].qty, 2);
 assert.equal(pastedWithHeader.products[0].price, 28000);
 assert.equal(pastedWithHeader.spreadsheetMeta.mapping.price, 3);
+assert.deepEqual(pastedWithHeader.spreadsheetMeta.productRowNumbers, [2, 3]);
 
 const pastedNoHeader = parsePastedTable(
   'Trứng gà\tHộp\t2\t28 000\nTrứng vịt\tKhay\t3\t85.000'

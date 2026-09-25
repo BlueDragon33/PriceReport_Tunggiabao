@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v65-product-entry-accelerator', 'V6.5 product-entry-accelerator release must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v66-import-review-2', 'V6.6 import-review-2 release must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });

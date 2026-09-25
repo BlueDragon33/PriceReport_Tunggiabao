@@ -353,7 +353,8 @@ export function parsePastedTable(rawText) {
       confidence,
       rows,
       invalidRows: rebuilt.invalidRows,
-      duplicates: rebuilt.duplicates
+      duplicates: rebuilt.duplicates,
+      productRowNumbers: rebuilt.productRowNumbers
     }
   };
 }
@@ -454,7 +455,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
       quantities: indexes.map(index => products[index].qty)
     }));
 
-  return { products, groups, invalidRows, duplicates };
+  return { products, groups, invalidRows, duplicates, productRowNumbers };
 }
 
 export function parseSpreadsheetRows(rows) {

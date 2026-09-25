@@ -3892,6 +3892,17 @@ function resetSmartImportDraft() {
   const issueList = document.getElementById('smartImportIssueList');
   if (issues) issues.hidden = true;
   if (issueList) issueList.innerHTML = '';
+  const editableRows = document.getElementById('smartImportEditableProductRows');
+  const productSearch = document.getElementById('smartImportProductSearch');
+  const productFilter = document.getElementById('smartImportProductFilter');
+  if (editableRows) editableRows.innerHTML = '';
+  if (productSearch) productSearch.value = '';
+  if (productFilter) productFilter.value = 'all';
+  smartImportIssueCursor = -1;
+  setText('smartImportBeforeCount', state.products.filter(productHasDraftContent).length);
+  setText('smartImportValidCount', 0);
+  setText('smartImportNeedsReviewCount', 0);
+  setText('smartImportAfterCount', state.products.filter(productHasDraftContent).length);
   setSmartImportProgress('Chọn file Excel hoặc ảnh chữ viết tay để bắt đầu.');
 }
 
@@ -3993,6 +4004,239 @@ function rebuildSmartImportProductsFromMapping() {
   smartImportDraft.groups = rebuilt.groups;
   meta.invalidRows = rebuilt.invalidRows;
   meta.duplicates = rebuilt.duplicates;
+  meta.productRowNumbers = rebuilt.productRowNumbers || [];
+}
+
+
+let smartImportIssueCursor = -1;
+
+function smartImportDuplicateIndexSet() {
+  const products = Array.isArray(smartImportDraft?.products) ? smartImportDraft.products : [];
+  const signatures = new Map();
+  products.forEach((product, index) => {
+    const signature = [product?.name, product?.unit, product?.pack]
+      .map(value => canonicalLibraryText(value))
+      .join('|');
+    if (!signature.replace(/\|/g, '')) return;
+    const indexes = signatures.get(signature) || [];
+    indexes.push(index);
+    signatures.set(signature, indexes);
+  });
+
+  const duplicateIndexes = new Set();
+  signatures.forEach(indexes => {
+    if (indexes.length < 2) return;
+    indexes.forEach(index => duplicateIndexes.add(index));
+  });
+  return duplicateIndexes;
+}
+
+function renderSmartImportDashboard() {
+  if (!smartImportDraft) return;
+  const currentCount = state.products.filter(productHasDraftContent).length;
+  const validCount = Array.isArray(smartImportDraft.products) ? smartImportDraft.products.length : 0;
+  const invalidCount = smartImportDraft.spreadsheetMeta?.invalidRows?.length || 0;
+  const duplicateCount = smartImportDraft.spreadsheetMeta?.duplicates?.length || 0;
+  const replaceProducts = document.getElementById('replaceImportedProducts')?.checked !== false;
+  const afterCount = replaceProducts && validCount ? validCount : currentCount;
+
+  setText('smartImportBeforeCount', currentCount);
+  setText('smartImportValidCount', validCount);
+  setText('smartImportNeedsReviewCount', invalidCount + duplicateCount);
+  setText('smartImportAfterCount', afterCount);
+
+  const afterHint = document.getElementById('smartImportAfterHint');
+  if (afterHint) {
+    afterHint.textContent = replaceProducts && validCount
+      ? 'Thay ' + currentCount + ' dòng hiện tại bằng dữ liệu đã kiểm tra'
+      : 'Giữ nguyên danh sách sản phẩm hiện tại';
+  }
+
+  const note = document.getElementById('smartImportApplyNote');
+  if (note) {
+    if (invalidCount) {
+      note.textContent = invalidCount + ' dòng lỗi đang bị loại khỏi dữ liệu áp dụng. Hãy sửa ở “Dòng cần kiểm tra” nếu muốn đưa các dòng đó vào báo giá.';
+    } else if (duplicateCount) {
+      note.textContent = duplicateCount + ' nhóm có thể trùng vẫn đang được giữ nguyên. Chỉ bỏ/gộp khi bạn chủ động chọn.';
+    } else {
+      note.textContent = 'Dữ liệu đã qua kiểm tra. Chỉ được ghi vào báo giá khi bạn bấm “Áp dụng vào báo giá”.';
+    }
+  }
+
+  const apply = document.getElementById('applySmartImport');
+  if (apply && !smartImportBusy) {
+    apply.textContent = validCount
+      ? 'Áp dụng ' + validCount + ' dòng vào báo giá'
+      : 'Áp dụng vào báo giá';
+  }
+}
+
+function updateSmartImportEditableProduct(productIndex, key, value) {
+  if (!smartImportDraft || !Array.isArray(smartImportDraft.products)) return;
+  const index = Number(productIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= smartImportDraft.products.length) return;
+
+  const meta = smartImportDraft.spreadsheetMeta;
+  const sourceRowNumber = Number(meta?.productRowNumbers?.[index]);
+  const sourceIndex = meta?.mapping?.[key];
+
+  if (meta && Number.isInteger(sourceRowNumber) && sourceRowNumber > 0 && sourceIndex != null &&
+      Array.isArray(meta.rows?.[sourceRowNumber - 1])) {
+    const nextRow = [...meta.rows[sourceRowNumber - 1]];
+    nextRow[sourceIndex] = value;
+    meta.rows[sourceRowNumber - 1] = nextRow;
+    rebuildSmartImportProductsFromMapping();
+  } else {
+    smartImportDraft.products[index][key] = value;
+    smartImportDraft.groups = [...new Set(
+      smartImportDraft.products.map(item => String(item.group || '').trim()).filter(Boolean)
+    )];
+  }
+
+  renderSmartImportReview();
+  setSmartImportProgress('Đã cập nhật dữ liệu trong bảng kiểm tra. Chưa ghi vào báo giá.', 'success');
+}
+
+function removeSmartImportEditableProduct(productIndex) {
+  if (!smartImportDraft || !Array.isArray(smartImportDraft.products)) return;
+  const index = Number(productIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= smartImportDraft.products.length) return;
+
+  const meta = smartImportDraft.spreadsheetMeta;
+  const sourceRowNumber = Number(meta?.productRowNumbers?.[index]);
+
+  if (meta && Number.isInteger(sourceRowNumber) && sourceRowNumber > 0) {
+    const previousExcluded = [...(meta.excludedRows || [])];
+    meta.excludedRows = [...new Set([...previousExcluded, sourceRowNumber])];
+    rebuildSmartImportProductsFromMapping();
+    renderSmartImportReview();
+    toast('Đã bỏ dòng ' + sourceRowNumber + ' khỏi lần nhập này', {
+      label: 'Hoàn tác',
+      duration: 6000,
+      onClick: () => {
+        meta.excludedRows = previousExcluded;
+        rebuildSmartImportProductsFromMapping();
+        renderSmartImportReview();
+      }
+    });
+    return;
+  }
+
+  const removed = clone(smartImportDraft.products[index]);
+  smartImportDraft.products.splice(index, 1);
+  renderSmartImportReview();
+  toast('Đã bỏ một dòng khỏi lần nhập này', {
+    label: 'Hoàn tác',
+    duration: 6000,
+    onClick: () => {
+      smartImportDraft.products.splice(index, 0, removed);
+      renderSmartImportReview();
+    }
+  });
+}
+
+function renderSmartImportEditableProducts() {
+  const section = document.getElementById('smartImportEditableProducts');
+  const host = document.getElementById('smartImportEditableProductRows');
+  const count = document.getElementById('smartImportEditableCount');
+  if (!section || !host) return;
+
+  const products = Array.isArray(smartImportDraft?.products) ? smartImportDraft.products : [];
+  if (!products.length) {
+    section.hidden = true;
+    host.innerHTML = '';
+    if (count) count.textContent = '0 dòng';
+    return;
+  }
+
+  section.hidden = false;
+  host.innerHTML = '';
+  const query = canonicalSearchText(document.getElementById('smartImportProductSearch')?.value || '');
+  const filter = document.getElementById('smartImportProductFilter')?.value || 'all';
+  const duplicateIndexes = smartImportDuplicateIndexSet();
+  const meta = smartImportDraft?.spreadsheetMeta;
+
+  const visible = products.map((product, index) => ({ product, index })).filter(({ product, index }) => {
+    if (filter === 'duplicate' && !duplicateIndexes.has(index)) return false;
+    if (!query) return true;
+    return canonicalSearchText([
+      product.group, product.name, product.pack, product.unit, product.qty, product.price, product.note
+    ].filter(value => value != null && String(value).trim()).join(' ')).includes(query);
+  });
+
+  visible.slice(0, 120).forEach(({ product, index }) => {
+    const row = document.createElement('div');
+    row.className = 'import-editable-grid-row' + (duplicateIndexes.has(index) ? ' is-duplicate' : '');
+    row.dataset.importProductIndex = String(index);
+
+    const status = document.createElement('span');
+    status.className = 'import-row-status' + (duplicateIndexes.has(index) ? ' duplicate' : '');
+    const sourceRowNumber = Number(meta?.productRowNumbers?.[index]);
+    status.textContent = duplicateIndexes.has(index) ? 'Có thể trùng' : 'Hợp lệ';
+    status.title = Number.isInteger(sourceRowNumber) && sourceRowNumber > 0
+      ? 'Nguồn: dòng ' + sourceRowNumber
+      : 'Dòng dữ liệu nhận diện';
+
+    const fields = [
+      ['group','text'],
+      ['name','text'],
+      ['pack','text'],
+      ['unit','text'],
+      ['qty','number'],
+      ['price','number'],
+      ['note','text']
+    ];
+    const nodes = [status];
+    fields.forEach(([key, type]) => {
+      const input = document.createElement('input');
+      input.type = type;
+      input.value = product?.[key] == null ? '' : String(product[key]);
+      input.dataset.importProductField = key;
+      input.setAttribute('aria-label', key + ' dòng ' + (index + 1));
+      if (type === 'number') {
+        input.min = '0';
+        input.step = key === 'price' ? '1000' : '1';
+        input.inputMode = 'decimal';
+      }
+      input.addEventListener('change', () => updateSmartImportEditableProduct(index, key, input.value));
+      nodes.push(input);
+    });
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'import-editable-remove';
+    remove.textContent = 'Bỏ dòng';
+    remove.addEventListener('click', () => removeSmartImportEditableProduct(index));
+    nodes.push(remove);
+
+    row.append(...nodes);
+    host.appendChild(row);
+  });
+
+  if (!visible.length) {
+    const empty = document.createElement('div');
+    empty.className = 'import-editable-empty';
+    empty.textContent = filter === 'duplicate'
+      ? 'Không còn dòng trùng phù hợp với bộ lọc.'
+      : 'Không tìm thấy dòng phù hợp.';
+    host.appendChild(empty);
+  } else if (visible.length > 120) {
+    const more = document.createElement('div');
+    more.className = 'import-editable-empty';
+    more.textContent = 'Đang hiển thị 120/' + visible.length + ' dòng. Dùng tìm kiếm để thu hẹp dữ liệu.';
+    host.appendChild(more);
+  }
+
+  if (count) count.textContent = visible.length + ' dòng';
+}
+
+function focusNextSmartImportIssue() {
+  const items = Array.from(document.querySelectorAll('#smartImportIssueList .import-issue-item'));
+  if (!items.length) return;
+  smartImportIssueCursor = (smartImportIssueCursor + 1) % items.length;
+  items[smartImportIssueCursor].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  items[smartImportIssueCursor].setAttribute('tabindex', '-1');
+  items[smartImportIssueCursor].focus({ preventScroll: true });
 }
 
 function renderSmartImportProductPreview() {
@@ -4276,7 +4520,13 @@ function renderSmartImportIssues() {
 
   const total = invalidRows.length + duplicates.length;
   section.hidden = total === 0;
+  smartImportIssueCursor = total ? Math.min(smartImportIssueCursor, total - 1) : -1;
   if (summary) summary.textContent = total + ' mục';
+  const nextIssue = document.getElementById('smartImportNextIssue');
+  if (nextIssue) {
+    nextIssue.disabled = total === 0;
+    nextIssue.hidden = total === 0;
+  }
 }
 
 function renderSmartImportReview() {
@@ -4330,7 +4580,9 @@ function renderSmartImportReview() {
   warnings.hidden = !messages.length;
 
   renderSmartImportMapping();
+  renderSmartImportEditableProducts();
   renderSmartImportIssues();
+  renderSmartImportDashboard();
   review.hidden = false;
   apply.disabled = false;
 }
@@ -4414,6 +4666,7 @@ async function parseExcelFile(file) {
       parsed.groups = rebuilt.groups;
       parsed.spreadsheetMeta.invalidRows = rebuilt.invalidRows;
       parsed.spreadsheetMeta.duplicates = rebuilt.duplicates;
+      parsed.spreadsheetMeta.productRowNumbers = rebuilt.productRowNumbers || [];
     }
 
     return { sheetName, parsed, score };
@@ -4589,6 +4842,10 @@ function setupSmartImport() {
   document.getElementById('cancelSmartImport')?.addEventListener('click', () => closeSmartImport({ discard: true }));
   document.getElementById('resetSmartImport')?.addEventListener('click', resetSmartImportDraft);
   document.getElementById('applySmartImport')?.addEventListener('click', applySmartImportDraft);
+  document.getElementById('smartImportProductSearch')?.addEventListener('input', renderSmartImportEditableProducts);
+  document.getElementById('smartImportProductFilter')?.addEventListener('change', renderSmartImportEditableProducts);
+  document.getElementById('replaceImportedProducts')?.addEventListener('change', renderSmartImportDashboard);
+  document.getElementById('smartImportNextIssue')?.addEventListener('click', focusNextSmartImportIssue);
   document.getElementById('closeSmartPastePanel')?.addEventListener('click', () => {
     const panel = document.getElementById('smartPastePanel');
     if (panel) panel.hidden = true;
