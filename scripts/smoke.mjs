@@ -147,7 +147,7 @@ if (!js.includes('function renderSmartImportDashboard') || !html.includes('id="s
 if (!js.includes('function renderSmartImportEditableProducts') || !js.includes('function updateSmartImportEditableProduct')) fail('V6.6 editable spreadsheet review controller is missing');
 if (!html.includes('id="smartImportEditableProductRows"') || !html.includes('SỬA TRỰC TIẾP TRƯỚC KHI NHẬP')) fail('V6.6 editable import grid surface is missing');
 if (!js.includes('function focusNextSmartImportIssue') || !html.includes('id="smartImportNextIssue"')) fail('V6.6 issue navigation is missing');
-if (!uiCss.includes('width:min(1320px,96vw)')) fail('V6.6 Smart Import must use the wider review workspace');
+if (!v5Css.includes('width:min(1320px,96vw)')) fail('V6.6 Smart Import must use the wider review workspace');
 if (!contentWorkspaceCss.includes('min-width:min(1040px') || !contentWorkspaceCss.includes('--content-workspace-width:1200px')) fail('V6.3 workspace must keep a ChatGPT-like desktop minimum and 1200px default');
 if (!contentWorkspaceCss.includes('@media (max-width:760px)') || !contentWorkspaceCss.includes('height:100dvh')) fail('V6.3 mobile full-screen workspace fallback is missing');
 if (!js.includes('function openProductWorkspace') || !js.includes('function closeProductWorkspace')) fail('V5.9 fixed product modal controller is missing');
