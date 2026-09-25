@@ -4140,8 +4140,8 @@ document.querySelectorAll('#designPanel [data-inspector-open-tab]').forEach((but
   });
 });
 document.getElementById('inspectorRunCheck')?.addEventListener('click', () => {
-  document.getElementById('preflightCheck')?.click();
   updateDocumentHealth();
+  renderStudioGuidance();
 });
 document.getElementById('inspectorPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
