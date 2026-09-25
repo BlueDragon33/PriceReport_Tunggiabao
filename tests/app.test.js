@@ -2004,7 +2004,7 @@ test('V6.6 editable import grid writes spreadsheet edits back into reviewed prod
   search.value = 'Keep';
   search.dispatchEvent(new Event('input', { bubbles: true }));
   expect(document.querySelectorAll('#smartImportEditableProductRows .import-editable-grid-row').length).toBe(1);
-  expect(document.getElementById('smartImportEditableProductRows').textContent).toContain('V66 Keep');
+  expect(document.querySelector('#smartImportEditableProductRows [data-import-product-field="name"]').value).toBe('V66 Keep');
 
   document.getElementById('cancelSmartImport').click();
 });
