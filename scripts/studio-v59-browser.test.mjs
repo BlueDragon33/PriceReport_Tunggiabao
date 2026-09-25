@@ -170,6 +170,14 @@ try {
     if (!(await page.locator('#' + field).evaluate(node => Boolean(node.closest('#contentWorkspaceModal'))))) {
       fail(block + ' did not mount the original bound field inside the shared workspace');
     }
+    const guideTitle = (await page.locator('#contentWorkspaceGuideTitle').textContent() || '').trim();
+    if (!guideTitle) fail(block + ' workspace has no contextual assistant title');
+    if (await page.locator('#contentWorkspaceQuickTools').count() !== 1) {
+      fail(block + ' workspace contextual assistant surface is missing');
+    }
+    if (block === 'customer' && await page.locator('#contentWorkspaceCustomerSearch').count() !== 1) {
+      fail('customer workspace does not expose saved-customer search');
+    }
 
     if (block === 'general') {
       near('default content workspace width', dialog.width, 1200, 8);
@@ -284,7 +292,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.3 BROWSER PASS: unified shell, wide adjustable content workspaces, product modal, 16-theme library and reference A4 geometry verified');
+  console.log('V6.4 BROWSER PASS: unified shell, guided wide content workspaces, product modal, 16-theme library and reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
