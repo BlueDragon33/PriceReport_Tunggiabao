@@ -1833,7 +1833,25 @@ body.v5-ui.reference-ui-v59 .product-workspace-modal-footer{
   gap:12px;
 }
 body.v5-ui.reference-ui-v59 .product-workspace-modal-footer span{color:#829ab5;font-size:10px}
+body.v5-ui.reference-ui-v59 .product-workspace-flow-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
 body.v5-ui.reference-ui-v59 .product-workspace-modal-footer .btn{min-width:104px}
+body.v5-ui.reference-ui-v59 .product-workspace-flow-actions .btn{
+  min-height:38px;
+  padding:0 11px;
+  border-color:rgba(255,255,255,.11);
+  background:#14385f;
+  color:#dce8f6;
+  font-size:9.5px;
+}
+body.v5-ui.reference-ui-v59 .product-workspace-flow-actions .btn.primary{
+  border-color:#1677ff;
+  background:#1677ff;
+  color:#fff;
+}
 body.v5-ui.reference-ui-v59 .product-workspace-dialog .product-card{
   background:#fff;
   border-color:#d4dee9;
@@ -2287,4 +2305,22 @@ body.v5-ui.reference-ui-v59 .library-thumb.executive-navy{
 body.v5-ui.reference-ui-v59 .library-thumb.executive-navy:before{top:27%;background:#d5ad58;box-shadow:0 20px 0 -2px #263c5d,0 32px 0 -3px #b8c1cd,0 82px 0 -2px #172b4d}
 body.v5-ui.reference-ui-v59 .library-thumb.sky-minimal{
   --lib-accent:#4b9be8;--lib-soft:#e3f0fa;background:radial-gradient(88px 62px at 108% -2%,#d8edff 0 55%,transparent 56%),#fff
+}
+
+@media (max-width:760px){
+  body.v5-ui.reference-ui-v59 .product-workspace-modal-footer{
+    padding:7px 9px;
+    align-items:stretch;
+  }
+  body.v5-ui.reference-ui-v59 .product-workspace-modal-footer>span{display:none}
+  body.v5-ui.reference-ui-v59 .product-workspace-flow-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1.3fr 1fr;
+  }
+  body.v5-ui.reference-ui-v59 .product-workspace-flow-actions .btn{
+    min-width:0;
+    padding:0 5px;
+    font-size:8.6px;
+  }
 }
