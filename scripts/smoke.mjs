@@ -6,8 +6,9 @@ const css = fs.readFileSync('src/styles.css', 'utf8');
 const v5Css = fs.readFileSync('src/ui-v5.css', 'utf8');
 const studioCss = fs.readFileSync('src/studio-v59.css', 'utf8');
 const contentWorkspaceCss = fs.readFileSync('src/content-workspace-v63.css', 'utf8');
+const responsiveCss = fs.readFileSync('src/responsive-v69.css', 'utf8');
 const themeCss = fs.readFileSync('src/quotation-themes-v60.css', 'utf8');
-const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss;
+const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss + '\n' + responsiveCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 
@@ -91,7 +92,7 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
@@ -159,6 +160,14 @@ if (!js.includes('function renderQuoteFlowNavigators')) fail('V6.8 live flow nav
 if (!html.includes('id="contentWorkspaceStepList"') || !html.includes('id="productWorkspaceStepList"')) fail('V6.8 cross-modal navigator surfaces are missing');
 if (!html.includes('id="contentWorkspaceReview"') || !html.includes('id="productWorkspaceReview"')) fail('V6.8 final-review shortcuts are missing from editing modals');
 if (!contentWorkspaceCss.includes('.quote-flow-step-button') || !contentWorkspaceCss.includes('.quote-flow-navigator-card')) fail('V6.8 flow navigator styling is missing');
+if (!html.includes('src/responsive-v69.css')) fail('V6.9 responsive ownership layer is not linked after the workspace styles');
+if (!responsiveCss.includes('data-device-class="tablet"') || !responsiveCss.includes('--touch-editor-w:300px')) fail('V6.9 iPad split-view contract is missing');
+if (!responsiveCss.includes('data-device-class="phone"') || !responsiveCss.includes('--touch-nav-h:66px')) fail('V6.9 phone app-shell contract is missing');
+if (!responsiveCss.includes('.content-library[data-content-mode="home"]>.content-library-home')) fail('V6.9 touch Content Library restoration guard is missing');
+if (!responsiveCss.includes('.product-modal-grid .product-data-grid-head') || !responsiveCss.includes('display:none!important')) fail('V6.9 phone card-first product editor guard is missing');
+if (!js.includes("const touchContentBlock = fromMobileMore && ['customer','products','payment','terms'].includes(tab)")) fail('V6.9 touch More menu must route quotation content through popup workspaces');
+if (!js.includes("classList.add('command-palette-open')") || !js.includes("classList.remove('command-palette-open')")) fail('V6.9 touch command palette overlay state is missing');
+if (!js.includes("document.body.dataset.deviceClass === 'tablet'")) fail('V6.9 iPad A4 auto-fit hook is missing');
 if (!js.includes('function renderSmartImportEditableProducts') || !js.includes('function updateSmartImportEditableProduct')) fail('V6.6 editable spreadsheet review controller is missing');
 if (!html.includes('id="smartImportEditableProductRows"') || !html.includes('SỬA TRỰC TIẾP TRƯỚC KHI NHẬP')) fail('V6.6 editable import grid surface is missing');
 if (!js.includes('function focusNextSmartImportIssue') || !html.includes('id="smartImportNextIssue"')) fail('V6.6 issue navigation is missing');
