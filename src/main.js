@@ -932,7 +932,8 @@ function renderContentBlockSummaries() {
       : 'Nội dung chính đã hoàn thiện; có thể kiểm tra và xuất PDF.';
   }
   renderQuoteFlowCard();
-  renderQuoteFlowNavigators(activeContentBlock);
+  const productModal = document.getElementById('productWorkspaceModal');
+  renderQuoteFlowNavigators(productModal && !productModal.hidden ? 'products' : activeContentBlock);
 }
 
 function renderQuoteFlowNavigators(currentBlock = activeContentBlock) {
