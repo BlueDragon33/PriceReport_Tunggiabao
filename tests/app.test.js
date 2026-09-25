@@ -226,6 +226,42 @@ test('V6.7 final review blocks PDF on errors and routes an issue back to its edi
   document.getElementById('doneContentWorkspace').click();
 });
 
+test('V6.8 content modal navigator lists all seven blocks and switches without closing the workspace', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+
+  const navigator = document.getElementById('contentWorkspaceStepList');
+  const steps = Array.from(navigator.querySelectorAll('.quote-flow-step-button'));
+  expect(steps).toHaveLength(7);
+  expect(navigator.querySelector('[data-flow-block="general"]').getAttribute('aria-current')).toBe('step');
+
+  navigator.querySelector('[data-flow-block="payment"]').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('payment');
+  expect(document.querySelector('#contentWorkspaceStepList [data-flow-block="payment"]').getAttribute('aria-current')).toBe('step');
+
+  document.getElementById('doneContentWorkspace').click();
+});
+
+test('V6.8 product modal navigator crosses back into a content workspace and exposes final review', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="products"]').click();
+
+  const navigator = document.getElementById('productWorkspaceStepList');
+  expect(navigator.querySelectorAll('.quote-flow-step-button')).toHaveLength(7);
+  expect(navigator.querySelector('[data-flow-block="products"]').getAttribute('aria-current')).toBe('step');
+
+  navigator.querySelector('[data-flow-block="terms"]').click();
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('terms');
+
+  document.getElementById('contentWorkspaceReview').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(true);
+  expect(document.getElementById('quoteReviewModal').hidden).toBe(false);
+  document.getElementById('closeQuoteReview').click();
+});
+
 test('V6.4 workspace assistant exposes block-aware quick tools without duplicating form state', () => {
   document.querySelector('[data-tab="general"]').click();
 

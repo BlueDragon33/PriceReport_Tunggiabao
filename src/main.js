@@ -932,6 +932,58 @@ function renderContentBlockSummaries() {
       : 'Nội dung chính đã hoàn thiện; có thể kiểm tra và xuất PDF.';
   }
   renderQuoteFlowCard();
+  const productModal = document.getElementById('productWorkspaceModal');
+  renderQuoteFlowNavigators(productModal && !productModal.hidden ? 'products' : activeContentBlock);
+}
+
+function renderQuoteFlowNavigators(currentBlock = activeContentBlock) {
+  const containers = [
+    document.getElementById('contentWorkspaceStepList'),
+    document.getElementById('productWorkspaceStepList')
+  ].filter(Boolean);
+
+  containers.forEach((container) => {
+    container.innerHTML = '';
+    CONTENT_BLOCK_ORDER.forEach((block, index) => {
+      const config = CONTENT_BLOCKS[block];
+      const status = contentBlockStatus(block);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'quote-flow-step-button ' + status.state;
+      button.dataset.flowBlock = block;
+      button.title = config.displayTitle + ' — ' + status.summary;
+      if (block === currentBlock) {
+        button.classList.add('current');
+        button.setAttribute('aria-current', 'step');
+      }
+
+      const marker = document.createElement('span');
+      marker.className = 'quote-flow-step-marker';
+      marker.textContent = status.complete ? '✓' : String(index + 1);
+
+      const copy = document.createElement('span');
+      const label = document.createElement('strong');
+      label.textContent = config.displayTitle;
+      const detail = document.createElement('small');
+      detail.textContent = status.complete ? 'Hoàn tất' : status.state === 'partial' ? 'Đang thiếu' : 'Chưa làm';
+      copy.append(label, detail);
+
+      button.append(marker, copy);
+      button.addEventListener('click', () => {
+        quoteFlowActive = true;
+        openContentBlock(block);
+      });
+      container.appendChild(button);
+    });
+  });
+
+  const completed = CONTENT_BLOCK_ORDER.filter(block => contentBlockStatus(block).complete).length;
+  ['contentWorkspaceReview','productWorkspaceReview'].forEach((id) => {
+    const button = document.getElementById(id);
+    if (!button) return;
+    button.textContent = 'Kiểm tra cuối · ' + completed + '/7 →';
+    button.dataset.completion = String(completed);
+  });
 }
 
 function nextIncompleteContentBlock() {
@@ -1580,6 +1632,7 @@ function openContentWorkspace(block, { focusFirst = true } = {}) {
   document.body.classList.add('content-workspace-open');
   updateContentWorkspaceStatus(block);
   renderContentWorkspaceAssist(block);
+  renderQuoteFlowNavigators(block);
 
   requestAnimationFrame(() => {
     const mount = document.getElementById('contentWorkspaceMount');
@@ -5409,6 +5462,7 @@ function openProductWorkspace({ focusFirst = true } = {}) {
   renderProductLaunchSummary();
   renderProductWorkspaceAssistant();
   updateQuoteFlowProgress('products');
+  renderQuoteFlowNavigators('products');
   requestAnimationFrame(() => {
     const target = focusFirst
       ? document.querySelector('#productEditor [data-product-key="name"]') || document.getElementById('addProductTop')
@@ -5466,6 +5520,14 @@ document.getElementById('productWorkspaceNext')?.addEventListener('click', () =>
   if (!persisted) toast('Đã chuyển bước; bản nháp chưa thể ghi vào bộ nhớ chính');
   closeProductWorkspace({ restoreFocus: false });
   openContentBlock('payment');
+});
+document.getElementById('contentWorkspaceReview')?.addEventListener('click', () => openQuoteReview());
+document.getElementById('productWorkspaceReview')?.addEventListener('click', () => openQuoteReview());
+document.getElementById('productWorkspaceModal')?.addEventListener('input', () => {
+  requestAnimationFrame(() => renderContentBlockSummaries());
+});
+document.getElementById('productWorkspaceModal')?.addEventListener('change', () => {
+  requestAnimationFrame(() => renderContentBlockSummaries());
 });
 document.getElementById('productWorkspaceCatalogSearch')?.addEventListener('input', (event) => {
   renderProductWorkspaceCatalogResults(event.currentTarget.value);

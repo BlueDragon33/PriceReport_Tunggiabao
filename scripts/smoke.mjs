@@ -71,7 +71,8 @@ const requiredIds = [
   'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace',
   'contentWorkspaceGuideTitle','contentWorkspaceGuideDetail','contentWorkspaceQuickTools',
   'quoteFlowCard','quoteFlowStart','quoteFlowCardTitle','quoteFlowCardHint','quoteFlowProgress','quoteFlowStepLabel','quoteFlowProgressBar',
-  'productWorkspacePrev','productWorkspaceNext','productWorkspaceFlowStatus',
+  'contentWorkspaceStepList','contentWorkspaceReview',
+  'productWorkspacePrev','productWorkspaceNext','productWorkspaceFlowStatus','productWorkspaceStepList','productWorkspaceReview',
   'quoteReviewModal','quoteReviewTitle','quoteReviewCompletion','quoteReviewErrorCount','quoteReviewWarningCount','quoteReviewTotal',
   'quoteReviewStepList','quoteReviewIssueList','quoteReviewFirstIncomplete','quoteReviewRefresh',
   'quoteReviewBack','quoteReviewSave','quoteReviewPreview','quoteReviewExportPdf','closeQuoteReview'
@@ -105,7 +106,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v67-guided-quote-flow")) fail('Service-worker cache version was not aligned with the V6.7 guided quote flow release');
+if (!sw.includes("pricereport-shell-v68-flow-navigator")) fail('Service-worker cache version was not aligned with the V6.8 flow navigator release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -154,6 +155,10 @@ if (!js.includes('function renderQuoteReview') || !html.includes('id="quoteRevie
 if (!html.includes('id="productWorkspacePrev"') || !html.includes('id="productWorkspaceNext"')) fail('V6.7 product step navigation is missing');
 if (!html.includes('id="quoteFlowProgressBar"') || !contentWorkspaceCss.includes('.quote-flow-progress')) fail('V6.7 guided flow progress UI is missing');
 if (!contentWorkspaceCss.includes('.quote-review-dialog') || !contentWorkspaceCss.includes('.quote-review-issue')) fail('V6.7 review workspace styling is missing');
+if (!js.includes('function renderQuoteFlowNavigators')) fail('V6.8 live flow navigator controller is missing');
+if (!html.includes('id="contentWorkspaceStepList"') || !html.includes('id="productWorkspaceStepList"')) fail('V6.8 cross-modal navigator surfaces are missing');
+if (!html.includes('id="contentWorkspaceReview"') || !html.includes('id="productWorkspaceReview"')) fail('V6.8 final-review shortcuts are missing from editing modals');
+if (!contentWorkspaceCss.includes('.quote-flow-step-button') || !contentWorkspaceCss.includes('.quote-flow-navigator-card')) fail('V6.8 flow navigator styling is missing');
 if (!js.includes('function renderSmartImportEditableProducts') || !js.includes('function updateSmartImportEditableProduct')) fail('V6.6 editable spreadsheet review controller is missing');
 if (!html.includes('id="smartImportEditableProductRows"') || !html.includes('SỬA TRỰC TIẾP TRƯỚC KHI NHẬP')) fail('V6.6 editable import grid surface is missing');
 if (!js.includes('function focusNextSmartImportIssue') || !html.includes('id="smartImportNextIssue"')) fail('V6.6 issue navigation is missing');
