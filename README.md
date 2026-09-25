@@ -2,20 +2,22 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.3 Unified Content Workspaces
+## Trạng thái hiện tại — V6.4 Guided Content Workspaces
 
-V6.3 chuyển box **Nội dung báo giá** từ nơi chứa form hẹp thành **trung tâm điều phối nội dung**. Sáu khối ngoài Sản phẩm/Dịch vụ mở trong một shared workspace modal lớn; Sản phẩm tiếp tục dùng Product Workspace lớn hiện có.
+V6.4 giữ nguyên nền **V6.3 Unified Content Workspaces** nhưng biến cột trợ giúp bên phải thành **trợ lý thao tác theo từng khối**, để người chỉ cần nhập dữ liệu có thể hoàn thành báo giá nhanh hơn mà không phải tìm chức năng ở nơi khác.
 
-- **Thông tin chung / Khách hàng / Thanh toán / Điều khoản / Chữ ký / Văn bản tùy chỉnh** đều mở popup cùng một design system.
-- Không tạo form/state thứ hai: các input gốc được mount tạm vào workspace và trả lại đúng vị trí khi đóng.
-- Desktop mặc định **1200 px**, có nút giảm/tăng theo các mức **1040 / 1200 / 1360 / 1480 px**; mức nhỏ nhất vẫn giữ bề ngang kiểu ChatGPT trên desktop lớn.
-- Vùng nhập chính trong modal ưu tiên khoảng **820 px trở lên** ở viewport chuẩn 1664×912; tablet tự co hợp lý và mobile chuyển full-screen.
-- Cột trái luôn ở launcher mode, không còn đổi thành form dài hoặc làm geometry Studio nhảy qua lại.
-- Card nội dung hiển thị summary thực tế, trạng thái hoàn thành/đang nhập và progress **x/7 khối**.
-- Có **Khối trước / Khối tiếp theo**, Ctrl/Cmd+Enter để hoàn tất, Esc để đóng và focus trap đầy đủ.
-- Package: **6.3.0**.
-- PWA cache generation: **pricereport-shell-v63-unified-content-workspaces**.
-- Nền V6.2 vẫn được giữ: thư viện **16 mẫu**, trong đó Corporate Blue Reference bám ảnh tham chiếu xanh-trắng.
+- **Thông tin chung**: cập nhật ngày hôm nay, tạo mã báo giá mới và bật số/ngày trên A4.
+- **Khách hàng**: tìm tối đa 5 khách gần nhất/phù hợp theo tên, công ty, SĐT, email; nạp trực tiếp vào báo giá; lưu khách hiện tại vào danh bạ ngay trong popup.
+- **Thanh toán**: preset VAT 0/5/8/10%, giảm giá 0/5/10%, phương thức Tiền mặt / Chuyển khoản / TM-CK và nút bật tổng tiền + thanh toán trên A4.
+- **Điều khoản**: chèn bộ chuẩn hoặc từng điều khoản giao hàng, thanh toán, hiệu lực; chống chèn trùng và không ghi đè nội dung đã có.
+- **Chữ ký**: tạo dòng ngày tháng hiện tại, chuẩn hóa bố cục ký hai bên nhưng giữ nguyên họ tên đã nhập.
+- **Văn bản tùy chỉnh**: dùng nhanh lời mở đầu, lời kết và chân trang chuẩn.
+- Nút **Lưu nháp & tiếp tục →** lưu state hiện tại rồi chuyển sang khối kế tiếp mà không đóng workspace.
+- Toàn bộ quick tools vẫn thao tác trên **single source of truth** hiện có; không clone input, không tạo state thứ hai.
+- Desktop vẫn giữ các mức **1040 / 1200 / 1360 / 1480 px**, mặc định **1200 px**; mobile vẫn full-screen.
+- Package: **6.4.0**.
+- PWA cache generation: **pricereport-shell-v64-guided-content-workspaces**.
+- Nền V6.2/V6.3 vẫn được giữ: 16 mẫu báo giá native, launcher cố định và popup nhập sản phẩm lớn.
 
 
 ## Kiểm thử
