@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v67-guided-quote-flow';
+const CACHE = 'pricereport-shell-v68-flow-navigator';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
