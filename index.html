@@ -230,7 +230,7 @@
 
         <div class="content-library-section-head">
           <span>Mẫu thiết kế</span>
-          <button type="button" data-open-inspector="design">Xem tất cả</button>
+          <button type="button" id="openTemplateLibraryFromContent" data-open-inspector="design" aria-haspopup="dialog" aria-controls="templateLibraryModal">Xem tất cả</button>
         </div>
         <div class="content-template-grid" id="contentTemplateGrid">
           <button type="button" data-content-theme="canva-blue" title="Business Wave — mẫu xanh hiện đại theo cảm hứng Canva"><span class="mini-paper mini-canva-blue"></span><small>Business Wave</small></button>
@@ -1014,7 +1014,7 @@
           <div class="inspector-section-head"><h3>Giao diện tổng thể</h3><span>01</span></div>
           <button class="current-theme-card" id="toggleInspectorTemplates" type="button" aria-expanded="false">
             <span class="current-theme-preview" id="inspectorThemePreview"></span>
-            <span><b id="inspectorThemeName">Chuẩn công ty</b><small>Nhấn để đổi mẫu thiết kế</small></span>
+            <span><b id="inspectorThemeName">Chuẩn công ty</b><small>Mở thư viện mẫu báo giá</small></span>
             <em>›</em>
           </button>
           <div class="inspector-template-picker" id="inspectorTemplatePicker" hidden>
@@ -1191,6 +1191,7 @@
       <div class="preview-tools">
         <div class="preview-left-tools">
           <button class="toolbar-btn view-exit" id="exitReportView" type="button" hidden>← Chỉnh sửa</button>
+          <button class="toolbar-btn template-preview-back" id="templatePreviewBack" type="button" hidden>← Thư viện mẫu</button>
           <span class="paper-size-label">A4 <small>210 × 297 mm</small></span>
           <div class="zoom-control">
             <button class="zoom-btn" id="zoomOut" aria-label="Thu nhỏ">−</button>
@@ -1201,6 +1202,7 @@
           <button class="toolbar-icon-btn" id="wideView" type="button" aria-label="Màn hình rộng" title="Màn hình rộng">⛶</button>
         </div>
         <div class="preview-right-tools">
+          <button class="toolbar-btn template-preview-apply" id="templatePreviewApply" type="button" hidden>✓ Dùng mẫu này</button>
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
           <button class="toolbar-icon-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false" aria-label="Sắp xếp khối" title="Sắp xếp khối">✥</button>
@@ -1665,6 +1667,101 @@
         <span>Dữ liệu được lưu liên tục vào bản nháp hiện tại.</span>
         <button class="btn primary" id="doneProductWorkspace" type="button">Xong</button>
       </footer>
+    </section>
+  </div>
+
+  <div class="template-library-backdrop" id="templateLibraryModal" hidden>
+    <section class="template-library-dialog" role="dialog" aria-modal="true" aria-labelledby="templateLibraryTitle" tabindex="-1">
+      <header class="template-library-head">
+        <div>
+          <span class="eyebrow">THƯ VIỆN MẪU BÁO GIÁ</span>
+          <h2 id="templateLibraryTitle">Chọn phong cách phù hợp trong một màn hình</h2>
+          <p>Gallery lớn kiểu Canva: lọc theo ngành, xem thumbnail rõ và bấm một lần để xem thử toàn trang A4 trước khi áp dụng.</p>
+        </div>
+        <label class="template-library-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="templateLibrarySearch" type="search" placeholder="Tìm mẫu, ngành hoặc phong cách…" autocomplete="off">
+        </label>
+        <button class="template-library-close" id="closeTemplateLibrary" type="button" aria-label="Đóng thư viện mẫu">×</button>
+      </header>
+
+      <div class="template-library-body">
+        <nav class="template-library-categories" aria-label="Phân loại mẫu">
+          <button class="active" type="button" data-template-category="all">Tất cả</button>
+          <button type="button" data-template-category="business">Doanh nghiệp</button>
+          <button type="button" data-template-category="service">Dịch vụ</button>
+          <button type="button" data-template-category="construction">Xây dựng</button>
+          <button type="button" data-template-category="tech">Công nghệ</button>
+          <button type="button" data-template-category="education">Giáo dục</button>
+          <button type="button" data-template-category="minimal">Tối giản</button>
+          <button type="button" data-template-category="premium">Cao cấp</button>
+        </nav>
+
+        <div class="template-library-results-meta">
+          <strong id="templateLibraryCount">12 mẫu</strong>
+          <span>Chạm vào một mẫu để mở ngay bản xem thử A4. Mẫu chỉ được lưu khi bấm “Dùng mẫu này”.</span>
+        </div>
+
+        <div class="template-library-grid" id="templateLibraryGrid">
+          <button class="template-library-card featured" type="button" data-template-library-theme="canva-blue" data-categories="business tech service" data-search="business wave xanh doanh nghiệp công nghệ dịch vụ hiện đại canva">
+            <span class="template-library-badge">Nổi bật</span>
+            <span class="library-thumb canva-blue" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Business Wave</b><small>Doanh nghiệp · Công nghệ</small><em>Xanh hiện đại, sóng góc phải và metadata gọn.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="mint-finance" data-categories="tech education service" data-search="mint finance xanh ngọc công nghệ giáo dục dịch vụ tài chính">
+            <span class="template-library-badge">Mới</span>
+            <span class="library-thumb mint-finance" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Mint Finance</b><small>Công nghệ · Giáo dục</small><em>Khoảng trắng rộng, sáng và thân thiện.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="warm-proposal" data-categories="construction service premium" data-search="warm proposal xây dựng dịch vụ nội thất cam kem proposal">
+            <span class="template-library-badge">Mới</span>
+            <span class="library-thumb warm-proposal" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Warm Proposal</b><small>Xây dựng · Dịch vụ</small><em>Cam đào mềm, hợp thi công và proposal dịch vụ.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="violet-studio" data-categories="tech service premium" data-search="violet studio tím công nghệ dịch vụ agency cao cấp sáng tạo">
+            <span class="template-library-badge">Mới</span>
+            <span class="library-thumb violet-studio" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Violet Studio</b><small>Dịch vụ · Cao cấp</small><em>Tím hiện đại cho agency, media và sáng tạo.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="modern" data-categories="business service education" data-search="chuẩn công ty doanh nghiệp dịch vụ giáo dục truyền thống cân đối">
+            <span class="library-thumb modern" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Chuẩn công ty</b><small>Doanh nghiệp · Dịch vụ</small><em>Bố cục cân đối, phù hợp đa số báo giá.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="corporate" data-categories="business tech" data-search="doanh nghiệp corporate xanh công nghệ chuyên nghiệp">
+            <span class="library-thumb corporate" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Doanh nghiệp</b><small>Doanh nghiệp · Công nghệ</small><em>Gọn, chắc và dễ đọc khi gửi khách hàng.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="minimal" data-categories="minimal service education" data-search="tối giản minimal dịch vụ giáo dục trắng sạch">
+            <span class="library-thumb minimal" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Tối giản</b><small>Tối giản · Giáo dục</small><em>Nhiều khoảng trắng, ít trang trí, dễ in.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="classic" data-categories="business premium education" data-search="trang trọng classic cao cấp doanh nghiệp giáo dục serif">
+            <span class="library-thumb classic" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Trang trọng</b><small>Cao cấp · Doanh nghiệp</small><em>Serif nhẹ, hợp hồ sơ chính thức và hợp đồng.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="emerald" data-categories="service construction education" data-search="xanh thương hiệu emerald dịch vụ xây dựng giáo dục">
+            <span class="library-thumb emerald" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Xanh thương hiệu</b><small>Dịch vụ · Xây dựng</small><em>Xanh nổi bật nhưng vẫn giữ bố cục nghiêm túc.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="warm" data-categories="service construction" data-search="ấm nhẹ warm dịch vụ xây dựng cam ấm">
+            <span class="library-thumb warm" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Ấm nhẹ</b><small>Dịch vụ · Xây dựng</small><em>Tông ấm mềm, phù hợp khách hàng cá nhân.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="premium" data-categories="premium business tech" data-search="cao cấp sáng premium doanh nghiệp công nghệ sang trọng">
+            <span class="library-thumb premium" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Cao cấp sáng</b><small>Cao cấp · Doanh nghiệp</small><em>Tương phản mạnh, hợp proposal giá trị cao.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="mono" data-categories="minimal construction business" data-search="đen trắng mono tối giản xây dựng doanh nghiệp tiết kiệm mực">
+            <span class="library-thumb mono" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Đen trắng</b><small>Tối giản · Xây dựng</small><em>Rõ ràng, tiết kiệm mực và thân thiện máy in.</em></span>
+          </button>
+        </div>
+
+        <div class="template-library-empty" id="templateLibraryEmpty" hidden>
+          <strong>Không tìm thấy mẫu phù hợp</strong>
+          <span>Thử chọn “Tất cả” hoặc đổi từ khóa tìm kiếm.</span>
+        </div>
+      </div>
     </section>
   </div>
 
