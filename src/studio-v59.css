@@ -1738,6 +1738,7 @@ body.v5-ui.reference-ui-v59 .template-preview-apply{
 }
 body.v5-ui.reference-ui-v59 .template-preview-apply:hover{background:#0e68e7}
 
+body.v5-ui.reference-ui-v59.template-library-open{overflow:hidden}
 body.v5-ui.reference-ui-v59 .template-library-backdrop[hidden]{display:none!important}
 body.v5-ui.reference-ui-v59 .template-library-backdrop{
   position:fixed;
