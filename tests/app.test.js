@@ -158,6 +158,74 @@ test('V6.3 content workspace starts wider than a typical chat column and support
   document.getElementById('doneContentWorkspace').click();
 });
 
+test('V6.7 guided quote flow resumes the first incomplete block and exposes step progress', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const companyName = document.getElementById('companyName');
+  const originalCompany = companyName.value;
+  companyName.value = '';
+  companyName.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(document.getElementById('quoteFlowCardTitle').textContent).toContain('Thông tin chung');
+  document.getElementById('quoteFlowStart').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('general');
+  expect(document.getElementById('quoteFlowStepLabel').textContent).toBe('Bước 1/8');
+
+  companyName.value = originalCompany;
+  companyName.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+});
+
+test('V6.7 guided flow crosses the dedicated product modal and continues to payment', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+  document.getElementById('contentWorkspaceNext').click();
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('customer');
+
+  document.getElementById('contentWorkspaceNext').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(true);
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('productWorkspaceFlowStatus').textContent).toContain('Bước 3/8');
+
+  document.getElementById('productWorkspaceNext').click();
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('payment');
+  expect(document.getElementById('quoteFlowStepLabel').textContent).toBe('Bước 4/8');
+  document.getElementById('doneContentWorkspace').click();
+});
+
+test('V6.7 final review blocks PDF on errors and routes an issue back to its editor', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+  const quoteTitle = document.getElementById('quoteTitle');
+  const originalTitle = quoteTitle.value;
+  quoteTitle.value = '';
+  quoteTitle.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+
+  document.querySelector('#contentBlockList [data-content-block="custom-text"]').click();
+  document.getElementById('contentWorkspaceNext').click();
+
+  expect(document.getElementById('quoteReviewModal').hidden).toBe(false);
+  expect(document.querySelectorAll('#quoteReviewStepList .quote-review-step').length).toBe(7);
+  expect(Number(document.getElementById('quoteReviewErrorCount').textContent)).toBeGreaterThan(0);
+  expect(document.getElementById('quoteReviewExportPdf').disabled).toBe(true);
+
+  const titleIssue = Array.from(document.querySelectorAll('#quoteReviewIssueList .quote-review-issue'))
+    .find(button => button.textContent.includes('Thiếu tiêu đề báo giá'));
+  expect(titleIssue).toBeTruthy();
+  titleIssue.click();
+
+  expect(document.getElementById('quoteReviewModal').hidden).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('general');
+
+  quoteTitle.value = originalTitle;
+  quoteTitle.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+});
+
 test('V6.4 workspace assistant exposes block-aware quick tools without duplicating form state', () => {
   document.querySelector('[data-tab="general"]').click();
 
