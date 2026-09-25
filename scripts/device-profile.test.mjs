@@ -3,6 +3,8 @@ import { classifyDeviceProfile, DEVICE_PROFILES, resolveRemoteAdminReady, device
 
 assert.equal(classifyDeviceProfile({ width: 1440, touchPoints: 0, userAgent: 'Windows NT' }).id, 'desktop');
 assert.equal(classifyDeviceProfile({ width: 820, touchPoints: 5, userAgent: 'iPad' }).id, 'tablet');
+assert.equal(classifyDeviceProfile({ width: 1024, touchPoints: 5, userAgent: 'iPad' }).id, 'tablet');
+assert.equal(classifyDeviceProfile({ width: 1366, touchPoints: 5, userAgent: 'Macintosh' }).id, 'tablet');
 assert.equal(classifyDeviceProfile({ width: 430, touchPoints: 5, userAgent: 'iPhone' }).id, 'phone');
 assert.equal(classifyDeviceProfile({ width: 900, touchPoints: 0, userAgent: 'Windows NT' }).id, 'desktop');
 assert.equal(classifyDeviceProfile({ width: 900, touchPoints: 1, userAgent: 'Android' }).id, 'tablet');

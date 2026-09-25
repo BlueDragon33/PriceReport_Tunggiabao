@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v610-touch-polish';
+const CACHE = 'pricereport-shell-v611-touch-breakpoint-hardening';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
