@@ -2,24 +2,25 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.9 Mobile & iPad UI
+## Trạng thái hiện tại — V6.10 Mobile & iPad Polish
 
-V6.9 cập nhật riêng giao diện **điện thoại và iPad/tablet** để dùng đúng hệ UI/UX mới thay vì fallback V5 cũ.
+V6.10 là vòng làm lại thứ hai cho giao diện cảm ứng. V6.9 đã đưa mobile/iPad sang shell mới, nhưng V6.10 tập trung vào **độ thoáng, thứ tự ưu tiên và thao tác thực tế** thay vì chỉ responsive hóa desktop.
 
-- Khôi phục **global header** và **Content Library** trên thiết bị cảm ứng.
-- Dùng **bottom navigation 5 mục**: Trang chủ, Soạn báo giá, Quản lý báo giá, Khách hàng & sản phẩm, Thêm.
-- iPad dùng **split view**: Content Library bên trái + live A4 preview bên phải; A4 tự fit khi vào Studio và khi xoay màn hình.
-- Điện thoại dùng **single-column Studio**; A4 được tách thành chế độ Xem báo cáo để không ép form và tài liệu vào cùng một màn hình hẹp.
-- Content Workspace và Product Workspace được chuyển thành trải nghiệm touch gần/fullscreen, giữ **Flow Navigator 7 bước** ở dạng strip ngang.
-- Menu **Thêm** trên touch mở Khách hàng / Sản phẩm / Thanh toán / Điều khoản bằng đúng popup workflow hiện đại.
-- Product editor trên điện thoại dùng **card-first**, bỏ spreadsheet header nhỏ khó bấm.
-- Form điện thoại dùng cỡ chữ input tối thiểu **16 px** để tránh iOS tự zoom khi focus.
-- Thiết kế trên iPad là drawer bên phải; trên phone là drawer toàn chiều ngang.
-- Template Library và Final Review dùng bố cục fullscreen phù hợp touch.
-- Command palette trên touch chuyển thành overlay rõ ràng dưới header.
-- Desktop V6.8, dữ liệu local-first, Guided Quote Flow, Flow Navigator và 16 mẫu báo giá được giữ nguyên.
-- Package: **6.9.0**.
-- PWA cache generation: **pricereport-shell-v69-mobile-ipad-ui**.
+- **iPad dọc**: bỏ split-view chật; khu soạn chiếm gần toàn bộ chiều ngang, danh sách 7 khối chia 2 cột, preview A4 mở riêng khi cần.
+- **iPad ngang / tablet rộng**: giữ split-view hợp lý với editor 320 px + live A4 preview.
+- **Điện thoại**: header gọn hơn, bỏ icon tài liệu dư thừa, tăng khả năng đọc tên báo giá và trạng thái.
+- Bottom navigation giữ 5 mục nhưng tăng vùng chạm và phản hồi active rõ hơn.
+- Màn hình **Thêm nội dung** giảm chiều dài: mẫu thiết kế chuyển thành rail vuốt ngang thay vì bức tường card 2 cột.
+- Popup chỉnh sửa tận dụng thêm chiều cao; Flow Navigator gọn hơn nhưng vẫn đủ 7 bước.
+- Footer thao tác không còn chữ quá nhỏ; Prev / Tiếp tục / Xong có vùng chạm tối thiểu 44 px.
+- Toolbar Sản phẩm trên touch đổi thành **action rail vuốt ngang**, tránh chiếm nhiều hàng.
+- Product editor tiếp tục card-first trên phone.
+- Template Library trên phone chuyển sang card một cột ngang thông tin, dễ đọc hơn.
+- Final Review phone dùng dashboard 2×2 và panel một cột.
+- Các bảng quản lý dài được cuộn ngang cục bộ, không làm tràn toàn trang.
+- Desktop và logic báo giá không thay đổi.
+- Package: **6.10.0**.
+- PWA cache generation: **pricereport-shell-v610-touch-polish**.
 
 
 ## Kiểm thử
