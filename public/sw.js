@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v69-mobile-ipad-ui';
+const CACHE = 'pricereport-shell-v610-touch-polish';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
