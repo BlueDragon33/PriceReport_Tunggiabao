@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v63-unified-content-workspaces', 'V6.3 unified-content-workspace release must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v64-guided-content-workspaces', 'V6.4 guided-content-workspace release must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
