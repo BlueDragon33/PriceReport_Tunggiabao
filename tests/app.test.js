@@ -262,6 +262,38 @@ test('V6.8 product modal navigator crosses back into a content workspace and exp
   document.getElementById('closeQuoteReview').click();
 });
 
+test('V6.9 touch More routes quotation sections through popup workspaces', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const more = document.getElementById('mobileMoreToggle');
+  more.click();
+  expect(document.getElementById('mobileMoreMenu').hidden).toBe(false);
+
+  document.querySelector('#mobileMoreMenu [data-open-tab="customer"]').click();
+  expect(document.getElementById('mobileMoreMenu').hidden).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('customer');
+  document.getElementById('doneContentWorkspace').click();
+
+  more.click();
+  document.querySelector('#mobileMoreMenu [data-open-tab="products"]').click();
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(false);
+  document.getElementById('doneProductWorkspace').click();
+});
+
+test('V6.9 touch command palette uses an explicit overlay state and clears it on close', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.getElementById('studioTopMenu').click();
+  expect(document.querySelector('.studio-topbar').classList.contains('command-palette-open')).toBe(true);
+  expect(document.getElementById('studioCommandSearch').getAttribute('aria-expanded')).toBe('true');
+
+  document.getElementById('studioCommandSearch').dispatchEvent(new KeyboardEvent('keydown', {
+    key: 'Escape',
+    bubbles: true
+  }));
+  expect(document.querySelector('.studio-topbar').classList.contains('command-palette-open')).toBe(false);
+  expect(document.getElementById('studioCommandResults').hidden).toBe(true);
+});
+
 test('V6.4 workspace assistant exposes block-aware quick tools without duplicating form state', () => {
   document.querySelector('[data-tab="general"]').click();
 
@@ -409,7 +441,10 @@ test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunti
   const customerAction = menu.querySelector('[data-open-tab="customer"]');
   customerAction.click();
   expect(menu.hidden).toBe(true);
-  expect(document.getElementById('pane-customer').contains(document.activeElement)).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('customer');
+  expect(document.getElementById('customerName').closest('#contentWorkspaceModal')).toBeTruthy();
+  document.getElementById('doneContentWorkspace').click();
   document.querySelector('[data-tab="dashboard"]').click();
 });
 

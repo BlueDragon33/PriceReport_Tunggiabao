@@ -2,20 +2,24 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.8 Flow Navigator
+## Trạng thái hiện tại — V6.9 Mobile & iPad UI
 
-V6.8 tiếp tục tối ưu trải nghiệm popup: người dùng có thể **chuyển trực tiếp giữa 7 khối nội dung ngay bên trong cửa sổ đang mở**, không cần đóng popup rồi quay về danh sách bên trái.
+V6.9 cập nhật riêng giao diện **điện thoại và iPad/tablet** để dùng đúng hệ UI/UX mới thay vì fallback V5 cũ.
 
-- Content Workspace có **Flow Navigator** 7 bước ở cột trợ lý, hiển thị trạng thái Hoàn tất / Đang thiếu / Chưa làm.
-- Bước hiện tại được đánh dấu rõ bằng `aria-current="step"` và highlight riêng.
-- Product Workspace có navigator tương tự, vì vậy từ bảng Sản phẩm có thể nhảy thẳng sang Điều khoản, Khách hàng, Thanh toán... mà không mất ngữ cảnh.
-- Chuyển từ Content → Product hoặc Product → Content vẫn dùng đúng popup chuyên dụng của từng khối.
-- Hai workspace đều có nút **Kiểm tra cuối · x/7 →** để mở Final Review ngay tại chỗ.
-- Trạng thái navigator cập nhật trực tiếp từ dữ liệu thật; không tạo wizard state hay bản sao form.
-- Product modal cập nhật navigator khi người dùng sửa dữ liệu sản phẩm.
-- Toàn bộ Guided Quote Flow V6.7, Import Review 2.0, Product Entry Accelerator và 16 mẫu báo giá được giữ nguyên.
-- Package: **6.8.0**.
-- PWA cache generation: **pricereport-shell-v68-flow-navigator**.
+- Khôi phục **global header** và **Content Library** trên thiết bị cảm ứng.
+- Dùng **bottom navigation 5 mục**: Trang chủ, Soạn báo giá, Quản lý báo giá, Khách hàng & sản phẩm, Thêm.
+- iPad dùng **split view**: Content Library bên trái + live A4 preview bên phải; A4 tự fit khi vào Studio và khi xoay màn hình.
+- Điện thoại dùng **single-column Studio**; A4 được tách thành chế độ Xem báo cáo để không ép form và tài liệu vào cùng một màn hình hẹp.
+- Content Workspace và Product Workspace được chuyển thành trải nghiệm touch gần/fullscreen, giữ **Flow Navigator 7 bước** ở dạng strip ngang.
+- Menu **Thêm** trên touch mở Khách hàng / Sản phẩm / Thanh toán / Điều khoản bằng đúng popup workflow hiện đại.
+- Product editor trên điện thoại dùng **card-first**, bỏ spreadsheet header nhỏ khó bấm.
+- Form điện thoại dùng cỡ chữ input tối thiểu **16 px** để tránh iOS tự zoom khi focus.
+- Thiết kế trên iPad là drawer bên phải; trên phone là drawer toàn chiều ngang.
+- Template Library và Final Review dùng bố cục fullscreen phù hợp touch.
+- Command palette trên touch chuyển thành overlay rõ ràng dưới header.
+- Desktop V6.8, dữ liệu local-first, Guided Quote Flow, Flow Navigator và 16 mẫu báo giá được giữ nguyên.
+- Package: **6.9.0**.
+- PWA cache generation: **pricereport-shell-v69-mobile-ipad-ui**.
 
 
 ## Kiểm thử

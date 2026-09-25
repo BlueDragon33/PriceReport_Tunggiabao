@@ -1876,6 +1876,9 @@ function openTab(tab, options = {}) {
     renderMasterData();
     offerDataLibraryImportRecovery();
   }
+  if (!appWorkspace && tab !== 'view' && document.body.dataset.deviceClass === 'tablet') {
+    requestAnimationFrame(() => document.getElementById('fit')?.click());
+  }
   setTimeout(enhanceCollapsibleCards, 0);
 }
 
@@ -1937,6 +1940,7 @@ const STUDIO_COMMANDS = [
 function closeStudioCommandPalette() {
   const input = document.getElementById('studioCommandSearch');
   const results = document.getElementById('studioCommandResults');
+  document.querySelector('.studio-topbar')?.classList.remove('command-palette-open');
   if (results) {
     results.hidden = true;
     results.innerHTML = '';
@@ -1947,6 +1951,7 @@ function closeStudioCommandPalette() {
 function openStudioCommandPalette(initialQuery = '') {
   const input = document.getElementById('studioCommandSearch');
   if (!input) return;
+  document.querySelector('.studio-topbar')?.classList.add('command-palette-open');
   input.value = initialQuery;
   input.focus();
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -2444,6 +2449,12 @@ document.querySelectorAll('[data-open-tab]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const fromMobileMore = Boolean(btn.closest('#mobileMoreMenu'));
     const tab = btn.dataset.openTab;
+    const touchContentBlock = fromMobileMore && ['customer','products','payment','terms'].includes(tab);
+    if (touchContentBlock) {
+      setMobileMoreMenu(false);
+      openContentBlock(tab);
+      return;
+    }
     openTab(tab);
     if (fromMobileMore) focusTabDestination(tab);
   });
@@ -8953,10 +8964,11 @@ setTimeout(() => {
   }
 }, 60);
 window.addEventListener('resize', () => {
-  if (document.querySelector('.shell')?.classList.contains('report-view')) {
+  const shell = document.querySelector('.shell');
+  if (shell?.classList.contains('report-view')) {
     requestAnimationFrame(fitReportView);
-  } else if (window.innerWidth > 1050) {
-    document.getElementById('fit').click();
+  } else if (!shell?.classList.contains('app-workspace') && (window.innerWidth > 1050 || document.body.dataset.deviceClass === 'tablet')) {
+    requestAnimationFrame(() => document.getElementById('fit')?.click());
   }
   requestAnimationFrame(updatePageEstimate);
 });
