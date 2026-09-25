@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v57-reference-fidelity';
+const CACHE = 'pricereport-shell-v58-pixel-lock';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
