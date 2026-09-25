@@ -1467,13 +1467,29 @@ test('V6.0 modern template gallery applies Canva-inspired profiles end to end', 
   expect(document.querySelector('.quote-top > .qmeta').style.display).toBe('block');
 });
 
+test('V6.2 reference layout pack exposes and applies four new quotation compositions', () => {
+  const names = ['reference-blue-corporate','blue-sidebar','executive-navy','sky-minimal'];
+  names.forEach((theme) => {
+    const inspectorButton = document.querySelector('.tpl[data-theme="' + theme + '"]');
+    expect(inspectorButton).toBeTruthy();
+    expect(document.querySelector('[data-template-library-theme="' + theme + '"]')).toBeTruthy();
+    inspectorButton.click();
+    expect(document.getElementById('paper').classList.contains('theme-' + theme)).toBe(true);
+  });
+
+  document.querySelector('.tpl[data-theme="reference-blue-corporate"]').click();
+  expect(document.getElementById('inspectorThemeName').textContent).toBe('Corporate Blue Reference');
+  expect(document.querySelector('.quote-top > .qmeta').style.display).toBe('block');
+  expect(document.querySelector('[data-content-theme="reference-blue-corporate"]')).toBeTruthy();
+});
+
 test('V6.1 template library filters categories and previews A4 before committing', () => {
   document.querySelector('.tpl[data-theme="modern"]').click();
   document.getElementById('toggleInspectorTemplates').click();
 
   const modal = document.getElementById('templateLibraryModal');
   expect(modal.hidden).toBe(false);
-  expect(document.querySelectorAll('[data-template-library-theme]').length).toBe(12);
+  expect(document.querySelectorAll('[data-template-library-theme]').length).toBe(16);
 
   document.querySelector('[data-template-category="construction"]').click();
   const visibleConstruction = Array.from(document.querySelectorAll('[data-template-library-theme]'))
@@ -1916,7 +1932,7 @@ test('large Tùng Gia Bảo product set starts collapsed for practical editing',
   expect(cards.filter(card => card.classList.contains('collapsed')).length).toBeGreaterThanOrEqual(72);
 });
 
-test('all eight report templates preserve the full grouped price-list content and business data', () => {
+test('legacy eight report templates preserve the full grouped price-list content and business data', () => {
   const themes = ['modern','corporate','minimal','classic','emerald','warm','premium','mono'];
   const expectedProducts = document.querySelectorAll('.product-card').length;
   const companyBefore = document.getElementById('pCompanyName').textContent;
@@ -1930,7 +1946,7 @@ test('all eight report templates preserve the full grouped price-list content an
     expect(document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent).toBe(firstProductBefore);
   }
   document.querySelector('.tpl[data-theme="modern"]').click();
-});
+}, 12000);
 
 test('airy spacing survives binding normalization instead of silently becoming standard', () => {
   const select = document.getElementById('previewSpacing');

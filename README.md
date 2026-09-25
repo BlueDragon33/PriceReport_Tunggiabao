@@ -2,22 +2,19 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.9 Unified Shell
+## Trạng thái hiện tại — V6.2 Reference Layout Pack
 
-V5.9 xử lý dứt điểm hiện tượng giao diện “nhảy” giữa kiểu cũ và mới bằng cách giữ **một shell chính duy nhất** cho cả Workspace quản trị và Quotation Studio.
+V6.2 mở rộng thư viện từ **12 lên 16 mẫu báo giá native** và bổ sung một bố cục bám sát ảnh tham chiếu xanh-trắng đã cung cấp, nhưng vẫn dùng HTML/CSS thật thay vì đặt ảnh nền.
 
-- Rail trái luôn dùng cùng kích thước, màu, typography và tập điều hướng chính; các tab nội bộ của báo giá không còn xuất hiện/biến mất trên rail khi chuyển chế độ.
-- Topbar navy 72px luôn tồn tại. Khi ở Workspace nó hiện tên khu vực; khi vào báo giá nó chuyển sang context báo giá, trạng thái, lưu, xem trước và PDF mà không thay cả bộ khung.
-- Studio vẫn giữ geometry chuẩn: **118px rail → 320px “Thêm nội dung” → Preview → 384px Inspector**.
-- Các màn hình quản trị giữ nội dung sáng để đọc dữ liệu dễ, nhưng nằm trong cùng rail + topbar thay vì dùng một giao diện riêng.
-- Phần **Sản phẩm / Dịch vụ** không còn kéo dài panel trái theo số dòng. Panel trái giữ một vùng launcher cố định ~430px; bấm vào sẽ mở một modal nhập liệu lớn cố định.
-- Modal sản phẩm dùng trực tiếp `#productEditor` hiện có, không tạo state/form engine thứ hai. Kích thước desktop mục tiêu: **1400 × 820px** tại viewport 1664×912.
-- Trong modal có thêm dòng, dán bảng, nhập Excel, lấy từ danh mục, lưu danh mục, thao tác hàng loạt, sắp xếp, chỉnh cột hiển thị và phím nhanh.
-- Chuyển tab/top-level workspace sẽ tự đóng modal để tránh overlay cũ nằm đè lên giao diện mới.
-- CI có browser gate V5.9 để kiểm tra rail/topbar không đổi khi chuyển Dashboard ↔ Studio, thứ tự navigation không đổi, geometry Studio giữ đúng và modal sản phẩm mở/đóng đúng kích thước.
-- Stylesheet active: `src/studio-v59.css`; stylesheet V5.8 cũ đã bị xóa.
-- PWA cache generation: **pricereport-shell-v59-unified-shell**.
-- Package: **5.9.0**.
+- **Corporate Blue Reference**: logo/thương hiệu ở đầu trang, cụm liên hệ bên phải, tiêu đề báo giá lớn bên trái, thẻ số/ngày/hiệu lực bên phải, thông tin khách hàng bên trái, khối lời dẫn dạng quote-card bên phải, bảng xanh nhạt, khối thanh toán/tổng tiền cân đối và chữ ký hai cột.
+- **Blue Sidebar**: dải xanh dọc mạnh, phù hợp kỹ thuật/B2B.
+- **Executive Navy**: đầu trang navy đậm, điểm nhấn vàng nhạt cho hồ sơ giá trị cao.
+- **Sky Minimal**: xanh trời tối giản, nhiều khoảng trắng và nhịp card nhẹ.
+- Gallery toàn màn hình hiện có 16 mẫu, vẫn giữ tìm kiếm, lọc ngành và luồng xem thử A4 không phá dữ liệu trước khi bấm **Dùng mẫu này**.
+- Package: **6.2.0**.
+- PWA cache generation: **pricereport-shell-v62-reference-layout-pack**.
+- Nền tảng shell V5.9 vẫn được giữ nguyên: **118px rail → 320px Thêm nội dung → Preview → 384px Inspector**, topbar 72px và modal nhập sản phẩm lớn dùng cùng một state/form engine.
+
 
 ## Kiểm thử
 

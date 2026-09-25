@@ -233,6 +233,7 @@
           <button type="button" id="openTemplateLibraryFromContent" aria-haspopup="dialog" aria-controls="templateLibraryModal">Xem tất cả</button>
         </div>
         <div class="content-template-grid" id="contentTemplateGrid">
+          <button type="button" data-content-theme="reference-blue-corporate" title="Corporate Blue Reference — bố cục bám sát ảnh mẫu xanh-trắng đính kèm"><span class="mini-paper mini-reference-blue-corporate"></span><small>Corporate Blue</small></button>
           <button type="button" data-content-theme="canva-blue" title="Business Wave — mẫu xanh hiện đại theo cảm hứng Canva"><span class="mini-paper mini-canva-blue"></span><small>Business Wave</small></button>
           <button type="button" data-content-theme="mint-finance" title="Mint Finance — xanh ngọc sáng, gọn và thân thiện"><span class="mini-paper mini-mint-finance"></span><small>Mint Finance</small></button>
           <button type="button" data-content-theme="warm-proposal" title="Warm Proposal — cam kem mềm, phù hợp báo giá dịch vụ"><span class="mini-paper mini-warm-proposal"></span><small>Warm Proposal</small></button>
@@ -1027,7 +1028,11 @@
               <button class="tpl" data-theme="warm" data-description="Biến thể màu ấm nhẹ."><div class="thumb warm"></div><span>Ấm nhẹ</span></button>
               <button class="tpl" data-theme="premium" data-description="Điểm nhấn cao cấp sáng."><div class="thumb premium"></div><span>Cao cấp sáng</span></button>
               <button class="tpl" data-theme="mono" data-description="Đen trắng rõ ràng và tiết kiệm mực."><div class="thumb mono"></div><span>Đen trắng</span></button>
-              <button class="tpl tpl-featured" data-theme="canva-blue" data-description="Business Wave: bố cục xanh dương hiện đại, mảng sóng góc phải và thẻ thông tin gọn — lấy cảm hứng từ mẫu báo giá doanh nghiệp trên Canva trong ảnh tham chiếu."><div class="thumb canva-blue"></div><span>Business Wave</span><small>Mới · Canva-inspired</small></button>
+              <button class="tpl tpl-featured" data-theme="reference-blue-corporate" data-description="Corporate Blue Reference: bố cục bám sát ảnh mẫu đính kèm — logo/thông tin doanh nghiệp ở đầu trang, tiêu đề lớn bên trái, thẻ số báo giá bên phải, khối khách hàng và lời dẫn song song, bảng xanh nhạt, tổng tiền và chữ ký cân đối."><div class="thumb reference-blue-corporate"></div><span>Corporate Blue</span><small>Mới · Reference match</small></button>
+              <button class="tpl" data-theme="blue-sidebar" data-description="Blue Sidebar: dải xanh dọc mạnh, phù hợp báo giá kỹ thuật, thi công và dịch vụ B2B."><div class="thumb blue-sidebar"></div><span>Blue Sidebar</span><small>Mới</small></button>
+              <button class="tpl" data-theme="executive-navy" data-description="Executive Navy: navy đậm, điểm nhấn vàng nhạt và cấu trúc trang trọng cho báo giá giá trị cao."><div class="thumb executive-navy"></div><span>Executive Navy</span><small>Mới</small></button>
+              <button class="tpl" data-theme="sky-minimal" data-description="Sky Minimal: xanh trời rất nhạt, nhiều khoảng trắng, card mềm và bảng nhẹ cho dịch vụ hiện đại."><div class="thumb sky-minimal"></div><span>Sky Minimal</span><small>Mới</small></button>
+              <button class="tpl" data-theme="canva-blue" data-description="Business Wave: bố cục xanh dương hiện đại, mảng sóng góc phải và thẻ thông tin gọn — lấy cảm hứng từ mẫu báo giá doanh nghiệp trên Canva trong ảnh tham chiếu."><div class="thumb canva-blue"></div><span>Business Wave</span><small>Mới · Canva-inspired</small></button>
               <button class="tpl" data-theme="mint-finance" data-description="Mint Finance: xanh ngọc sáng, khoảng trắng rộng, phù hợp công nghệ, giáo dục và dịch vụ chuyên nghiệp."><div class="thumb mint-finance"></div><span>Mint Finance</span><small>Mới</small></button>
               <button class="tpl" data-theme="warm-proposal" data-description="Warm Proposal: cam đào và kem sáng, thân thiện cho proposal, thi công, nội thất và dịch vụ."><div class="thumb warm-proposal"></div><span>Warm Proposal</span><small>Mới</small></button>
               <button class="tpl" data-theme="violet-studio" data-description="Violet Studio: tím gradient hiện đại, phù hợp agency, media, thiết kế và dịch vụ sáng tạo."><div class="thumb violet-studio"></div><span>Violet Studio</span><small>Mới</small></button>
@@ -1698,11 +1703,31 @@
         </nav>
 
         <div class="template-library-results-meta">
-          <strong id="templateLibraryCount">12 mẫu</strong>
+          <strong id="templateLibraryCount">16 mẫu</strong>
           <span>Chạm vào một mẫu để mở ngay bản xem thử A4. Mẫu chỉ được lưu khi bấm “Dùng mẫu này”.</span>
         </div>
 
         <div class="template-library-grid" id="templateLibraryGrid">
+          <button class="template-library-card featured" type="button" data-template-library-theme="reference-blue-corporate" data-categories="business tech service premium" data-search="corporate blue reference xanh trắng doanh nghiệp báo giá mẫu ảnh đính kèm công nghệ dịch vụ cao cấp">
+            <span class="template-library-badge">Giống ảnh mẫu</span>
+            <span class="library-thumb reference-blue-corporate" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Corporate Blue Reference</b><small>Doanh nghiệp · Công nghệ</small><em>Bố cục xanh-trắng bám sát ảnh đính kèm: title trái, meta phải, khối khách hàng và lời dẫn song song.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="blue-sidebar" data-categories="business tech service" data-search="blue sidebar xanh dọc doanh nghiệp kỹ thuật công nghệ dịch vụ b2b">
+            <span class="template-library-badge">Mới</span>
+            <span class="library-thumb blue-sidebar" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Blue Sidebar</b><small>Doanh nghiệp · Kỹ thuật</small><em>Dải xanh dọc rõ, nhịp nội dung chắc và dễ đọc.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="executive-navy" data-categories="business premium tech" data-search="executive navy cao cấp doanh nghiệp công nghệ navy vàng proposal">
+            <span class="template-library-badge">Mới</span>
+            <span class="library-thumb executive-navy" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Executive Navy</b><small>Cao cấp · Doanh nghiệp</small><em>Navy sâu, điểm nhấn vàng nhạt cho proposal và báo giá giá trị cao.</em></span>
+          </button>
+          <button class="template-library-card" type="button" data-template-library-theme="sky-minimal" data-categories="minimal service education tech" data-search="sky minimal xanh trời tối giản dịch vụ giáo dục công nghệ sáng">
+            <span class="template-library-badge">Mới</span>
+            <span class="library-thumb sky-minimal" aria-hidden="true"></span>
+            <span class="template-library-card-copy"><b>Sky Minimal</b><small>Tối giản · Dịch vụ</small><em>Khoảng trắng rộng, card nhẹ và bảng thoáng.</em></span>
+          </button>
           <button class="template-library-card featured" type="button" data-template-library-theme="canva-blue" data-categories="business tech service" data-search="business wave xanh doanh nghiệp công nghệ dịch vụ hiện đại canva">
             <span class="template-library-badge">Nổi bật</span>
             <span class="library-thumb canva-blue" aria-hidden="true"></span>

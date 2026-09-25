@@ -170,7 +170,7 @@ try {
   near('template library dialog width', templateDialog.width, 1480, 10);
   near('template library dialog height', templateDialog.height, 850, 10);
   if (await page.locator('[data-template-category]').count() !== 8) fail('template library category set is incomplete');
-  if (await page.locator('[data-template-library-theme]').count() !== 12) fail('template library does not expose all 12 themes');
+  if (await page.locator('[data-template-library-theme]').count() !== 16) fail('template library does not expose all 16 themes');
 
   await page.locator('[data-template-category="construction"]').click();
   if (await page.locator('[data-template-library-theme]:visible').count() !== 4) {
@@ -194,6 +194,27 @@ try {
 
   await page.locator('#templatePreviewBack').click();
   await page.locator('#templateLibraryModal:not([hidden])').waitFor();
+
+  // V6.2: the attached-reference layout is a real A4 composition, not a thumbnail-only skin.
+  await page.locator('[data-template-library-theme="reference-blue-corporate"]').click();
+  await page.locator('.shell.report-view #paper.theme-reference-blue-corporate').waitFor();
+  const referenceDisplay = await page.locator('#paper').evaluate(node => getComputedStyle(node).display);
+  if (referenceDisplay !== 'grid') fail('reference layout must own the A4 composition with CSS grid, got ' + referenceDisplay);
+  const referenceTitle = await box('.shell.report-view #paper .qtitle-wrap');
+  const referenceMeta = await box('.shell.report-view #paper .quote-top > .qmeta');
+  const referenceRecipient = await box('.shell.report-view #paper .recipient');
+  const referenceIntro = await box('.shell.report-view #paper .intro');
+  if (!(referenceTitle.x < referenceMeta.x)) fail('reference layout must keep title left and quote metadata right');
+  if (!(referenceRecipient.x < referenceIntro.x)) fail('reference layout must keep customer information left and intro quote card right');
+  if (Math.abs(referenceRecipient.y - referenceIntro.y) > 70) {
+    fail('reference customer/intro blocks no longer form the intended two-column band');
+  }
+  const referencePaper = await box('.shell.report-view #paper');
+  const referenceTable = await box('.shell.report-view #paper .qtable');
+  if (referenceTable.width < referencePaper.width * 0.68) fail('reference table is no longer a dominant full-width document block');
+
+  await page.locator('#templatePreviewBack').click();
+  await page.locator('#templateLibraryModal:not([hidden])').waitFor();
   await page.locator('#closeTemplateLibrary').click();
 
   const search = page.locator('#studioCommandSearch');
@@ -202,7 +223,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V5.9 BROWSER UNIFIED-SHELL PASS: shell continuity, Studio geometry and fixed product modal verified');
+  console.log('V6.2 BROWSER PASS: unified shell, product modal, 16-theme library and attached-reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

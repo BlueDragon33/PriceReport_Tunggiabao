@@ -54,3 +54,218 @@
 .theme-violet-studio .qtable td{border-color:#e4def0}
 .theme-violet-studio .summary .grand{background:#eee8ff;color:#5a3db1}
 .theme-violet-studio .footer{color:#fff}
+
+
+/* V6.2 — Reference-led layout pack.
+   Corporate Blue Reference intentionally follows the supplied blue/white quotation image
+   with a two-column information zone, left title/right metadata, soft quote card,
+   pale-blue table header, right-side totals and balanced signature footer. */
+
+.theme-reference-blue-corporate{
+  --doc:#1f6fe5;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto auto auto auto auto auto auto auto auto!important;
+  column-gap:8mm!important;
+  row-gap:0!important;
+  align-content:start!important;
+  padding:10.5mm 11.5mm 9.5mm!important;
+  background:#fff!important;
+  font-family:Arial,sans-serif!important;
+  color:#18304f!important
+}
+.theme-reference-blue-corporate .decor-top{
+  right:-16mm;top:-19mm;width:103mm;height:60mm;border-radius:0 0 0 100%;
+  background:linear-gradient(147deg,#edf5ff 0 30%,#b8d7ff 30% 43%,#6faaff 43% 53%,#dcecff 53% 65%,transparent 65%)
+}
+.theme-reference-blue-corporate .decor-top:before{
+  content:"";position:absolute;right:5mm;top:10mm;width:76mm;height:32mm;border-radius:50%;
+  border:3.2mm solid rgba(255,255,255,.88);transform:rotate(-27deg)
+}
+.theme-reference-blue-corporate .decor-top:after{
+  content:"";position:absolute;right:16mm;top:13mm;width:63mm;height:25mm;border-radius:50%;
+  border:1.8mm solid rgba(50,125,232,.25);transform:rotate(-27deg)
+}
+.theme-reference-blue-corporate .decor-bottom{display:none!important}
+.paper.theme-reference-blue-corporate .doc-head{
+  grid-column:1/-1!important;grid-row:1!important;
+  display:grid!important;grid-template-columns:43mm minmax(0,1fr)!important;
+  gap:6mm!important;align-items:start!important;min-height:29mm!important;
+  margin:0 0 2.5mm!important;padding:0 0 1.5mm!important;border:0!important
+}
+.paper.theme-reference-blue-corporate .logo-zone{
+  min-height:24mm!important;padding:0!important;place-items:start!important;align-content:start!important;
+  background:transparent!important;border:0!important;box-shadow:none!important
+}
+.paper.theme-reference-blue-corporate .logo-zone img{max-width:40mm!important;max-height:22mm!important;object-position:left top!important}
+.paper.theme-reference-blue-corporate .company-col{
+  width:100%!important;display:flex!important;justify-content:flex-end!important;align-items:flex-start!important
+}
+.paper.theme-reference-blue-corporate .company-block{
+  width:72mm!important;max-width:72mm!important;margin:0!important;align-items:stretch!important
+}
+.paper.theme-reference-blue-corporate .company-name{
+  margin:0 0 1.1mm!important;color:#15366d!important;text-align:left!important;
+  font-size:11px!important;line-height:1.2!important;font-weight:850!important;letter-spacing:.15px!important
+}
+.paper.theme-reference-blue-corporate .company-lines{
+  width:100%!important;max-width:none!important;margin:0!important;color:#4c6687!important;
+  font-size:8.35px!important;line-height:1.28!important
+}
+.paper.theme-reference-blue-corporate .company-lines>div{
+  position:relative;margin:.32mm 0!important;padding-left:4mm!important
+}
+.paper.theme-reference-blue-corporate .company-lines>div:before{
+  content:"";position:absolute;left:.6mm;top:.95mm;width:1.8mm;height:1.8mm;border-radius:50%;background:#2b7de9;
+  box-shadow:0 0 0 .55mm #e6f1ff
+}
+.theme-reference-blue-corporate .quote-top{
+  grid-column:1/-1!important;grid-row:2!important;display:grid!important;
+  grid-template-columns:minmax(0,1fr) 52mm!important;gap:8mm!important;align-items:center!important;
+  margin:0 0 4mm!important;padding:0!important;border:0!important
+}
+.theme-reference-blue-corporate .qtitle{
+  margin:0!important;color:#102a62!important;text-align:left!important;font-size:25.5px!important;
+  line-height:1!important;font-weight:900!important;letter-spacing:.2px!important
+}
+.theme-reference-blue-corporate .qtitle:after{
+  width:30mm!important;height:1.2px!important;margin:2.2mm 0 0!important;background:#2f7fe9!important
+}
+.theme-reference-blue-corporate .qsubtitle{
+  margin-top:1.4mm!important;color:#3f7fd6!important;font-size:11px!important;font-weight:700!important
+}
+.theme-reference-blue-corporate .qmeta{
+  display:block;border:1px solid #d8e7fb!important;border-radius:2.2mm!important;
+  background:linear-gradient(145deg,#f7fbff,#edf5ff)!important;padding:2.5mm 3.2mm!important;
+  color:#395677!important;font-size:8.7px!important;line-height:1.3!important;box-shadow:0 1.4mm 4mm rgba(31,111,229,.08)
+}
+.theme-reference-blue-corporate .qmeta div{margin:.65mm 0!important}
+.theme-reference-blue-corporate .recipient{
+  grid-column:1!important;grid-row:3!important;align-self:start!important;
+  position:relative!important;margin:0 0 1.5mm!important;padding:7mm 0 0!important;
+  color:#183865!important;text-align:left!important;font-size:10.6px!important;font-weight:800!important
+}
+.theme-reference-blue-corporate .recipient:before{
+  content:"THÔNG TIN KHÁCH HÀNG";position:absolute;left:0;top:0;color:#1e63bd;font-size:8.8px;font-weight:900;letter-spacing:.25px
+}
+.theme-reference-blue-corporate .recipient:after{
+  content:"";position:absolute;left:0;top:4.4mm;width:16mm;height:1px;background:#2b80ec
+}
+.theme-reference-blue-corporate .report-customer-meta{
+  grid-column:1!important;grid-row:4!important;align-self:start!important;
+  margin:0 0 4mm!important;padding:0!important;border:0!important;background:transparent!important;
+  color:#526985!important;font-size:8.8px!important;line-height:1.55!important
+}
+.theme-reference-blue-corporate .intro{
+  grid-column:2!important;grid-row:3/5!important;align-self:start!important;
+  position:relative!important;min-height:27mm!important;margin:0 0 4mm!important;padding:5.8mm 6mm 4mm 10mm!important;
+  border:1px solid #e0ebfa!important;border-radius:2.4mm!important;background:#f4f8fe!important;
+  color:#60728a!important;text-align:left!important;font-size:8.7px!important;line-height:1.55!important;font-style:italic!important
+}
+.theme-reference-blue-corporate .intro:before{
+  content:"“";position:absolute;left:3.2mm;top:1mm;color:#4c8fea;font-size:25px;font-weight:900;line-height:1
+}
+.theme-reference-blue-corporate .sectionbar{
+  grid-column:1/-1!important;grid-row:5!important;margin:0!important;padding:1.8mm 0 1.7mm!important;
+  border:0!important;border-radius:0!important;background:transparent!important;color:#1d5eb5!important;
+  font-size:8.9px!important;font-weight:900!important;letter-spacing:.18px!important
+}
+.theme-reference-blue-corporate .sectionbar:before{
+  content:"▣";display:inline-block;margin-right:2mm;color:#2d81ef;font-size:9px
+}
+.theme-reference-blue-corporate .qtable{
+  grid-column:1/-1!important;grid-row:6!important;margin:0!important;border:1px solid #cfdff3!important;
+  border-collapse:separate!important;border-spacing:0!important;border-radius:1.7mm!important;overflow:hidden!important;
+  color:#273f5e!important
+}
+.theme-reference-blue-corporate .qtable th{
+  background:#eaf3ff!important;color:#21466f!important;border-color:#d0e0f3!important;font-weight:850!important
+}
+.theme-reference-blue-corporate .qtable td{border-color:#d8e4f2!important}
+.theme-reference-blue-corporate .payment-print{
+  grid-column:1!important;grid-row:7!important;align-self:start!important;
+  margin:4mm 0 0!important;padding:3mm 3.5mm!important;border:1px solid #e0ebf9!important;border-radius:2.4mm!important;
+  background:#f5f9fe!important
+}
+.theme-reference-blue-corporate .payment-print h4{margin:0 0 1.8mm!important;color:#2369c3!important;font-size:8.8px!important}
+.theme-reference-blue-corporate .payment-grid{
+  display:block!important;padding:0!important;border:0!important;background:transparent!important;color:#61758f!important;font-size:8.25px!important
+}
+.theme-reference-blue-corporate .payment-grid>div{margin:.65mm 0!important}
+.theme-reference-blue-corporate .summary{
+  grid-column:2!important;grid-row:7!important;align-self:start!important;
+  width:100%!important;margin:4mm 0 0!important;border-collapse:collapse!important;font-size:8.7px!important
+}
+.theme-reference-blue-corporate .summary td{border-color:#d6e3f2!important;padding:1.35mm 2mm!important}
+.theme-reference-blue-corporate .summary .grand{
+  background:#e8f2ff!important;color:#1558b4!important;border-color:#c9dcf5!important;font-size:9.4px!important
+}
+.theme-reference-blue-corporate .words{
+  grid-column:2!important;grid-row:8!important;margin:1.5mm 0 0!important;color:#55708f!important;font-size:8.4px!important
+}
+.theme-reference-blue-corporate .terms{
+  grid-column:1/-1!important;grid-row:9!important;margin:4.2mm 0 0!important;padding-top:0!important
+}
+.theme-reference-blue-corporate .terms h4{color:#244f86!important;font-size:8.9px!important}
+.theme-reference-blue-corporate .terms ol{color:#4c617d!important;font-size:8.4px!important;line-height:1.38!important}
+.theme-reference-blue-corporate .closing{color:#6c7e93!important;font-size:8.5px!important}
+.theme-reference-blue-corporate .signatures{
+  grid-column:1/-1!important;grid-row:10!important;display:grid!important;grid-template-columns:1fr 1fr!important;
+  gap:22mm!important;min-height:26mm!important;margin:4mm 0 0!important;color:#294563!important;font-size:8.5px!important
+}
+.theme-reference-blue-corporate .sig-title{color:#214c82!important;font-weight:850!important}
+.theme-reference-blue-corporate .sig-name{margin-top:12mm!important}
+.theme-reference-blue-corporate .footer{
+  grid-column:1/-1!important;grid-row:11!important;min-height:8mm!important;margin:2mm 0 0!important;padding:2mm 0 0!important;
+  border-top:1px solid #e3ecf7!important;color:#72859a!important;justify-content:center!important;font-size:7.8px!important
+}
+
+/* Additional V6.2 variants keep the same document semantics while offering visibly different compositions. */
+.theme-blue-sidebar{
+  --doc:#1557a6;border-left:8mm solid #1557a6!important;padding-left:10mm!important;background:linear-gradient(90deg,#f3f8ff 0 8mm,#fff 8mm)!important
+}
+.theme-blue-sidebar .decor-top{left:-8mm;top:0;width:8mm;height:100%;background:linear-gradient(180deg,#0f4b91,#2f7bd0);border-radius:0}
+.theme-blue-sidebar .decor-bottom{display:none}
+.theme-blue-sidebar .doc-head{border-bottom:1px solid #d9e5f3!important}
+.theme-blue-sidebar .company-name,.theme-blue-sidebar .qtitle{color:#134d92!important;font-family:Arial,sans-serif!important}
+.theme-blue-sidebar .qtitle{text-align:left!important}
+.theme-blue-sidebar .qtitle:after{margin-left:0!important;width:40mm!important}
+.theme-blue-sidebar .qmeta{background:#f3f7fc!important;border:1px solid #d7e3f0!important}
+.theme-blue-sidebar .sectionbar{border-radius:0!important;background:#1557a6!important}
+.theme-blue-sidebar .qtable th{background:#edf4fb!important;color:#24476e!important;border-color:#cfdded!important}
+.theme-blue-sidebar .qtable td{border-color:#d8e2ed!important}
+.theme-blue-sidebar .summary .grand{background:#1557a6!important;color:#fff!important}
+.theme-blue-sidebar .footer{border-top:1px solid #d7e1ec!important;color:#50667f!important}
+
+.theme-executive-navy{
+  --doc:#172b4d;background:linear-gradient(180deg,#172b4d 0 34mm,#fff 34mm)!important;font-family:Arial,sans-serif!important
+}
+.theme-executive-navy .decor-top{display:none}
+.theme-executive-navy .decor-bottom{left:0;right:0;bottom:0;height:7mm;background:#172b4d}
+.theme-executive-navy .doc-head{color:#fff!important;border:0!important;padding-top:1mm!important}
+.theme-executive-navy .company-name,.theme-executive-navy .logo-text{color:#fff!important}
+.theme-executive-navy .company-lines{color:#d5dfef!important}
+.theme-executive-navy .qtitle{color:#172b4d!important;text-align:left!important;font-family:Arial,sans-serif!important}
+.theme-executive-navy .qtitle:after{margin-left:0!important;width:37mm!important;background:#d5ad58!important}
+.theme-executive-navy .qmeta{background:#f7f3e8!important;border:1px solid #e7d7ad!important}
+.theme-executive-navy .sectionbar{background:#172b4d!important;border-radius:0!important}
+.theme-executive-navy .qtable th{background:#eef1f5!important;color:#263a56!important}
+.theme-executive-navy .summary .grand{background:#172b4d!important;color:#fff!important}
+.theme-executive-navy .footer{color:#fff!important}
+
+.theme-sky-minimal{
+  --doc:#4b9be8;background:#fff!important;font-family:Arial,sans-serif!important
+}
+.theme-sky-minimal .decor-top{right:-28mm;top:-25mm;width:100mm;height:52mm;border-radius:0 0 0 100%;background:linear-gradient(145deg,#eef8ff,#c9e7ff 58%,transparent 58%)}
+.theme-sky-minimal .decor-bottom{display:none}
+.theme-sky-minimal .doc-head{border:0!important;border-bottom:1px solid #e2edf7!important}
+.theme-sky-minimal .company-name,.theme-sky-minimal .qtitle{color:#285f96!important;font-family:Arial,sans-serif!important}
+.theme-sky-minimal .qtitle{text-align:left!important;font-weight:750!important}
+.theme-sky-minimal .qtitle:after{margin-left:0!important;width:32mm!important;background:#79b7ef!important}
+.theme-sky-minimal .qmeta{background:#f7fbff!important;border:1px solid #e1eef9!important;box-shadow:none!important}
+.theme-sky-minimal .sectionbar{background:#f0f7fd!important;color:#316d9f!important;border-radius:2mm!important}
+.theme-sky-minimal .qtable th{background:#f5faff!important;color:#416686!important;border-color:#d9e7f3!important}
+.theme-sky-minimal .qtable td{border-color:#e0eaf3!important}
+.theme-sky-minimal .summary .grand{background:#edf6ff!important;color:#2e71ac!important;border-color:#d7e8f7!important}
+.theme-sky-minimal .payment-grid{background:#f8fbfe!important;border-color:#e2edf6!important}
+.theme-sky-minimal .footer{color:#6b8194!important;border-top:1px solid #e4edf5!important;padding-top:3mm!important}
