@@ -213,6 +213,15 @@
           <small id="contentCompletionHint">Mở từng khối để hoàn thiện báo giá.</small>
         </section>
 
+        <section class="quote-flow-card" id="quoteFlowCard" aria-live="polite">
+          <div class="quote-flow-card-copy">
+            <span class="eyebrow">QUY TRÌNH NHANH</span>
+            <strong id="quoteFlowCardTitle">Hoàn thiện báo giá theo từng bước</strong>
+            <small id="quoteFlowCardHint">Đi lần lượt qua 7 khối nội dung rồi kiểm tra trước khi xuất.</small>
+          </div>
+          <button class="quote-flow-start" id="quoteFlowStart" type="button">Bắt đầu →</button>
+        </section>
+
         <div class="content-library-section-label">Khối cơ bản</div>
         <div class="content-block-list" id="contentBlockList">
           <button class="content-block-row" type="button" data-content-block="general" data-search-text="thông tin chung doanh nghiệp báo giá">
@@ -1678,6 +1687,10 @@
 
       <div class="content-workspace-toolbar">
         <span><b id="contentWorkspaceBlockState">Đang chỉnh sửa</b><small>Dữ liệu dùng chung với báo giá hiện tại, không tạo bản sao.</small></span>
+        <div class="quote-flow-progress" id="quoteFlowProgress" aria-label="Tiến độ quy trình tạo báo giá">
+          <span id="quoteFlowStepLabel">Bước 1/8</span>
+          <div class="quote-flow-progress-track" aria-hidden="true"><span id="quoteFlowProgressBar"></span></div>
+        </div>
         <button class="btn" id="contentWorkspaceOpenPreview" type="button">◉ Xem A4</button>
       </div>
 
@@ -1840,8 +1853,62 @@
       </div>
 
       <footer class="product-workspace-modal-footer">
-        <span>Dữ liệu được lưu liên tục vào bản nháp hiện tại.</span>
-        <button class="btn primary" id="doneProductWorkspace" type="button">Xong</button>
+        <span id="productWorkspaceFlowStatus">Bước 3/8 · Dữ liệu được lưu liên tục vào bản nháp hiện tại.</span>
+        <div class="product-workspace-flow-actions">
+          <button class="btn" id="productWorkspacePrev" type="button">← Khách hàng</button>
+          <button class="btn" id="productWorkspaceNext" type="button">Lưu nháp & tiếp tục →</button>
+          <button class="btn primary" id="doneProductWorkspace" type="button">Xong</button>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <div class="quote-review-backdrop" id="quoteReviewModal" hidden>
+    <section class="quote-review-dialog" role="dialog" aria-modal="true" aria-labelledby="quoteReviewTitle" tabindex="-1">
+      <header class="quote-review-head">
+        <div>
+          <span class="eyebrow">BƯỚC 8/8 · KIỂM TRA CUỐI CÙNG</span>
+          <h2 id="quoteReviewTitle">Sẵn sàng xuất báo giá?</h2>
+          <p id="quoteReviewSubtitle">Kiểm tra nội dung, lỗi nghiệp vụ và tổng tiền trước khi lưu hoặc xuất PDF.</p>
+        </div>
+        <button class="quote-review-close" id="closeQuoteReview" type="button" aria-label="Đóng kiểm tra cuối">×</button>
+      </header>
+
+      <div class="quote-review-body">
+        <section class="quote-review-summary">
+          <article><small>Khối hoàn thiện</small><strong id="quoteReviewCompletion">0/7</strong><span>Nội dung chính</span></article>
+          <article><small>Lỗi cần sửa</small><strong id="quoteReviewErrorCount">0</strong><span>Chặn xuất PDF</span></article>
+          <article><small>Cần kiểm tra</small><strong id="quoteReviewWarningCount">0</strong><span>Có thể xác nhận tiếp tục</span></article>
+          <article class="total"><small>Tổng báo giá</small><strong id="quoteReviewTotal">0 VND</strong><span id="quoteReviewQuoteNo">Chưa có mã báo giá</span></article>
+        </section>
+
+        <div class="quote-review-grid">
+          <section class="quote-review-panel">
+            <div class="quote-review-panel-head">
+              <div><strong>QUY TRÌNH NỘI DUNG</strong><span>Click một bước để quay lại chỉnh sửa đúng khối.</span></div>
+              <button class="btn" id="quoteReviewFirstIncomplete" type="button">Tới mục chưa xong</button>
+            </div>
+            <div class="quote-review-step-list" id="quoteReviewStepList"></div>
+          </section>
+
+          <section class="quote-review-panel">
+            <div class="quote-review-panel-head">
+              <div><strong>KIỂM TRA NGHIỆP VỤ</strong><span>Lỗi đỏ phải sửa; cảnh báo vàng cần xác nhận trước khi xuất.</span></div>
+              <button class="btn" id="quoteReviewRefresh" type="button">↻ Kiểm tra lại</button>
+            </div>
+            <div class="quote-review-issue-list" id="quoteReviewIssueList"></div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="quote-review-footer">
+        <span id="quoteReviewFooterStatus">Chưa chạy kiểm tra.</span>
+        <div>
+          <button class="btn" id="quoteReviewBack" type="button">← Quay lại chỉnh sửa</button>
+          <button class="btn" id="quoteReviewSave" type="button">Lưu báo giá</button>
+          <button class="btn" id="quoteReviewPreview" type="button">◉ Xem A4</button>
+          <button class="btn primary" id="quoteReviewExportPdf" type="button">⇩ Xuất PDF</button>
+        </div>
       </footer>
     </section>
   </div>
