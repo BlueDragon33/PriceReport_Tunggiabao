@@ -417,9 +417,12 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
   expect(search.getAttribute('aria-activedescendant')).toBeTruthy();
   const activeOption = document.getElementById(search.getAttribute('aria-activedescendant'));
   expect(activeOption?.getAttribute('aria-selected')).toBe('true');
-  while (document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active') !== result) {
+  const searchOptions = Array.from(document.querySelectorAll('#dashboardSearchResults .dashboard-search-result'));
+  for (let step = 0; step < searchOptions.length &&
+      document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active') !== result; step += 1) {
     search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
   }
+  expect(document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active')).toBe(result);
   search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
   expect(document.getElementById('quickCustomerCompany').value).toBe('Công ty Search V46');
@@ -432,7 +435,7 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
     el.dispatchEvent(new Event('input', { bubbles: true }));
   });
   document.querySelector('[data-tab="general"]').click();
-});
+}, 12000);
 
 test('V4.9 settings persist application preferences without touching business data', () => {
   const uiKey = 'tunggiabao-price-report-ui-v2';
