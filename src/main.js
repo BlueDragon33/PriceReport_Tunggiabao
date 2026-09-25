@@ -576,6 +576,17 @@ const STATUS_LABELS = {
   expired: 'Hết hiệu lực'
 };
 
+const THEME_LABELS = {
+  modern: 'Chuẩn công ty',
+  corporate: 'Doanh nghiệp',
+  minimal: 'Tối giản',
+  classic: 'Trang trọng',
+  emerald: 'Xanh thương hiệu',
+  warm: 'Ấm nhẹ',
+  premium: 'Cao cấp sáng',
+  mono: 'Đen trắng'
+};
+
 function comparableQuoteForHistory(data) {
   const snapshot = clone(data || {});
   delete snapshot.logo;
@@ -4043,17 +4054,6 @@ const THEME_FONTS = {
   warm: 'Georgia',
   premium: 'Arial',
   mono: 'Arial'
-};
-
-const THEME_LABELS = {
-  modern: 'Chuẩn công ty',
-  corporate: 'Doanh nghiệp',
-  minimal: 'Tối giản',
-  classic: 'Trang trọng',
-  emerald: 'Xanh thương hiệu',
-  warm: 'Ấm nhẹ',
-  premium: 'Cao cấp sáng',
-  mono: 'Đen trắng'
 };
 
 const THEME_PROFILES = {
