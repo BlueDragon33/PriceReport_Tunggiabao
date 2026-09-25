@@ -158,6 +158,54 @@ test('V6.3 content workspace starts wider than a typical chat column and support
   document.getElementById('doneContentWorkspace').click();
 });
 
+test('V6.4 workspace assistant exposes block-aware quick tools without duplicating form state', () => {
+  document.querySelector('[data-tab="general"]').click();
+
+  document.querySelector('#contentBlockList [data-content-block="payment"]').click();
+  expect(document.getElementById('contentWorkspaceGuideTitle').textContent).toContain('thanh toán');
+  const vatInput = document.getElementById('vatPct');
+  const previousVat = vatInput.value;
+  const vat8 = Array.from(document.querySelectorAll('#contentWorkspaceQuickTools .content-workspace-chip'))
+    .find(button => button.textContent === '8%');
+  expect(vat8).toBeTruthy();
+  vat8.click();
+  expect(vatInput.value).toBe('8');
+  expect(document.querySelectorAll('#vatPct').length).toBe(1);
+  vatInput.value = previousVat;
+  vatInput.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+
+  document.querySelector('#contentBlockList [data-content-block="terms"]').click();
+  expect(document.getElementById('contentWorkspaceGuideTitle').textContent).toContain('điều khoản');
+  const terms = document.getElementById('termsText');
+  const previousTerms = terms.value;
+  const delivery = Array.from(document.querySelectorAll('#contentWorkspaceQuickTools .content-workspace-chip'))
+    .find(button => button.textContent === 'Giao hàng 1–3 ngày');
+  expect(delivery).toBeTruthy();
+  delivery.click();
+  delivery.click();
+  expect(terms.value.split('\n').filter(line => line.includes('1 - 3 ngày')).length).toBe(1);
+  terms.value = previousTerms;
+  terms.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+});
+
+test('V6.4 save-and-continue keeps the wide workspace open and advances to the next content block', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+  const modal = document.getElementById('contentWorkspaceModal');
+  expect(modal.hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('general');
+  expect(document.getElementById('contentWorkspaceNext').textContent).toContain('Lưu nháp');
+
+  document.getElementById('contentWorkspaceNext').click();
+  expect(modal.hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('customer');
+  expect(document.getElementById('customerName').closest('#contentWorkspaceModal')).toBeTruthy();
+  expect(document.getElementById('contentWorkspaceCustomerSearch')).toBeTruthy();
+  document.getElementById('doneContentWorkspace').click();
+});
+
 test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunting', () => {
   const toggle = document.getElementById('mobileMoreToggle');
   const menu = document.getElementById('mobileMoreMenu');
