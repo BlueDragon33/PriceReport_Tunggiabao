@@ -1876,6 +1876,9 @@ function openTab(tab, options = {}) {
     renderMasterData();
     offerDataLibraryImportRecovery();
   }
+  if (!appWorkspace && tab !== 'view' && document.body.dataset.deviceClass === 'tablet') {
+    requestAnimationFrame(() => document.getElementById('fit')?.click());
+  }
   setTimeout(enhanceCollapsibleCards, 0);
 }
 
@@ -8961,10 +8964,11 @@ setTimeout(() => {
   }
 }, 60);
 window.addEventListener('resize', () => {
-  if (document.querySelector('.shell')?.classList.contains('report-view')) {
+  const shell = document.querySelector('.shell');
+  if (shell?.classList.contains('report-view')) {
     requestAnimationFrame(fitReportView);
-  } else if (window.innerWidth > 1050) {
-    document.getElementById('fit').click();
+  } else if (!shell?.classList.contains('app-workspace') && (window.innerWidth > 1050 || document.body.dataset.deviceClass === 'tablet')) {
+    requestAnimationFrame(() => document.getElementById('fit')?.click());
   }
   requestAnimationFrame(updatePageEstimate);
 });
