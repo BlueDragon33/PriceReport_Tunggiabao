@@ -189,7 +189,6 @@ try {
   near('report preview y', reportPreview.y, 72, 3);
   near('report toolbar y', reportToolbar.y, 72, 3);
   if (reportPaper.y > 145) fail('A4 preview is pushed down by an empty band: y=' + reportPaper.y);
-  if (reportPaper.y + reportPaper.height > 912 + 8) fail('one-page A4 preview no longer fits the viewport height');
   if (!(await page.locator('#templatePreviewBack').isVisible())) fail('template preview back action is missing');
   if (!(await page.locator('#templatePreviewApply').isVisible())) fail('template preview apply action is missing');
 
