@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v68-flow-navigator', 'V6.8 flow-navigator release must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v69-mobile-ipad-ui', 'V6.9 mobile/iPad UI release must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
