@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./src/quotation-themes-v60.css">
   <link rel="stylesheet" href="./src/ui-v5.css">
   <link rel="stylesheet" href="./src/studio-v59.css">
+  <link rel="stylesheet" href="./src/content-workspace-v63.css">
   <title>PriceReport Tùng Gia Bảo</title>
   <script>
     window.addEventListener('load', async () => {
@@ -203,6 +204,15 @@
           <input id="contentLibrarySearch" type="search" placeholder="Tìm khối nội dung..." autocomplete="off">
         </label>
 
+        <section class="content-completion-card" id="contentCompletionCard" aria-live="polite">
+          <div class="content-completion-head">
+            <span>Tiến độ nội dung</span>
+            <strong id="contentCompletionLabel">0/7 khối</strong>
+          </div>
+          <div class="content-completion-track" aria-hidden="true"><span id="contentCompletionBar"></span></div>
+          <small id="contentCompletionHint">Mở từng khối để hoàn thiện báo giá.</small>
+        </section>
+
         <div class="content-library-section-label">Khối cơ bản</div>
         <div class="content-block-list" id="contentBlockList">
           <button class="content-block-row" type="button" data-content-block="general" data-search-text="thông tin chung doanh nghiệp báo giá">
@@ -358,7 +368,7 @@
         </div>
 
         <div class="pane studio-pane studio-pane-general" id="pane-general">
-          <div class="card">
+          <div class="card" data-content-workspace-section="general">
             <h3>Logo</h3>
             <div class="logo-edit" id="logoEdit"><div class="logo-placeholder">THẾ GIỚI TRỨNG®</div></div>
             <div class="logo-upload-note">Logo mới luôn được giữ nguyên ảnh gốc. Không tự tách nền. Kích thước tối đa 3 MB.</div>
@@ -368,7 +378,7 @@
               <button class="btn danger" id="clearLogo">Xóa logo</button>
             </div>
           </div>
-          <div class="card">
+          <div class="card" data-content-workspace-section="general">
             <h3>Thông tin công ty</h3>
             <div class="btns profile-apply-actions">
               <button class="btn primary" id="applyTungGiaBaoProfile" type="button">Áp dụng dữ liệu Tùng Gia Bảo</button>
@@ -411,7 +421,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card" data-content-workspace-section="general">
             <h3>Thông tin báo giá</h3>
             <div class="row"><label>Tiêu đề</label><input id="quoteTitle" data-bind="quoteTitle"></div>
             <div class="row"><label>Phụ đề / kỳ báo giá</label><input id="quoteSubtitle" data-bind="quoteSubtitle" placeholder="Ví dụ: Giá lương thực, thực phẩm tháng 09/2026"></div>
@@ -432,7 +442,7 @@
               </div>
             </div>
             <div class="row"><label>Kính gửi</label><input id="recipientLine" data-bind="recipientLine"></div>
-            <div class="row"><label>Lời mở đầu</label><textarea id="intro" data-bind="intro"></textarea></div>
+            <div class="row" data-custom-text-source="intro"><label>Lời mở đầu</label><textarea id="intro" data-bind="intro"></textarea></div>
             <div class="row"><label>Tiêu đề nhóm sản phẩm</label><input id="sectionTitle" data-bind="sectionTitle"></div>
           </div>
         </div>
@@ -757,7 +767,7 @@
         </div>
 
         <div class="pane studio-pane studio-pane-customer" id="pane-customer">
-          <div class="card">
+          <div class="card" data-content-workspace-section="customer">
             <h3>Thông tin khách hàng</h3>
             <div class="row"><label>Tên khách hàng</label><input id="customerName" data-bind="customerName" data-customer-autocomplete="name" list="customerNameSuggestions" autocomplete="off"></div>
             <div class="row"><label>Công ty / đơn vị</label><input id="customerCompany" data-bind="customerCompany" data-customer-autocomplete="company" list="customerCompanySuggestions" autocomplete="off"></div>
@@ -805,7 +815,7 @@
         </div>
 
         <div class="pane studio-pane studio-pane-payment" id="pane-payment">
-          <div class="card">
+          <div class="card" data-content-workspace-section="payment">
             <h3>Tính tiền</h3>
             <div class="grid3">
               <div class="row"><label>Giảm giá %</label><input id="discountPct" data-bind="discountPct" type="number" min="0" max="100" step="0.1"></div>
@@ -820,7 +830,7 @@
               <div class="grand"><span>Tổng thanh toán</span><strong id="studioGrandTotal">0 VND</strong></div>
             </div>
           </div>
-          <div class="card">
+          <div class="card" data-content-workspace-section="payment">
             <h3>Thanh toán</h3>
             <div class="row"><label>Phương thức</label><input id="paymentMethod" data-bind="paymentMethod"></div>
             <div class="row"><label>Ngân hàng</label><input id="bankName" data-bind="bankName"></div>
@@ -831,13 +841,13 @@
         </div>
 
         <div class="pane studio-pane studio-pane-terms" id="pane-terms">
-          <div class="card">
+          <div class="card" data-content-workspace-section="terms">
             <h3>Điều khoản thương mại</h3>
             <div class="row"><label>Tiêu đề</label><input id="termsTitle" data-bind="termsTitle"></div>
             <div class="row"><label>Mỗi dòng = 1 điều khoản</label><textarea id="termsText" data-bind="termsText"></textarea></div>
-            <div class="row"><label>Lời kết</label><input id="closingText" data-bind="closingText"></div>
+            <div class="row" data-custom-text-source="closing"><label>Lời kết</label><input id="closingText" data-bind="closingText"></div>
           </div>
-          <div class="card">
+          <div class="card" data-content-workspace-section="signature">
             <h3>Ngày & chữ ký</h3>
             <div class="row"><label>Dòng ngày tháng</label><input id="dateLine" data-bind="dateLine"></div>
             <div class="grid2">
@@ -852,7 +862,7 @@
               <div class="row"><label>Họ tên trái</label><input id="leftName" data-bind="leftName"></div>
               <div class="row"><label>Họ tên phải</label><input id="rightName" data-bind="rightName"></div>
             </div>
-            <div class="row"><label>Chân trang</label><textarea id="footerText" data-bind="footerText"></textarea></div>
+            <div class="row" data-custom-text-source="footer"><label>Chân trang</label><textarea id="footerText" data-bind="footerText"></textarea></div>
           </div>
         </div>
 
@@ -1577,6 +1587,64 @@
       <footer class="data-library-import-actions">
         <button class="btn" id="cancelDataLibraryImport" type="button">Hủy</button>
         <button class="btn primary" id="applyDataLibraryImport" type="button" disabled>Áp dụng vào thư viện</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="content-workspace-backdrop" id="contentWorkspaceModal" hidden>
+    <section class="content-workspace-dialog" id="contentWorkspaceDialog" role="dialog" aria-modal="true" aria-labelledby="contentWorkspaceTitle" aria-describedby="contentWorkspaceSubtitle" tabindex="-1">
+      <header class="content-workspace-head">
+        <div class="content-workspace-identity">
+          <span class="content-workspace-icon" id="contentWorkspaceIcon" aria-hidden="true">▤</span>
+          <div>
+            <span class="eyebrow">NỘI DUNG BÁO GIÁ</span>
+            <h2 id="contentWorkspaceTitle">Thông tin chung</h2>
+            <p id="contentWorkspaceSubtitle">Chỉnh sửa trong không gian rộng; bản A4 cập nhật trực tiếp.</p>
+          </div>
+        </div>
+        <div class="content-workspace-head-actions">
+          <span class="content-workspace-save-state" id="contentWorkspaceSaveState">✓ Tự động lưu bản nháp</span>
+          <div class="content-workspace-width-control" role="group" aria-label="Điều chỉnh độ rộng cửa sổ">
+            <button id="contentWorkspaceWidthDown" type="button" aria-label="Thu hẹp cửa sổ">−</button>
+            <button id="contentWorkspaceWidthReset" type="button" title="Khôi phục độ rộng chuẩn"><span id="contentWorkspaceWidthLabel">1200 px</span></button>
+            <button id="contentWorkspaceWidthUp" type="button" aria-label="Mở rộng cửa sổ">＋</button>
+          </div>
+          <button class="content-workspace-close" id="closeContentWorkspace" type="button" aria-label="Đóng cửa sổ nội dung">×</button>
+        </div>
+      </header>
+
+      <div class="content-workspace-toolbar">
+        <span><b id="contentWorkspaceBlockState">Đang chỉnh sửa</b><small>Dữ liệu dùng chung với báo giá hiện tại, không tạo bản sao.</small></span>
+        <button class="btn" id="contentWorkspaceOpenPreview" type="button">◉ Xem A4</button>
+      </div>
+
+      <div class="content-workspace-body">
+        <main class="content-workspace-main" id="contentWorkspaceMount"></main>
+        <aside class="content-workspace-side" aria-label="Hướng dẫn khối nội dung">
+          <section>
+            <span class="eyebrow">TRẠNG THÁI KHỐI</span>
+            <strong id="contentWorkspaceStatusTitle">Đang kiểm tra</strong>
+            <p id="contentWorkspaceStatusDetail">Điền các thông tin cần thiết; thay đổi sẽ xuất hiện ngay trên báo giá.</p>
+          </section>
+          <section>
+            <span class="eyebrow">THAO TÁC NHANH</span>
+            <ul>
+              <li><b>Ctrl + Enter</b> hoàn tất và đóng.</li>
+              <li><b>Esc</b> đóng cửa sổ.</li>
+              <li><b>Tab</b> di chuyển giữa các trường.</li>
+              <li>Dùng <b>− / ＋</b> để điều chỉnh độ rộng.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="content-workspace-footer">
+        <span id="contentWorkspaceFooterStatus">✓ Tự động lưu vào bản nháp hiện tại</span>
+        <div>
+          <button class="btn" id="contentWorkspacePrev" type="button">← Khối trước</button>
+          <button class="btn" id="contentWorkspaceNext" type="button">Khối tiếp theo →</button>
+          <button class="btn primary" id="doneContentWorkspace" type="button">Xong</button>
+        </div>
       </footer>
     </section>
   </div>
