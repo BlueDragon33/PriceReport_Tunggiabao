@@ -302,6 +302,32 @@ try {
   if (!(await page.locator('#quoteReviewErrorCount').isVisible())) fail('V6.7 final review error metric is missing');
   await page.locator('#closeQuoteReview').click();
 
+  // V6.8: every large editing modal exposes the same live seven-step navigator.
+  await page.locator('#contentBlockList [data-content-block="general"]').click();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceStepList .quote-flow-step-button').count() !== 7) {
+    fail('V6.8 content workspace navigator does not expose seven content blocks');
+  }
+  if (await page.locator('#contentWorkspaceStepList [data-flow-block="general"]').getAttribute('aria-current') !== 'step') {
+    fail('V6.8 content workspace navigator did not mark General as current');
+  }
+  await page.locator('#contentWorkspaceStepList [data-flow-block="products"]').click();
+  await page.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#productWorkspaceStepList .quote-flow-step-button').count() !== 7) {
+    fail('V6.8 product workspace navigator does not expose seven content blocks');
+  }
+  if (await page.locator('#productWorkspaceStepList [data-flow-block="products"]').getAttribute('aria-current') !== 'step') {
+    fail('V6.8 product workspace navigator did not mark Products as current');
+  }
+  await page.locator('#productWorkspaceStepList [data-flow-block="terms"]').click();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'terms') {
+    fail('V6.8 product navigator did not cross into Terms workspace');
+  }
+  await page.locator('#contentWorkspaceReview').click();
+  await page.locator('#quoteReviewModal:not([hidden])').waitFor();
+  await page.locator('#closeQuoteReview').click();
+
   // Content Library remains in launcher mode; return directly to management.
   if (await page.locator('.content-library').getAttribute('data-content-mode') !== 'home') {
     fail('content library left launcher mode after modal editing');
@@ -372,7 +398,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.7 BROWSER PASS: unified shell, guided quote flow, final review, accelerated product entry, spreadsheet import review, 16-theme library and reference A4 geometry verified');
+  console.log('V6.8 BROWSER PASS: unified shell, cross-modal flow navigator, guided quote flow, final review, accelerated product entry, spreadsheet import review, 16-theme library and reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
