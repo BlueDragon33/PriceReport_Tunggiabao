@@ -788,7 +788,7 @@ function openContentBlock(block) {
   if (title) title.textContent = config.title;
   if (subtitle) subtitle.textContent = config.subtitle;
   if (block === 'products') {
-    requestAnimationFrame(() => openProductWorkspace({ focusFirst: false }));
+    openProductWorkspace({ focusFirst: false });
   } else {
     focusContentBlockTarget(block);
   }
