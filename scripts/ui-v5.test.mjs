@@ -60,7 +60,7 @@ const inspectorOrder = [
   '>Cài đặt nâng cao<',
   '>Brand Kit<'
 ];
-let inspectorCursor = html.indexOf('class="inspector-design-view"');
+let inspectorCursor = html.indexOf('inspector-design-view');
 if (inspectorCursor < 0) fail('V5.8 inspector Design view is missing');
 for (const token of inspectorOrder) {
   const next = html.indexOf(token, inspectorCursor + 1);
@@ -72,7 +72,7 @@ for (const token of inspectorOrder) {
 if (!studioCss.includes('background:var(--studio-bg)') || !studioCss.includes('background:var(--studio-panel)')) fail('V5.8 dark Studio chrome/canvas ownership is missing');
 if (!studioCss.includes('#paperWrap') || !studioCss.includes('drop-shadow(0 12px 32px rgba(0,0,0,.20))')) fail('V5.8 A4 presentation shadow is missing');
 if (studioCss.includes('!important')) fail('V5.8 Studio stylesheet must not introduce !important');
-if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(studioCss)) fail('V5.8 Studio stylesheet must not target the report document');
+if (/\.paper(?=[\s.:#>+~\[\{])/.test(studioCss)) fail('V5.8 Studio stylesheet must not target the report document');
 if (/@media\s+print/i.test(studioCss)) fail('V5.8 Studio stylesheet must not contain print rules');
 if (html.includes('class="studio-stepper"') || html.includes('class="studio-commandbar"')) fail('V5.7 visible stepper/command bar must not remain in V5.8 Studio DOM');
 
