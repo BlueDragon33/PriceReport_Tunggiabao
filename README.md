@@ -2,20 +2,23 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.7 Reference Fidelity UI/UX
+## Trạng thái hiện tại — V5.8 Studio Pixel-Lock
 
-- Giao diện V5.7 tiếp tục lấy **ảnh mẫu người dùng đính kèm ngày 24/09/2026** làm source of truth; đặc tả mới nằm tại `UI_REFERENCE_V5.7.md` và không tạo thêm ảnh mockup.
-- Quotation Studio desktop đổi đúng trật tự thị giác của ảnh mẫu: **118px app rail → 320px editor → Preview A4 linh hoạt → 368px inspector Thiết kế**. Preview nằm ở giữa; inspector nằm ngoài cùng bên phải.
-- Sidebar quản trị và Studio dùng cùng ngôn ngữ navy/blue, hit-area lớn và trạng thái active rõ; các workspace không còn chuyển sang rail 224px tách biệt.
-- Typography ứng dụng được nâng lên theo mức đọc của một ứng dụng productivity hiện đại: baseline 15px, form 12.5–14px, button 13.5px, workspace heading 30px. Chữ 8–10px chỉ còn ở metadata/badge/table header nhỏ có chủ đích.
-- Studio dùng chrome navy đồng nhất cho rail/editor/inspector, trong khi A4 nằm trên canvas xanh xám trung tính. Thanh lệnh 68px chạy xuyên Editor–Preview–Inspector và dùng lại đúng hành động Lưu/Xem trước/PDF; inspector bên phải có ba tab Thiết kế / Nội dung / Kiểm tra và tái sử dụng workflow/preflight hiện có. Các workspace quản trị vẫn giữ surface sáng để dễ đọc bảng/dữ liệu.
-- **Trung tâm xuất bản & dữ liệu** đã bỏ kiểu card xám lớn nhưng chữ nhỏ; action card dùng nền trắng/soft-blue, title 14px, mô tả 11.5px và hover rõ.
-- Dashboard, History và Data Management được tăng chiều cao card/toolbar/table row để chữ lớn không bị nhồi; Settings/System được nhóm lại theo nhịp 20px.
-- Smart Import và Data Library review được mở rộng trên desktop, đồng thời giữ containment riêng cho tablet/phone.
-- Preview dùng canvas xanh xám trung tính, toolbar navy cùng trục với editor/inspector; stylesheet báo cáo A4 vẫn được cô lập, không bị UI refactor can thiệp.
-- V5.5 Operator Safety, import/recovery/undo, backup/restore, Device Gate và Application Management contract tiếp tục giữ nguyên logic đã kiểm thử.
-- PWA/offline dùng cache generation **pricereport-shell-v57-reference-fidelity** để client không giữ asset V5.5.
-- Package release được đồng bộ ở **5.7.0**.
+V5.8 là một **hard reset riêng phần Quotation Studio** theo ảnh mẫu 1664×912, không phải một lớp CSS chồng thêm lên V5.7.
+
+- Studio có stylesheet riêng `src/studio-v58.css`; lớp override V5.7 cũ và phần chrome stepper/commandbar chết đã được dọn khỏi `src/ui-v5.css`.
+- Bố cục desktop khóa tại **118px rail → 320px “Thêm nội dung” → Preview linh hoạt → 384px Inspector**, topbar **72px**, preview toolbar **52px**.
+- Panel trái là đúng mô hình **Thêm nội dung** với 7 khối: Thông tin chung, Khách hàng, Sản phẩm/Dịch vụ, Thanh toán, Điều khoản, Chữ ký, Văn bản tùy chỉnh. Các khối chỉ điều hướng tới form/state hiện có, không nhân đôi dữ liệu.
+- Topbar chỉ còn một hierarchy chính: context báo giá, command search, Lưu nháp, Xem trước và Xuất PDF. Stepper 6 bước và commandbar V5.7 đã bỏ khỏi DOM Studio.
+- Preview toolbar được rút gọn; công cụ ít dùng chuyển vào overflow. Fit A4 khóa mục tiêu hiển thị khoảng **706px** tại viewport chuẩn.
+- Inspector phải giữ 3 tab **Thiết kế / Nội dung / Kiểm tra**; Design được sắp lại đúng thứ tự: Giao diện tổng thể → Màu chủ đạo → Font chữ → Thiết lập hiển thị → Cài đặt nâng cao → Brand Kit.
+- Theme selector trái/phải cùng dùng `applyTheme()`; Check dùng lại validation/preflight hiện có; gợi ý bố cục dùng bộ auto-arrange cục bộ hiện có.
+- Logic nghiệp vụ, import/export, local storage, history, PC storage, Device Gate và A4 report engine không bị fork hoặc viết lại.
+- Ngoài bảng sản phẩm, typography báo cáo vẫn cố định; chỉ `tableFontSize` là cỡ chữ báo cáo người dùng được chỉnh.
+- CI có thêm **Chromium/Playwright rendered pixel-lock gate** tại 1664×912 để đo bounding box thực tế của rail/topbar/panel/preview/inspector/A4, kiểm tra thứ tự nội dung, màu computed và runtime errors. CI xanh giờ không còn chỉ dựa vào chuỗi CSS/DOM.
+- Source of truth: `UI_REFERENCE_V5.8_PIXEL_LOCK.md`; audit triển khai: `AUDIT_V5.8_PIXEL_LOCK.md`.
+- PWA cache generation: **pricereport-shell-v58-pixel-lock**.
+- Package: **5.8.0**.
 
 ## Kiểm thử
 
