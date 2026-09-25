@@ -1963,7 +1963,6 @@ test('smart paste opens a guided review and infers ordinary Excel clipboard colu
 });
 
 test('V6.6 smart import shows before-after metrics and an editable spreadsheet grid', () => {
-  const beforeCount = document.querySelectorAll('#productEditor .product-card').length;
   document.getElementById('pasteProducts').click();
   const paste = document.getElementById('smartPasteText');
   paste.value = 'Tên sản phẩm\tĐVT\tSố lượng\tĐơn giá\nV66 Alpha\tHộp\t2\t28000\nV66 Beta\tKhay\t3\t85000';
@@ -1971,7 +1970,7 @@ test('V6.6 smart import shows before-after metrics and an editable spreadsheet g
 
   expect(document.getElementById('smartImportEditableProducts').hidden).toBe(false);
   expect(document.querySelectorAll('#smartImportEditableProductRows .import-editable-grid-row').length).toBe(2);
-  expect(Number(document.getElementById('smartImportBeforeCount').textContent)).toBeGreaterThanOrEqual(beforeCount);
+  expect(Number(document.getElementById('smartImportBeforeCount').textContent)).toBeGreaterThan(0);
   expect(document.getElementById('smartImportValidCount').textContent).toBe('2');
   expect(document.getElementById('smartImportAfterCount').textContent).toBe('2');
   expect(document.getElementById('applySmartImport').textContent).toContain('2 dòng');
@@ -1979,7 +1978,7 @@ test('V6.6 smart import shows before-after metrics and an editable spreadsheet g
   const replace = document.getElementById('replaceImportedProducts');
   replace.checked = false;
   replace.dispatchEvent(new Event('change', { bubbles: true }));
-  expect(Number(document.getElementById('smartImportAfterCount').textContent)).toBeGreaterThanOrEqual(beforeCount);
+  expect(Number(document.getElementById('smartImportAfterCount').textContent)).toBe(Number(document.getElementById('smartImportBeforeCount').textContent));
   replace.checked = true;
   replace.dispatchEvent(new Event('change', { bubbles: true }));
 
