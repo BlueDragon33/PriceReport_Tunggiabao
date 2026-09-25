@@ -155,7 +155,8 @@ try {
   await page.locator('#closeProductWorkspace').click();
   if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
 
-  // Returning to management must preserve the same topbar instead of switching to old chrome.
+  // Return from the product detail to the content library, then to management.
+  await page.locator('#contentLibraryBack').click();
   await page.locator('#studioBackHome').click();
   const returnHeader = await box('.shell.app-workspace > .studio-topbar');
   near('return dashboard header height', returnHeader.height, 72, 2);
@@ -168,8 +169,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  await page.locator('#contentLibraryBack').evaluate(node => node.click());
-  console.log('V5.9 BROWSER UNIFIED-SHELL PASS: canonical 1664x912 geometry and visible hierarchy verified');
+  console.log('V5.9 BROWSER UNIFIED-SHELL PASS: shell continuity, Studio geometry and fixed product modal verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
