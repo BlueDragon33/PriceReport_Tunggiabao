@@ -176,9 +176,14 @@ try {
       const mainSurface = await box('#contentWorkspaceMount');
       if (mainSurface.width < 820) fail('main editing surface is narrower than the requested ChatGPT-like content width: ' + mainSurface.width);
       await page.locator('#contentWorkspaceWidthUp').click();
+      if (await page.locator('#contentWorkspaceWidthLabel').textContent() !== '1360 px') {
+        fail('expanded content workspace width control did not commit 1360px');
+      }
+      await page.waitForTimeout(220);
       const widerDialog = await box('#contentWorkspaceDialog');
       near('expanded content workspace width', widerDialog.width, 1360, 8);
       await page.locator('#contentWorkspaceWidthDown').click();
+      await page.waitForTimeout(220);
     }
 
     await page.locator('#doneContentWorkspace').click();
