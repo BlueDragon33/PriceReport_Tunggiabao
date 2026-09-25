@@ -4286,6 +4286,7 @@ function openTemplateLibrary({ restoreSearch = false } = {}) {
   templateLibraryLastFocus = document.activeElement;
   modal.hidden = false;
   document.body.classList.add('template-library-open');
+  document.getElementById('toggleInspectorTemplates')?.setAttribute('aria-expanded', 'true');
   if (!restoreSearch) {
     templateLibraryCategory = 'all';
     const search = document.getElementById('templateLibrarySearch');
@@ -4303,6 +4304,7 @@ function closeTemplateLibrary({ restoreFocus = true } = {}) {
   if (!modal || modal.hidden) return;
   modal.hidden = true;
   document.body.classList.remove('template-library-open');
+  document.getElementById('toggleInspectorTemplates')?.setAttribute('aria-expanded', 'false');
   if (restoreFocus) templateLibraryLastFocus?.focus?.();
 }
 
