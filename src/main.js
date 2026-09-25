@@ -231,7 +231,7 @@ function merge(data) {
   }
 
   if (merged.theme === 'blue') merged.theme = 'corporate';
-  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono','canva-blue','mint-finance','warm-proposal','violet-studio'].includes(merged.theme)) merged.theme = 'modern';
+  if (!['modern','corporate','minimal','classic','emerald','warm','premium','mono','canva-blue','mint-finance','warm-proposal','violet-studio','reference-blue-corporate','blue-sidebar','executive-navy','sky-minimal'].includes(merged.theme)) merged.theme = 'modern';
   if (!['VND','USD','RUB'].includes(String(merged.currency || '').toUpperCase())) merged.currency = 'VND';
   else merged.currency = String(merged.currency).toUpperCase();
   merged.discountPct = normalizeBoundedNumber(merged.discountPct, 0, 100, defaults.discountPct);
@@ -272,7 +272,7 @@ function merge(data) {
     merged.previewLineHeight = 1.26;
     merged.showQuoteMeta = false;
     if (merged.theme === 'modern') merged.docFont = 'Times New Roman';
-    else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono','canva-blue','mint-finance','warm-proposal','violet-studio'].includes(merged.theme)) merged.docFont = 'Arial';
+    else if (merged.docFont === 'Times New Roman' && ['corporate','minimal','premium','mono','canva-blue','mint-finance','warm-proposal','violet-studio','reference-blue-corporate','blue-sidebar','executive-navy','sky-minimal'].includes(merged.theme)) merged.docFont = 'Arial';
   }
 
   const hasLogoDisplayMode = data && Object.prototype.hasOwnProperty.call(data, 'logoDisplayMode');
@@ -588,7 +588,11 @@ const THEME_LABELS = {
   'canva-blue': 'Business Wave',
   'mint-finance': 'Mint Finance',
   'warm-proposal': 'Warm Proposal',
-  'violet-studio': 'Violet Studio'
+  'violet-studio': 'Violet Studio',
+  'reference-blue-corporate': 'Corporate Blue Reference',
+  'blue-sidebar': 'Blue Sidebar',
+  'executive-navy': 'Executive Navy',
+  'sky-minimal': 'Sky Minimal'
 };
 
 function comparableQuoteForHistory(data) {
@@ -4181,7 +4185,11 @@ const THEME_ACCENTS = {
   'canva-blue': '#2563eb',
   'mint-finance': '#13a88a',
   'warm-proposal': '#ef7f4d',
-  'violet-studio': '#7657d6'
+  'violet-studio': '#7657d6',
+  'reference-blue-corporate': '#1f6fe5',
+  'blue-sidebar': '#1557a6',
+  'executive-navy': '#172b4d',
+  'sky-minimal': '#4b9be8'
 };
 
 const THEME_FONTS = {
@@ -4196,7 +4204,11 @@ const THEME_FONTS = {
   'canva-blue': 'Arial',
   'mint-finance': 'Arial',
   'warm-proposal': 'Arial',
-  'violet-studio': 'Arial'
+  'violet-studio': 'Arial',
+  'reference-blue-corporate': 'Arial',
+  'blue-sidebar': 'Arial',
+  'executive-navy': 'Arial',
+  'sky-minimal': 'Arial'
 };
 
 const THEME_PROFILES = {
@@ -4211,7 +4223,11 @@ const THEME_PROFILES = {
   'canva-blue': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
   'mint-finance': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'airy', previewTableDensity: 'standard' },
   'warm-proposal': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  'violet-studio': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' }
+  'violet-studio': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  'reference-blue-corporate': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  'blue-sidebar': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  'executive-navy': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  'sky-minimal': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'airy', previewTableDensity: 'standard' }
 };
 
 const THEME_PROFILE_FIELDS = [
