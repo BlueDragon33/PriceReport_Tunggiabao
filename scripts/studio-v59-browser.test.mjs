@@ -398,7 +398,162 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.8 BROWSER PASS: unified shell, cross-modal flow navigator, guided quote flow, final review, accelerated product entry, spreadsheet import review, 16-theme library and reference A4 geometry verified');
+  // V6.9: iPad/tablet UI must use the updated touch shell, not the legacy stacked fallback.
+  const tabletContext = await browser.newContext({
+    viewport: { width: 834, height: 1112 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  });
+  const tabletPage = await tabletContext.newPage();
+  const tabletErrors = [];
+  tabletPage.on('pageerror', error => tabletErrors.push(String(error?.message || error)));
+  await tabletPage.goto(URL, { waitUntil: 'networkidle' });
+  await tabletPage.waitForFunction(() => document.body.dataset.deviceClass === 'tablet');
+
+  const tabletBox = async selector => {
+    const value = await tabletPage.locator(selector).boundingBox();
+    if (!value) fail('V6.9 tablet missing visible box for ' + selector);
+    return value;
+  };
+  const tabletHeader = await tabletBox('.shell.app-workspace > .studio-topbar');
+  const tabletNav = await tabletBox('.shell.app-workspace > .nav');
+  near('V6.9 tablet header height', tabletHeader.height, 64, 3);
+  near('V6.9 tablet bottom nav height', tabletNav.height, 70, 4);
+  if (!(tabletNav.y > tabletHeader.y + tabletHeader.height + 500)) fail('V6.9 tablet navigation is not anchored below the workspace');
+  if (await tabletPage.locator('.shell.app-workspace > .nav > button:visible').count() !== 5) {
+    fail('V6.9 tablet bottom navigation must expose exactly five primary actions');
+  }
+
+  await tabletPage.locator('.shell > .nav > button[data-tab="general"]').click();
+  await tabletPage.locator('.shell:not(.app-workspace)').waitFor();
+  if (!(await tabletPage.locator('.content-library-home').isVisible())) fail('V6.9 tablet did not restore the modern Content Library launcher');
+  const tabletEditor = await tabletBox('.shell:not(.app-workspace) > .content-library');
+  const tabletPreview = await tabletBox('.shell:not(.app-workspace) > .preview');
+  if (!(tabletEditor.x < tabletPreview.x && tabletEditor.width >= 285 && tabletPreview.width >= 500)) {
+    fail('V6.9 tablet Studio is not using the intended editor + live-preview split');
+  }
+  await tabletPage.waitForTimeout(100);
+  const tabletPaper = await tabletBox('#paperWrap');
+  if (tabletPaper.width > tabletPreview.width + 2) fail('V6.9 tablet A4 preview was not auto-fit inside the live preview column');
+
+  await tabletPage.locator('#contentBlockList [data-content-block="general"]').click();
+  await tabletPage.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  const tabletContentDialog = await tabletBox('#contentWorkspaceModal .content-workspace-dialog');
+  if (tabletContentDialog.width < 800 || tabletContentDialog.height < 1000) {
+    fail('V6.9 tablet content workspace is not using the near-fullscreen touch canvas');
+  }
+  if (await tabletPage.locator('#contentWorkspaceStepList .quote-flow-step-button').count() !== 7) {
+    fail('V6.9 tablet content workspace lost the seven-step flow navigator');
+  }
+  const tabletFlowDisplay = await tabletPage.locator('#contentWorkspaceStepList').evaluate(node => getComputedStyle(node).display);
+  if (tabletFlowDisplay !== 'flex') fail('V6.9 tablet flow navigator is not the horizontal touch strip');
+  await tabletPage.locator('#contentWorkspaceStepList [data-flow-block="products"]').click();
+  await tabletPage.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  if (await tabletPage.locator('#productWorkspaceStepList .quote-flow-step-button').count() !== 7) {
+    fail('V6.9 tablet product workspace lost the seven-step flow navigator');
+  }
+  await tabletPage.locator('#doneProductWorkspace').click();
+
+  await tabletPage.locator('.shell > .nav > .mobile-more-toggle').click();
+  await tabletPage.locator('#mobileMoreMenu:not([hidden])').waitFor();
+  const tabletMore = await tabletBox('#mobileMoreMenu');
+  const tabletNavAfterMore = await tabletBox('.shell > .nav');
+  if (!(tabletMore.y + tabletMore.height <= tabletNavAfterMore.y + 2)) fail('V6.9 tablet More menu is not presented as a bottom sheet above navigation');
+  if (await tabletPage.locator('#mobileMoreMenu .mobile-more-grid button:visible').count() < 8) {
+    fail('V6.9 tablet More sheet actions are hidden or incomplete');
+  }
+  await tabletPage.locator('#mobileMoreClose').click();
+
+  await tabletPage.locator('#studioTopMenu').click();
+  if (!(await tabletPage.locator('.studio-topbar').evaluate(node => node.classList.contains('command-palette-open')))) {
+    fail('V6.9 tablet command palette overlay state was not activated');
+  }
+  if (!(await tabletPage.locator('.studio-topbar-center').isVisible())) fail('V6.9 tablet command palette is not visible');
+  await tabletPage.locator('#studioCommandSearch').press('Escape');
+  if (tabletErrors.length) fail('V6.9 tablet runtime page error(s): ' + tabletErrors.join(' | '));
+  await tabletContext.close();
+
+  // V6.9: phone UI is a genuine single-column app shell with fullscreen editors.
+  const phoneContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3,
+    hasTouch: true,
+    isMobile: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  });
+  const phonePage = await phoneContext.newPage();
+  const phoneErrors = [];
+  phonePage.on('pageerror', error => phoneErrors.push(String(error?.message || error)));
+  await phonePage.goto(URL, { waitUntil: 'networkidle' });
+  await phonePage.waitForFunction(() => document.body.dataset.deviceClass === 'phone');
+
+  const phoneBox = async selector => {
+    const value = await phonePage.locator(selector).boundingBox();
+    if (!value) fail('V6.9 phone missing visible box for ' + selector);
+    return value;
+  };
+  const phoneHeader = await phoneBox('.shell.app-workspace > .studio-topbar');
+  const phoneNav = await phoneBox('.shell.app-workspace > .nav');
+  near('V6.9 phone header height', phoneHeader.height, 58, 3);
+  near('V6.9 phone bottom nav height', phoneNav.height, 66, 4);
+  if (await phonePage.locator('.shell.app-workspace > .nav > button:visible').count() !== 5) {
+    fail('V6.9 phone bottom navigation must expose exactly five primary actions');
+  }
+
+  await phonePage.locator('.shell > .nav > button[data-tab="general"]').click();
+  await phonePage.locator('.shell:not(.app-workspace)').waitFor();
+  if (!(await phonePage.locator('.content-library-home').isVisible())) fail('V6.9 phone did not restore the modern Content Library launcher');
+  if (await phonePage.locator('.shell:not(.app-workspace) > .preview').isVisible()) {
+    fail('V6.9 phone edit mode must prioritize the single-column content launcher instead of squeezing A4 beside it');
+  }
+  const phoneOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  if (phoneOverflow > 2) fail('V6.9 phone shell has horizontal page overflow: ' + phoneOverflow + 'px');
+
+  await phonePage.locator('#contentBlockList [data-content-block="general"]').click();
+  await phonePage.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  const phoneContentDialog = await phoneBox('#contentWorkspaceModal .content-workspace-dialog');
+  near('V6.9 phone content workspace width', phoneContentDialog.width, 390, 3);
+  near('V6.9 phone content workspace height', phoneContentDialog.height, 844, 4);
+  if (await phonePage.locator('#contentWorkspaceStepList .quote-flow-step-button').count() !== 7) {
+    fail('V6.9 phone content workspace lost the seven-step flow navigator');
+  }
+  const companyFontSize = await phonePage.locator('#companyName').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  if (companyFontSize < 16) fail('V6.9 phone form inputs must stay at 16px+ to prevent iOS focus zoom');
+
+  await phonePage.locator('#contentWorkspaceStepList [data-flow-block="products"]').click();
+  await phonePage.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  const phoneProductDialog = await phoneBox('#productWorkspaceModal .product-workspace-dialog');
+  near('V6.9 phone product workspace width', phoneProductDialog.width, 390, 3);
+  const gridHeadDisplay = await phonePage.locator('#productWorkspaceModal .product-data-grid-head').evaluate(node => getComputedStyle(node).display);
+  if (gridHeadDisplay !== 'none') fail('V6.9 phone product editor still exposes the desktop spreadsheet header');
+  await phonePage.locator('#doneProductWorkspace').click();
+
+  await phonePage.locator('.shell > .nav > .mobile-more-toggle').click();
+  await phonePage.locator('#mobileMoreMenu:not([hidden])').waitFor();
+  if (await phonePage.locator('#mobileMoreMenu .mobile-more-grid button:visible').count() < 8) {
+    fail('V6.9 phone More sheet actions are hidden or incomplete');
+  }
+  await phonePage.locator('#mobileMoreMenu [data-open-tab="customer"]').click();
+  await phonePage.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await phonePage.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'customer') {
+    fail('V6.9 phone More sheet did not route Customer through the modern popup workflow');
+  }
+  await phonePage.locator('#doneContentWorkspace').click();
+
+  await phonePage.locator('#studioGlobalPreview').click();
+  await phonePage.locator('.shell.report-view').waitFor();
+  await phonePage.waitForTimeout(120);
+  if (!(await phonePage.locator('.shell.report-view > .preview').isVisible())) fail('V6.9 phone report view is not visible');
+  if (await phonePage.locator('.shell.report-view > .editor').isVisible()) fail('V6.9 phone report view must hide the editor');
+  const phoneReportPreview = await phoneBox('.shell.report-view > .preview');
+  const phoneReportPaper = await phoneBox('.shell.report-view #paperWrap');
+  if (phoneReportPaper.width > phoneReportPreview.width + 2) fail('V6.9 phone A4 report does not fit inside the viewport');
+
+  if (phoneErrors.length) fail('V6.9 phone runtime page error(s): ' + phoneErrors.join(' | '));
+  await phoneContext.close();
+
+  console.log('V6.9 BROWSER PASS: desktop shell plus dedicated iPad split-view and phone single-column touch UI verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
