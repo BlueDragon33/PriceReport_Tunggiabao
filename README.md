@@ -2,20 +2,23 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.5 Product Entry Accelerator
+## Trạng thái hiện tại — V6.6 Import Review 2.0
 
-V6.5 tập trung vào nơi người nhập liệu thao tác nhiều nhất: **Sản phẩm / Dịch vụ**. Product Workspace vẫn giữ cửa sổ lớn cố định của V5.9, nhưng sidebar bên phải giờ trở thành một **trợ lý nhập liệu trực tiếp** thay vì chỉ chứa thiết lập hiển thị.
+V6.6 nâng cấp Smart Import thành một **workspace kiểm tra dữ liệu rộng kiểu bảng tính**, để người nhập liệu có thể xem, sửa và quyết định ngay trước khi dữ liệu đi vào báo giá.
 
-- **Tìm sản phẩm ngay trong danh mục** theo tên, nhóm, quy cách, đơn vị, ghi chú hoặc tiền tệ; hiển thị tối đa 6 kết quả và thêm trực tiếp vào báo giá mà không đóng popup.
-- **Data Health theo thời gian thực**: số dòng có dữ liệu, số dòng thiếu giá, số lượng bằng 0 và số nhóm sản phẩm trùng.
-- **Phát hiện dòng trùng** theo danh tính sản phẩm (nhóm + tên + quy cách + ĐVT). Các dòng trùng được đánh dấu trực tiếp trên bảng.
-- Nút **Gộp dòng trùng cùng đơn giá** chỉ tự gộp khi giá và ghi chú giống nhau; nếu khác giá/ghi chú thì hệ thống giữ nguyên và yêu cầu kiểm tra thủ công.
-- **Điền nhanh dòng đang chọn**: gợi ý nhóm hàng và đơn vị tính được lấy từ danh mục + dữ liệu hiện tại; click chip để điền vào đúng dòng đang focus.
-- Nút dán dữ liệu đổi thành **Dán & kiểm tra** để thể hiện rõ luồng Smart Import có bước review trước khi áp dụng.
-- Tìm kiếm danh mục và quick-fill không tạo form/state thứ hai; vẫn dùng trực tiếp `state.products`, autosave và render A4 hiện có.
-- V6.4 Guided Content Workspaces, 16 mẫu báo giá và toàn bộ geometry desktop/mobile trước đó được giữ nguyên.
-- Package: **6.5.0**.
-- PWA cache generation: **pricereport-shell-v65-product-entry-accelerator**.
+- Smart Import mở rộng lên tối đa **1320 px**, phù hợp luồng nhập Excel nhiều cột và không còn cảm giác chật như popup nhỏ.
+- Dashboard **Trước khi nhập → Dữ liệu hợp lệ → Cần kiểm tra → Sau khi áp dụng** cho biết rõ tác động của lần nhập trước khi bấm Apply.
+- Có **bảng chỉnh sửa trực tiếp** cho toàn bộ dòng sản phẩm hợp lệ: Nhóm hàng, Tên, Quy cách, ĐVT, SL, Đơn giá, Ghi chú.
+- Với Excel/Paste, chỉnh sửa ở bảng review được ghi ngược về **dòng nguồn** rồi chạy lại parser/mapping, vì vậy preview, duplicate detection và dữ liệu Apply luôn đồng bộ.
+- Có tìm kiếm trong dữ liệu nhập và bộ lọc **chỉ dòng có thể trùng**.
+- Có thể **Bỏ dòng** ngay trong bảng review; dữ liệu chưa bị ghi vào báo giá và có thao tác Hoàn tác.
+- Khu vực vấn đề có nút **Vấn đề tiếp theo** để nhảy nhanh qua các dòng lỗi/nhóm trùng.
+- Dòng lỗi tiếp tục không được tự áp dụng; duplicate vẫn được giữ nguyên trừ khi người dùng chủ động bỏ/gộp.
+- Nút Apply hiển thị rõ số dòng sẽ áp dụng.
+- Mobile giữ layout gọn hơn, dashboard 2 cột và bảng có vùng cuộn riêng.
+- Toàn bộ nền V6.5 Product Entry Accelerator, V6.4 Guided Workspaces và 16 mẫu báo giá được giữ nguyên.
+- Package: **6.6.0**.
+- PWA cache generation: **pricereport-shell-v66-import-review-2**.
 
 
 ## Kiểm thử
