@@ -5656,6 +5656,35 @@ function refreshOpenStudioGuidance() {
   if (panel && !panel.hidden) renderStudioGuidance();
 }
 
+function renderInspectorCheckSummary(result = validateQuote()) {
+  const errors = Array.isArray(result?.errors) ? result.errors : [];
+  const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+  const errorCount = document.getElementById('inspectorErrorCount');
+  const warningCount = document.getElementById('inspectorWarningCount');
+  const list = document.getElementById('inspectorIssueList');
+  if (errorCount) errorCount.textContent = String(errors.length);
+  if (warningCount) warningCount.textContent = String(warnings.length);
+  if (!list) return;
+  list.innerHTML = '';
+  const issues = [
+    ...errors.map((message) => ({ tone: 'error', message })),
+    ...warnings.map((message) => ({ tone: 'warn', message }))
+  ].slice(0, 3);
+  if (!issues.length) {
+    const ready = document.createElement('div');
+    ready.className = 'inspector-issue empty';
+    ready.textContent = '✓ Không phát hiện lỗi nghiệp vụ.';
+    list.appendChild(ready);
+    return;
+  }
+  issues.forEach((issue) => {
+    const item = document.createElement('div');
+    item.className = 'inspector-issue ' + issue.tone;
+    item.textContent = issue.message;
+    list.appendChild(item);
+  });
+}
+
 function updateDocumentHealth() {
   const result = validateQuote();
   const badges = [
@@ -5680,6 +5709,7 @@ function updateDocumentHealth() {
     badge.classList.add(tone);
     badge.textContent = label;
   });
+  renderInspectorCheckSummary(result);
 }
 
 function runPreflight({ forPrint = false, forExport = false } = {}) {
@@ -7031,9 +7061,13 @@ function setZoom(value) {
 document.getElementById('exitReportView')?.addEventListener('click', () => openTab('general'));
 document.getElementById('actual').addEventListener('click', () => setZoom(100));
 document.getElementById('fit').addEventListener('click', () => {
-  const available = document.querySelector('.preview').clientWidth - 34;
-  const width = document.getElementById('paper').offsetWidth;
-  setZoom(Math.floor((available / width) * 100));
+  const preview = document.querySelector('.preview');
+  const paper = document.getElementById('paper');
+  if (!preview || !paper) return;
+  const available = Math.max(300, preview.clientWidth - 70);
+  const targetPaperWidth = Math.min(706, available);
+  const width = paper.offsetWidth || (210 / 25.4) * 96;
+  setZoom(Math.floor((targetPaperWidth / width) * 100));
 });
 document.getElementById('zoomOut').addEventListener('click', () => setZoom(zoom - 10));
 document.getElementById('zoomIn').addEventListener('click', () => setZoom(zoom + 10));
