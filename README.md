@@ -2,26 +2,18 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.10 Mobile & iPad Polish
+## Trạng thái hiện tại — V6.11 Touch Breakpoint Hardening
 
-V6.10 là vòng làm lại thứ hai cho giao diện cảm ứng. V6.9 đã đưa mobile/iPad sang shell mới, nhưng V6.10 tập trung vào **độ thoáng, thứ tự ưu tiên và thao tác thực tế** thay vì chỉ responsive hóa desktop.
+V6.11 là vòng hardening sau V6.10, tập trung vào hai lỗi mà breakpoint cũ chưa bao phủ: **iPad Pro dọc 1024 px** bị ép split-view và **tablet ngang 900–1023 px** để lại preview A4 quá hẹp. Browser regression được thêm trước và đã tái hiện lỗi trên CI trước khi sửa.
 
-- **iPad dọc**: bỏ split-view chật; khu soạn chiếm gần toàn bộ chiều ngang, danh sách 7 khối chia 2 cột, preview A4 mở riêng khi cần.
-- **iPad ngang / tablet rộng**: giữ split-view hợp lý với editor 320 px + live A4 preview.
-- **Điện thoại**: header gọn hơn, bỏ icon tài liệu dư thừa, tăng khả năng đọc tên báo giá và trạng thái.
-- Bottom navigation giữ 5 mục nhưng tăng vùng chạm và phản hồi active rõ hơn.
-- Màn hình **Thêm nội dung** giảm chiều dài: mẫu thiết kế chuyển thành rail vuốt ngang thay vì bức tường card 2 cột.
-- Popup chỉnh sửa tận dụng thêm chiều cao; Flow Navigator gọn hơn nhưng vẫn đủ 7 bước.
-- Footer thao tác không còn chữ quá nhỏ; Prev / Tiếp tục / Xong có vùng chạm tối thiểu 44 px.
-- Toolbar Sản phẩm trên touch đổi thành **action rail vuốt ngang**, tránh chiếm nhiều hàng.
-- Product editor tiếp tục card-first trên phone.
-- Template Library trên phone chuyển sang card một cột ngang thông tin, dễ đọc hơn.
-- Final Review phone dùng dashboard 2×2 và panel một cột.
-- Các bảng quản lý dài được cuộn ngang cục bộ, không làm tràn toàn trang.
-- Desktop và logic báo giá không thay đổi.
-- Package: **6.10.0**.
-- PWA cache generation: **pricereport-shell-v610-touch-polish**.
-
+- Tablet/iPad **portrait ở mọi chiều rộng**: ưu tiên nhập liệu, editor gần full-width và ẩn live A4 trong lúc soạn.
+- Tablet **landscape dưới 1024 px**: cũng ưu tiên nhập liệu, tránh ép A4 vào cột hẹp.
+- Tablet/iPad **landscape từ 1024 px**: bật split view với editor khoảng 320 px và phần preview còn đủ rộng.
+- Browser gates khóa thêm iPad Pro portrait 1024×1366, compact landscape 900×700 và boundary landscape 1024×768, bên cạnh 834×1112 và 1112×834 đã có.
+- Phone tăng độ đọc cho status/meta, bottom navigation, mô tả khối, Flow Navigator và các nút footer; input vẫn giữ 16 px+ để tránh iOS focus zoom.
+- Không tạo mobile state riêng, không sửa business state, dữ liệu local-first và desktop workflow được giữ nguyên.
+- Package: **6.11.0**.
+- PWA cache generation: **pricereport-shell-v611-touch-breakpoint-hardening**.
 
 ## Kiểm thử
 
