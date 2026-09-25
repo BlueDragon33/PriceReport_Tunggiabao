@@ -1023,6 +1023,265 @@ function mountContentWorkspaceNodes(block) {
   return mounted;
 }
 
+
+const CONTENT_WORKSPACE_GUIDES = {
+  general: {
+    title: 'Hoàn tất phần nhận diện và số báo giá',
+    detail: 'Dùng thao tác nhanh cho ngày lập, mã báo giá và metadata A4 mà không rời vùng nhập.'
+  },
+  customer: {
+    title: 'Tái sử dụng khách hàng đã lưu',
+    detail: 'Tìm theo tên, công ty hoặc SĐT; nạp trực tiếp vào báo giá hiện tại hoặc lưu khách đang nhập vào danh bạ.'
+  },
+  payment: {
+    title: 'Thiết lập tiền và thanh toán nhanh',
+    detail: 'Áp VAT, giảm giá, phương thức thanh toán và bật các khối tổng tiền bằng một lần bấm.'
+  },
+  terms: {
+    title: 'Soạn điều khoản theo các mảnh chuẩn',
+    detail: 'Chèn các điều khoản thường dùng mà không ghi đè những dòng đã có.'
+  },
+  signature: {
+    title: 'Chuẩn hóa phần ký',
+    detail: 'Điền dòng ngày tháng và bố cục ký hai bên, đồng thời giữ nguyên họ tên đã nhập.'
+  },
+  'custom-text': {
+    title: 'Điền nhanh văn bản mẫu',
+    detail: 'Có thể dùng lại lời mở đầu, lời kết hoặc chân trang chuẩn rồi tiếp tục chỉnh tay.'
+  }
+};
+
+function applyContentWorkspacePatch(patch, notice = '') {
+  Object.entries(patch || {}).forEach(([key, value]) => {
+    state[key] = value;
+  });
+  if (['companyAddressDetail','companyProvince','companyWard'].some(key => Object.prototype.hasOwnProperty.call(patch || {}, key))) {
+    syncLegacyCompanyAddress();
+  }
+  const persisted = save();
+  syncInputs();
+  render();
+  renderContentBlockSummaries();
+  updateContentWorkspaceStatus();
+  if (notice) toast(persisted ? notice : notice + ' · chưa thể ghi bộ nhớ chính');
+  return persisted;
+}
+
+function workspaceToolButton(label, handler, { primary = false, className = '' } = {}) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = (className || 'content-workspace-chip') + (primary ? ' primary' : '');
+  button.textContent = label;
+  button.addEventListener('click', handler);
+  return button;
+}
+
+function appendWorkspaceToolGroup(container, label, actions) {
+  const group = document.createElement('div');
+  group.className = 'content-workspace-quick-group';
+  const heading = document.createElement('span');
+  heading.textContent = label;
+  const row = document.createElement('div');
+  row.className = 'content-workspace-chip-row';
+  actions.forEach(action => {
+    row.appendChild(workspaceToolButton(action.label, action.run, { primary: Boolean(action.primary) }));
+  });
+  group.append(heading, row);
+  container.appendChild(group);
+}
+
+function appendUniqueWorkspaceTerms(lines, notice) {
+  const current = String(state.termsText || '').split(/\n+/).map(line => line.trim()).filter(Boolean);
+  const seen = new Set(current.map(canonicalSearchText));
+  (Array.isArray(lines) ? lines : []).forEach(line => {
+    const clean = String(line || '').trim();
+    const key = canonicalSearchText(clean);
+    if (clean && key && !seen.has(key)) {
+      current.push(clean);
+      seen.add(key);
+    }
+  });
+  applyContentWorkspacePatch({ termsText: current.join('\n'), showTerms: true }, notice);
+}
+
+function renderContentWorkspaceCustomerResults(list, query = '') {
+  if (!list) return;
+  list.innerHTML = '';
+  const needle = canonicalSearchText(query);
+  const customers = getCustomerLibrary()
+    .filter(customer => {
+      if (!needle) return true;
+      return [customer.name, customer.company, customer.phone, customer.email, customer.contact]
+        .some(value => canonicalSearchText(value).includes(needle));
+    })
+    .slice(0, 5);
+
+  if (!customers.length) {
+    const empty = document.createElement('div');
+    empty.className = 'content-workspace-empty-note';
+    empty.textContent = getCustomerLibrary().length
+      ? 'Không tìm thấy khách phù hợp.'
+      : 'Danh bạ chưa có khách hàng. Nhập thông tin bên trái rồi bấm “Lưu khách hiện tại”.';
+    list.appendChild(empty);
+    return;
+  }
+
+  customers.forEach(customer => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.workspaceAction = 'use-customer';
+    const title = document.createElement('b');
+    title.textContent = customer.company || customer.name || 'Khách hàng';
+    const detail = document.createElement('small');
+    detail.textContent = [customer.name !== title.textContent ? customer.name : '', customer.phone, customer.email]
+      .filter(Boolean).join(' · ') || 'Nạp khách hàng này';
+    button.append(title, detail);
+    button.addEventListener('click', () => {
+      useCustomer(customer, { navigate: false, focus: false, notify: false });
+      updateContentWorkspaceStatus('customer');
+      renderContentBlockSummaries();
+      toast('Đã nạp khách hàng từ danh bạ');
+    });
+    list.appendChild(button);
+  });
+}
+
+function renderContentWorkspaceAssist(block = activeContentBlock) {
+  const guide = CONTENT_WORKSPACE_GUIDES[block] || {
+    title: 'Gợi ý theo khối đang mở',
+    detail: 'Các thao tác dùng trực tiếp dữ liệu báo giá hiện tại.'
+  };
+  setText('contentWorkspaceGuideTitle', guide.title);
+  setText('contentWorkspaceGuideDetail', guide.detail);
+
+  const tools = document.getElementById('contentWorkspaceQuickTools');
+  if (!tools) return;
+  tools.innerHTML = '';
+
+  if (block === 'general') {
+    appendWorkspaceToolGroup(tools, 'Báo giá', [
+      { label: 'Ngày hôm nay', run: () => applyContentWorkspacePatch({ quoteDate: localDateISO() }, 'Đã cập nhật ngày lập') },
+      { label: 'Tạo mã mới', run: () => applyContentWorkspacePatch({ quoteNo: generateUniqueQuoteNo() }, 'Đã tạo mã báo giá mới') }
+    ]);
+    const showMeta = workspaceToolButton('Hiện số / ngày trên A4', () => {
+      applyContentWorkspacePatch({ showQuoteMeta: true }, 'Đã bật metadata báo giá');
+    }, { primary: true, className: 'content-workspace-tool-button' });
+    showMeta.dataset.workspaceAction = 'show-quote-meta';
+    tools.appendChild(showMeta);
+    return;
+  }
+
+  if (block === 'customer') {
+    const saveCustomer = workspaceToolButton('＋ Lưu khách hiện tại vào danh bạ', () => {
+      saveCurrentCustomerToLibrary();
+      const list = document.getElementById('contentWorkspaceCustomerResults');
+      const search = document.getElementById('contentWorkspaceCustomerSearch');
+      renderContentWorkspaceCustomerResults(list, search?.value || '');
+    }, { primary: true, className: 'content-workspace-tool-button' });
+    saveCustomer.dataset.workspaceAction = 'save-customer';
+    tools.appendChild(saveCustomer);
+
+    const search = document.createElement('input');
+    search.id = 'contentWorkspaceCustomerSearch';
+    search.className = 'content-workspace-customer-search';
+    search.type = 'search';
+    search.autocomplete = 'off';
+    search.placeholder = 'Tìm tên, công ty, SĐT…';
+    search.setAttribute('aria-label', 'Tìm khách hàng đã lưu');
+
+    const list = document.createElement('div');
+    list.id = 'contentWorkspaceCustomerResults';
+    list.className = 'content-workspace-customer-list';
+    search.addEventListener('input', () => renderContentWorkspaceCustomerResults(list, search.value));
+    tools.append(search, list);
+    renderContentWorkspaceCustomerResults(list);
+    return;
+  }
+
+  if (block === 'payment') {
+    appendWorkspaceToolGroup(tools, 'VAT', [0, 5, 8, 10].map(value => ({
+      label: value + '%',
+      run: () => applyContentWorkspacePatch({ vatPct: value }, 'Đã đặt VAT ' + value + '%')
+    })));
+    appendWorkspaceToolGroup(tools, 'Giảm giá', [0, 5, 10].map(value => ({
+      label: value + '%',
+      run: () => applyContentWorkspacePatch({ discountPct: value }, 'Đã đặt giảm giá ' + value + '%')
+    })));
+    appendWorkspaceToolGroup(tools, 'Phương thức', [
+      { label: 'Chuyển khoản', run: () => applyContentWorkspacePatch({ paymentMethod: 'Chuyển khoản' }, 'Đã chọn chuyển khoản') },
+      { label: 'Tiền mặt', run: () => applyContentWorkspacePatch({ paymentMethod: 'Tiền mặt' }, 'Đã chọn tiền mặt') },
+      { label: 'TM / CK', run: () => applyContentWorkspacePatch({ paymentMethod: 'Tiền mặt hoặc chuyển khoản' }, 'Đã chọn tiền mặt hoặc chuyển khoản') }
+    ]);
+    const showPayment = workspaceToolButton('Hiện tổng tiền + thanh toán trên A4', () => {
+      applyContentWorkspacePatch({ showTotals: true, showPaymentBlock: true }, 'Đã bật khối tổng tiền và thanh toán');
+    }, { primary: true, className: 'content-workspace-tool-button' });
+    showPayment.dataset.workspaceAction = 'show-payment';
+    tools.appendChild(showPayment);
+    return;
+  }
+
+  if (block === 'terms') {
+    appendWorkspaceToolGroup(tools, 'Chèn nhanh', [
+      {
+        label: 'Bộ chuẩn',
+        run: () => appendUniqueWorkspaceTerms(String(defaults.termsText || '').split(/\n+/), 'Đã bổ sung bộ điều khoản chuẩn')
+      },
+      {
+        label: 'Giao hàng 1–3 ngày',
+        run: () => appendUniqueWorkspaceTerms(['Thời gian giao hàng: 1 - 3 ngày kể từ khi xác nhận đơn hàng.'], 'Đã bổ sung điều khoản giao hàng')
+      },
+      {
+        label: 'Thanh toán TM / CK',
+        run: () => appendUniqueWorkspaceTerms(['Phương thức thanh toán: Tiền mặt hoặc chuyển khoản.'], 'Đã bổ sung điều khoản thanh toán')
+      },
+      {
+        label: 'Hiệu lực 7 ngày',
+        run: () => appendUniqueWorkspaceTerms(['Bảng báo giá có hiệu lực trong vòng 7 ngày kể từ ngày phát hành.'], 'Đã bổ sung thời hạn hiệu lực')
+      }
+    ]);
+    const showTerms = workspaceToolButton('Hiện điều khoản trên A4', () => {
+      applyContentWorkspacePatch({ showTerms: true }, 'Đã bật khối điều khoản');
+    }, { primary: true, className: 'content-workspace-tool-button' });
+    showTerms.dataset.workspaceAction = 'show-terms';
+    tools.appendChild(showTerms);
+    return;
+  }
+
+  if (block === 'signature') {
+    appendWorkspaceToolGroup(tools, 'Chữ ký', [
+      {
+        label: 'Dòng ngày hiện tại',
+        run: () => applyContentWorkspacePatch({ dateLine: defaultSignatureDateLine(new Date()) }, 'Đã cập nhật dòng ngày tháng')
+      },
+      {
+        label: 'Bố cục ký 2 bên',
+        run: () => {
+          const patch = { showSignature: true };
+          if (!String(state.leftTitle || '').trim()) patch.leftTitle = defaults.leftTitle;
+          if (!String(state.rightTitle || '').trim()) patch.rightTitle = defaults.rightTitle;
+          if (!String(state.leftNote || '').trim()) patch.leftNote = defaults.leftNote;
+          if (!String(state.rightNote || '').trim()) patch.rightNote = defaults.rightNote;
+          applyContentWorkspacePatch(patch, 'Đã chuẩn hóa bố cục chữ ký');
+        }
+      }
+    ]);
+    const showSignature = workspaceToolButton('Hiện chữ ký trên A4', () => {
+      applyContentWorkspacePatch({ showSignature: true }, 'Đã bật chữ ký');
+    }, { primary: true, className: 'content-workspace-tool-button' });
+    showSignature.dataset.workspaceAction = 'show-signature';
+    tools.appendChild(showSignature);
+    return;
+  }
+
+  if (block === 'custom-text') {
+    appendWorkspaceToolGroup(tools, 'Văn bản mẫu', [
+      { label: 'Lời mở đầu chuẩn', run: () => applyContentWorkspacePatch({ intro: defaults.intro }, 'Đã dùng lời mở đầu chuẩn') },
+      { label: 'Lời kết chuẩn', run: () => applyContentWorkspacePatch({ closingText: defaults.closingText }, 'Đã dùng lời kết chuẩn') },
+      { label: 'Chân trang chuẩn', run: () => applyContentWorkspacePatch({ footerText: defaults.footerText }, 'Đã dùng chân trang chuẩn') }
+    ]);
+  }
+}
+
 function updateContentWorkspaceStatus(block = activeContentBlock) {
   const status = contentBlockStatus(block);
   const titleMap = {
@@ -1084,6 +1343,7 @@ function openContentWorkspace(block, { focusFirst = true } = {}) {
   modal.hidden = false;
   document.body.classList.add('content-workspace-open');
   updateContentWorkspaceStatus(block);
+  renderContentWorkspaceAssist(block);
 
   requestAnimationFrame(() => {
     const mount = document.getElementById('contentWorkspaceMount');
@@ -1166,7 +1426,11 @@ document.getElementById('contentWorkspacePrev')?.addEventListener('click', () =>
 });
 document.getElementById('contentWorkspaceNext')?.addEventListener('click', () => {
   const index = CONTENT_BLOCK_ORDER.indexOf(activeContentBlock);
-  if (index >= 0 && index < CONTENT_BLOCK_ORDER.length - 1) openContentBlock(CONTENT_BLOCK_ORDER[index + 1]);
+  if (index >= 0 && index < CONTENT_BLOCK_ORDER.length - 1) {
+    const persisted = save();
+    if (!persisted) toast('Đã chuyển khối; bản nháp chưa thể ghi vào bộ nhớ chính');
+    openContentBlock(CONTENT_BLOCK_ORDER[index + 1]);
+  }
 });
 
 let mobileMoreLastFocus = null;
