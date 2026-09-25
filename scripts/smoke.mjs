@@ -359,8 +359,10 @@ for (const studioPane of ['general','customer','products','payment','terms','des
     fail('V5 Pass 18 studio pane scope missing: ' + studioPane);
   }
 }
-if ((html.match(/data-studio-step=/g) || []).length !== 6) fail('V5.1 quotation workflow must expose exactly six drafting steps');
-if (!html.includes('data-studio-step="terms"')) fail('V5.1 quotation workflow must expose Terms as its own step');
+if ((html.match(/data-content-block=/g) || []).length < 14) fail('V5.8 content navigation must expose seven blocks in both library and inspector');
+for (const block of ['general','customer','products','payment','terms','signature','custom-text']) {
+  if (!html.includes('data-content-block="' + block + '"')) fail('V5.8 content library is missing block: ' + block);
+}
 if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
 if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
