@@ -58,3 +58,7 @@ jobs:
       - name: Smoke tests
         run: node scripts/smoke.mjs
       - run: npm run build
+      - name: Install Chromium for V5.8 visual gate
+        run: npx playwright install --with-deps chromium
+      - name: V5.8 rendered pixel-lock gate
+        run: node scripts/studio-v58-browser.test.mjs

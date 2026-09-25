@@ -4,7 +4,8 @@ const html = fs.readFileSync('index.html', 'utf8');
 const js = fs.readFileSync('src/main.js', 'utf8');
 const css = fs.readFileSync('src/styles.css', 'utf8');
 const v5Css = fs.readFileSync('src/ui-v5.css', 'utf8');
-const appCss = css + '\n' + v5Css;
+const studioCss = fs.readFileSync('src/studio-v58.css', 'utf8');
+const appCss = css + '\n' + v5Css + '\n' + studioCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 
@@ -46,11 +47,14 @@ const requiredIds = [
   'smartPastePanel','smartPasteText','parseSmartPaste','smartImportSheetPicker','smartImportSheetSelect',
   'smartImportIssues','smartImportIssueList','saveProductsToCatalogTop',
   'showPack','showQty','quoteSubtitle','pQuoteSubtitle','resetSmartImport',
-  'studioSaveQuote','studioCheckQuote','studioPreviewQuote','studioPrevStep','studioNextStep',
-  'studioWorkflowPosition','studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal',
+  'studioDocumentHealth','quickShowCustomer','studioSubtotal','studioGrandTotal',
   'inspectorHealthStatus','inspectorRunCheck','inspectorPreviewQuote',
+  'inspectorErrorCount','inspectorWarningCount','inspectorIssueList',
   'studioGlobalTitle','studioGlobalQuoteNo','studioGlobalHistoryState','studioGlobalHealth',
-  'studioGlobalSave','studioGlobalPreview','studioGlobalPdf'
+  'studioGlobalSave','studioGlobalPreview','studioGlobalPdf',
+  'contentLibraryHome','contentLibrarySearch','contentLibraryBack','contentLibraryDetailHead',
+  'contentBlockList','contentTemplateGrid','runLayoutSuggestion',
+  'studioCommandSearch','studioCommandResults','studioTopMenu','previewOverflowMenu'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -66,7 +70,7 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/ui-v5.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/ui-v5.css','src/studio-v58.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
@@ -81,10 +85,10 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v57-reference-fidelity")) fail('Service-worker cache version was not aligned with the V5.7 reference-fidelity release');
+if (!sw.includes("pricereport-shell-v58-pixel-lock")) fail('Service-worker cache version was not aligned with the V5.8 pixel-lock release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
-if (!html.includes("const recoveryKey = 'tgb-style-recovery-v3'")) fail('Bounded V5.7 stylesheet recovery key is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v4'")) fail('Bounded V5.8 stylesheet recovery key is missing');
 if (!html.includes('reloadLinkedStylesheets')) fail('Runtime stylesheet reload helper is missing');
 if (!html.includes('nextAttempt > 3')) fail('Runtime stylesheet recovery must be bounded');
 if (!html.includes("url.searchParams.set('asset-recovery-ts'")) fail('Runtime stylesheet recovery must cache-bust page retries');
@@ -300,10 +304,11 @@ if (!js.includes("row.className = 'master-item master-table-row customer-table-g
 if (!js.includes("row.className = 'master-item master-table-row product-table-grid'")) fail('V4.4 product table renderer is missing');
 if (!appCss.includes('.master-workspace-header') || !appCss.includes('.master-table-row')) fail('Master-data workspace styles are missing');
 
-if (!html.includes('id="studioBackHome"') || !html.includes('id="studioQuoteLabel"') || !html.includes('class="studio-stepper"')) fail('V4.5 quotation studio context header is missing');
-if (!js.includes('function syncStudioContext(tab')) fail('V4.5 studio context synchronizer is missing');
-if (!js.includes("document.querySelectorAll('[data-studio-step]')")) fail('V4.5 studio step navigation is not wired');
-if (!v5Css.includes('.studio-context-row') || !v5Css.includes('.studio-stepper button.active')) fail('Quotation studio context styles are missing from V5 UI');
+if (!html.includes('id="studioBackHome"') || !html.includes('id="contentLibraryHome"') || !html.includes('class="editor content-library"')) fail('V5.8 quotation Studio content library is missing');
+if (!js.includes('function syncStudioContext()')) fail('Studio context synchronizer is missing');
+if (!js.includes('function openContentBlock(block)') || !js.includes('function showContentLibraryHome')) fail('V5.8 content-library controller is missing');
+if (!js.includes('function openStudioCommandPalette') || !js.includes('function applyTheme')) fail('V5.8 shared Studio command/theme controllers are missing');
+if (!studioCss.includes('.content-library-home') || !studioCss.includes('.studio-topbar') || !studioCss.includes('.inspector-section')) fail('V5.8 Studio pixel-lock styling is missing');
 
 if (!html.includes('id="dashboardSearchResults"') || !html.includes('dashboard-search-wrap')) fail('V4.6 dashboard global-search result surface is missing');
 if (!js.includes('function renderDashboardSearchResults(rawQuery)')) fail('V4.6 global-search renderer is missing');
@@ -354,20 +359,24 @@ for (const studioPane of ['general','customer','products','payment','terms','des
     fail('V5 Pass 18 studio pane scope missing: ' + studioPane);
   }
 }
-if ((html.match(/data-studio-step=/g) || []).length !== 6) fail('V5.1 quotation workflow must expose exactly six drafting steps');
-if (!html.includes('data-studio-step="terms"')) fail('V5.1 quotation workflow must expose Terms as its own step');
+if ((html.match(/data-content-block=/g) || []).length < 14) fail('V5.8 content navigation must expose seven blocks in both library and inspector');
+for (const block of ['general','customer','products','payment','terms','signature','custom-text']) {
+  if (!html.includes('data-content-block="' + block + '"')) fail('V5.8 content library is missing block: ' + block);
+}
 if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
 if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
-if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
+if (!v5Css.includes('Shared Studio form / health utilities')) fail('Shared Studio form/health utilities are missing');
 
-if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 Pass 18 Studio consolidation styles are missing');
-if (!html.includes('reference-ui-v57')) fail('V5.7 reference-fidelity UI scope is missing');
-if (!v5Css.includes('V5.7 reference-fidelity UI/UX refactor')) fail('V5.7 reference-fidelity UI refactor is missing');
-if (!v5Css.includes('--v5-sidebar-width:118px') || !v5Css.includes('--edit:320px') || !v5Css.includes('--design:368px')) fail('V5.7 reference desktop geometry is missing');
-if (!html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.7 inspector tabs are missing');
-if (!js.includes('setDesignInspectorTab')) fail('V5.7 inspector tab controller is missing');
-if (!html.includes('class="studio-global-bar"') || !js.includes('studioGlobalSave')) fail('V5.7 Studio global command bar is not wired');
+if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 shared Studio primitives are missing');
+if (!html.includes('reference-ui-v58')) fail('V5.8 pixel-lock UI scope is missing');
+if (!html.includes('href="./src/studio-v58.css"')) fail('V5.8 dedicated Studio stylesheet is not loaded');
+if (!studioCss.includes('--studio-header-h:72px') || !studioCss.includes('--studio-rail-w:118px') || !studioCss.includes('--studio-left-w:320px') || !studioCss.includes('--studio-right-w:384px')) fail('V5.8 canonical Studio geometry is missing');
+if (!html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.8 inspector tabs are missing');
+if (!js.includes('setDesignInspectorTab') || !js.includes('renderInspectorCheckSummary')) fail('V5.8 inspector controllers are missing');
+if (!html.includes('class="studio-topbar"') || !js.includes('studioGlobalSave')) fail('V5.8 single Studio topbar is not wired');
+if (html.includes('class="studio-stepper"') || html.includes('class="studio-commandbar"')) fail('V5.7 visible Studio workflow chrome returned');
+if (!js.includes('const targetPaperWidth = Math.min(706, available)')) fail('V5.8 canonical A4 fit target is missing');
 if (html.includes('class="btns" style="margin-top:8px"')) fail('Legacy inline Studio spacing returned');
 
 if (/class="color"[^>]*style=/.test(html)) fail('V5 Pass 18 color swatches must not use inline presentation');
@@ -380,7 +389,7 @@ if (!js.includes('dataLibraryImportReadToken')) fail('V5.5 Data Library stale-re
 if (!js.includes('function offerDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery prompt is missing');
 if (!js.includes('function writeDataLibraryImportRecovery') || !js.includes('function readDataLibraryImportRecovery')) fail('V5.5 Data Library import recovery persistence is missing');
 if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS')) fail('V5.5 Data Library import recovery size guard is missing');
-if (!html.includes("const recoveryKey = 'tgb-style-recovery-v3'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
+if (!html.includes("const recoveryKey = 'tgb-style-recovery-v4'") || !html.includes('asset-recovery')) fail('Production style self-recovery bootstrap is missing');
 if (!js.includes("updateViaCache: 'none'")) fail('Service worker update must bypass stale HTTP cache');
 if (!html.includes('id="dataLibraryImportIssues"') || !html.includes('id="dataLibraryImportIssueList"')) fail('V5.5 Data Library decision review panel is missing');
 if (!js.includes('function dataLibraryImportReviewState') || !js.includes('function chooseDataLibraryImportDuplicate')) fail('V5.5 explicit duplicate review decision flow is missing');

@@ -576,24 +576,15 @@ const STATUS_LABELS = {
   expired: 'Hết hiệu lực'
 };
 
-const STUDIO_WORKFLOW = [
-  { tab: 'general', label: 'Thông tin' },
-  { tab: 'products', label: 'Sản phẩm' },
-  { tab: 'payment', label: 'Thanh toán' },
-  { tab: 'terms', label: 'Điều khoản' },
-  { tab: 'design', label: 'Thiết kế' },
-  { tab: 'export', label: 'Xuất' }
-];
-
-const STUDIO_STAGE_BY_TAB = {
-  general: 'general',
-  customer: 'general',
-  products: 'products',
-  payment: 'payment',
-  terms: 'terms',
-  design: 'design',
-  presets: 'design',
-  export: 'export'
+const THEME_LABELS = {
+  modern: 'Chuẩn công ty',
+  corporate: 'Doanh nghiệp',
+  minimal: 'Tối giản',
+  classic: 'Trang trọng',
+  emerald: 'Xanh thương hiệu',
+  warm: 'Ấm nhẹ',
+  premium: 'Cao cấp sáng',
+  mono: 'Đen trắng'
 };
 
 function comparableQuoteForHistory(data) {
@@ -642,25 +633,12 @@ function updateStudioStepHealth() {
   });
 }
 
-function syncStudioContext(tab = '') {
-  const quoteLabel = document.getElementById('studioQuoteLabel');
+function syncStudioContext() {
   const quoteStatus = document.getElementById('studioQuoteStatus');
-  const historyState = document.getElementById('studioHistoryState');
-  if (quoteLabel) quoteLabel.textContent = String(state.quoteNo || '').trim() || 'Báo giá mới';
   if (quoteStatus) {
     const currentStatus = state.quoteStatus || 'draft';
     quoteStatus.textContent = statusLabel(currentStatus);
     quoteStatus.className = 'studio-status-badge status-' + currentStatus;
-  }
-  if (historyState) {
-    const historyMode = currentQuoteHistoryState();
-    historyState.textContent = historyMode === 'saved'
-      ? 'Đã lưu lịch sử'
-      : historyMode === 'dirty'
-        ? 'Có thay đổi chưa lưu'
-        : 'Chưa lưu lịch sử';
-    historyState.className = 'studio-history-state' +
-      (historyMode === 'saved' ? ' saved' : historyMode === 'dirty' ? ' dirty' : '');
   }
 
   const globalTitle = document.getElementById('studioGlobalTitle');
@@ -676,35 +654,6 @@ function syncStudioContext(tab = '') {
       : historyMode === 'dirty'
         ? 'Có thay đổi chưa lưu'
         : 'Chưa lưu lịch sử';
-  }
-
-  const stage = STUDIO_STAGE_BY_TAB[tab] || '';
-  document.querySelectorAll('[data-studio-step]').forEach((button) => {
-    const active = Boolean(stage) && button.dataset.studioStep === stage;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-current', active ? 'step' : 'false');
-  });
-
-  updateStudioStepHealth();
-
-  const workflowIndex = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
-  const position = document.getElementById('studioWorkflowPosition');
-  const prev = document.getElementById('studioPrevStep');
-  const next = document.getElementById('studioNextStep');
-  if (position) {
-    position.textContent = workflowIndex >= 0
-      ? 'Bước ' + (workflowIndex + 1) + '/' + STUDIO_WORKFLOW.length + ' · ' + STUDIO_WORKFLOW[workflowIndex].label
-      : 'Quy trình ' + STUDIO_WORKFLOW.length + ' bước';
-  }
-  if (prev) {
-    prev.disabled = workflowIndex <= 0;
-    prev.title = workflowIndex > 0 ? 'Về ' + STUDIO_WORKFLOW[workflowIndex - 1].label : 'Đang ở bước đầu';
-  }
-  if (next) {
-    next.disabled = workflowIndex < 0 || workflowIndex >= STUDIO_WORKFLOW.length - 1;
-    next.title = workflowIndex >= 0 && workflowIndex < STUDIO_WORKFLOW.length - 1
-      ? 'Tiếp: ' + STUDIO_WORKFLOW[workflowIndex + 1].label
-      : 'Đang ở bước cuối';
   }
 }
 
@@ -724,6 +673,96 @@ const tabMeta = {
   presets: ['LƯU MẪU', 'Lưu các cấu hình báo giá để dùng lại.'],
   settings: ['CÀI ĐẶT ỨNG DỤNG', 'Khởi động, giao diện và hành vi lưu dữ liệu.']
 };
+
+const CONTENT_BLOCKS = {
+  general: {
+    tab: 'general',
+    title: 'THÔNG TIN CHUNG',
+    subtitle: 'Logo, doanh nghiệp, mã báo giá và ngày lập.',
+    focusId: 'companyName'
+  },
+  customer: {
+    tab: 'customer',
+    title: 'KHÁCH HÀNG',
+    subtitle: 'Người nhận và đơn vị mua hàng.',
+    focusId: 'customerName'
+  },
+  products: {
+    tab: 'products',
+    title: 'SẢN PHẨM / DỊCH VỤ',
+    subtitle: 'Danh sách hàng hóa, quy cách, số lượng và đơn giá.',
+    focusId: 'productEditor'
+  },
+  payment: {
+    tab: 'payment',
+    title: 'THANH TOÁN',
+    subtitle: 'VAT, giảm giá, tổng tiền và tài khoản.',
+    focusId: 'discountPct'
+  },
+  terms: {
+    tab: 'terms',
+    title: 'ĐIỀU KHOẢN',
+    subtitle: 'Nội dung thương mại và lời kết.',
+    focusId: 'termsTitle'
+  },
+  signature: {
+    tab: 'terms',
+    title: 'CHỮ KÝ',
+    subtitle: 'Ngày tháng, chức danh, ghi chú và người ký.',
+    focusId: 'dateLine'
+  },
+  'custom-text': {
+    tab: 'general',
+    title: 'VĂN BẢN TÙY CHỈNH',
+    subtitle: 'Lời mở đầu, lời kết và chân trang dùng lại dữ liệu hiện có.',
+    focusId: 'intro'
+  }
+};
+
+let activeContentBlock = '';
+
+function setContentLibraryMode(mode, block = '') {
+  const editor = document.querySelector('.content-library');
+  if (!editor) return;
+  const next = mode === 'detail' ? 'detail' : 'home';
+  editor.dataset.contentMode = next;
+  activeContentBlock = next === 'detail' ? block : '';
+  document.querySelectorAll('[data-content-block]').forEach((button) => {
+    button.classList.toggle('active', Boolean(activeContentBlock) && button.dataset.contentBlock === activeContentBlock);
+  });
+  const detailHead = document.getElementById('contentLibraryDetailHead');
+  if (detailHead) detailHead.hidden = next !== 'detail';
+}
+
+function showContentLibraryHome({ focusSearch = false } = {}) {
+  setContentLibraryMode('home');
+  if (focusSearch) {
+    requestAnimationFrame(() => document.getElementById('contentLibrarySearch')?.focus());
+  }
+}
+
+function focusContentBlockTarget(block) {
+  const config = CONTENT_BLOCKS[block];
+  if (!config) return;
+  requestAnimationFrame(() => {
+    const target = document.getElementById(config.focusId);
+    target?.scrollIntoView?.({ block: 'center' });
+    if (target && typeof target.focus === 'function' && target.matches?.('input,textarea,select,button,[tabindex]')) target.focus();
+  });
+}
+
+function openContentBlock(block) {
+  const config = CONTENT_BLOCKS[block];
+  if (!config) return false;
+  setContentLibraryMode('detail', block);
+  openTab(config.tab, { contentBlock: block, keepContentMode: true });
+  const title = document.getElementById('paneTitle');
+  const subtitle = document.getElementById('paneSub');
+  if (title) title.textContent = config.title;
+  if (subtitle) subtitle.textContent = config.subtitle;
+  focusContentBlockTarget(block);
+  return true;
+}
 
 let mobileMoreLastFocus = null;
 
@@ -769,7 +808,7 @@ document.getElementById('mobileMoreMenu')?.addEventListener('keydown', (event) =
   }
 });
 
-function openTab(tab) {
+function openTab(tab, options = {}) {
   setMobileMoreMenu(false);
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
@@ -791,8 +830,17 @@ function openTab(tab) {
   shell?.classList.toggle('app-workspace', appWorkspace);
   setReportViewMode(false);
   document.querySelectorAll('.pane').forEach((el) => el.classList.toggle('active', el.id === 'pane-' + tab));
-  document.getElementById('paneTitle').textContent = tabMeta[tab][0];
-  document.getElementById('paneSub').textContent = tabMeta[tab][1];
+  const paneTitle = document.getElementById('paneTitle');
+  const paneSub = document.getElementById('paneSub');
+  if (paneTitle && tabMeta[tab]) paneTitle.textContent = tabMeta[tab][0];
+  if (paneSub && tabMeta[tab]) paneSub.textContent = tabMeta[tab][1];
+
+  if (appWorkspace) {
+    showContentLibraryHome();
+  } else if (!options.keepContentMode) {
+    if (tab === 'general') showContentLibraryHome();
+    else if (CONTENT_BLOCKS[tab]) setContentLibraryMode('detail', tab);
+  }
 
   syncStudioContext(tab);
   if (tab !== 'design') document.getElementById('designPanel')?.classList.remove('open');
@@ -825,37 +873,144 @@ document.querySelectorAll('.nav button[data-tab]').forEach((btn) => {
 });
 
 document.getElementById('studioBackHome')?.addEventListener('click', () => openTab('dashboard'));
-document.querySelectorAll('[data-studio-step]').forEach((button) => {
-  button.addEventListener('click', () => openTab(button.dataset.studioStep));
+document.getElementById('contentLibraryBack')?.addEventListener('click', () => showContentLibraryHome({ focusSearch: false }));
+document.querySelectorAll('[data-content-block]').forEach((button) => {
+  button.addEventListener('click', () => openContentBlock(button.dataset.contentBlock));
 });
 
-function moveStudioWorkflow(direction) {
-  const activeTab = document.querySelector('.pane.active')?.id?.replace('pane-', '') || '';
-  const stage = STUDIO_STAGE_BY_TAB[activeTab] || '';
-  const index = STUDIO_WORKFLOW.findIndex(item => item.tab === stage);
-  const target = STUDIO_WORKFLOW[index + direction];
-  if (target) openTab(target.tab);
-}
+document.getElementById('contentLibrarySearch')?.addEventListener('input', (event) => {
+  const query = String(event.target.value || '').trim().toLocaleLowerCase('vi');
+  document.querySelectorAll('#contentBlockList [data-content-block]').forEach((button) => {
+    const haystack = String(button.dataset.searchText || button.textContent || '').toLocaleLowerCase('vi');
+    button.hidden = Boolean(query) && !haystack.includes(query);
+  });
+  document.querySelectorAll('#contentTemplateGrid [data-content-theme]').forEach((button) => {
+    const haystack = String(button.title || button.textContent || '').toLocaleLowerCase('vi');
+    button.hidden = Boolean(query) && !haystack.includes(query);
+  });
+});
 
-document.getElementById('studioPrevStep')?.addEventListener('click', () => moveStudioWorkflow(-1));
-document.getElementById('studioNextStep')?.addEventListener('click', () => moveStudioWorkflow(1));
-document.getElementById('studioSaveQuote')?.addEventListener('click', saveCurrentQuote);
+document.querySelectorAll('[data-open-inspector]').forEach((button) => {
+  button.addEventListener('click', () => {
+    setDesignInspectorTab(button.dataset.openInspector || 'design');
+    setMajorPanelState('design', false);
+    document.getElementById('designPanel')?.classList.add('open');
+  });
+});
+
 document.getElementById('studioGlobalSave')?.addEventListener('click', saveCurrentQuote);
 document.getElementById('studioGlobalPreview')?.addEventListener('click', () => openTab('view'));
-document.getElementById('studioCheckQuote')?.addEventListener('click', () => {
-  updateDocumentHealth();
-  renderStudioGuidance();
-});
 document.getElementById('closeStudioGuidance')?.addEventListener('click', () => {
   const panel = document.getElementById('studioGuidancePanel');
   if (panel) panel.hidden = true;
 });
-document.getElementById('studioPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
+const STUDIO_COMMANDS = [
+  { label: 'Thông tin chung', hint: 'Khối nội dung', run: () => openContentBlock('general') },
+  { label: 'Khách hàng', hint: 'Khối nội dung', run: () => openContentBlock('customer') },
+  { label: 'Sản phẩm / Dịch vụ', hint: 'Khối nội dung', run: () => openContentBlock('products') },
+  { label: 'Thanh toán', hint: 'Khối nội dung', run: () => openContentBlock('payment') },
+  { label: 'Điều khoản', hint: 'Khối nội dung', run: () => openContentBlock('terms') },
+  { label: 'Chữ ký', hint: 'Khối nội dung', run: () => openContentBlock('signature') },
+  { label: 'Lưu nháp', hint: 'Thao tác', run: () => saveCurrentQuote() },
+  { label: 'Xem trước A4', hint: 'Thao tác', run: () => openTab('view') },
+  { label: 'Kiểm tra báo giá', hint: 'Thao tác', run: () => { updateDocumentHealth(); renderStudioGuidance(); } },
+  { label: 'Quản lý báo giá', hint: 'Ứng dụng', run: () => openTab('history') },
+  { label: 'Khách hàng & sản phẩm', hint: 'Ứng dụng', run: () => openTab('master') },
+  { label: 'Cài đặt ứng dụng', hint: 'Ứng dụng', run: () => openTab('settings') }
+];
+
+function closeStudioCommandPalette() {
+  const input = document.getElementById('studioCommandSearch');
+  const results = document.getElementById('studioCommandResults');
+  if (results) {
+    results.hidden = true;
+    results.innerHTML = '';
+  }
+  input?.setAttribute('aria-expanded', 'false');
+}
+
+function openStudioCommandPalette(initialQuery = '') {
+  const input = document.getElementById('studioCommandSearch');
+  if (!input) return;
+  input.value = initialQuery;
+  input.focus();
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function renderStudioCommandResults(query) {
+  const results = document.getElementById('studioCommandResults');
+  const input = document.getElementById('studioCommandSearch');
+  if (!results || !input) return;
+  const needle = String(query || '').trim().toLocaleLowerCase('vi');
+  const matches = STUDIO_COMMANDS
+    .filter((command) => !needle || (command.label + ' ' + command.hint).toLocaleLowerCase('vi').includes(needle))
+    .slice(0, 8);
+  results.innerHTML = '';
+  matches.forEach((command, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+    const label = document.createElement('span');
+    label.textContent = command.label;
+    const hint = document.createElement('small');
+    hint.textContent = command.hint;
+    button.append(label, hint);
+    button.addEventListener('click', () => {
+      closeStudioCommandPalette();
+      input.value = '';
+      command.run();
+    });
+    results.appendChild(button);
+  });
+  results.hidden = !matches.length;
+  input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+}
+
+document.getElementById('studioCommandSearch')?.addEventListener('input', (event) => {
+  renderStudioCommandResults(event.target.value);
+});
+document.getElementById('studioCommandSearch')?.addEventListener('focus', (event) => {
+  renderStudioCommandResults(event.target.value);
+});
+document.getElementById('studioCommandSearch')?.addEventListener('keydown', (event) => {
+  const results = document.getElementById('studioCommandResults');
+  const options = Array.from(results?.querySelectorAll('[role="option"]') || []);
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeStudioCommandPalette();
+    event.currentTarget.blur();
+    return;
+  }
+  if (!options.length) return;
+  let index = options.findIndex((option) => option.getAttribute('aria-selected') === 'true');
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    index = event.key === 'ArrowDown'
+      ? Math.min(options.length - 1, index + 1)
+      : Math.max(0, index - 1);
+    options.forEach((option, itemIndex) => option.setAttribute('aria-selected', itemIndex === index ? 'true' : 'false'));
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    (options[index >= 0 ? index : 0])?.click();
+  }
+});
+document.addEventListener('pointerdown', (event) => {
+  if (!event.target.closest?.('.studio-command-search')) closeStudioCommandPalette();
+});
+
+document.getElementById('studioTopMenu')?.addEventListener('click', () => openStudioCommandPalette(''));
 document.addEventListener('keydown', (event) => {
-  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return;
-  event.preventDefault();
-  saveCurrentQuote();
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault();
+    openStudioCommandPalette('');
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+    event.preventDefault();
+    saveCurrentQuote();
+  }
 });
 
 function dashboardStatusClass(status) {
@@ -2306,6 +2461,8 @@ function renderLogo() {
   if (thresholdValue) thresholdValue.textContent = normalizeRemoveBgTolerance(state.logoRemoveBgThreshold, 46);
   const tableFontSizeValue = document.getElementById('tableFontSizeValue');
   if (tableFontSizeValue) tableFontSizeValue.textContent = Number(state.tableFontSize || 9).toFixed(1) + ' px';
+  const inspectorTableFontSizeValue = document.getElementById('inspectorTableFontSizeValue');
+  if (inspectorTableFontSizeValue) inspectorTableFontSizeValue.textContent = Number(state.tableFontSize || 9).toFixed(1) + ' px';
 
   const docHead = document.querySelector('.doc-head');
   if (docHead) {
@@ -2466,12 +2623,17 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  document.querySelectorAll('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  document.querySelectorAll('[data-content-theme]').forEach((el) => el.classList.toggle('active', el.dataset.contentTheme === state.theme));
+  document.querySelectorAll('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
   $$('[data-title-align]').forEach((el) => el.classList.toggle('active', el.dataset.titleAlign === (state.previewTitleAlign || 'center')));
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
   if (description && activeTemplate) description.textContent = activeTemplate.dataset.description || '';
+  const inspectorThemeName = document.getElementById('inspectorThemeName');
+  if (inspectorThemeName) inspectorThemeName.textContent = THEME_LABELS[state.theme] || state.theme || 'Chuẩn công ty';
+  const inspectorThemePreview = document.getElementById('inspectorThemePreview');
+  if (inspectorThemePreview) inspectorThemePreview.style.setProperty('--theme-accent', state.accent || '#0b8f83');
   updateDocumentHealth();
   syncStudioContext(document.querySelector('.pane.active')?.id?.replace('pane-', '') || '');
   refreshOpenStudioGuidance();
@@ -3905,7 +4067,19 @@ const THEME_PROFILES = {
   mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' }
 };
 
-$$('.tpl').forEach((el) => {
+function applyTheme(themeName) {
+  const next = Object.prototype.hasOwnProperty.call(THEME_ACCENTS, themeName) ? themeName : 'modern';
+  state.theme = next;
+  if (THEME_ACCENTS[next]) state.accent = THEME_ACCENTS[next];
+  if (THEME_FONTS[next]) state.docFont = THEME_FONTS[next];
+  Object.assign(state, THEME_PROFILES[next] || {});
+  if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
+  save();
+  syncInputs();
+  render();
+}
+
+document.querySelectorAll('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
     if (description) description.textContent = el.dataset.description || '';
@@ -3915,16 +4089,20 @@ $$('.tpl').forEach((el) => {
     const description = document.getElementById('templateDescription');
     if (description && active) description.textContent = active.dataset.description || '';
   });
-  el.addEventListener('click', () => {
-    state.theme = el.dataset.theme;
-    if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
-    if (THEME_FONTS[state.theme]) state.docFont = THEME_FONTS[state.theme];
-    Object.assign(state, THEME_PROFILES[state.theme] || {});
-    if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
-    save();
-    syncInputs();
-    render();
-  });
+  el.addEventListener('click', () => applyTheme(el.dataset.theme));
+});
+
+document.querySelectorAll('[data-content-theme]').forEach((el) => {
+  el.addEventListener('click', () => applyTheme(el.dataset.contentTheme));
+});
+
+document.getElementById('toggleInspectorTemplates')?.addEventListener('click', () => {
+  const panel = document.getElementById('inspectorTemplatePicker');
+  const button = document.getElementById('toggleInspectorTemplates');
+  if (!panel || !button) return;
+  const open = panel.hidden;
+  panel.hidden = !open;
+  button.setAttribute('aria-expanded', open ? 'true' : 'false');
 });
 
 $$('.color').forEach((el) => {
@@ -3955,11 +4133,15 @@ document.querySelectorAll('#designPanel [data-inspector-tab]').forEach((button) 
   button.addEventListener('click', () => setDesignInspectorTab(button.dataset.inspectorTab));
 });
 document.querySelectorAll('#designPanel [data-inspector-open-tab]').forEach((button) => {
-  button.addEventListener('click', () => openTab(button.dataset.inspectorOpenTab));
+  button.addEventListener('click', () => {
+    const target = button.dataset.inspectorOpenTab;
+    if (CONTENT_BLOCKS[target]) openContentBlock(target);
+    else openTab(target);
+  });
 });
 document.getElementById('inspectorRunCheck')?.addEventListener('click', () => {
-  document.getElementById('preflightCheck')?.click();
   updateDocumentHealth();
+  renderStudioGuidance();
 });
 document.getElementById('inspectorPreviewQuote')?.addEventListener('click', () => openTab('view'));
 
@@ -5412,6 +5594,35 @@ function refreshOpenStudioGuidance() {
   if (panel && !panel.hidden) renderStudioGuidance();
 }
 
+function renderInspectorCheckSummary(result = validateQuote()) {
+  const errors = Array.isArray(result?.errors) ? result.errors : [];
+  const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+  const errorCount = document.getElementById('inspectorErrorCount');
+  const warningCount = document.getElementById('inspectorWarningCount');
+  const list = document.getElementById('inspectorIssueList');
+  if (errorCount) errorCount.textContent = String(errors.length);
+  if (warningCount) warningCount.textContent = String(warnings.length);
+  if (!list) return;
+  list.innerHTML = '';
+  const issues = [
+    ...errors.map((message) => ({ tone: 'error', message })),
+    ...warnings.map((message) => ({ tone: 'warn', message }))
+  ].slice(0, 3);
+  if (!issues.length) {
+    const ready = document.createElement('div');
+    ready.className = 'inspector-issue empty';
+    ready.textContent = '✓ Không phát hiện lỗi nghiệp vụ.';
+    list.appendChild(ready);
+    return;
+  }
+  issues.forEach((issue) => {
+    const item = document.createElement('div');
+    item.className = 'inspector-issue ' + issue.tone;
+    item.textContent = issue.message;
+    list.appendChild(item);
+  });
+}
+
 function updateDocumentHealth() {
   const result = validateQuote();
   const badges = [
@@ -5436,6 +5647,7 @@ function updateDocumentHealth() {
     badge.classList.add(tone);
     badge.textContent = label;
   });
+  renderInspectorCheckSummary(result);
 }
 
 function runPreflight({ forPrint = false, forExport = false } = {}) {
@@ -6592,8 +6804,11 @@ function setupLayoutEditor() {
     }
   });
 
-  ['autoArrangeLayoutToolbar','autoArrangeLayoutPanel'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('click', autoArrangePreview);
+  ['autoArrangeLayoutToolbar','autoArrangeLayoutPanel','runLayoutSuggestion'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      autoArrangePreview();
+      if (id === 'runLayoutSuggestion') toast('Đã tối ưu bố cục bằng bộ sắp xếp cục bộ');
+    });
   });
 
   document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
@@ -6784,21 +6999,43 @@ function setZoom(value) {
 document.getElementById('exitReportView')?.addEventListener('click', () => openTab('general'));
 document.getElementById('actual').addEventListener('click', () => setZoom(100));
 document.getElementById('fit').addEventListener('click', () => {
-  const available = document.querySelector('.preview').clientWidth - 34;
-  const width = document.getElementById('paper').offsetWidth;
-  setZoom(Math.floor((available / width) * 100));
+  const preview = document.querySelector('.preview');
+  const paper = document.getElementById('paper');
+  if (!preview || !paper) return;
+  const available = Math.max(300, preview.clientWidth - 70);
+  const targetPaperWidth = Math.min(706, available);
+  const width = paper.offsetWidth || (210 / 25.4) * 96;
+  setZoom(Math.floor((targetPaperWidth / width) * 100));
 });
 document.getElementById('zoomOut').addEventListener('click', () => setZoom(zoom - 10));
 document.getElementById('zoomIn').addEventListener('click', () => setZoom(zoom + 10));
 document.getElementById('wideView').addEventListener('click', () => {
   const shell = document.querySelector('.shell');
   const enabled = shell.classList.toggle('wide-preview');
-  document.getElementById('wideView').innerHTML = enabled ? '⛶&nbsp; Thu gọn' : '⛶&nbsp; Màn hình rộng';
+  const button = document.getElementById('wideView');
+  button?.setAttribute('aria-label', enabled ? 'Thoát màn hình rộng' : 'Màn hình rộng');
+  button?.setAttribute('title', enabled ? 'Thoát màn hình rộng' : 'Màn hình rộng');
   requestAnimationFrame(() => document.getElementById('fit').click());
 });
-document.getElementById('toolbarMenu').addEventListener('click', () => {
-  openTab('export');
-  toast('Đã mở công cụ Xuất / Nhập / In');
+
+function setPreviewOverflowMenu(open) {
+  const menu = document.getElementById('previewOverflowMenu');
+  const button = document.getElementById('toolbarMenu');
+  if (!menu || !button) return;
+  const enabled = Boolean(open);
+  menu.hidden = !enabled;
+  button.setAttribute('aria-expanded', enabled ? 'true' : 'false');
+}
+document.getElementById('toolbarMenu')?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  const menu = document.getElementById('previewOverflowMenu');
+  setPreviewOverflowMenu(Boolean(menu?.hidden));
+});
+document.addEventListener('pointerdown', (event) => {
+  if (!event.target.closest?.('.preview-right-tools')) setPreviewOverflowMenu(false);
+});
+document.getElementById('previewOverflowMenu')?.addEventListener('click', (event) => {
+  if (event.target.closest('button')) setPreviewOverflowMenu(false);
 });
 
 function setPreviewCustomizer(open) {

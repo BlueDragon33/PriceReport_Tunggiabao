@@ -8,13 +8,14 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./src/styles.css">
   <link rel="stylesheet" href="./src/ui-v5.css">
+  <link rel="stylesheet" href="./src/studio-v58.css">
   <title>PriceReport Tùng Gia Bảo</title>
   <script>
     window.addEventListener('load', async () => {
       const shell = document.querySelector('.shell');
       if (!shell) return;
 
-      const recoveryKey = 'tgb-style-recovery-v3';
+      const recoveryKey = 'tgb-style-recovery-v4';
       const recoveryAttempt = Math.max(0, Number(sessionStorage.getItem(recoveryKey) || '0') || 0);
       const shellIsStyled = () => getComputedStyle(shell).display === 'grid';
 
@@ -86,7 +87,7 @@
     }, { once: true });
   </script>
 </head>
-<body class="v5-ui reference-ui-v57">
+<body class="v5-ui reference-ui-v58">
 <div id="app">
   <div class="shell app-workspace">
     <nav class="nav" aria-label="Điều hướng ứng dụng">
@@ -143,87 +144,130 @@
       <div class="tip"><b>Chế độ ứng dụng</b><br>Trang chủ để quản lý. Tạo báo giá để vào studio A4.</div>
     </nav>
 
-    <header class="studio-global-bar" aria-label="Thanh công cụ báo giá">
-      <div class="studio-global-context">
-        <span class="studio-global-doc-icon" aria-hidden="true">▧</span>
-        <div>
-          <strong id="studioGlobalTitle">Báo giá mới</strong>
-          <small>Mã báo giá: <span id="studioGlobalQuoteNo">—</span><i aria-hidden="true">•</i><span id="studioGlobalHistoryState">Chưa lưu lịch sử</span></small>
+    <header class="studio-topbar" aria-label="Thanh công cụ báo giá">
+      <div class="studio-topbar-context">
+        <span class="studio-topbar-doc" aria-hidden="true">▧</span>
+        <div class="studio-topbar-title">
+          <div class="studio-title-line">
+            <strong id="studioGlobalTitle">Báo giá mới</strong>
+            <span class="studio-status-badge status-draft" id="studioQuoteStatus">Bản nháp</span>
+          </div>
+          <small>
+            <span>Mã báo giá: <b id="studioGlobalQuoteNo">—</b></span>
+            <i aria-hidden="true">•</i>
+            <span id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
+            <i aria-hidden="true">•</i>
+            <span id="studioGlobalHistoryState">Chưa lưu lịch sử</span>
+          </small>
         </div>
       </div>
-      <div class="studio-global-middle">
-        <span class="document-health" id="studioGlobalHealth">Đang kiểm tra</span>
+
+      <div class="studio-topbar-center">
+        <button class="studio-icon-action" id="studioUndo" type="button" disabled aria-label="Hoàn tác" title="Hoàn tác sẽ được bổ sung khi có lịch sử thao tác an toàn">↶</button>
+        <button class="studio-icon-action" id="studioRedo" type="button" disabled aria-label="Làm lại" title="Làm lại sẽ được bổ sung khi có lịch sử thao tác an toàn">↷</button>
+        <div class="studio-command-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="studioCommandSearch" type="search" placeholder="Tìm kiếm (Ctrl + K)" autocomplete="off" aria-controls="studioCommandResults" aria-expanded="false">
+          <kbd>Ctrl K</kbd>
+          <div class="studio-command-results" id="studioCommandResults" role="listbox" hidden></div>
+        </div>
       </div>
-      <div class="studio-global-actions">
-        <button class="studio-global-action" id="studioGlobalSave" type="button">Lưu nháp</button>
-        <button class="studio-global-action" id="studioGlobalPreview" type="button">◉ Xem trước</button>
-        <button class="studio-global-action primary print-action" id="studioGlobalPdf" type="button">⇩ Xuất PDF</button>
+
+      <div class="studio-topbar-actions">
+        <span class="document-health" id="studioGlobalHealth">Đang kiểm tra</span>
+        <button class="studio-top-action" id="studioGlobalSave" type="button">Lưu nháp</button>
+        <button class="studio-top-action" id="studioGlobalPreview" type="button">◉ Xem trước</button>
+        <button class="studio-top-action primary print-action" id="studioGlobalPdf" type="button">⇩ Xuất PDF</button>
+        <button class="studio-icon-action" id="studioTopMenu" type="button" aria-label="Tùy chọn khác">⋯</button>
       </div>
     </header>
 
-    <section class="editor">
-      <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
-      <div class="panel-head studio-panel-head">
-        <div class="studio-context-row">
+    <section class="editor content-library" data-content-mode="home">
+      <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nội dung" title="Thu gọn / mở bảng nội dung">‹</button>
+
+      <div class="content-library-home" id="contentLibraryHome">
+        <header class="content-library-head">
+          <div>
+            <small>NỘI DUNG BÁO GIÁ</small>
+            <h2>Thêm nội dung</h2>
+          </div>
           <button class="studio-home-button" id="studioBackHome" type="button" aria-label="Về Trang chủ" title="Về Trang chủ">⌂</button>
-          <div class="studio-current-quote">
-            <small>ĐANG SOẠN</small>
-            <strong id="studioQuoteLabel">Báo giá mới</strong>
-          </div>
-          <div class="studio-context-badges">
-            <span class="studio-status-badge" id="studioQuoteStatus">Bản nháp</span>
-            <span class="studio-history-state" id="studioHistoryState">Chưa lưu lịch sử</span>
-            <span class="studio-autosave-state" id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
-          </div>
+        </header>
+
+        <label class="content-library-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="contentLibrarySearch" type="search" placeholder="Tìm khối nội dung..." autocomplete="off">
+        </label>
+
+        <div class="content-library-section-label">Khối cơ bản</div>
+        <div class="content-block-list" id="contentBlockList">
+          <button class="content-block-row" type="button" data-content-block="general" data-search-text="thông tin chung doanh nghiệp báo giá">
+            <span class="content-block-icon">▤</span><span><b>Thông tin chung</b><small>Doanh nghiệp, mã báo giá, ngày lập</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="customer" data-search-text="khách hàng người nhận liên hệ">
+            <span class="content-block-icon">●</span><span><b>Khách hàng</b><small>Người nhận và đơn vị mua hàng</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="products" data-search-text="sản phẩm dịch vụ hàng hóa đơn giá">
+            <span class="content-block-icon">◆</span><span><b>Sản phẩm / Dịch vụ</b><small>Danh sách, quy cách, số lượng và giá</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="payment" data-search-text="thanh toán vat giảm giá ngân hàng">
+            <span class="content-block-icon">₫</span><span><b>Thanh toán</b><small>VAT, giảm giá, tổng tiền và tài khoản</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="terms" data-search-text="điều khoản thương mại hiệu lực">
+            <span class="content-block-icon">≡</span><span><b>Điều khoản</b><small>Chính sách và nội dung thương mại</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="signature" data-search-text="chữ ký ngày tháng đại diện">
+            <span class="content-block-icon">✎</span><span><b>Chữ ký</b><small>Ngày tháng, chức danh và người ký</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="custom-text" data-search-text="văn bản tùy chỉnh lời mở đầu lời kết chân trang">
+            <span class="content-block-icon">T</span><span><b>Văn bản tùy chỉnh</b><small>Lời mở đầu, lời kết và chân trang</small></span><em>›</em>
+          </button>
         </div>
-        <div class="studio-pane-title">
+
+        <div class="content-library-section-head">
+          <span>Mẫu thiết kế</span>
+          <button type="button" data-open-inspector="design">Xem tất cả</button>
+        </div>
+        <div class="content-template-grid" id="contentTemplateGrid">
+          <button type="button" data-content-theme="modern" title="Chuẩn công ty"><span class="mini-paper mini-modern"></span><small>Chuẩn</small></button>
+          <button type="button" data-content-theme="corporate" title="Doanh nghiệp"><span class="mini-paper mini-corporate"></span><small>DN</small></button>
+          <button type="button" data-content-theme="minimal" title="Tối giản"><span class="mini-paper mini-minimal"></span><small>Tối giản</small></button>
+        </div>
+
+        <article class="layout-suggestion-card">
+          <span class="layout-suggestion-icon">✦</span>
+          <div><b>Gợi ý bố cục</b><small>Tối ưu bố cục A4 hiện tại bằng bộ sắp xếp cục bộ.</small></div>
+          <button id="runLayoutSuggestion" type="button" aria-label="Tối ưu bố cục">→</button>
+        </article>
+      </div>
+
+      <div class="content-library-detail-head" id="contentLibraryDetailHead" hidden>
+        <button class="content-detail-back" id="contentLibraryBack" type="button" aria-label="Quay lại Thêm nội dung">←</button>
+        <div>
+          <small>CHỈNH SỬA KHỐI</small>
           <h2 id="paneTitle">THÔNG TIN CHUNG</h2>
           <p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p>
         </div>
-        <div class="studio-stepper" aria-label="Các bước soạn báo giá">
-          <button type="button" data-studio-step="general"><b>1</b><span>Thông tin</span></button>
-          <button type="button" data-studio-step="products"><b>2</b><span>Sản phẩm</span></button>
-          <button type="button" data-studio-step="payment"><b>3</b><span>Thanh toán</span></button>
-          <button type="button" data-studio-step="terms"><b>4</b><span>Điều khoản</span></button>
-          <button type="button" data-studio-step="design"><b>5</b><span>Thiết kế</span></button>
-          <button type="button" data-studio-step="export"><b>6</b><span>Xuất</span></button>
-        </div>
-        <div class="studio-commandbar" aria-label="Thao tác báo giá">
-          <div class="studio-command-main">
-            <button class="btn primary" id="studioSaveQuote" type="button">Lưu nháp</button>
-            <button class="btn" id="studioCheckQuote" type="button">Kiểm tra</button>
-            <button class="btn" id="studioPreviewQuote" type="button">Xem A4</button>
-          </div>
-          <div class="studio-flow-controls">
-            <button class="btn studio-flow-button" id="studioPrevStep" type="button" aria-label="Bước trước">←</button>
-            <span class="studio-workflow-position" id="studioWorkflowPosition">Bước 1/6</span>
-            <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
-          </div>
-          <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
-        </div>
-        <section class="studio-guidance-panel" id="studioGuidancePanel" hidden aria-live="polite">
-          <div class="studio-guidance-head">
-            <div>
-              <strong>KIỂM TRA BÁO GIÁ</strong>
-              <span id="studioGuidanceSummary">Không có mục cần xử lý.</span>
-            </div>
-            <button class="mini-action" id="closeStudioGuidance" type="button" aria-label="Đóng kết quả kiểm tra">×</button>
-          </div>
-          <div class="studio-guidance-list" id="studioGuidanceList"></div>
-        </section>
+        <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
+      </div>
 
-        <div class="draft-recovery-banner" id="draftRecoveryBanner" role="status" hidden>
-          <div>
-            <strong>Có bản đang soạn chưa lưu hoàn chỉnh</strong>
-            <span id="draftRecoveryDetail">Có thể khôi phục dữ liệu gần nhất trên tab này.</span>
-          </div>
-          <div class="draft-recovery-actions">
-            <button class="btn primary" id="restoreDraftRecovery" type="button">Khôi phục</button>
-            <button class="btn" id="discardDraftRecovery" type="button">Bỏ qua</button>
-          </div>
+      <section class="studio-guidance-panel" id="studioGuidancePanel" hidden aria-live="polite">
+        <div class="studio-guidance-head">
+          <div><strong>KIỂM TRA BÁO GIÁ</strong><span id="studioGuidanceSummary">Không có mục cần xử lý.</span></div>
+          <button class="mini-action" id="closeStudioGuidance" type="button" aria-label="Đóng kết quả kiểm tra">×</button>
+        </div>
+        <div class="studio-guidance-list" id="studioGuidanceList"></div>
+      </section>
+
+      <div class="draft-recovery-banner" id="draftRecoveryBanner" role="status" hidden>
+        <div><strong>Có bản đang soạn chưa lưu hoàn chỉnh</strong><span id="draftRecoveryDetail">Có thể khôi phục dữ liệu gần nhất trên tab này.</span></div>
+        <div class="draft-recovery-actions">
+          <button class="btn primary" id="restoreDraftRecovery" type="button">Khôi phục</button>
+          <button class="btn" id="discardDraftRecovery" type="button">Bỏ qua</button>
         </div>
       </div>
-      <div class="panel-body">
+
+      <div class="panel-body content-library-detail">
         <div class="pane active app-dashboard app-workspace-pane" id="pane-dashboard">
           <header class="dashboard-topbar app-workspace-header">
             <div>
@@ -978,124 +1022,39 @@
 
     <aside class="design" id="designPanel" data-inspector-tab="design">
       <button class="panel-edge-toggle design-edge-toggle" id="toggleDesignPanel" type="button" aria-label="Thu gọn bảng thiết kế" title="Thu gọn / mở bảng thiết kế">‹</button>
+
       <div class="inspector-tabs" role="tablist" aria-label="Công cụ báo giá">
         <button class="active" type="button" role="tab" aria-selected="true" data-inspector-tab="design">Thiết kế</button>
         <button type="button" role="tab" aria-selected="false" data-inspector-tab="content">Nội dung</button>
         <button type="button" role="tab" aria-selected="false" data-inspector-tab="check">Kiểm tra</button>
       </div>
-      <div class="panel-head"><h2>CHỌN MẪU TEMPLATE</h2><p>Đổi phong cách mà không làm mất dữ liệu.</p></div>
-      <div class="panel-body">
-        <div class="card">
-          <h3>Mẫu báo giá</h3>
-          <div class="template-grid">
-            <button class="tpl" data-theme="modern" data-description="Mẫu chuẩn khuyến nghị: bố cục cân đối giống báo giá PDF truyền thống, logo trái – công ty phải – tiêu đề giữa trang."><div class="thumb modern"></div><span>Chuẩn công ty</span></button>
-            <button class="tpl" data-theme="corporate" data-description="Cùng bố cục chuẩn, thêm điểm nhấn viền xanh gọn cho khách doanh nghiệp."><div class="thumb corporate"></div><span>Doanh nghiệp</span></button>
-            <button class="tpl" data-theme="minimal" data-description="Nhiều khoảng trắng, bỏ bớt trang trí nhưng giữ nguyên hệ căn lề chuẩn."><div class="thumb minimal"></div><span>Tối giản</span></button>
-            <button class="tpl" data-theme="classic" data-description="Phong cách trang trọng, serif nhẹ, phù hợp văn bản chính thức."><div class="thumb classic"></div><span>Trang trọng</span></button>
-            <button class="tpl" data-theme="emerald" data-description="Biến thể thương hiệu xanh nhưng không phá bố cục chuẩn của trang."><div class="thumb emerald"></div><span>Xanh thương hiệu</span></button>
-            <button class="tpl" data-theme="warm" data-description="Biến thể màu ấm nhẹ, phù hợp báo giá bán lẻ nhưng vẫn giữ nền trắng."><div class="thumb warm"></div><span>Ấm nhẹ</span></button>
-            <button class="tpl" data-theme="premium" data-description="Cao cấp sáng: nhấn viền và tiêu đề, không dùng nền tối làm lệch bố cục."><div class="thumb premium"></div><span>Cao cấp sáng</span></button>
-            <button class="tpl" data-theme="mono" data-description="Đen trắng rõ ràng, tiết kiệm mực và giữ nguyên chuẩn căn lề."><div class="thumb mono"></div><span>Đen trắng</span></button>
-          </div>
-          <div class="template-description" id="templateDescription">Chọn một mẫu để xem phong cách và mục đích sử dụng.</div>
-        </div>
-        <div class="card logo-design-card">
-          <h3>Logo & nhận diện</h3>
-          <div class="logo-design-preview" id="logoDesignPreview"></div>
-          <div class="btns logo-design-actions">
-            <label class="btn file-btn" for="logoInput">Thay logo</label>
-            <button class="btn" id="resetLogoPosition">Đặt lại</button>
-          </div>
 
-          <div class="row">
-            <label>Kích thước logo <span class="range-value" id="logoWidthValue">58 mm</span></label>
-            <div class="logo-size-control">
-              <button class="mini-action logo-step" id="logoShrink" type="button" aria-label="Giảm kích thước logo">−</button>
-              <input id="logoWidthRange" data-bind="logoWidth" type="range" min="18" max="90" step="1">
-              <button class="mini-action logo-step" id="logoGrow" type="button" aria-label="Tăng kích thước logo">+</button>
+      <div class="panel-body inspector-design-view" data-inspector-view="design">
+        <section class="inspector-section inspector-overview">
+          <div class="inspector-section-head"><h3>Giao diện tổng thể</h3><span>01</span></div>
+          <button class="current-theme-card" id="toggleInspectorTemplates" type="button" aria-expanded="false">
+            <span class="current-theme-preview" id="inspectorThemePreview"></span>
+            <span><b id="inspectorThemeName">Chuẩn công ty</b><small>Nhấn để đổi mẫu thiết kế</small></span>
+            <em>›</em>
+          </button>
+          <div class="inspector-template-picker" id="inspectorTemplatePicker" hidden>
+            <div class="template-grid">
+              <button class="tpl" data-theme="modern" data-description="Mẫu chuẩn khuyến nghị: bố cục cân đối giống báo giá PDF truyền thống."><div class="thumb modern"></div><span>Chuẩn công ty</span></button>
+              <button class="tpl" data-theme="corporate" data-description="Điểm nhấn xanh gọn cho khách doanh nghiệp."><div class="thumb corporate"></div><span>Doanh nghiệp</span></button>
+              <button class="tpl" data-theme="minimal" data-description="Nhiều khoảng trắng, tối giản trang trí."><div class="thumb minimal"></div><span>Tối giản</span></button>
+              <button class="tpl" data-theme="classic" data-description="Phong cách trang trọng với serif nhẹ."><div class="thumb classic"></div><span>Trang trọng</span></button>
+              <button class="tpl" data-theme="emerald" data-description="Biến thể xanh thương hiệu."><div class="thumb emerald"></div><span>Xanh thương hiệu</span></button>
+              <button class="tpl" data-theme="warm" data-description="Biến thể màu ấm nhẹ."><div class="thumb warm"></div><span>Ấm nhẹ</span></button>
+              <button class="tpl" data-theme="premium" data-description="Điểm nhấn cao cấp sáng."><div class="thumb premium"></div><span>Cao cấp sáng</span></button>
+              <button class="tpl" data-theme="mono" data-description="Đen trắng rõ ràng và tiết kiệm mực."><div class="thumb mono"></div><span>Đen trắng</span></button>
             </div>
+            <div class="template-description" id="templateDescription">Chọn một mẫu để xem phong cách và mục đích sử dụng.</div>
           </div>
+        </section>
 
-          <div class="grid2">
-            <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="18" max="90"></div>
-            <div class="row"><label>Khoảng thở (mm)</label><input id="logoPadding" data-bind="logoPadding" type="number" min="0" max="12" step="1"></div>
-          </div>
-
-          <div class="grid2">
-            <div class="row"><label>Dịch ngang logo (mm)</label><input id="logoOffsetX" data-bind="logoOffsetX" type="number" min="-40" max="40" step="0.5"></div>
-            <div class="row"><label>Dịch dọc logo (mm)</label><input id="logoOffsetY" data-bind="logoOffsetY" type="number" min="-30" max="30" step="0.5"></div>
-          </div>
-
-          <div class="row">
-            <label>Chế độ ảnh logo</label>
-            <select id="logoDisplayMode" data-bind="logoDisplayMode">
-              <option value="original">Giữ nguyên ảnh gốc (mặc định)</option>
-              <option value="remove-bg">Xóa nền (tạo PNG trong suốt)</option>
-              <option value="styled">Hiệu ứng / hòa nền nâng cao</option>
-            </select>
-          </div>
-          <div class="logo-mode-status" id="logoModeStatus">Ảnh gốc • không xử lý nền</div>
-
-          <div class="logo-remove-bg-controls" id="logoRemoveBgControls" hidden>
-            <div class="row">
-              <label>Dung sai màu nền <span class="range-value" id="logoRemoveBgThresholdValue">46</span></label>
-              <input id="logoRemoveBgThreshold" data-bind="logoRemoveBgThreshold" type="range" min="8" max="140" step="1">
-            </div>
-            <div class="help">Xóa thật vùng nền liên thông từ mép ảnh và chuyển vùng đó thành trong suốt. Tăng dung sai khi nền có nhiều sắc độ. Logo gốc vẫn được giữ nguyên để khôi phục.</div>
-          </div>
-
-          <div class="logo-styled-controls" id="logoStyledControls" hidden>
-            <div class="row">
-              <label>Hòa trộn logo</label>
-              <select id="logoBlendMode" data-bind="logoBlendMode">
-                <option value="normal">Giữ nguyên màu</option>
-                <option value="multiply">Hòa nền sáng</option>
-                <option value="darken">Giảm cảm giác nền trắng</option>
-              </select>
-            </div>
-
-            <div class="logo-backdrop-editor">
-              <div class="logo-backdrop-title">NỀN PHÍA SAU LOGO</div>
-            <div class="row">
-              <label>Kiểu nền</label>
-              <select id="logoTreatment" data-bind="logoTreatment">
-                <option value="blend">Hòa vào mặt giấy</option>
-                <option value="soft">Mảng màu rất nhẹ</option>
-                <option value="clean">Plate trắng tinh gọn</option>
-                <option value="custom">Tùy chỉnh nền</option>
-                <option value="none">Không nền</option>
-              </select>
-            </div>
-            <div class="grid2">
-              <div class="row"><label>Màu nền</label><input id="logoBackdropColor" data-bind="logoBackdropColor" type="color"></div>
-              <div class="row"><label>Độ trong <span class="range-value" id="logoBackdropOpacityValue">8%</span></label><input id="logoBackdropOpacity" data-bind="logoBackdropOpacity" type="range" min="0" max="100" step="1"></div>
-            </div>
-            <div class="grid2">
-              <div class="row"><label>Bo góc (mm)</label><input id="logoBackdropRadius" data-bind="logoBackdropRadius" type="number" min="0" max="24" step="1"></div>
-              <div class="row"><label>Viền nền</label><select id="logoBackdropBorder" data-bind="logoBackdropBorder"><option value="none">Không viền</option><option value="soft">Viền mảnh</option></select></div>
-            </div>
-          </div>
-          </div>
-
-          <div class="btns logo-original-actions">
-            <button class="btn" id="restoreLogoOriginal" type="button">Khôi phục logo gốc</button>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Tùy chỉnh hiển thị</h3>
-          <label class="check"><input id="designShowStt" data-bind="showStt" type="checkbox"> Hiển thị cột STT</label>
-          <label class="check"><input id="designShowPrice" data-bind="showPrice" type="checkbox"> Hiển thị cột đơn giá</label>
-          <label class="check"><input id="designShowAmount" data-bind="showAmount" type="checkbox"> Hiển thị cột thành tiền</label>
-          <label class="check"><input id="designShowTotals" data-bind="showTotals" type="checkbox"> Hiển thị tổng cộng</label>
-          <label class="check"><input id="showTerms" data-bind="showTerms" type="checkbox"> Hiển thị điều khoản</label>
-          <label class="check"><input id="showSignature" data-bind="showSignature" type="checkbox"> Hiển thị chữ ký</label>
-          <label class="check"><input id="showLogo" data-bind="showLogo" type="checkbox"> Hiển thị logo</label>
-          <label class="check"><input id="showSlogan" data-bind="showSlogan" type="checkbox"> Hiển thị slogan</label>
-          <label class="check"><input id="showWebEmail" data-bind="showWebEmail" type="checkbox"> Hiển thị website/email</label>
-        </div>
-        <div class="card">
-          <h3>Màu chủ đạo</h3>
-          <div class="colors">
+        <section class="inspector-section">
+          <div class="inspector-section-head"><h3>Màu chủ đạo</h3><span>02</span></div>
+          <div class="colors inspector-colors">
             <button class="color color-teal" data-color="#0b8f83" aria-label="Màu xanh teal" title="Xanh teal"></button>
             <button class="color color-blue" data-color="#1774db" aria-label="Màu xanh dương" title="Xanh dương"></button>
             <button class="color color-orange" data-color="#f39c12" aria-label="Màu cam" title="Cam"></button>
@@ -1103,43 +1062,142 @@
             <button class="color color-purple" data-color="#7a4ae2" aria-label="Màu tím" title="Tím"></button>
             <button class="color color-charcoal" data-color="#263444" aria-label="Màu than" title="Than"></button>
           </div>
-        </div>
-        <div class="card">
-          <h3>Định dạng</h3>
-          <div class="row"><label>Khổ giấy</label><select id="paperSize" disabled><option>A4 (210 × 297 mm)</option></select></div>
-          <div class="row"><label>Font chữ</label><select id="docFont" data-bind="docFont"><option>Times New Roman</option><option>Georgia</option><option>Arial</option></select></div>
-          <div class="row"><label>Cỡ chữ trong bảng</label><input id="designTableFontSize" data-bind="tableFontSize" type="range" min="7.5" max="14" step="0.2"></div>
-          <div class="help">Tên đơn vị, địa chỉ, tiêu đề, kính gửi, lời mở đầu, điều khoản và chữ ký dùng cỡ cố định.</div>
-          <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
-        </div>
-        <button class="btn block" id="closeDesign">Đóng bảng thiết kế</button>
+        </section>
+
+        <section class="inspector-section">
+          <div class="inspector-section-head"><h3>Font chữ</h3><span>03</span></div>
+          <div class="row inspector-single-field">
+            <select id="docFont" data-bind="docFont" aria-label="Font chữ báo giá">
+              <option>Times New Roman</option><option>Georgia</option><option>Arial</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="inspector-section">
+          <div class="inspector-section-head"><h3>Thiết lập hiển thị</h3><span>04</span></div>
+          <div class="inspector-toggle-list">
+            <label class="inspector-toggle-row"><span>Hiển thị logo công ty</span><input id="showLogo" data-bind="showLogo" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Hiển thị thông tin liên hệ</span><input id="showWebEmail" data-bind="showWebEmail" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Mã báo giá / ngày / hiệu lực</span><input id="inspectorShowQuoteMeta" data-bind="showQuoteMeta" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Thông tin khách hàng</span><input id="inspectorShowCustomer" data-bind="showCustomer" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Điều khoản</span><input id="showTerms" data-bind="showTerms" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Chữ ký</span><input id="showSignature" data-bind="showSignature" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Thông tin thanh toán</span><input id="inspectorShowPaymentBlock" data-bind="showPaymentBlock" type="checkbox"></label>
+            <label class="inspector-toggle-row"><span>Slogan</span><input id="showSlogan" data-bind="showSlogan" type="checkbox"></label>
+          </div>
+        </section>
+
+        <details class="inspector-section inspector-advanced">
+          <summary><span>Cài đặt nâng cao</span><em>05</em></summary>
+          <div class="inspector-advanced-body">
+            <div class="grid2">
+              <div class="row"><label>VAT %</label><input id="inspectorVatPct" data-bind="vatPct" type="number" min="0" max="100" step="0.1"></div>
+              <div class="row"><label>Giảm giá %</label><input id="inspectorDiscountPct" data-bind="discountPct" type="number" min="0" max="100" step="0.1"></div>
+            </div>
+            <div class="row"><label>Tiền tệ</label><select id="inspectorCurrency" data-bind="currency"><option>VND</option><option>USD</option><option>RUB</option></select></div>
+            <div class="grid2">
+              <div class="row"><label>Khoảng cách</label><select id="inspectorPreviewSpacing" data-bind="previewSpacing"><option value="compact">Gọn</option><option value="standard">Chuẩn</option><option value="airy">Thoáng</option></select></div>
+              <div class="row"><label>Mật độ bảng</label><select id="inspectorTableDensity" data-bind="previewTableDensity"><option value="compact">Gọn</option><option value="standard">Chuẩn</option><option value="comfortable">Thoải mái</option></select></div>
+            </div>
+            <div class="grid3 inspector-margin-grid">
+              <div class="row"><label>Lề ngang</label><input id="inspectorMarginX" data-bind="marginX" type="number" min="6" max="30"></div>
+              <div class="row"><label>Lề trên</label><input id="inspectorMarginTop" data-bind="marginTop" type="number" min="6" max="30"></div>
+              <div class="row"><label>Lề dưới</label><input id="inspectorMarginBottom" data-bind="marginBottom" type="number" min="6" max="30"></div>
+            </div>
+            <div class="row">
+              <label>Cỡ chữ trong bảng <span class="range-value" id="inspectorTableFontSizeValue">9.0 px</span></label>
+              <input id="designTableFontSize" data-bind="tableFontSize" type="range" min="7.5" max="14" step="0.2">
+            </div>
+            <div class="row"><label>Khổ giấy</label><select id="paperSize" disabled><option>A4 (210 × 297 mm)</option></select></div>
+            <label class="check"><input id="compactTable" data-bind="compactTable" type="checkbox"> Bảng gọn để chứa nhiều dòng</label>
+            <div class="inspector-column-toggles">
+              <label class="check"><input id="designShowStt" data-bind="showStt" type="checkbox"> STT</label>
+              <label class="check"><input id="designShowPrice" data-bind="showPrice" type="checkbox"> Đơn giá</label>
+              <label class="check"><input id="designShowAmount" data-bind="showAmount" type="checkbox"> Thành tiền</label>
+              <label class="check"><input id="designShowTotals" data-bind="showTotals" type="checkbox"> Tổng cộng</label>
+            </div>
+          </div>
+        </details>
+
+        <section class="inspector-section inspector-brand-kit">
+          <div class="inspector-section-head"><h3>Brand Kit</h3><span>06</span></div>
+          <div class="brand-kit-summary">
+            <div class="logo-design-preview" id="logoDesignPreview"></div>
+            <div>
+              <b>Logo & nhận diện</b>
+              <small>Màu, font và logo của báo giá hiện tại.</small>
+              <div class="brand-kit-actions"><label class="btn file-btn" for="logoInput">Thay logo</label><button class="btn" id="resetLogoPosition" type="button">Đặt lại</button></div>
+            </div>
+          </div>
+
+          <details class="brand-kit-advanced">
+            <summary>Tùy chỉnh logo nâng cao</summary>
+            <div class="row">
+              <label>Kích thước logo <span class="range-value" id="logoWidthValue">58 mm</span></label>
+              <div class="logo-size-control">
+                <button class="mini-action logo-step" id="logoShrink" type="button" aria-label="Giảm kích thước logo">−</button>
+                <input id="logoWidthRange" data-bind="logoWidth" type="range" min="18" max="90" step="1">
+                <button class="mini-action logo-step" id="logoGrow" type="button" aria-label="Tăng kích thước logo">+</button>
+              </div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Rộng logo (mm)</label><input id="logoWidthDesign" data-bind="logoWidth" type="number" min="18" max="90"></div>
+              <div class="row"><label>Khoảng thở (mm)</label><input id="logoPadding" data-bind="logoPadding" type="number" min="0" max="12" step="1"></div>
+            </div>
+            <div class="grid2">
+              <div class="row"><label>Dịch ngang (mm)</label><input id="logoOffsetX" data-bind="logoOffsetX" type="number" min="-40" max="40" step="0.5"></div>
+              <div class="row"><label>Dịch dọc (mm)</label><input id="logoOffsetY" data-bind="logoOffsetY" type="number" min="-30" max="30" step="0.5"></div>
+            </div>
+            <div class="row">
+              <label>Chế độ ảnh logo</label>
+              <select id="logoDisplayMode" data-bind="logoDisplayMode">
+                <option value="original">Giữ nguyên ảnh gốc (mặc định)</option>
+                <option value="remove-bg">Xóa nền (tạo PNG trong suốt)</option>
+                <option value="styled">Hiệu ứng / hòa nền</option>
+              </select>
+            </div>
+            <div class="logo-mode-status" id="logoModeStatus">Ảnh gốc • không xử lý nền</div>
+            <div class="logo-remove-bg-controls" id="logoRemoveBgControls" hidden>
+              <div class="row"><label>Dung sai màu nền <span class="range-value" id="logoRemoveBgThresholdValue">46</span></label><input id="logoRemoveBgThreshold" data-bind="logoRemoveBgThreshold" type="range" min="8" max="140" step="1"></div>
+              <div class="help">Xóa vùng nền liên thông từ mép ảnh; logo gốc vẫn được giữ để khôi phục.</div>
+            </div>
+            <div class="logo-styled-controls" id="logoStyledControls" hidden>
+              <div class="row"><label>Hòa trộn logo</label><select id="logoBlendMode" data-bind="logoBlendMode"><option value="normal">Giữ nguyên màu</option><option value="multiply">Hòa nền sáng</option><option value="darken">Giảm nền trắng</option></select></div>
+              <div class="logo-backdrop-editor">
+                <div class="logo-backdrop-title">NỀN PHÍA SAU LOGO</div>
+                <div class="row"><label>Kiểu nền</label><select id="logoTreatment" data-bind="logoTreatment"><option value="blend">Hòa vào mặt giấy</option><option value="soft">Mảng màu rất nhẹ</option><option value="clean">Plate trắng tinh gọn</option><option value="custom">Tùy chỉnh nền</option><option value="none">Không nền</option></select></div>
+                <div class="grid2"><div class="row"><label>Màu nền</label><input id="logoBackdropColor" data-bind="logoBackdropColor" type="color"></div><div class="row"><label>Độ trong <span class="range-value" id="logoBackdropOpacityValue">8%</span></label><input id="logoBackdropOpacity" data-bind="logoBackdropOpacity" type="range" min="0" max="100" step="1"></div></div>
+                <div class="grid2"><div class="row"><label>Bo góc (mm)</label><input id="logoBackdropRadius" data-bind="logoBackdropRadius" type="number" min="0" max="24" step="1"></div><div class="row"><label>Viền nền</label><select id="logoBackdropBorder" data-bind="logoBackdropBorder"><option value="none">Không viền</option><option value="soft">Viền mảnh</option></select></div></div>
+              </div>
+            </div>
+            <button class="btn block" id="restoreLogoOriginal" type="button">Khôi phục logo gốc</button>
+          </details>
+        </section>
+
+        <button class="btn block inspector-close" id="closeDesign" type="button">Đóng bảng thiết kế</button>
       </div>
 
       <section class="inspector-view inspector-content-view" data-inspector-view="content" hidden>
-        <header>
-          <h2>NỘI DUNG BÁO GIÁ</h2>
-          <p>Đi tới đúng nhóm nhập liệu; dữ liệu vẫn dùng chung với trình soạn bên trái.</p>
-        </header>
+        <header><h2>NỘI DUNG BÁO GIÁ</h2><p>Đi thẳng tới đúng khối nhập liệu; không tạo bản sao dữ liệu.</p></header>
         <div class="inspector-content-list">
-          <button type="button" data-inspector-open-tab="general"><span>01</span><b>Thông tin chung</b><small>Doanh nghiệp, mã báo giá, ngày lập</small></button>
-          <button type="button" data-inspector-open-tab="products"><span>02</span><b>Sản phẩm / Dịch vụ</b><small>Danh sách hàng hóa và đơn giá</small></button>
-          <button type="button" data-inspector-open-tab="payment"><span>03</span><b>Thanh toán</b><small>VAT, giảm giá và phương thức</small></button>
-          <button type="button" data-inspector-open-tab="terms"><span>04</span><b>Điều khoản</b><small>Hiệu lực, chính sách và ghi chú</small></button>
-          <button type="button" data-inspector-open-tab="design"><span>05</span><b>Thiết kế</b><small>Mẫu, logo, màu và định dạng</small></button>
-          <button type="button" data-inspector-open-tab="export"><span>06</span><b>Xuất bản & dữ liệu</b><small>PDF, Excel, sao lưu và khôi phục</small></button>
+          <button type="button" data-content-block="general"><span>01</span><b>Thông tin chung</b><small>Doanh nghiệp, mã báo giá, ngày lập</small></button>
+          <button type="button" data-content-block="customer"><span>02</span><b>Khách hàng</b><small>Người nhận và đơn vị mua hàng</small></button>
+          <button type="button" data-content-block="products"><span>03</span><b>Sản phẩm / Dịch vụ</b><small>Danh sách hàng hóa và đơn giá</small></button>
+          <button type="button" data-content-block="payment"><span>04</span><b>Thanh toán</b><small>VAT, giảm giá và phương thức</small></button>
+          <button type="button" data-content-block="terms"><span>05</span><b>Điều khoản</b><small>Nội dung thương mại</small></button>
+          <button type="button" data-content-block="signature"><span>06</span><b>Chữ ký</b><small>Ngày tháng và đại diện ký</small></button>
+          <button type="button" data-content-block="custom-text"><span>07</span><b>Văn bản tùy chỉnh</b><small>Lời mở đầu, lời kết, chân trang</small></button>
         </div>
       </section>
 
       <section class="inspector-view inspector-check-view" data-inspector-view="check" hidden>
-        <header>
-          <h2>KIỂM TRA BÁO GIÁ</h2>
-          <p>Đọc trực tiếp kết quả từ bộ kiểm tra hiện có trước khi in hoặc xuất PDF.</p>
-        </header>
+        <header><h2>KIỂM TRA BÁO GIÁ</h2><p>Đọc trực tiếp từ bộ validation/preflight hiện có.</p></header>
         <div class="inspector-health-card">
           <span>Tình trạng tài liệu</span>
           <strong id="inspectorHealthStatus" class="document-health">Đang kiểm tra</strong>
-          <small>Kiểm tra dữ liệu bắt buộc, sản phẩm, ngày và các cảnh báo in.</small>
+          <div class="inspector-check-counts"><span><b id="inspectorErrorCount">0</b> lỗi</span><span><b id="inspectorWarningCount">0</b> cảnh báo</span></div>
         </div>
+        <div class="inspector-issue-list" id="inspectorIssueList"></div>
         <button class="btn primary block" id="inspectorRunCheck" type="button">✓ Chạy kiểm tra</button>
         <button class="btn block" id="inspectorPreviewQuote" type="button">◉ Xem A4 toàn màn hình</button>
       </section>
@@ -1148,27 +1206,29 @@
     <main class="preview">
       <div class="preview-tools">
         <div class="preview-left-tools">
-          <button class="toolbar-btn view-exit" id="exitReportView" type="button" hidden>←&nbsp; Chỉnh sửa</button>
-          <button class="toolbar-btn active-preview" id="fit">◉&nbsp; Xem trước</button>
-          <button class="toolbar-btn" id="wideView">⛶&nbsp; Màn hình rộng</button>
-        </div>
-        <div class="preview-right-tools">
+          <button class="toolbar-btn view-exit" id="exitReportView" type="button" hidden>← Chỉnh sửa</button>
+          <span class="paper-size-label">A4 <small>210 × 297 mm</small></span>
           <div class="zoom-control">
             <button class="zoom-btn" id="zoomOut" aria-label="Thu nhỏ">−</button>
-            <button class="zoom-value" id="actual"><span id="zoomText">82%</span></button>
+            <button class="zoom-value" id="actual" aria-label="Mức thu phóng"><span id="zoomText">82%</span></button>
             <button class="zoom-btn" id="zoomIn" aria-label="Phóng to">+</button>
           </div>
+          <button class="toolbar-icon-btn" id="fit" type="button" aria-label="Vừa trang" title="Vừa trang">⌗</button>
+          <button class="toolbar-icon-btn" id="wideView" type="button" aria-label="Màn hình rộng" title="Màn hình rộng">⛶</button>
+        </div>
+        <div class="preview-right-tools">
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
-          <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
-          <button class="toolbar-btn import-data" id="openSmartImport" type="button">⇧&nbsp; Nhập dữ liệu</button>
-          <button class="toolbar-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false">✥&nbsp; Sắp xếp</button>
-          <button class="toolbar-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden>↺&nbsp; Tự động</button>
+          <button class="toolbar-icon-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false" aria-label="Sắp xếp khối" title="Sắp xếp khối">✥</button>
+          <button class="toolbar-icon-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden aria-label="Tự động sắp xếp" title="Tự động sắp xếp">↺</button>
           <span class="layout-selection" id="layoutSelection" hidden>Chọn khối để kéo</span>
-          <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
-          <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
-          <button class="toolbar-btn print print-action">▣&nbsp; In</button>
-          <button class="toolbar-btn menu" id="toolbarMenu" aria-label="Tùy chọn">⋮</button>
+          <button class="toolbar-icon-btn" id="toolbarMenu" type="button" aria-expanded="false" aria-controls="previewOverflowMenu" aria-label="Công cụ khác">⋯</button>
+          <div class="preview-overflow-menu" id="previewOverflowMenu" hidden>
+            <button type="button" id="preflightCheck">✓ <span>Kiểm tra báo giá</span></button>
+            <button type="button" id="openSmartImport">⇧ <span>Nhập dữ liệu</span></button>
+            <button type="button" id="customizePreview">⚙ <span>Tùy chỉnh xem trước</span></button>
+            <button type="button" class="print-action">⇩ <span>Tải PDF / In</span></button>
+          </div>
         </div>
       </div>
 

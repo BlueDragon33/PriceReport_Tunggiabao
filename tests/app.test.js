@@ -47,17 +47,21 @@ test('V4 boots into application dashboard and exposes separate new-quote and edi
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 });
 
-test('V4.5 quotation studio shows current quote context and navigable workflow steps', () => {
+test('V5.8 quotation studio shows quote context and routes through the content library', () => {
   document.querySelector('[data-tab="general"]').click();
   const quoteNo = document.getElementById('quoteNo').value;
-  expect(document.getElementById('studioQuoteLabel').textContent).toBe(quoteNo || 'Báo giá mới');
-  expect(document.querySelector('[data-studio-step="general"]').classList.contains('active')).toBe(true);
+  expect(document.getElementById('studioGlobalQuoteNo').textContent).toBe(quoteNo || '—');
+  expect(document.querySelector('.content-library').dataset.contentMode).toBe('home');
+  expect(document.querySelectorAll('#contentBlockList [data-content-block]').length).toBe(7);
 
-  document.querySelector('[data-studio-step="products"]').click();
+  document.querySelector('#contentBlockList [data-content-block="products"]').click();
   expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
-  expect(document.querySelector('[data-studio-step="products"]').classList.contains('active')).toBe(true);
+  expect(document.querySelector('.content-library').dataset.contentMode).toBe('detail');
 
-  document.querySelector('[data-studio-step="design"]').click();
+  document.getElementById('contentLibraryBack').click();
+  expect(document.querySelector('.content-library').dataset.contentMode).toBe('home');
+
+  document.querySelector('[data-open-inspector="design"]').click();
   expect(document.getElementById('designPanel').classList.contains('open')).toBe(true);
 
   document.getElementById('studioBackHome').click();
@@ -67,25 +71,26 @@ test('V4.5 quotation studio shows current quote context and navigable workflow s
   document.querySelector('[data-tab="general"]').click();
 });
 
-test('V5.1 quotation studio exposes six explicit workflow steps and drafting commands', () => {
+test('V5.8 quotation studio exposes seven content blocks and one command hierarchy', () => {
   document.querySelector('[data-tab="general"]').click();
-  expect(document.querySelectorAll('[data-studio-step]').length).toBe(6);
-  expect(document.querySelector('[data-studio-step="terms"]')).toBeTruthy();
-  expect(document.getElementById('studioSaveQuote')).toBeTruthy();
-  expect(document.getElementById('studioCheckQuote')).toBeTruthy();
-  expect(document.getElementById('studioPreviewQuote')).toBeTruthy();
-  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 1/6');
+  const blocks = Array.from(document.querySelectorAll('#contentBlockList [data-content-block]'));
+  expect(blocks.map(button => button.dataset.contentBlock)).toEqual([
+    'general','customer','products','payment','terms','signature','custom-text'
+  ]);
+  expect(document.getElementById('studioGlobalSave')).toBeTruthy();
+  expect(document.getElementById('studioGlobalPreview')).toBeTruthy();
+  expect(document.getElementById('studioGlobalPdf')).toBeTruthy();
+  expect(document.getElementById('studioCommandSearch')).toBeTruthy();
+  expect(document.querySelector('.studio-stepper')).toBeFalsy();
+  expect(document.querySelector('.studio-commandbar')).toBeFalsy();
 
-  document.getElementById('studioNextStep').click();
-  expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
-  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 2/6');
-
-  document.querySelector('[data-studio-step="terms"]').click();
+  document.querySelector('#contentBlockList [data-content-block="terms"]').click();
   expect(document.getElementById('pane-terms').classList.contains('active')).toBe(true);
-  expect(document.getElementById('studioWorkflowPosition').textContent).toContain('Bước 4/6');
+  document.getElementById('contentLibraryBack').click();
 
-  document.getElementById('studioPrevStep').click();
+  document.querySelector('#contentBlockList [data-content-block="payment"]').click();
   expect(document.getElementById('pane-payment').classList.contains('active')).toBe(true);
+  document.getElementById('contentLibraryBack').click();
   document.querySelector('[data-tab="general"]').click();
 });
 
@@ -224,27 +229,23 @@ test('V5.2 smart import exposes a dedicated multi-sheet chooser without clutteri
   expect(select.getAttribute('aria-label')).toContain('sheet Excel');
 });
 
-test('V5.3 Studio stepper exposes validation health per workflow step', () => {
+test('V5.8 Check inspector reflects validation health without a workflow stepper', () => {
   document.querySelector('[data-tab="general"]').click();
   const company = document.getElementById('companyName');
   const previous = company.value;
   company.value = '';
   company.dispatchEvent(new Event('input', { bubbles: true }));
 
-  document.querySelector('[data-tab="products"]').click();
-  document.querySelector('[data-tab="general"]').click();
+  document.getElementById('inspectorRunCheck').click();
+  expect(Number(document.getElementById('inspectorErrorCount').textContent)).toBeGreaterThan(0);
+  expect(document.getElementById('inspectorHealthStatus').classList.contains('error')).toBe(true);
+  expect(document.querySelector('[data-studio-step]')).toBeFalsy();
 
-  const generalStep = document.querySelector('[data-studio-step="general"]');
-  const exportStep = document.querySelector('[data-studio-step="export"]');
-  expect(generalStep.dataset.health).toBe('error');
-  expect(generalStep.classList.contains('step-error')).toBe(true);
-  expect(exportStep.dataset.health).toBe('error');
-
-  company.value = previous;
+  company.value = previous || 'Tùng Gia Bảo';
   company.dispatchEvent(new Event('input', { bubbles: true }));
-  document.querySelector('[data-tab="products"]').click();
-  document.querySelector('[data-tab="general"]').click();
-  expect(generalStep.dataset.health).not.toBe('error');
+  document.getElementById('inspectorRunCheck').click();
+  expect(document.getElementById('inspectorHealthStatus').classList.contains('error')).toBe(false);
+  document.getElementById('closeStudioGuidance').click();
 });
 
 test('V5.3 product warning guidance focuses the matching product row', async () => {
@@ -263,7 +264,7 @@ test('V5.3 product warning guidance focuses the matching product row', async () 
   refreshedQty.value = '-2';
   refreshedQty.dispatchEvent(new Event('input', { bubbles: true }));
 
-  document.getElementById('studioCheckQuote').click();
+  document.getElementById('inspectorRunCheck').click();
   const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
     .find(item => item.textContent.includes('V5.3 guided row target') && item.textContent.includes('số lượng âm'));
   expect(issue).toBeTruthy();
@@ -295,7 +296,7 @@ test('V5.3 duplicate product names still route a warning to the exact row and fi
   secondQty.value = '-3';
   secondQty.dispatchEvent(new Event('input', { bubbles: true }));
 
-  document.getElementById('studioCheckQuote').click();
+  document.getElementById('inspectorRunCheck').click();
   const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
     .find(item => item.textContent.includes('Dòng sản phẩm ' + (Number(secondIndex) + 1))
       && item.textContent.includes('Sản phẩm trùng tên V5.3')
@@ -323,7 +324,7 @@ test('V5.3 payment guidance targets the actionable missing control', async () =>
   showTotals.dispatchEvent(new Event('change', { bubbles: true }));
   discount.value = '5';
   discount.dispatchEvent(new Event('input', { bubbles: true }));
-  document.getElementById('studioCheckQuote').click();
+  document.getElementById('inspectorRunCheck').click();
 
   const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
     .find(item => item.textContent.includes('bảng tổng cộng đang bị ẩn'));
@@ -356,7 +357,7 @@ test('V5.3 guided correction can return focus to the issue with Escape', async (
 
   company.value = '';
   company.dispatchEvent(new Event('input', { bubbles: true }));
-  document.getElementById('studioCheckQuote').click();
+  document.getElementById('inspectorRunCheck').click();
 
   const issue = Array.from(document.querySelectorAll('#studioGuidanceList .studio-guidance-item'))
     .find(item => item.textContent.includes('Thiếu tên công ty'));
@@ -388,7 +389,7 @@ test('V5.3 open guidance refreshes immediately after a field is corrected', () =
 
   company.value = '';
   company.dispatchEvent(new Event('input', { bubbles: true }));
-  document.getElementById('studioCheckQuote').click();
+  document.getElementById('inspectorRunCheck').click();
   expect(document.getElementById('studioGuidancePanel').textContent).toContain('Thiếu tên công ty');
 
   company.value = previous || 'Tùng Gia Bảo';
@@ -405,7 +406,7 @@ test('V5.3 Studio validation opens guided issues instead of relying only on aler
   company.value = '';
   company.dispatchEvent(new Event('input', { bubbles: true }));
 
-  document.getElementById('studioCheckQuote').click();
+  document.getElementById('inspectorRunCheck').click();
   const panel = document.getElementById('studioGuidancePanel');
   expect(panel.hidden).toBe(false);
   expect(panel.textContent).toContain('Thiếu tên công ty');
@@ -2188,22 +2189,22 @@ test('failed history persistence keeps a changed quotation visibly unsaved', () 
     .find(item => item.querySelector('.history-quote-cell strong')?.textContent === 'BG-V51-SAVE-FAIL');
   expect(row).toBeTruthy();
   row.querySelector('.history-actions .btn.primary').click();
-  expect(document.getElementById('studioHistoryState').textContent).toBe('Đã lưu lịch sử');
+  expect(document.getElementById('studioGlobalHistoryState').textContent).toBe('Đã lưu lịch sử');
 
   const title = document.getElementById('quoteTitle');
   title.value = (title.value || 'BẢNG BÁO GIÁ') + ' · chỉnh sửa';
   title.dispatchEvent(new Event('input', { bubbles: true }));
-  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+  expect(document.getElementById('studioGlobalHistoryState').textContent).toBe('Có thay đổi chưa lưu');
 
   const nativeSetItem = Storage.prototype.setItem;
   const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
     if (key === historyKey) throw new DOMException('Quota exceeded', 'QuotaExceededError');
     return nativeSetItem.call(this, key, value);
   });
-  document.getElementById('studioSaveQuote').click();
+  document.getElementById('studioGlobalSave').click();
   spy.mockRestore();
 
-  expect(document.getElementById('studioHistoryState').textContent).toBe('Có thay đổi chưa lưu');
+  expect(document.getElementById('studioGlobalHistoryState').textContent).toBe('Có thay đổi chưa lưu');
   expect(JSON.parse(localStorage.getItem(historyKey))[0].data.quoteTitle).not.toContain('· chỉnh sửa');
 
   if (previousHistory == null) localStorage.removeItem(historyKey);
@@ -2243,7 +2244,7 @@ test('updating a saved quotation cannot reuse another quotation number', () => {
   const quoteNo = document.getElementById('quoteNo');
   quoteNo.value = 'BG-V51-B';
   quoteNo.dispatchEvent(new Event('input', { bubbles: true }));
-  document.getElementById('studioSaveQuote').click();
+  document.getElementById('studioGlobalSave').click();
 
   expect(document.getElementById('quoteNo').value).not.toBe('BG-V51-B');
   const stored = JSON.parse(localStorage.getItem(historyKey));
