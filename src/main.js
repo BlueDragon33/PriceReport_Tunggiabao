@@ -648,6 +648,13 @@ function syncStudioContext(tab = '') {
   const globalTitle = document.getElementById('studioGlobalTitle');
   const workspaceSubtitle = document.getElementById('workspaceShellSubtitle');
 
+  document.querySelectorAll('[data-shell-quote-only]').forEach((element) => {
+    element.hidden = workspaceMode;
+  });
+  document.querySelectorAll('[data-shell-workspace-only]').forEach((element) => {
+    element.hidden = !workspaceMode;
+  });
+
   if (workspaceMode) {
     const meta = WORKSPACE_SHELL_META[tab] || ['Tunggiabao Workspace', 'Không gian làm việc thống nhất'];
     if (globalTitle) globalTitle.textContent = meta[0];
