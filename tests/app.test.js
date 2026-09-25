@@ -1452,6 +1452,21 @@ test('template selection applies real document profile', () => {
   expect(document.querySelector('.quote-top > .qmeta').style.display).toBe('none');
 });
 
+test('V6.0 modern template gallery applies Canva-inspired profiles end to end', () => {
+  const names = ['canva-blue','mint-finance','warm-proposal','violet-studio'];
+  names.forEach((theme) => {
+    const button = document.querySelector('.tpl[data-theme="' + theme + '"]');
+    expect(button).toBeTruthy();
+    button.click();
+    expect(document.getElementById('paper').classList.contains('theme-' + theme)).toBe(true);
+    expect(document.querySelector('[data-content-theme="' + theme + '"]')).toBeTruthy();
+  });
+
+  document.querySelector('.tpl[data-theme="canva-blue"]').click();
+  expect(document.getElementById('inspectorThemeName').textContent).toBe('Business Wave');
+  expect(document.querySelector('.quote-top > .qmeta').style.display).toBe('block');
+});
+
 test('history save records one valid quotation and print preflight reaches print', () => {
   document.querySelectorAll('.product-card').forEach((card, index) => {
     const name = card.querySelector('[data-product-key="name"]');
