@@ -59,8 +59,18 @@ try {
   if (await page.locator('.shell.app-workspace [data-shell-workspace-only]:visible').count() < 1) {
     fail('workspace context is not visible in the shared topbar');
   }
+
+  const primaryTabsBefore = await page.locator('.shell.app-workspace > .nav button[data-tab]:visible').evaluateAll(nodes =>
+    nodes.map(node => node.getAttribute('data-tab'))
+  );
   await page.locator('[data-tab="general"]').click();
   await page.locator('.shell:not(.app-workspace)').waitFor();
+  const primaryTabsStudio = await page.locator('.shell:not(.app-workspace) > .nav button[data-tab]:visible').evaluateAll(nodes =>
+    nodes.map(node => node.getAttribute('data-tab'))
+  );
+  if (JSON.stringify(primaryTabsStudio) !== JSON.stringify(primaryTabsBefore)) {
+    fail('primary navigation changes between workspace and Studio: ' + JSON.stringify(primaryTabsBefore) + ' → ' + JSON.stringify(primaryTabsStudio));
+  }
   await page.locator('#fit').click();
   await page.waitForTimeout(120);
 
@@ -144,7 +154,7 @@ try {
   if (await page.locator('#productWorkspaceModal #productEditor').count() !== 1) fail('product editor is not single-source inside the product dialog');
   if (await page.locator('#pane-products #productEditor').count()) fail('product editor leaked back into the narrow Studio pane');
   await page.locator('#closeProductWorkspace').click();
-  if (!await page.locator('#productWorkspaceModal').getAttribute('hidden')) fail('product modal did not close cleanly');
+  if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
 
   // Returning to management must preserve the same topbar instead of switching to old chrome.
   await page.locator('#studioBackHome').click();
