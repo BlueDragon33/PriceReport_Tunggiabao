@@ -162,6 +162,10 @@
     color:#fff!important;
   }
 
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-menu:not([hidden]),
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-menu:not([hidden]){
+    display:block!important;
+  }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-menu,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-menu{
     position:fixed!important;
@@ -174,6 +178,21 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-head strong,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-head strong{font-size:14px}
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-grid,
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-grid{
+    display:grid!important;
+  }
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-head button,
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-head button,
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-grid button,
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-grid button{
+    display:flex!important;
+  }
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-head button,
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-head button{
+    align-items:center!important;
+    justify-content:center!important;
+  }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-grid button,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-grid button{
     color:#243951!important;
