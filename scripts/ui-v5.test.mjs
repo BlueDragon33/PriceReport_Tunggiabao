@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const css = fs.readFileSync(new URL('../src/ui-v5.css', import.meta.url), 'utf8');
-const studioCss = fs.readFileSync(new URL('../src/studio-v58.css', import.meta.url), 'utf8');
+const studioCss = fs.readFileSync(new URL('../src/studio-v59.css', import.meta.url), 'utf8');
 const legacyCss = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
@@ -12,24 +12,24 @@ function fail(message) {
 
 if (!css.includes('--v5-primary:')) fail('V5 shared design tokens are missing');
 if (!css.includes('body.v5-ui')) fail('V5 shared stylesheet is not body-scoped');
-if (!html.includes('class="v5-ui reference-ui-v58"')) fail('V5.8 pixel-lock UI scope is not active on the application body');
-if (!html.includes('href="./src/studio-v58.css"')) fail('V5.8 dedicated Studio stylesheet is not loaded');
-if (!studioCss.includes('V5.8 Studio Pixel-Lock')) fail('V5.8 Studio stylesheet ownership marker is missing');
+if (!html.includes('class="v5-ui reference-ui-v59"')) fail('V5.9 unified-shell UI scope is not active on the application body');
+if (!html.includes('href="./src/studio-v59.css"')) fail('V5.9 dedicated Studio stylesheet is not loaded');
+if (!studioCss.includes('V5.9 Unified Shell')) fail('V5.9 unified-shell stylesheet ownership marker is missing');
 if (!studioCss.includes('--studio-header-h:72px') ||
     !studioCss.includes('--studio-rail-w:118px') ||
     !studioCss.includes('--studio-left-w:320px') ||
     !studioCss.includes('--studio-right-w:384px') ||
     !studioCss.includes('--studio-preview-toolbar-h:52px')) {
-  fail('V5.8 canonical 72 / 118 / 320 / 384 / 52 geometry tokens are missing');
+  fail('V5.9 canonical 72 / 118 / 320 / 384 / 52 geometry tokens are missing');
 }
 if (!studioCss.includes('grid-template-columns:var(--studio-rail-w) var(--studio-left-w) minmax(0,1fr) var(--studio-right-w)')) {
-  fail('V5.8 canonical Studio four-column grid is missing');
+  fail('V5.9 canonical Studio four-column grid is missing');
 }
-if (!studioCss.includes('grid-template-rows:var(--studio-header-h) minmax(0,1fr)')) fail('V5.8 Studio header row geometry is missing');
-if (!html.includes('class="studio-topbar"')) fail('V5.8 single Studio topbar is missing');
+if (!studioCss.includes('grid-template-rows:var(--studio-header-h) minmax(0,1fr)')) fail('V5.9 Studio header row geometry is missing');
+if (!html.includes('class="studio-topbar"')) fail('V5.9 single Studio topbar is missing');
 if (html.includes('class="studio-global-bar"')) fail('V5.7 Studio global bar must not remain visible');
-if (!html.includes('class="editor content-library"') || !html.includes('id="contentLibraryHome"')) fail('V5.8 Thêm nội dung library is missing');
-if (!studioCss.includes('.content-library-home') || !studioCss.includes('.content-block-row')) fail('V5.8 content library styling is missing');
+if (!html.includes('class="editor content-library"') || !html.includes('id="contentLibraryHome"')) fail('V5.9 Thêm nội dung library is missing');
+if (!studioCss.includes('.content-library-home') || !studioCss.includes('.content-block-row')) fail('V5.9 content library styling is missing');
 
 const contentOrder = [
   'data-content-block="general"',
@@ -43,14 +43,19 @@ const contentOrder = [
 let contentCursor = -1;
 for (const token of contentOrder) {
   const next = html.indexOf(token, contentCursor + 1);
-  if (next < 0) fail('V5.8 content block is missing: ' + token);
-  else if (next <= contentCursor) fail('V5.8 content block order is incorrect: ' + token);
+  if (next < 0) fail('V5.9 content block is missing: ' + token);
+  else if (next <= contentCursor) fail('V5.9 content block order is incorrect: ' + token);
   contentCursor = next;
 }
 
-if (!html.includes('id="studioCommandSearch"') || !html.includes('id="studioCommandResults"')) fail('V5.8 command search surface is missing');
-if (!html.includes('id="previewOverflowMenu"')) fail('V5.8 compact preview overflow menu is missing');
-if (!html.includes('data-inspector-tab="design"') || !html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.8 Design/Content/Check inspector tabs are missing');
+if (!html.includes('id="studioCommandSearch"') || !html.includes('id="studioCommandResults"')) fail('V5.9 command search surface is missing');
+if (!html.includes('id="previewOverflowMenu"')) fail('V5.9 compact preview overflow menu is missing');
+if (!html.includes('id="productWorkspaceModal"') || !html.includes('id="openProductWorkspace"')) fail('V5.9 fixed product workspace modal is missing');
+if (!studioCss.includes('.product-workspace-dialog') || !studioCss.includes('height:min(820px,calc(100vh - 48px))')) fail('V5.9 fixed product modal geometry is missing');
+if (!studioCss.includes('.shell.app-workspace>.studio-topbar') || !studioCss.includes('grid-template-rows:var(--studio-header-h) minmax(0,1fr)')) fail('V5.9 management workspace must share the same topbar shell');
+if (!html.includes('data-shell-workspace-only') || !html.includes('data-shell-quote-only')) fail('V5.9 shell mode context controls are missing');
+
+if (!html.includes('data-inspector-tab="design"') || !html.includes('data-inspector-tab="content"') || !html.includes('data-inspector-tab="check"')) fail('V5.9 Design/Content/Check inspector tabs are missing');
 
 const inspectorOrder = [
   '>Giao diện tổng thể<',
@@ -61,20 +66,21 @@ const inspectorOrder = [
   '>Brand Kit<'
 ];
 let inspectorCursor = html.indexOf('inspector-design-view');
-if (inspectorCursor < 0) fail('V5.8 inspector Design view is missing');
+if (inspectorCursor < 0) fail('V5.9 inspector Design view is missing');
 for (const token of inspectorOrder) {
   const next = html.indexOf(token, inspectorCursor + 1);
-  if (next < 0) fail('V5.8 inspector section is missing: ' + token);
-  else if (next <= inspectorCursor) fail('V5.8 inspector section order is incorrect: ' + token);
+  if (next < 0) fail('V5.9 inspector section is missing: ' + token);
+  else if (next <= inspectorCursor) fail('V5.9 inspector section order is incorrect: ' + token);
   inspectorCursor = next;
 }
 
-if (!studioCss.includes('background:var(--studio-bg)') || !studioCss.includes('background:var(--studio-panel)')) fail('V5.8 dark Studio chrome/canvas ownership is missing');
-if (!studioCss.includes('#paperWrap') || !studioCss.includes('drop-shadow(0 12px 32px rgba(0,0,0,.20))')) fail('V5.8 A4 presentation shadow is missing');
-if (studioCss.includes('!important')) fail('V5.8 Studio stylesheet must not introduce !important');
-if (/\.paper(?=[\s.:#>+~\[\{])/.test(studioCss)) fail('V5.8 Studio stylesheet must not target the report document');
-if (/@media\s+print/i.test(studioCss)) fail('V5.8 Studio stylesheet must not contain print rules');
-if (html.includes('class="studio-stepper"') || html.includes('class="studio-commandbar"')) fail('V5.7 visible stepper/command bar must not remain in V5.8 Studio DOM');
+if (!studioCss.includes('background:var(--studio-bg)') || !studioCss.includes('background:var(--studio-panel)')) fail('V5.9 dark Studio chrome/canvas ownership is missing');
+if (!studioCss.includes('#paperWrap') || !studioCss.includes('drop-shadow(0 12px 32px rgba(0,0,0,.20))')) fail('V5.9 A4 presentation shadow is missing');
+if (studioCss.includes('!important')) fail('V5.9 Studio stylesheet must not introduce !important');
+if (/\.paper(?=[\s.:#>+~\[\{])/.test(studioCss)) fail('V5.9 Studio stylesheet must not target the report document');
+if (/@media\s+print/i.test(studioCss)) fail('V5.9 Studio stylesheet must not contain print rules');
+if (html.includes('class="studio-stepper"') || html.includes('class="studio-commandbar"')) fail('Legacy visible stepper/command bar must not remain in V5.9 Studio DOM');
+if (html.includes('id="productFocusToggle"')) fail('Legacy product-focus shell toggle must not remain after modal migration');
 
 if (css.includes('!important')) fail('V5 shared stylesheet must not introduce !important');
 if (/\.paper(?:\b|\s|[.:#>+~\[])/.test(css)) fail('V5 shared application stylesheet must not target the report document');
@@ -125,7 +131,7 @@ for (const literal of ['#edf1f5','#18385f','#29415f','#294667','#7653d9','#f2edf
 const mediaCount = (css.match(/@media/g) || []).length;
 if (mediaCount > 4) fail('V5 shared responsive layer has too many media-query blocks: ' + mediaCount);
 const studioMediaCount = (studioCss.match(/@media/g) || []).length;
-if (studioMediaCount > 4) fail('V5.8 Studio responsive layer has too many media-query blocks: ' + studioMediaCount);
+if (studioMediaCount > 4) fail('V5.9 Studio responsive layer has too many media-query blocks: ' + studioMediaCount);
 
 const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
 const studioWithoutComments = studioCss.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -261,10 +267,10 @@ if (unscoped.length) {
 const studioSelectors = extractSelectors(studioWithoutComments);
 const studioUnscoped = studioSelectors.filter(selector =>
   selector !== ':root' &&
-  !selector.startsWith('body.v5-ui.reference-ui-v58')
+  !selector.startsWith('body.v5-ui.reference-ui-v59')
 );
 if (studioUnscoped.length) {
-  fail('V5.8 Studio selectors must be explicitly scoped: ' + studioUnscoped.slice(0, 8).join(' | '));
+  fail('V5.9 Studio selectors must be explicitly scoped: ' + studioUnscoped.slice(0, 8).join(' | '));
 }
 
 if (!process.exitCode) {
