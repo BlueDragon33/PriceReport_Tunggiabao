@@ -2672,8 +2672,9 @@ function render() {
   renderPreviewProducts();
   renderTotals();
 
-  $$('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
-  $$('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
+  $('.tpl').forEach((el) => el.classList.toggle('active', el.dataset.theme === state.theme));
+  $('[data-content-theme]').forEach((el) => el.classList.toggle('active', el.dataset.contentTheme === state.theme));
+  $('.color').forEach((el) => el.classList.toggle('active', el.dataset.color === state.accent));
   $$('[data-title-align]').forEach((el) => el.classList.toggle('active', el.dataset.titleAlign === (state.previewTitleAlign || 'center')));
   const activeTemplate = document.querySelector('.tpl[data-theme="' + state.theme + '"]');
   const description = document.getElementById('templateDescription');
@@ -4111,7 +4112,19 @@ const THEME_PROFILES = {
   mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' }
 };
 
-$$('.tpl').forEach((el) => {
+function applyTheme(themeName) {
+  const next = Object.prototype.hasOwnProperty.call(THEME_ACCENTS, themeName) ? themeName : 'modern';
+  state.theme = next;
+  if (THEME_ACCENTS[next]) state.accent = THEME_ACCENTS[next];
+  if (THEME_FONTS[next]) state.docFont = THEME_FONTS[next];
+  Object.assign(state, THEME_PROFILES[next] || {});
+  if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
+  save();
+  syncInputs();
+  render();
+}
+
+$('.tpl').forEach((el) => {
   el.addEventListener('mouseenter', () => {
     const description = document.getElementById('templateDescription');
     if (description) description.textContent = el.dataset.description || '';
@@ -4121,16 +4134,11 @@ $$('.tpl').forEach((el) => {
     const description = document.getElementById('templateDescription');
     if (description && active) description.textContent = active.dataset.description || '';
   });
-  el.addEventListener('click', () => {
-    state.theme = el.dataset.theme;
-    if (THEME_ACCENTS[state.theme]) state.accent = THEME_ACCENTS[state.theme];
-    if (THEME_FONTS[state.theme]) state.docFont = THEME_FONTS[state.theme];
-    Object.assign(state, THEME_PROFILES[state.theme] || {});
-    if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
-    save();
-    syncInputs();
-    render();
-  });
+  el.addEventListener('click', () => applyTheme(el.dataset.theme));
+});
+
+$('[data-content-theme]').forEach((el) => {
+  el.addEventListener('click', () => applyTheme(el.dataset.contentTheme));
 });
 
 $$('.color').forEach((el) => {
@@ -4161,7 +4169,11 @@ document.querySelectorAll('#designPanel [data-inspector-tab]').forEach((button) 
   button.addEventListener('click', () => setDesignInspectorTab(button.dataset.inspectorTab));
 });
 document.querySelectorAll('#designPanel [data-inspector-open-tab]').forEach((button) => {
-  button.addEventListener('click', () => openTab(button.dataset.inspectorOpenTab));
+  button.addEventListener('click', () => {
+    const target = button.dataset.inspectorOpenTab;
+    if (CONTENT_BLOCKS[target]) openContentBlock(target);
+    else openTab(target);
+  });
 });
 document.getElementById('inspectorRunCheck')?.addEventListener('click', () => {
   document.getElementById('preflightCheck')?.click();
@@ -6798,8 +6810,11 @@ function setupLayoutEditor() {
     }
   });
 
-  ['autoArrangeLayoutToolbar','autoArrangeLayoutPanel'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('click', autoArrangePreview);
+  ['autoArrangeLayoutToolbar','autoArrangeLayoutPanel','runLayoutSuggestion'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      autoArrangePreview();
+      if (id === 'runLayoutSuggestion') toast('Đã tối ưu bố cục bằng bộ sắp xếp cục bộ');
+    });
   });
 
   document.getElementById('resetBlockPositions')?.addEventListener('click', () => {
@@ -6999,12 +7014,30 @@ document.getElementById('zoomIn').addEventListener('click', () => setZoom(zoom +
 document.getElementById('wideView').addEventListener('click', () => {
   const shell = document.querySelector('.shell');
   const enabled = shell.classList.toggle('wide-preview');
-  document.getElementById('wideView').innerHTML = enabled ? '⛶&nbsp; Thu gọn' : '⛶&nbsp; Màn hình rộng';
+  const button = document.getElementById('wideView');
+  button?.setAttribute('aria-label', enabled ? 'Thoát màn hình rộng' : 'Màn hình rộng');
+  button?.setAttribute('title', enabled ? 'Thoát màn hình rộng' : 'Màn hình rộng');
   requestAnimationFrame(() => document.getElementById('fit').click());
 });
-document.getElementById('toolbarMenu').addEventListener('click', () => {
-  openTab('export');
-  toast('Đã mở công cụ Xuất / Nhập / In');
+
+function setPreviewOverflowMenu(open) {
+  const menu = document.getElementById('previewOverflowMenu');
+  const button = document.getElementById('toolbarMenu');
+  if (!menu || !button) return;
+  const enabled = Boolean(open);
+  menu.hidden = !enabled;
+  button.setAttribute('aria-expanded', enabled ? 'true' : 'false');
+}
+document.getElementById('toolbarMenu')?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  const menu = document.getElementById('previewOverflowMenu');
+  setPreviewOverflowMenu(Boolean(menu?.hidden));
+});
+document.addEventListener('pointerdown', (event) => {
+  if (!event.target.closest?.('.preview-right-tools')) setPreviewOverflowMenu(false);
+});
+document.getElementById('previewOverflowMenu')?.addEventListener('click', (event) => {
+  if (event.target.closest('button')) setPreviewOverflowMenu(false);
 });
 
 function setPreviewCustomizer(open) {
