@@ -4201,29 +4201,150 @@ const THEME_FONTS = {
 
 const THEME_PROFILES = {
   modern: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  corporate: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  minimal: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'airy', previewTableDensity: 'standard' },
-  classic: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  emerald: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  warm: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  premium: { showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
-  mono: { showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' },
+  corporate: { showWebEmail: false, showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  minimal: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'airy', previewTableDensity: 'standard' },
+  classic: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  emerald: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  warm: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  premium: { showWebEmail: false, showQuoteMeta: true, previewTitleAlign: 'center', previewSpacing: 'standard', previewTableDensity: 'standard' },
+  mono: { showWebEmail: false, showQuoteMeta: false, previewTitleAlign: 'center', previewSpacing: 'compact', previewTableDensity: 'compact' },
   'canva-blue': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
   'mint-finance': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'airy', previewTableDensity: 'standard' },
   'warm-proposal': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' },
   'violet-studio': { showWebEmail: true, showQuoteMeta: true, previewTitleAlign: 'left', previewSpacing: 'standard', previewTableDensity: 'standard' }
 };
 
-function applyTheme(themeName) {
+const THEME_PROFILE_FIELDS = [
+  'theme','accent','docFont','showWebEmail','showQuoteMeta',
+  'previewTitleAlign','previewSpacing','previewTableDensity'
+];
+
+let templateLibraryCategory = 'all';
+let templateLibraryLastFocus = null;
+let templateLibraryPreview = null;
+
+function captureThemeProfileState() {
+  return Object.fromEntries(THEME_PROFILE_FIELDS.map((key) => [key, state[key]]));
+}
+
+function restoreThemeProfileState(snapshot, { persist = false } = {}) {
+  if (!snapshot) return;
+  THEME_PROFILE_FIELDS.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(snapshot, key)) state[key] = snapshot[key];
+  });
+  if (persist) save();
+  syncInputs();
+  render();
+}
+
+function setThemeState(themeName, { persist = true } = {}) {
   const next = Object.prototype.hasOwnProperty.call(THEME_ACCENTS, themeName) ? themeName : 'modern';
   state.theme = next;
   if (THEME_ACCENTS[next]) state.accent = THEME_ACCENTS[next];
   if (THEME_FONTS[next]) state.docFont = THEME_FONTS[next];
   Object.assign(state, THEME_PROFILES[next] || {});
-  if (state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
-  save();
+  if (persist && state.logoTreatment === 'custom' && !state.logoBackdropColor) state.logoBackdropColor = state.accent;
+  if (persist) save();
   syncInputs();
   render();
+  return next;
+}
+
+function applyTheme(themeName) {
+  return setThemeState(themeName, { persist: true });
+}
+
+function templateLibraryFocusable() {
+  const modal = document.getElementById('templateLibraryModal');
+  if (!modal || modal.hidden) return [];
+  return [...modal.querySelectorAll('button:not([disabled]):not([hidden]),input:not([disabled]):not([hidden])')]
+    .filter((el) => el.offsetParent !== null || el === document.activeElement);
+}
+
+function filterTemplateLibrary() {
+  const query = String(document.getElementById('templateLibrarySearch')?.value || '').trim().toLowerCase();
+  const cards = [...document.querySelectorAll('[data-template-library-theme]')];
+  let visible = 0;
+  cards.forEach((card) => {
+    const categories = String(card.dataset.categories || '').split(/\s+/).filter(Boolean);
+    const categoryMatch = templateLibraryCategory === 'all' || categories.includes(templateLibraryCategory);
+    const haystack = (String(card.dataset.search || '') + ' ' + String(card.textContent || '')).toLowerCase();
+    const queryMatch = !query || haystack.includes(query);
+    card.hidden = !(categoryMatch && queryMatch);
+    if (!card.hidden) visible += 1;
+    card.classList.toggle('selected', card.dataset.templateLibraryTheme === state.theme);
+  });
+  const count = document.getElementById('templateLibraryCount');
+  if (count) count.textContent = visible + ' mẫu';
+  const empty = document.getElementById('templateLibraryEmpty');
+  if (empty) empty.hidden = visible !== 0;
+}
+
+function openTemplateLibrary({ restoreSearch = false } = {}) {
+  const modal = document.getElementById('templateLibraryModal');
+  if (!modal) return;
+  templateLibraryLastFocus = document.activeElement;
+  modal.hidden = false;
+  document.body.classList.add('template-library-open');
+  if (!restoreSearch) {
+    templateLibraryCategory = 'all';
+    const search = document.getElementById('templateLibrarySearch');
+    if (search) search.value = '';
+    document.querySelectorAll('[data-template-category]').forEach((button) => {
+      button.classList.toggle('active', button.dataset.templateCategory === 'all');
+    });
+  }
+  filterTemplateLibrary();
+  requestAnimationFrame(() => document.getElementById('templateLibrarySearch')?.focus());
+}
+
+function closeTemplateLibrary({ restoreFocus = true } = {}) {
+  const modal = document.getElementById('templateLibraryModal');
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  document.body.classList.remove('template-library-open');
+  if (restoreFocus) templateLibraryLastFocus?.focus?.();
+}
+
+function setTemplatePreviewControls(active) {
+  const back = document.getElementById('templatePreviewBack');
+  const apply = document.getElementById('templatePreviewApply');
+  const exit = document.getElementById('exitReportView');
+  if (back) back.hidden = !active;
+  if (apply) apply.hidden = !active;
+  if (exit && document.querySelector('.shell')?.classList.contains('report-view')) exit.hidden = Boolean(active);
+}
+
+function previewTemplateFromLibrary(themeName) {
+  const snapshot = captureThemeProfileState();
+  const next = setThemeState(themeName, { persist: false });
+  templateLibraryPreview = { theme: next, snapshot };
+  closeTemplateLibrary({ restoreFocus: false });
+  openTab('view');
+  setTemplatePreviewControls(true);
+}
+
+function cancelTemplateLibraryPreview({ reopenLibrary = true } = {}) {
+  const preview = templateLibraryPreview;
+  if (!preview) {
+    openTab('general');
+    return;
+  }
+  templateLibraryPreview = null;
+  restoreThemeProfileState(preview.snapshot, { persist: false });
+  setTemplatePreviewControls(false);
+  openTab('design');
+  if (reopenLibrary) openTemplateLibrary({ restoreSearch: true });
+}
+
+function confirmTemplateLibraryPreview() {
+  if (!templateLibraryPreview) return;
+  const appliedTheme = templateLibraryPreview.theme;
+  templateLibraryPreview = null;
+  save();
+  setTemplatePreviewControls(false);
+  openTab('design');
+  toast('Đã áp dụng mẫu ' + (THEME_LABELS[appliedTheme] || appliedTheme));
 }
 
 document.querySelectorAll('.tpl').forEach((el) => {
@@ -4243,13 +4364,47 @@ document.querySelectorAll('[data-content-theme]').forEach((el) => {
   el.addEventListener('click', () => applyTheme(el.dataset.contentTheme));
 });
 
-document.getElementById('toggleInspectorTemplates')?.addEventListener('click', () => {
-  const panel = document.getElementById('inspectorTemplatePicker');
-  const button = document.getElementById('toggleInspectorTemplates');
-  if (!panel || !button) return;
-  const open = panel.hidden;
-  panel.hidden = !open;
-  button.setAttribute('aria-expanded', open ? 'true' : 'false');
+document.getElementById('toggleInspectorTemplates')?.addEventListener('click', () => openTemplateLibrary());
+document.getElementById('openTemplateLibraryFromContent')?.addEventListener('click', (event) => {
+  event.preventDefault();
+  openTemplateLibrary();
+});
+document.getElementById('closeTemplateLibrary')?.addEventListener('click', () => closeTemplateLibrary());
+document.getElementById('templateLibrarySearch')?.addEventListener('input', filterTemplateLibrary);
+document.querySelectorAll('[data-template-category]').forEach((button) => {
+  button.addEventListener('click', () => {
+    templateLibraryCategory = button.dataset.templateCategory || 'all';
+    document.querySelectorAll('[data-template-category]').forEach((item) => item.classList.toggle('active', item === button));
+    filterTemplateLibrary();
+  });
+});
+document.querySelectorAll('[data-template-library-theme]').forEach((card) => {
+  card.addEventListener('click', () => previewTemplateFromLibrary(card.dataset.templateLibraryTheme));
+});
+document.getElementById('templatePreviewBack')?.addEventListener('click', () => cancelTemplateLibraryPreview({ reopenLibrary: true }));
+document.getElementById('templatePreviewApply')?.addEventListener('click', confirmTemplateLibraryPreview);
+document.getElementById('templateLibraryModal')?.addEventListener('click', (event) => {
+  if (event.target === event.currentTarget) closeTemplateLibrary();
+});
+document.getElementById('templateLibraryModal')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    event.stopPropagation();
+    closeTemplateLibrary();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const items = templateLibraryFocusable();
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 });
 
 $$('.color').forEach((el) => {
@@ -7096,9 +7251,12 @@ function fitReportView() {
   wrap.style.transform = 'none';
   wrap.style.marginBottom = '0';
   paper.style.removeProperty('transform');
-  const available = Math.max(280, preview.clientWidth - 20);
+  const toolbarHeight = document.querySelector('.preview-tools')?.offsetHeight || 52;
+  const availableWidth = Math.max(280, preview.clientWidth - 36);
+  const availableHeight = Math.max(360, preview.clientHeight - toolbarHeight - 28);
   const paperWidth = paper.offsetWidth || (210 / 25.4) * 96;
-  const scale = Math.min(1, available / paperWidth);
+  const a4Height = (297 / 25.4) * 96;
+  const scale = Math.min(1, availableWidth / paperWidth, availableHeight / a4Height);
   const paperHeight = Math.max(paper.scrollHeight, paper.offsetHeight);
 
   wrap.style.width = Math.ceil(paperWidth * scale) + 'px';
@@ -7120,7 +7278,12 @@ function setReportViewMode(enabled) {
   if (enabled) {
     setPreviewCustomizer(false);
     setLayoutEditMode(false);
-    requestAnimationFrame(fitReportView);
+    const preview = document.querySelector('.preview');
+    if (preview) {
+      preview.scrollTop = 0;
+      preview.scrollLeft = 0;
+    }
+    requestAnimationFrame(() => requestAnimationFrame(fitReportView));
   } else {
     resetReportViewScale();
     if (!shell.classList.contains('app-workspace')) {
@@ -7143,7 +7306,10 @@ function setZoom(value) {
   updatePageEstimate();
 }
 
-document.getElementById('exitReportView')?.addEventListener('click', () => openTab('general'));
+document.getElementById('exitReportView')?.addEventListener('click', () => {
+  if (templateLibraryPreview) cancelTemplateLibraryPreview({ reopenLibrary: true });
+  else openTab('general');
+});
 document.getElementById('actual').addEventListener('click', () => setZoom(100));
 document.getElementById('fit').addEventListener('click', () => {
   const preview = document.querySelector('.preview');
