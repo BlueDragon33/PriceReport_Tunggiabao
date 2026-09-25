@@ -478,5 +478,9 @@ if (!html.includes('id="dataLibraryActivity"') || !html.includes('id="dataLibrar
 if (!js.includes('function recordDataLibraryOperation') || !js.includes("'undo-available'") || !js.includes("'undone'")) fail('V5.5 operator-visible mutation state tracking is missing');
 if (!js.includes('Có thể hoàn tác trong 8 giây')) fail('V5.5 undo window must be explicit to the operator');
 
-if (!html.includes('src/responsive-v610.css')) fail('V6.10 touch polish stylesheet is not linked');
-if (!responsivePolishCss.includes('iPad portrait') || !responsivePolishCss.includes('Template samples are a horizontal rail')) fail('V6.10 phone/iPad refinement contracts are missing');
+if (!html.includes('src/responsive-v610.css')) fail('V6.11 touch hardening stylesheet is not linked');
+if (
+  !responsivePolishCss.includes('Tablet editing-first mode')
+  || !responsivePolishCss.includes('(min-width:1024px) and (orientation:landscape)')
+  || !responsivePolishCss.includes('Template samples are a horizontal rail')
+) fail('V6.11 phone/iPad breakpoint and readability contracts are missing');
