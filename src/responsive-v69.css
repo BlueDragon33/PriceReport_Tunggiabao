@@ -124,18 +124,18 @@
     display:none!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav button,
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button{
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>button{
     display:none!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav button[data-tab="dashboard"],
-  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav button[data-tab="general"],
-  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav button[data-tab="history"],
-  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav button[data-tab="master"],
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav>button[data-tab="dashboard"],
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav>button[data-tab="general"],
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav>button[data-tab="history"],
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav>button[data-tab="master"],
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.nav .mobile-more-toggle,
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button[data-tab="dashboard"],
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button[data-tab="general"],
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button[data-tab="history"],
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button[data-tab="master"],
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>button[data-tab="dashboard"],
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>button[data-tab="general"],
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>button[data-tab="history"],
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>button[data-tab="master"],
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav .mobile-more-toggle{
     width:auto!important;
     min-width:0!important;
