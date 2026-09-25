@@ -91,6 +91,86 @@
 .theme-mono .summary .grand{background:#30343a!important}
 .theme-mono .footer{border-top:1px solid #30343a;color:#30343a!important}
 
+/* V6.0 Canva-inspired quotation collection.
+   These are original implementations based on the visual language of the supplied reference:
+   clean A4 hierarchy, soft geometry, business-blue cards and generous whitespace. */
+.theme-canva-blue .decor-top{
+  right:-17mm;top:-18mm;width:93mm;height:61mm;border-radius:0 0 0 92%;
+  background:linear-gradient(145deg,#d9e9ff 0 38%,#82b6ff 38% 57%,var(--doc) 57% 72%,#0b4dbb 72%)
+}
+.theme-canva-blue .decor-top:before{
+  content:"";position:absolute;right:12mm;top:23mm;width:53mm;height:16mm;border-radius:50%;
+  border:3.5mm solid rgba(255,255,255,.75);transform:rotate(-25deg)
+}
+.theme-canva-blue .decor-bottom{display:none}
+.theme-canva-blue .doc-head{min-height:31mm;padding-top:1mm}
+.theme-canva-blue .company-name{text-align:left;color:#13295d;font-family:Arial,sans-serif}
+.theme-canva-blue .quote-top{align-items:center;margin-top:1mm}
+.theme-canva-blue .qtitle{text-align:left;color:#102a66!important;font-family:Arial,sans-serif;font-weight:850;letter-spacing:.3px}
+.theme-canva-blue .qtitle:after{margin-left:0;width:34mm;height:2px}
+.theme-canva-blue .qmeta{background:#f4f8ff;border:1px solid #dbe8fb;border-radius:3mm;box-shadow:0 2mm 5mm rgba(37,99,235,.08)}
+.theme-canva-blue .sectionbar{background:transparent!important;color:#17356e!important;border:0;border-bottom:1px solid #dbe5f3;border-radius:0;padding-left:0}
+.theme-canva-blue .qtable{border-radius:2.5mm;overflow:hidden}
+.theme-canva-blue .qtable th{background:#edf4ff!important;color:#163366!important;border-color:#dbe5f3}
+.theme-canva-blue .qtable td{border-color:#dbe5f3}
+.theme-canva-blue .summary .grand{background:#eaf2ff!important;color:#1251c4!important;border:1px solid #cfe0fb}
+.theme-canva-blue .payment-grid{background:#f7faff;border-color:#dce8f7}
+.theme-canva-blue .footer{color:#48627f!important;border-top:1px solid #dce6f1;padding-top:3mm}
+
+.theme-mint-finance .decor-top{
+  left:-18mm;top:-20mm;width:80mm;height:48mm;border-radius:0 0 82% 0;
+  background:linear-gradient(145deg,#dff9f2,var(--doc))
+}
+.theme-mint-finance .decor-bottom{
+  right:-19mm;bottom:-18mm;width:76mm;height:36mm;border-radius:100% 0 0 0;
+  background:linear-gradient(135deg,#c9f2e8,var(--doc))
+}
+.theme-mint-finance .doc-head{border-bottom:1px solid #dceee9;padding-bottom:2.5mm}
+.theme-mint-finance .company-name,.theme-mint-finance .qtitle{color:#0d6555!important;font-family:Arial,sans-serif}
+.theme-mint-finance .qtitle{text-align:left}
+.theme-mint-finance .qtitle:after{margin-left:0;width:34mm}
+.theme-mint-finance .sectionbar{background:#e8f8f4!important;color:#116956!important;border-radius:2mm}
+.theme-mint-finance .qtable th{background:#f1fbf8!important;color:#24594f!important;border-color:#cfe7e1}
+.theme-mint-finance .qtable td{border-color:#d8e9e5}
+.theme-mint-finance .summary .grand{background:#dff6f0!important;color:#0c6e59!important}
+.theme-mint-finance .footer{color:#4c6e66!important}
+
+.theme-warm-proposal .decor-top{
+  right:-24mm;top:-25mm;width:95mm;height:55mm;border-radius:0 0 0 100%;
+  background:linear-gradient(145deg,#fff1e7 0 40%,#ffc7aa 40% 65%,var(--doc) 65%)
+}
+.theme-warm-proposal .decor-bottom{
+  left:-23mm;bottom:-20mm;width:90mm;height:35mm;border-radius:0 100% 0 0;
+  background:linear-gradient(90deg,#ffd7c3,var(--doc))
+}
+.theme-warm-proposal .company-name,.theme-warm-proposal .qtitle{color:#7d3520!important;font-family:Arial,sans-serif}
+.theme-warm-proposal .qtitle{text-align:left}
+.theme-warm-proposal .qtitle:after{margin-left:0;width:38mm}
+.theme-warm-proposal .qmeta{background:#fff8f3;border:1px solid #f7dccd}
+.theme-warm-proposal .sectionbar{background:#fff1e8!important;color:#8a3d25!important;border-radius:2mm}
+.theme-warm-proposal .qtable th{background:#fff6f0!important;color:#703d2f!important;border-color:#efd8cd}
+.theme-warm-proposal .qtable td{border-color:#eedfd8}
+.theme-warm-proposal .summary .grand{background:#fff0e7!important;color:#b74f2d!important}
+.theme-warm-proposal .footer{color:#7d5a50!important}
+
+.theme-violet-studio .decor-top{
+  left:0;right:0;top:0;height:26mm;
+  background:linear-gradient(110deg,#2b2451,#7657d6 62%,#a58cf0)
+}
+.theme-violet-studio .decor-bottom{
+  left:0;right:0;bottom:0;height:11mm;background:linear-gradient(90deg,#2b2451,#7657d6)
+}
+.theme-violet-studio .doc-head{color:#fff;padding-top:2mm;min-height:34mm}
+.theme-violet-studio .company-name,.theme-violet-studio .logo-text{color:#fff}
+.theme-violet-studio .qtitle{text-align:left;color:#3d2b79!important;font-family:Arial,sans-serif}
+.theme-violet-studio .qtitle:after{margin-left:0;width:36mm}
+.theme-violet-studio .qmeta{background:#f7f4ff;border:1px solid #e3dcfa}
+.theme-violet-studio .sectionbar{background:#f2edff!important;color:#4a338a!important;border-radius:2mm}
+.theme-violet-studio .qtable th{background:#f7f4ff!important;color:#46366e!important;border-color:#dfd7ef}
+.theme-violet-studio .qtable td{border-color:#e4def0}
+.theme-violet-studio .summary .grand{background:#eee8ff!important;color:#5a3db1!important}
+.theme-violet-studio .footer{color:#fff}
+
 /* A4 content proportions */
 .doc-head{display:grid;grid-template-columns:43% 57%;gap:5mm;align-items:start;min-height:37mm}
 .doc-head.no-logo{grid-template-columns:1fr}
