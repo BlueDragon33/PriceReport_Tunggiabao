@@ -471,6 +471,116 @@ body.v5-ui.reference-ui-v59 .content-workspace-footer .btn.primary{
   color:#fff;
 }
 
+/* V6.4 — contextual assistant inside each workspace */
+body.v5-ui.reference-ui-v59 .content-workspace-assist{
+  border-color:rgba(93,164,245,.18)!important;
+  background:linear-gradient(160deg,#0c2a4c,#0b2441)!important;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-quick-tools{
+  margin-top:11px;
+  display:grid;
+  gap:9px;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-quick-group{
+  display:grid;
+  gap:6px;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-quick-group>span{
+  color:#7f9ab8;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-chip,
+body.v5-ui.reference-ui-v59 .content-workspace-tool-button{
+  min-height:32px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;
+  background:#14385f;
+  color:#dce9f7;
+  font:inherit;
+  font-size:9.8px;
+  font-weight:750;
+  cursor:pointer;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-chip:hover,
+body.v5-ui.reference-ui-v59 .content-workspace-tool-button:hover{
+  border-color:rgba(109,177,255,.35);
+  background:#1a4677;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-tool-button{
+  width:100%;
+  text-align:left;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-tool-button.primary{
+  border-color:#2f83e6;
+  background:#156fd2;
+  color:#fff;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-search{
+  width:100%;
+  min-height:34px;
+  padding:7px 9px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  outline:0;
+  background:#081e38;
+  color:#eef6ff;
+  font-size:10px;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-search:focus{
+  border-color:#4c9af0;
+  box-shadow:0 0 0 3px rgba(76,154,240,.12);
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-list{
+  display:grid;
+  gap:6px;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-list button{
+  padding:8px 9px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background:#0f3156;
+  color:#eef6ff;
+  text-align:left;
+  cursor:pointer;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-list button:hover{
+  background:#17446f;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-list b{
+  display:block;
+  overflow:hidden;
+  font-size:10px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-customer-list small{
+  display:block;
+  margin-top:2px;
+  overflow:hidden;
+  color:#8fa9c5;
+  font-size:9px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.v5-ui.reference-ui-v59 .content-workspace-empty-note{
+  padding:8px 9px;
+  border:1px dashed rgba(255,255,255,.1);
+  border-radius:8px;
+  color:#7f99b6;
+  font-size:9.2px;
+  line-height:13px;
+}
+
 @media (max-width:1100px){
   body.v5-ui.reference-ui-v59 .content-workspace-backdrop{padding:12px}
   body.v5-ui.reference-ui-v59 .content-workspace-dialog{

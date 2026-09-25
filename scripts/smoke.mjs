@@ -62,7 +62,8 @@ const requiredIds = [
   'contentCompletionCard','contentCompletionLabel','contentCompletionBar','contentCompletionHint',
   'contentWorkspaceModal','contentWorkspaceDialog','contentWorkspaceMount','contentWorkspaceTitle','contentWorkspaceSubtitle',
   'contentWorkspaceWidthDown','contentWorkspaceWidthReset','contentWorkspaceWidthLabel','contentWorkspaceWidthUp',
-  'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace'
+  'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace',
+  'contentWorkspaceGuideTitle','contentWorkspaceGuideDetail','contentWorkspaceQuickTools'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -93,7 +94,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v63-unified-content-workspaces")) fail('Service-worker cache version was not aligned with the V6.3 unified content workspace release');
+if (!sw.includes("pricereport-shell-v64-guided-content-workspaces")) fail('Service-worker cache version was not aligned with the V6.4 guided content workspace release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -128,6 +129,9 @@ if (!html.includes('src/content-workspace-v63.css')) fail('V6.3 content workspac
 if (!js.includes('const CONTENT_WORKSPACE_WIDTHS = [1040, 1200, 1360, 1480]')) fail('V6.3 ChatGPT-like adjustable workspace widths are missing');
 if (!js.includes('function openContentWorkspace') || !js.includes('function closeContentWorkspace') || !js.includes('function mountContentWorkspaceNodes')) fail('V6.3 shared content workspace controller is missing');
 if (!js.includes('function renderContentBlockSummaries') || !html.includes('id="contentCompletionCard"')) fail('V6.3 content completion/status system is missing');
+if (!js.includes('function renderContentWorkspaceAssist') || !js.includes('function applyContentWorkspacePatch')) fail('V6.4 contextual workspace assistant is missing');
+if (!js.includes('renderContentWorkspaceCustomerResults') || !html.includes('id="contentWorkspaceQuickTools"')) fail('V6.4 customer reuse assistant is missing');
+if (!html.includes('Lưu nháp & tiếp tục')) fail('V6.4 guided continuation action is missing');
 if (!contentWorkspaceCss.includes('min-width:min(1040px') || !contentWorkspaceCss.includes('--content-workspace-width:1200px')) fail('V6.3 workspace must keep a ChatGPT-like desktop minimum and 1200px default');
 if (!contentWorkspaceCss.includes('@media (max-width:760px)') || !contentWorkspaceCss.includes('height:100dvh')) fail('V6.3 mobile full-screen workspace fallback is missing');
 if (!js.includes('function openProductWorkspace') || !js.includes('function closeProductWorkspace')) fail('V5.9 fixed product modal controller is missing');
