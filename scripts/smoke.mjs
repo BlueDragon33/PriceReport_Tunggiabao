@@ -7,8 +7,9 @@ const v5Css = fs.readFileSync('src/ui-v5.css', 'utf8');
 const studioCss = fs.readFileSync('src/studio-v59.css', 'utf8');
 const contentWorkspaceCss = fs.readFileSync('src/content-workspace-v63.css', 'utf8');
 const responsiveCss = fs.readFileSync('src/responsive-v69.css', 'utf8');
+const responsivePolishCss = fs.readFileSync('src/responsive-v610.css', 'utf8');
 const themeCss = fs.readFileSync('src/quotation-themes-v60.css', 'utf8');
-const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss + '\n' + responsiveCss;
+const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss + '\n' + responsiveCss + '\n' + responsivePolishCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 
@@ -92,7 +93,7 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/responsive-v610.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
@@ -107,7 +108,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v69-mobile-ipad-ui")) fail('Service-worker cache version was not aligned with the V6.9 mobile/iPad UI release');
+if (!sw.includes("pricereport-shell-v610-touch-polish")) fail('Service-worker cache version was not aligned with the V6.10 touch polish release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -476,3 +477,6 @@ if (!js.includes('DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS') || !js.includes('now - s
 if (!html.includes('id="dataLibraryActivity"') || !html.includes('id="dataLibraryActivityList"')) fail('V5.5 session operation history surface is missing');
 if (!js.includes('function recordDataLibraryOperation') || !js.includes("'undo-available'") || !js.includes("'undone'")) fail('V5.5 operator-visible mutation state tracking is missing');
 if (!js.includes('Có thể hoàn tác trong 8 giây')) fail('V5.5 undo window must be explicit to the operator');
+
+if (!html.includes('src/responsive-v610.css')) fail('V6.10 touch polish stylesheet is not linked');
+if (!responsivePolishCss.includes('iPad portrait') || !responsivePolishCss.includes('Template samples are a horizontal rail')) fail('V6.10 phone/iPad refinement contracts are missing');
