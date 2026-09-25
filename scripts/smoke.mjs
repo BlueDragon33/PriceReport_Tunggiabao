@@ -366,7 +366,7 @@ for (const block of ['general','customer','products','payment','terms','signatur
 if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
 if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
-if (!v5Css.includes('V5.1 quotation studio usability')) fail('V5.1 quotation studio styles are missing');
+if (!v5Css.includes('Shared Studio form / health utilities')) fail('Shared Studio form/health utilities are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 shared Studio primitives are missing');
 if (!html.includes('reference-ui-v58')) fail('V5.8 pixel-lock UI scope is missing');
