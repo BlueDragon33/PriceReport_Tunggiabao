@@ -69,7 +69,12 @@ const requiredIds = [
   'contentWorkspaceModal','contentWorkspaceDialog','contentWorkspaceMount','contentWorkspaceTitle','contentWorkspaceSubtitle',
   'contentWorkspaceWidthDown','contentWorkspaceWidthReset','contentWorkspaceWidthLabel','contentWorkspaceWidthUp',
   'contentWorkspacePrev','contentWorkspaceNext','doneContentWorkspace','closeContentWorkspace',
-  'contentWorkspaceGuideTitle','contentWorkspaceGuideDetail','contentWorkspaceQuickTools'
+  'contentWorkspaceGuideTitle','contentWorkspaceGuideDetail','contentWorkspaceQuickTools',
+  'quoteFlowCard','quoteFlowStart','quoteFlowCardTitle','quoteFlowCardHint','quoteFlowProgress','quoteFlowStepLabel','quoteFlowProgressBar',
+  'productWorkspacePrev','productWorkspaceNext','productWorkspaceFlowStatus',
+  'quoteReviewModal','quoteReviewTitle','quoteReviewCompletion','quoteReviewErrorCount','quoteReviewWarningCount','quoteReviewTotal',
+  'quoteReviewStepList','quoteReviewIssueList','quoteReviewFirstIncomplete','quoteReviewRefresh',
+  'quoteReviewBack','quoteReviewSave','quoteReviewPreview','quoteReviewExportPdf','closeQuoteReview'
 ];
 for (const id of requiredIds) {
   if (!ids.includes(id)) fail('Missing required id #' + id);
@@ -100,7 +105,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v66-import-review-2")) fail('Service-worker cache version was not aligned with the V6.6 import review 2 release');
+if (!sw.includes("pricereport-shell-v67-guided-quote-flow")) fail('Service-worker cache version was not aligned with the V6.7 guided quote flow release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -144,6 +149,11 @@ if (!js.includes('function renderProductWorkspaceCatalogResults') || !html.inclu
 if (!js.includes('function applyProductWorkspaceQuickField') || !html.includes('id="productQuickUnitChips"')) fail('V6.5 quick-fill suggestions are missing');
 if (!html.includes('Dán & kiểm tra')) fail('V6.5 paste action must advertise review-before-apply behavior');
 if (!js.includes('function renderSmartImportDashboard') || !html.includes('id="smartImportAfterCount"')) fail('V6.6 before-after import dashboard is missing');
+if (!js.includes('function openQuoteFlow') || !js.includes('function openQuoteReview')) fail('V6.7 guided quote flow controller is missing');
+if (!js.includes('function renderQuoteReview') || !html.includes('id="quoteReviewModal"')) fail('V6.7 final review workspace is missing');
+if (!html.includes('id="productWorkspacePrev"') || !html.includes('id="productWorkspaceNext"')) fail('V6.7 product step navigation is missing');
+if (!html.includes('id="quoteFlowProgressBar"') || !contentWorkspaceCss.includes('.quote-flow-progress')) fail('V6.7 guided flow progress UI is missing');
+if (!contentWorkspaceCss.includes('.quote-review-dialog') || !contentWorkspaceCss.includes('.quote-review-issue')) fail('V6.7 review workspace styling is missing');
 if (!js.includes('function renderSmartImportEditableProducts') || !js.includes('function updateSmartImportEditableProduct')) fail('V6.6 editable spreadsheet review controller is missing');
 if (!html.includes('id="smartImportEditableProductRows"') || !html.includes('SỬA TRỰC TIẾP TRƯỚC KHI NHẬP')) fail('V6.6 editable import grid surface is missing');
 if (!js.includes('function focusNextSmartImportIssue') || !html.includes('id="smartImportNextIssue"')) fail('V6.6 issue navigation is missing');

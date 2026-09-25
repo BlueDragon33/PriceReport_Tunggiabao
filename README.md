@@ -2,23 +2,25 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.6 Import Review 2.0
+## Trạng thái hiện tại — V6.7 Guided Quote Flow
 
-V6.6 nâng cấp Smart Import thành một **workspace kiểm tra dữ liệu rộng kiểu bảng tính**, để người nhập liệu có thể xem, sửa và quyết định ngay trước khi dữ liệu đi vào báo giá.
+V6.7 nối các workspace rời rạc thành một **quy trình tạo báo giá có hướng dẫn**, để người nhập liệu không phải tự nhớ nên mở tab nào tiếp theo.
 
-- Smart Import mở rộng lên tối đa **1320 px**, phù hợp luồng nhập Excel nhiều cột và không còn cảm giác chật như popup nhỏ.
-- Dashboard **Trước khi nhập → Dữ liệu hợp lệ → Cần kiểm tra → Sau khi áp dụng** cho biết rõ tác động của lần nhập trước khi bấm Apply.
-- Có **bảng chỉnh sửa trực tiếp** cho toàn bộ dòng sản phẩm hợp lệ: Nhóm hàng, Tên, Quy cách, ĐVT, SL, Đơn giá, Ghi chú.
-- Với Excel/Paste, chỉnh sửa ở bảng review được ghi ngược về **dòng nguồn** rồi chạy lại parser/mapping, vì vậy preview, duplicate detection và dữ liệu Apply luôn đồng bộ.
-- Có tìm kiếm trong dữ liệu nhập và bộ lọc **chỉ dòng có thể trùng**.
-- Có thể **Bỏ dòng** ngay trong bảng review; dữ liệu chưa bị ghi vào báo giá và có thao tác Hoàn tác.
-- Khu vực vấn đề có nút **Vấn đề tiếp theo** để nhảy nhanh qua các dòng lỗi/nhóm trùng.
-- Dòng lỗi tiếp tục không được tự áp dụng; duplicate vẫn được giữ nguyên trừ khi người dùng chủ động bỏ/gộp.
-- Nút Apply hiển thị rõ số dòng sẽ áp dụng.
-- Mobile giữ layout gọn hơn, dashboard 2 cột và bảng có vùng cuộn riêng.
-- Toàn bộ nền V6.5 Product Entry Accelerator, V6.4 Guided Workspaces và 16 mẫu báo giá được giữ nguyên.
-- Package: **6.6.0**.
-- PWA cache generation: **pricereport-shell-v66-import-review-2**.
+- Thẻ **Quy trình nhanh** ở cột Nội dung tự tìm khối đầu tiên chưa hoàn thiện và mở đúng chỗ.
+- Luồng chuẩn: **Thông tin chung → Khách hàng → Sản phẩm / Dịch vụ → Thanh toán → Điều khoản → Chữ ký → Văn bản tùy chỉnh → Kiểm tra cuối**.
+- Content Workspace hiển thị rõ **Bước x/8** và thanh tiến độ.
+- Nút **Lưu nháp & tiếp tục** đi xuyên qua cả Content Workspace lẫn Product Workspace, không làm người dùng rơi về màn hình hẹp.
+- Product Workspace có riêng **← Khách hàng / Lưu nháp & tiếp tục → / Xong**, giữ nguyên bảng nhập rộng V6.5/V6.6.
+- Bước cuối mở **Final Review Workspace** với 4 số liệu: khối hoàn thiện, lỗi cần sửa, cảnh báo và tổng giá trị báo giá.
+- Final Review liệt kê đủ 7 khối nội dung; click vào khối sẽ quay thẳng về popup tương ứng.
+- Lỗi/cảnh báo nghiệp vụ trong Final Review có liên kết về đúng khối và đúng trường cần sửa; lỗi sản phẩm mở đúng Product Workspace.
+- **Xuất PDF bị khóa khi còn lỗi đỏ**; cảnh báo vàng vẫn dùng cơ chế xác nhận an toàn hiện có.
+- Có nút **Tới mục chưa xong**, **Kiểm tra lại**, **Lưu báo giá**, **Xem A4** và **Xuất PDF** ngay trong bước cuối.
+- Command palette bổ sung lệnh **Tiếp tục quy trình báo giá** và **Kiểm tra cuối & xuất PDF**.
+- Mobile dùng Final Review toàn màn hình, dashboard 2 cột và footer thao tác 2 cột.
+- Toàn bộ Import Review 2.0, Product Entry Accelerator, Guided Workspaces và 16 mẫu báo giá được giữ nguyên.
+- Package: **6.7.0**.
+- PWA cache generation: **pricereport-shell-v67-guided-quote-flow**.
 
 
 ## Kiểm thử

@@ -799,6 +799,8 @@ const DEFAULT_CONTENT_WORKSPACE_WIDTH = 1200;
 let activeContentBlock = '';
 let contentWorkspaceLastFocus = null;
 let contentWorkspaceMounted = [];
+let quoteFlowActive = false;
+let quoteReviewLastFocus = null;
 
 function setActiveContentBlock(block = '') {
   activeContentBlock = CONTENT_BLOCKS[block] ? block : '';
@@ -929,6 +931,229 @@ function renderContentBlockSummaries() {
       ? 'Tiếp theo: ' + incomplete.slice(0, 2).join(' · ')
       : 'Nội dung chính đã hoàn thiện; có thể kiểm tra và xuất PDF.';
   }
+  renderQuoteFlowCard();
+}
+
+function nextIncompleteContentBlock() {
+  return CONTENT_BLOCK_ORDER.find(block => !contentBlockStatus(block).complete) || '';
+}
+
+function renderQuoteFlowCard() {
+  const completed = CONTENT_BLOCK_ORDER.filter(block => contentBlockStatus(block).complete).length;
+  const nextBlock = nextIncompleteContentBlock();
+  const nextConfig = CONTENT_BLOCKS[nextBlock];
+  const title = document.getElementById('quoteFlowCardTitle');
+  const hint = document.getElementById('quoteFlowCardHint');
+  const button = document.getElementById('quoteFlowStart');
+  if (title) {
+    title.textContent = nextConfig
+      ? 'Tiếp tục từ ' + nextConfig.displayTitle
+      : 'Nội dung đã đủ — kiểm tra trước khi xuất';
+  }
+  if (hint) {
+    hint.textContent = nextConfig
+      ? completed + '/7 khối hoàn thiện · Hệ thống sẽ dẫn lần lượt tới bước còn thiếu.'
+      : '7/7 khối hoàn thiện · Mở kiểm tra cuối để xử lý lỗi/cảnh báo và xuất PDF.';
+  }
+  if (button) button.textContent = nextConfig ? 'Tiếp tục →' : 'Kiểm tra →';
+}
+
+function updateQuoteFlowProgress(block = activeContentBlock) {
+  const index = CONTENT_BLOCK_ORDER.indexOf(block);
+  const step = index >= 0 ? index + 1 : 1;
+  const label = document.getElementById('quoteFlowStepLabel');
+  const bar = document.getElementById('quoteFlowProgressBar');
+  if (label) label.textContent = 'Bước ' + step + '/8';
+  if (bar) bar.style.width = Math.round((step / 8) * 100) + '%';
+  const productStatus = document.getElementById('productWorkspaceFlowStatus');
+  if (productStatus) productStatus.textContent = 'Bước 3/8 · Dữ liệu được lưu liên tục vào bản nháp hiện tại.';
+}
+
+function openQuoteFlow() {
+  quoteFlowActive = true;
+  const nextBlock = nextIncompleteContentBlock();
+  if (nextBlock) {
+    openContentBlock(nextBlock);
+    return;
+  }
+  openQuoteReview();
+}
+
+function validationTargetBlock(target) {
+  if (!target) return 'general';
+  if (target.tab === 'products') return 'products';
+  if (target.tab === 'customer') return 'customer';
+  if (target.tab === 'payment') return 'payment';
+  if (target.tab === 'terms') {
+    return ['dateLine','leftTitle','leftNote','rightTitle','rightNote','rightName'].includes(target.fieldId)
+      ? 'signature'
+      : 'terms';
+  }
+  return 'general';
+}
+
+function openQuoteFlowTarget(block, fieldId = '') {
+  quoteFlowActive = true;
+  closeQuoteReview({ restoreFocus: false });
+  openContentBlock(block);
+  if (!fieldId) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const field = document.getElementById(fieldId);
+    field?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    field?.focus?.();
+  }));
+}
+
+function renderQuoteReview() {
+  const result = validateQuote();
+  const completed = CONTENT_BLOCK_ORDER.filter(block => contentBlockStatus(block).complete).length;
+  setText('quoteReviewCompletion', completed + '/7');
+  setText('quoteReviewErrorCount', result.errors.length);
+  setText('quoteReviewWarningCount', result.warnings.length);
+  setText('quoteReviewTotal', money(calcQuoteTotal(state)));
+  setText('quoteReviewQuoteNo', String(state.quoteNo || '').trim() || 'Chưa có mã báo giá');
+
+  const title = document.getElementById('quoteReviewTitle');
+  const subtitle = document.getElementById('quoteReviewSubtitle');
+  const footer = document.getElementById('quoteReviewFooterStatus');
+  if (title) {
+    title.textContent = result.errors.length
+      ? 'Còn ' + result.errors.length + ' lỗi cần sửa trước khi xuất'
+      : result.warnings.length
+        ? 'Báo giá có ' + result.warnings.length + ' mục cần xác nhận'
+        : 'Báo giá đã sẵn sàng để xuất';
+  }
+  if (subtitle) {
+    subtitle.textContent = result.errors.length
+      ? 'Click vào từng lỗi để quay đúng chỗ cần sửa; sau đó kiểm tra lại.'
+      : result.warnings.length
+        ? 'Không có lỗi chặn xuất. Hãy xem các cảnh báo trước khi tiếp tục.'
+        : 'Không phát hiện lỗi nghiệp vụ. Bạn có thể lưu, xem A4 hoặc xuất PDF.';
+  }
+  if (footer) {
+    footer.textContent = result.errors.length
+      ? 'Chưa thể xuất PDF khi còn lỗi đỏ.'
+      : result.warnings.length
+        ? 'Có thể xuất sau khi xác nhận các cảnh báo.'
+        : '✓ Kiểm tra hoàn tất · Sẵn sàng xuất PDF.';
+  }
+
+  const steps = document.getElementById('quoteReviewStepList');
+  if (steps) {
+    steps.innerHTML = '';
+    CONTENT_BLOCK_ORDER.forEach((block, index) => {
+      const status = contentBlockStatus(block);
+      const config = CONTENT_BLOCKS[block];
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'quote-review-step ' + status.state;
+      button.dataset.reviewBlock = block;
+      const number = document.createElement('span');
+      number.className = 'quote-review-step-number';
+      number.textContent = status.complete ? '✓' : String(index + 1);
+      const copy = document.createElement('span');
+      const strong = document.createElement('strong');
+      strong.textContent = config.displayTitle;
+      const small = document.createElement('small');
+      small.textContent = status.summary;
+      copy.append(strong, small);
+      const stateLabel = document.createElement('em');
+      stateLabel.textContent = status.complete ? 'Hoàn tất' : status.state === 'partial' ? 'Đang thiếu' : 'Chưa làm';
+      button.append(number, copy, stateLabel);
+      button.addEventListener('click', () => openQuoteFlowTarget(block, config.focusId));
+      steps.appendChild(button);
+    });
+  }
+
+  const issues = document.getElementById('quoteReviewIssueList');
+  if (issues) {
+    issues.innerHTML = '';
+    const items = [
+      ...result.errors.map(message => ({ tone: 'error', message })),
+      ...result.warnings.map(message => ({ tone: 'warn', message }))
+    ];
+    if (!items.length) {
+      const ready = document.createElement('div');
+      ready.className = 'quote-review-ready';
+      ready.innerHTML = '<strong>✓ Không phát hiện lỗi nghiệp vụ</strong><span>Báo giá đã qua kiểm tra cuối và có thể xuất PDF.</span>';
+      issues.appendChild(ready);
+    } else {
+      items.forEach((item, index) => {
+        const target = validationTargetForMessage(item.message);
+        const block = validationTargetBlock(target);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'quote-review-issue ' + item.tone;
+        button.dataset.reviewIssueIndex = String(index);
+        const badge = document.createElement('span');
+        badge.textContent = item.tone === 'error' ? 'Cần sửa' : 'Kiểm tra';
+        const copy = document.createElement('span');
+        const strong = document.createElement('strong');
+        strong.textContent = item.message;
+        const small = document.createElement('small');
+        small.textContent = 'Mở ' + (CONTENT_BLOCKS[block]?.displayTitle || 'khối liên quan') + ' để xử lý';
+        copy.append(strong, small);
+        const arrow = document.createElement('em');
+        arrow.textContent = '→';
+        button.append(badge, copy, arrow);
+        button.addEventListener('click', () => {
+          quoteFlowActive = true;
+          closeQuoteReview({ restoreFocus: false });
+          openContentBlock(block);
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (Number.isInteger(target?.productIndex)) {
+              const card = document.querySelector('#productEditor .product-card[data-product-index="' + target.productIndex + '"]');
+              const field = card?.querySelector('[data-product-key="' + (target.productKey || 'name') + '"]')
+                || card?.querySelector('input,select,textarea');
+              card?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+              field?.focus?.();
+              return;
+            }
+            const field = target?.fieldId ? document.getElementById(target.fieldId) : null;
+            field?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+            field?.focus?.();
+          }));
+        });
+        issues.appendChild(button);
+      });
+    }
+  }
+
+  const firstIncomplete = document.getElementById('quoteReviewFirstIncomplete');
+  if (firstIncomplete) {
+    const missing = nextIncompleteContentBlock();
+    firstIncomplete.disabled = !missing;
+    firstIncomplete.textContent = missing
+      ? 'Tới ' + CONTENT_BLOCKS[missing].displayTitle
+      : '7/7 đã hoàn tất';
+  }
+
+  const exportButton = document.getElementById('quoteReviewExportPdf');
+  if (exportButton) exportButton.disabled = result.errors.length > 0;
+  updateDocumentHealth();
+}
+
+function openQuoteReview() {
+  const modal = document.getElementById('quoteReviewModal');
+  if (!modal) return false;
+  quoteFlowActive = true;
+  quoteReviewLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  closeContentWorkspace({ restoreFocus: false });
+  closeProductWorkspace({ restoreFocus: false });
+  renderContentBlockSummaries();
+  renderQuoteReview();
+  modal.hidden = false;
+  document.body.classList.add('quote-review-open');
+  requestAnimationFrame(() => document.querySelector('#quoteReviewModal .quote-review-dialog')?.focus?.());
+  return true;
+}
+
+function closeQuoteReview({ restoreFocus = true } = {}) {
+  const modal = document.getElementById('quoteReviewModal');
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  document.body.classList.remove('quote-review-open');
+  if (restoreFocus) requestAnimationFrame(() => quoteReviewLastFocus?.focus?.());
 }
 
 function normalizedContentWorkspaceWidth(value) {
@@ -1337,8 +1562,19 @@ function openContentWorkspace(block, { focusFirst = true } = {}) {
   const index = CONTENT_BLOCK_ORDER.indexOf(block);
   const prev = document.getElementById('contentWorkspacePrev');
   const next = document.getElementById('contentWorkspaceNext');
-  if (prev) prev.disabled = index <= 0;
-  if (next) next.disabled = index < 0 || index >= CONTENT_BLOCK_ORDER.length - 1;
+  if (prev) {
+    prev.disabled = index <= 0;
+    prev.textContent = index > 0
+      ? '← ' + CONTENT_BLOCKS[CONTENT_BLOCK_ORDER[index - 1]].displayTitle
+      : '← Khối trước';
+  }
+  if (next) {
+    next.disabled = index < 0;
+    next.textContent = index === CONTENT_BLOCK_ORDER.length - 1
+      ? 'Kiểm tra & hoàn tất →'
+      : 'Lưu nháp & tiếp tục →';
+  }
+  updateQuoteFlowProgress(block);
 
   modal.hidden = false;
   document.body.classList.add('content-workspace-open');
@@ -1426,10 +1662,65 @@ document.getElementById('contentWorkspacePrev')?.addEventListener('click', () =>
 });
 document.getElementById('contentWorkspaceNext')?.addEventListener('click', () => {
   const index = CONTENT_BLOCK_ORDER.indexOf(activeContentBlock);
-  if (index >= 0 && index < CONTENT_BLOCK_ORDER.length - 1) {
-    const persisted = save();
-    if (!persisted) toast('Đã chuyển khối; bản nháp chưa thể ghi vào bộ nhớ chính');
+  if (index < 0) return;
+  quoteFlowActive = true;
+  const persisted = save();
+  if (!persisted) toast('Đã chuyển bước; bản nháp chưa thể ghi vào bộ nhớ chính');
+  if (index < CONTENT_BLOCK_ORDER.length - 1) {
     openContentBlock(CONTENT_BLOCK_ORDER[index + 1]);
+    return;
+  }
+  openQuoteReview();
+});
+
+document.getElementById('quoteFlowStart')?.addEventListener('click', openQuoteFlow);
+document.getElementById('closeQuoteReview')?.addEventListener('click', () => closeQuoteReview());
+document.getElementById('quoteReviewBack')?.addEventListener('click', () => {
+  closeQuoteReview({ restoreFocus: false });
+  const block = nextIncompleteContentBlock() || 'custom-text';
+  openContentBlock(block);
+});
+document.getElementById('quoteReviewFirstIncomplete')?.addEventListener('click', () => {
+  const block = nextIncompleteContentBlock();
+  if (block) openQuoteFlowTarget(block, CONTENT_BLOCKS[block].focusId);
+});
+document.getElementById('quoteReviewRefresh')?.addEventListener('click', renderQuoteReview);
+document.getElementById('quoteReviewSave')?.addEventListener('click', () => {
+  if (saveCurrentQuote()) {
+    renderQuoteReview();
+    toast('Đã lưu báo giá sau kiểm tra');
+  }
+});
+document.getElementById('quoteReviewPreview')?.addEventListener('click', () => {
+  closeQuoteReview({ restoreFocus: false });
+  openTab('view');
+});
+document.getElementById('quoteReviewExportPdf')?.addEventListener('click', () => {
+  if (runPreflight({ forPrint: true })) window.print();
+});
+document.getElementById('quoteReviewModal')?.addEventListener('pointerdown', (event) => {
+  if (event.target === event.currentTarget) closeQuoteReview();
+});
+document.getElementById('quoteReviewModal')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeQuoteReview();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const modal = document.getElementById('quoteReviewModal');
+  const items = Array.from(modal?.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+  ) || []).filter(element => !element.hidden);
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
   }
 });
 
@@ -1479,6 +1770,7 @@ document.getElementById('mobileMoreMenu')?.addEventListener('keydown', (event) =
 
 function openTab(tab, options = {}) {
   setMobileMoreMenu(false);
+  if (!options.keepQuoteReview) closeQuoteReview({ restoreFocus: false });
   if (!options.keepContentWorkspace) closeContentWorkspace({ restoreFocus: false });
   if (tab !== 'products') closeProductWorkspace({ restoreFocus: false });
   if (tab !== 'dashboard') closeDashboardSearchResults();
@@ -1572,6 +1864,8 @@ document.getElementById('closeStudioGuidance')?.addEventListener('click', () => 
 });
 
 const STUDIO_COMMANDS = [
+  { label: 'Tiếp tục quy trình báo giá', hint: 'Quy trình', run: () => openQuoteFlow() },
+  { label: 'Kiểm tra cuối & xuất PDF', hint: 'Quy trình', run: () => openQuoteReview() },
   { label: 'Thông tin chung', hint: 'Khối nội dung', run: () => openContentBlock('general') },
   { label: 'Khách hàng', hint: 'Khối nội dung', run: () => openContentBlock('customer') },
   { label: 'Sản phẩm / Dịch vụ', hint: 'Khối nội dung', run: () => openContentBlock('products') },
@@ -5114,6 +5408,7 @@ function openProductWorkspace({ focusFirst = true } = {}) {
   if (productWorkspaceActiveIndex < 0 && state.products.length) productWorkspaceActiveIndex = 0;
   renderProductLaunchSummary();
   renderProductWorkspaceAssistant();
+  updateQuoteFlowProgress('products');
   requestAnimationFrame(() => {
     const target = focusFirst
       ? document.querySelector('#productEditor [data-product-key="name"]') || document.getElementById('addProductTop')
@@ -5160,6 +5455,18 @@ document.getElementById('openProductWorkspace')?.addEventListener('click', () =>
 document.getElementById('openProductWorkspaceBottom')?.addEventListener('click', () => openProductWorkspace());
 document.getElementById('closeProductWorkspace')?.addEventListener('click', () => closeProductWorkspace());
 document.getElementById('doneProductWorkspace')?.addEventListener('click', () => closeProductWorkspace());
+document.getElementById('productWorkspacePrev')?.addEventListener('click', () => {
+  quoteFlowActive = true;
+  closeProductWorkspace({ restoreFocus: false });
+  openContentBlock('customer');
+});
+document.getElementById('productWorkspaceNext')?.addEventListener('click', () => {
+  quoteFlowActive = true;
+  const persisted = save();
+  if (!persisted) toast('Đã chuyển bước; bản nháp chưa thể ghi vào bộ nhớ chính');
+  closeProductWorkspace({ restoreFocus: false });
+  openContentBlock('payment');
+});
 document.getElementById('productWorkspaceCatalogSearch')?.addEventListener('input', (event) => {
   renderProductWorkspaceCatalogResults(event.currentTarget.value);
 });

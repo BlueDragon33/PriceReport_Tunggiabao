@@ -264,6 +264,44 @@ try {
   await page.locator('#closeProductWorkspace').click();
   if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
 
+  // V6.7: guided flow must cross the content modal -> product modal -> content modal boundary
+  // and finish in a dedicated final review workspace.
+  await page.locator('#contentBlockList [data-content-block="general"]').click();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if ((await page.locator('#quoteFlowStepLabel').textContent() || '').trim() !== 'Bước 1/8') {
+    fail('V6.7 guided flow did not expose step 1/8 in General');
+  }
+  await page.locator('#contentWorkspaceNext').click();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'customer') {
+    fail('V6.7 guided flow did not advance General -> Customer');
+  }
+  await page.locator('#contentWorkspaceNext').click();
+  await page.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  if (!(await page.locator('#productWorkspaceFlowStatus').textContent() || '').includes('Bước 3/8')) {
+    fail('V6.7 product workspace does not identify itself as step 3/8');
+  }
+  await page.locator('#productWorkspaceNext').click();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'payment') {
+    fail('V6.7 guided flow did not advance Products -> Payment');
+  }
+  if ((await page.locator('#quoteFlowStepLabel').textContent() || '').trim() !== 'Bước 4/8') {
+    fail('V6.7 payment workspace does not identify itself as step 4/8');
+  }
+  await page.locator('#doneContentWorkspace').click();
+
+  await page.locator('#contentBlockList [data-content-block="custom-text"]').click();
+  await page.locator('#contentWorkspaceNext').click();
+  await page.locator('#quoteReviewModal:not([hidden])').waitFor();
+  const reviewDialog = await box('#quoteReviewModal:not([hidden]) .quote-review-dialog');
+  near('V6.7 final review width', reviewDialog.width, 1180, 10);
+  if (await page.locator('#quoteReviewStepList .quote-review-step').count() !== 7) {
+    fail('V6.7 final review does not list all seven content blocks');
+  }
+  if (!(await page.locator('#quoteReviewCompletion').isVisible())) fail('V6.7 final review completion metric is missing');
+  if (!(await page.locator('#quoteReviewErrorCount').isVisible())) fail('V6.7 final review error metric is missing');
+  await page.locator('#closeQuoteReview').click();
+
   // Content Library remains in launcher mode; return directly to management.
   if (await page.locator('.content-library').getAttribute('data-content-mode') !== 'home') {
     fail('content library left launcher mode after modal editing');
@@ -334,7 +372,7 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  console.log('V6.6 BROWSER PASS: unified shell, guided content workspaces, accelerated product entry, spreadsheet-style import review, 16-theme library and reference A4 geometry verified');
+  console.log('V6.7 BROWSER PASS: unified shell, guided quote flow, final review, accelerated product entry, spreadsheet import review, 16-theme library and reference A4 geometry verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

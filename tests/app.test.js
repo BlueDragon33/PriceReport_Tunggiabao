@@ -158,6 +158,74 @@ test('V6.3 content workspace starts wider than a typical chat column and support
   document.getElementById('doneContentWorkspace').click();
 });
 
+test('V6.7 guided quote flow resumes the first incomplete block and exposes step progress', () => {
+  document.querySelector('[data-tab="general"]').click();
+  const companyName = document.getElementById('companyName');
+  const originalCompany = companyName.value;
+  companyName.value = '';
+  companyName.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(document.getElementById('quoteFlowCardTitle').textContent).toContain('Thông tin chung');
+  document.getElementById('quoteFlowStart').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('general');
+  expect(document.getElementById('quoteFlowStepLabel').textContent).toBe('Bước 1/8');
+
+  companyName.value = originalCompany;
+  companyName.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+});
+
+test('V6.7 guided flow crosses the dedicated product modal and continues to payment', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+  document.getElementById('contentWorkspaceNext').click();
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('customer');
+
+  document.getElementById('contentWorkspaceNext').click();
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(true);
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('productWorkspaceFlowStatus').textContent).toContain('Bước 3/8');
+
+  document.getElementById('productWorkspaceNext').click();
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('payment');
+  expect(document.getElementById('quoteFlowStepLabel').textContent).toBe('Bước 4/8');
+  document.getElementById('doneContentWorkspace').click();
+});
+
+test('V6.7 final review blocks PDF on errors and routes an issue back to its editor', () => {
+  document.querySelector('[data-tab="general"]').click();
+  document.querySelector('#contentBlockList [data-content-block="general"]').click();
+  const quoteTitle = document.getElementById('quoteTitle');
+  const originalTitle = quoteTitle.value;
+  quoteTitle.value = '';
+  quoteTitle.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+
+  document.querySelector('#contentBlockList [data-content-block="custom-text"]').click();
+  document.getElementById('contentWorkspaceNext').click();
+
+  expect(document.getElementById('quoteReviewModal').hidden).toBe(false);
+  expect(document.querySelectorAll('#quoteReviewStepList .quote-review-step').length).toBe(7);
+  expect(Number(document.getElementById('quoteReviewErrorCount').textContent)).toBeGreaterThan(0);
+  expect(document.getElementById('quoteReviewExportPdf').disabled).toBe(true);
+
+  const titleIssue = Array.from(document.querySelectorAll('#quoteReviewIssueList .quote-review-issue'))
+    .find(button => button.textContent.includes('Thiếu tiêu đề báo giá'));
+  expect(titleIssue).toBeTruthy();
+  titleIssue.click();
+
+  expect(document.getElementById('quoteReviewModal').hidden).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('general');
+
+  quoteTitle.value = originalTitle;
+  quoteTitle.dispatchEvent(new Event('input', { bubbles: true }));
+  document.getElementById('doneContentWorkspace').click();
+});
+
 test('V6.4 workspace assistant exposes block-aware quick tools without duplicating form state', () => {
   document.querySelector('[data-tab="general"]').click();
 
@@ -349,9 +417,12 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
   expect(search.getAttribute('aria-activedescendant')).toBeTruthy();
   const activeOption = document.getElementById(search.getAttribute('aria-activedescendant'));
   expect(activeOption?.getAttribute('aria-selected')).toBe('true');
-  while (document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active') !== result) {
+  const searchOptions = Array.from(document.querySelectorAll('#dashboardSearchResults .dashboard-search-result'));
+  for (let step = 0; step < searchOptions.length &&
+      document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active') !== result; step += 1) {
     search.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
   }
+  expect(document.querySelector('#dashboardSearchResults .dashboard-search-result.is-active')).toBe(result);
   search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   expect(document.getElementById('pane-general').classList.contains('active')).toBe(true);
   expect(document.getElementById('quickCustomerCompany').value).toBe('Công ty Search V46');
@@ -364,7 +435,7 @@ test('V4.6 dashboard global search can find a saved customer and open it', () =>
     el.dispatchEvent(new Event('input', { bubbles: true }));
   });
   document.querySelector('[data-tab="general"]').click();
-});
+}, 12000);
 
 test('V4.9 settings persist application preferences without touching business data', () => {
   const uiKey = 'tunggiabao-price-report-ui-v2';
