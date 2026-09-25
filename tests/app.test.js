@@ -441,7 +441,10 @@ test('V4.1 mobile more menu exposes secondary tools without horizontal tab hunti
   const customerAction = menu.querySelector('[data-open-tab="customer"]');
   customerAction.click();
   expect(menu.hidden).toBe(true);
-  expect(document.getElementById('pane-customer').contains(document.activeElement)).toBe(true);
+  expect(document.getElementById('contentWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('contentWorkspaceDialog').dataset.block).toBe('customer');
+  expect(document.getElementById('customerName').closest('#contentWorkspaceModal')).toBeTruthy();
+  document.getElementById('doneContentWorkspace').click();
   document.querySelector('[data-tab="dashboard"]').click();
 });
 
