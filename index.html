@@ -8,14 +8,14 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./src/styles.css">
   <link rel="stylesheet" href="./src/ui-v5.css">
-  <link rel="stylesheet" href="./src/studio-v58.css">
+  <link rel="stylesheet" href="./src/studio-v59.css">
   <title>PriceReport Tùng Gia Bảo</title>
   <script>
     window.addEventListener('load', async () => {
       const shell = document.querySelector('.shell');
       if (!shell) return;
 
-      const recoveryKey = 'tgb-style-recovery-v4';
+      const recoveryKey = 'tgb-style-recovery-v5';
       const recoveryAttempt = Math.max(0, Number(sessionStorage.getItem(recoveryKey) || '0') || 0);
       const shellIsStyled = () => getComputedStyle(shell).display === 'grid';
 
@@ -87,7 +87,7 @@
     }, { once: true });
   </script>
 </head>
-<body class="v5-ui reference-ui-v58">
+<body class="v5-ui reference-ui-v59">
 <div id="app">
   <div class="shell app-workspace">
     <nav class="nav" aria-label="Điều hướng ứng dụng">
@@ -150,21 +150,24 @@
         <div class="studio-topbar-title">
           <div class="studio-title-line">
             <strong id="studioGlobalTitle">Báo giá mới</strong>
-            <span class="studio-status-badge status-draft" id="studioQuoteStatus">Bản nháp</span>
+            <span class="studio-status-badge status-draft" id="studioQuoteStatus" data-shell-quote-only>Bản nháp</span>
           </div>
-          <small>
+          <small data-shell-quote-only>
             <span>Mã báo giá: <b id="studioGlobalQuoteNo">—</b></span>
             <i aria-hidden="true">•</i>
             <span id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
             <i aria-hidden="true">•</i>
             <span id="studioGlobalHistoryState">Chưa lưu lịch sử</span>
           </small>
+          <small class="workspace-shell-meta" data-shell-workspace-only hidden>
+            <span id="workspaceShellSubtitle">Không gian làm việc thống nhất</span>
+          </small>
         </div>
       </div>
 
       <div class="studio-topbar-center">
-        <button class="studio-icon-action" id="studioUndo" type="button" disabled aria-label="Hoàn tác" title="Hoàn tác sẽ được bổ sung khi có lịch sử thao tác an toàn">↶</button>
-        <button class="studio-icon-action" id="studioRedo" type="button" disabled aria-label="Làm lại" title="Làm lại sẽ được bổ sung khi có lịch sử thao tác an toàn">↷</button>
+        <button class="studio-icon-action" id="studioUndo" type="button" disabled aria-label="Hoàn tác" title="Hoàn tác sẽ được bổ sung khi có lịch sử thao tác an toàn" data-shell-quote-only>↶</button>
+        <button class="studio-icon-action" id="studioRedo" type="button" disabled aria-label="Làm lại" title="Làm lại sẽ được bổ sung khi có lịch sử thao tác an toàn" data-shell-quote-only>↷</button>
         <div class="studio-command-search">
           <span aria-hidden="true">⌕</span>
           <input id="studioCommandSearch" type="search" placeholder="Tìm kiếm (Ctrl + K)" autocomplete="off" aria-controls="studioCommandResults" aria-expanded="false">
@@ -174,10 +177,10 @@
       </div>
 
       <div class="studio-topbar-actions">
-        <span class="document-health" id="studioGlobalHealth">Đang kiểm tra</span>
-        <button class="studio-top-action" id="studioGlobalSave" type="button">Lưu nháp</button>
-        <button class="studio-top-action" id="studioGlobalPreview" type="button">◉ Xem trước</button>
-        <button class="studio-top-action primary print-action" id="studioGlobalPdf" type="button">⇩ Xuất PDF</button>
+        <span class="document-health" id="studioGlobalHealth" data-shell-quote-only>Đang kiểm tra</span>
+        <button class="studio-top-action" id="studioGlobalSave" type="button" data-shell-quote-only>Lưu nháp</button>
+        <button class="studio-top-action" id="studioGlobalPreview" type="button" data-shell-quote-only>◉ Xem trước</button>
+        <button class="studio-top-action primary print-action" id="studioGlobalPdf" type="button" data-shell-quote-only>⇩ Xuất PDF</button>
         <button class="studio-icon-action" id="studioTopMenu" type="button" aria-label="Tùy chọn khác">⋯</button>
       </div>
     </header>
@@ -764,63 +767,36 @@
         </div>
 
         <div class="pane studio-pane studio-pane-products" id="pane-products">
-          <div class="card product-workspace-card">
-            <div class="product-workspace-head">
+          <section class="product-launch-card" aria-labelledby="productLaunchTitle">
+            <div class="product-launch-head">
               <div>
-                <h3>Danh sách sản phẩm</h3>
-                <p>Nhập trực tiếp như bảng tính: Tab để sang ô, Enter để xuống dòng, có thể dán nguyên vùng từ Excel.</p>
+                <span class="eyebrow">KHÔNG GIAN NHẬP CỐ ĐỊNH</span>
+                <h3 id="productLaunchTitle">Sản phẩm / Dịch vụ</h3>
+                <p>Danh sách sản phẩm được chỉnh trong một cửa sổ lớn cố định để không làm thay đổi bố cục Studio.</p>
               </div>
-              <div class="btns product-workspace-actions">
-                <button class="btn primary" id="addProductTop" type="button">＋ Thêm dòng</button>
-                <button class="btn" id="pasteProducts" type="button">▤ Dán dữ liệu</button>
-                <button class="btn" id="importProductsExcel" type="button">XL Nhập từ Excel</button>
-                <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
-                <button class="btn product-secondary-action" id="saveProductsToCatalogTop" type="button">★ Lưu danh mục</button>
-                <button class="btn product-secondary-action" id="productFocusToggle">⛶ Mở rộng</button>
-                <button class="btn product-secondary-action" id="collapseAllProducts">Thu gọn</button>
-              </div>
+              <span class="product-launch-count" id="productLaunchCount">0 dòng</span>
             </div>
-            <div class="product-data-grid-shell" role="region" aria-label="Bảng nhập sản phẩm" tabindex="0">
-              <div class="product-data-grid-head">
-                <label class="product-select-all"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả sản phẩm"><span>STT</span></label>
-                <span>Nhóm hàng</span>
-                <span>Tên sản phẩm</span>
-                <span>Quy cách</span>
-                <span>ĐVT</span>
-                <span>SL</span>
-                <span>Đơn giá</span>
-                <span>Ghi chú</span>
-                <span>Thao tác</span>
-              </div>
-              <div class="product-bulk-bar" id="productBulkBar" hidden>
-                <strong id="productBulkCount">0 dòng đã chọn</strong>
-                <select id="productBulkAction" aria-label="Thao tác hàng loạt">
-                  <option value="group">Đổi nhóm hàng</option>
-                  <option value="unit">Đổi ĐVT</option>
-                  <option value="price">Điều chỉnh giá %</option>
-                  <option value="duplicate">Nhân bản</option>
-                  <option value="catalog">Lưu vào danh mục</option>
-                  <option value="delete">Xóa dòng</option>
-                </select>
-                <input id="productBulkValue" placeholder="Giá trị áp dụng" aria-label="Giá trị thao tác hàng loạt">
-                <button class="btn primary" id="applyProductBulk" type="button">Áp dụng</button>
-                <button class="btn" id="clearProductSelection" type="button">Bỏ chọn</button>
-              </div>
-              <div id="productEditor" class="product-editor-list product-data-grid"></div>
+
+            <button class="product-launch-surface" id="openProductWorkspace" type="button" aria-haspopup="dialog" aria-controls="productWorkspaceModal">
+              <span class="product-launch-icon" aria-hidden="true">▦</span>
+              <span class="product-launch-copy">
+                <b>Mở cửa sổ nhập sản phẩm</b>
+                <small>Nhập, dán Excel, chỉnh hàng loạt và sắp xếp trong không gian rộng.</small>
+              </span>
+              <span class="product-launch-arrow" aria-hidden="true">↗</span>
+            </button>
+
+            <div class="product-launch-summary">
+              <div class="product-launch-metric"><small>Sản phẩm có dữ liệu</small><strong id="productLaunchFilledCount">0</strong></div>
+              <div class="product-launch-metric"><small>Tạm tính</small><strong id="productLaunchSubtotal">0 VND</strong></div>
             </div>
-            <button class="btn primary block add-product-btn" id="addProduct">+ Thêm sản phẩm</button>
-          </div>
-          <div class="card">
-            <h3>Cột hiển thị</h3>
-            <div class="column-toggle-grid">
-              <label class="check"><input id="showStt" data-bind="showStt" type="checkbox"> Hiện STT</label>
-              <label class="check"><input id="showPack" data-bind="showPack" type="checkbox"> Hiện quy cách</label>
-              <label class="check"><input id="showQty" data-bind="showQty" type="checkbox"> Hiện số lượng</label>
-              <label class="check"><input id="showPrice" data-bind="showPrice" type="checkbox"> Hiện đơn giá</label>
-              <label class="check"><input id="showAmount" data-bind="showAmount" type="checkbox"> Hiện thành tiền</label>
-              <label class="check"><input id="showNote" data-bind="showNote" type="checkbox"> Hiện ghi chú</label>
-            </div>
-          </div>
+
+            <div class="product-launch-list" id="productLaunchList" aria-live="polite"></div>
+
+            <button class="btn primary block product-launch-primary" id="openProductWorkspaceBottom" type="button" aria-haspopup="dialog" aria-controls="productWorkspaceModal">
+              Mở không gian nhập sản phẩm
+            </button>
+          </section>
         </div>
 
         <div class="pane studio-pane studio-pane-payment" id="pane-payment">
@@ -1586,6 +1562,100 @@
       <footer class="data-library-import-actions">
         <button class="btn" id="cancelDataLibraryImport" type="button">Hủy</button>
         <button class="btn primary" id="applyDataLibraryImport" type="button" disabled>Áp dụng vào thư viện</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="product-workspace-backdrop" id="productWorkspaceModal" hidden>
+    <section class="product-workspace-dialog" role="dialog" aria-modal="true" aria-labelledby="productWorkspaceTitle">
+      <header class="product-workspace-modal-head">
+        <div>
+          <span class="eyebrow">NHẬP SẢN PHẨM</span>
+          <h2 id="productWorkspaceTitle">Danh sách sản phẩm / dịch vụ</h2>
+          <p>Không gian cố định, rộng và độc lập với bố cục A4. Dữ liệu vẫn dùng chung với báo giá hiện tại.</p>
+        </div>
+        <div class="product-workspace-modal-status">
+          <span id="productWorkspaceCount">0 dòng</span>
+          <strong id="productWorkspaceSubtotal">0 VND</strong>
+        </div>
+        <button class="product-workspace-close" id="closeProductWorkspace" type="button" aria-label="Đóng cửa sổ nhập sản phẩm">×</button>
+      </header>
+
+      <div class="product-workspace-modal-body">
+        <div class="product-workspace-main">
+          <div class="product-workspace-toolbar">
+            <button class="btn primary" id="addProductTop" type="button">＋ Thêm dòng</button>
+            <button class="btn" id="pasteProducts" type="button">▤ Dán dữ liệu</button>
+            <button class="btn" id="importProductsExcel" type="button">XL Nhập từ Excel</button>
+            <button class="btn" type="button" data-open-master="products">＋ Từ danh mục</button>
+            <button class="btn" id="saveProductsToCatalogTop" type="button">★ Lưu danh mục</button>
+            <span class="product-toolbar-spacer"></span>
+            <button class="btn" id="collapseAllProducts" type="button">Thu gọn tất cả</button>
+          </div>
+
+          <div class="product-data-grid-shell product-modal-grid" role="region" aria-label="Bảng nhập sản phẩm" tabindex="0">
+            <div class="product-data-grid-head">
+              <label class="product-select-all"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả sản phẩm"><span>STT</span></label>
+              <span>Nhóm hàng</span>
+              <span>Tên sản phẩm</span>
+              <span>Quy cách</span>
+              <span>ĐVT</span>
+              <span>SL</span>
+              <span>Đơn giá</span>
+              <span>Ghi chú</span>
+              <span>Thao tác</span>
+            </div>
+            <div class="product-bulk-bar" id="productBulkBar" hidden>
+              <strong id="productBulkCount">0 dòng đã chọn</strong>
+              <select id="productBulkAction" aria-label="Thao tác hàng loạt">
+                <option value="group">Đổi nhóm hàng</option>
+                <option value="unit">Đổi ĐVT</option>
+                <option value="price">Điều chỉnh giá %</option>
+                <option value="duplicate">Nhân bản</option>
+                <option value="catalog">Lưu vào danh mục</option>
+                <option value="delete">Xóa dòng</option>
+              </select>
+              <input id="productBulkValue" placeholder="Giá trị áp dụng" aria-label="Giá trị thao tác hàng loạt">
+              <button class="btn primary" id="applyProductBulk" type="button">Áp dụng</button>
+              <button class="btn" id="clearProductSelection" type="button">Bỏ chọn</button>
+            </div>
+            <div id="productEditor" class="product-editor-list product-data-grid"></div>
+          </div>
+
+          <button class="btn primary block add-product-btn" id="addProduct" type="button">＋ Thêm sản phẩm</button>
+        </div>
+
+        <aside class="product-workspace-side" aria-label="Thiết lập bảng sản phẩm">
+          <section>
+            <span class="eyebrow">HIỂN THỊ TRÊN A4</span>
+            <h3>Cột hiển thị</h3>
+            <p>Chỉ thay đổi cột xuất hiện trên báo giá; dữ liệu nhập vẫn được giữ.</p>
+            <div class="product-column-toggle-grid">
+              <label class="check"><input id="showStt" data-bind="showStt" type="checkbox"> Hiện STT</label>
+              <label class="check"><input id="showPack" data-bind="showPack" type="checkbox"> Hiện quy cách</label>
+              <label class="check"><input id="showQty" data-bind="showQty" type="checkbox"> Hiện số lượng</label>
+              <label class="check"><input id="showPrice" data-bind="showPrice" type="checkbox"> Hiện đơn giá</label>
+              <label class="check"><input id="showAmount" data-bind="showAmount" type="checkbox"> Hiện thành tiền</label>
+              <label class="check"><input id="showNote" data-bind="showNote" type="checkbox"> Hiện ghi chú</label>
+            </div>
+          </section>
+
+          <section class="product-modal-help">
+            <span class="eyebrow">PHÍM NHANH</span>
+            <h3>Nhập nhanh</h3>
+            <ul>
+              <li><b>Tab</b> sang ô kế tiếp</li>
+              <li><b>Enter</b> xuống dòng mới</li>
+              <li><b>↑ / ↓</b> di chuyển cùng cột</li>
+              <li>Dán vùng Excel nhiều dòng trực tiếp</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="product-workspace-modal-footer">
+        <span>Dữ liệu được lưu liên tục vào bản nháp hiện tại.</span>
+        <button class="btn primary" id="doneProductWorkspace" type="button">Xong</button>
       </footer>
     </section>
   </div>
