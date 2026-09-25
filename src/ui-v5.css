@@ -4000,6 +4000,13 @@ body.v5-ui .master-section-card.master-section-highlight{
 @media(max-width:760px){
   body.v5-ui .smart-import-backdrop{padding:8px}
   body.v5-ui .smart-import-dialog{max-height:96vh}
+  body.v5-ui .import-review-dashboard{grid-template-columns:1fr 1fr}
+  body.v5-ui .import-editable-products-head{align-items:stretch;flex-direction:column}
+  body.v5-ui .import-editable-products-tools{
+    flex:0 0 auto;
+    grid-template-columns:1fr;
+  }
+  body.v5-ui .import-editable-grid-shell{max-height:280px}
   body.v5-ui .import-source-grid,
   body.v5-ui .import-field-grid{grid-template-columns:1fr}
   body.v5-ui .import-field-grid label.wide{grid-column:auto}
