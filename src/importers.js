@@ -454,7 +454,7 @@ export function parseMappedSpreadsheetRows(rows, options = {}) {
       quantities: indexes.map(index => products[index].qty)
     }));
 
-  return { products, groups, invalidRows, duplicates };
+  return { products, groups, invalidRows, duplicates, productRowNumbers };
 }
 
 export function parseSpreadsheetRows(rows) {
