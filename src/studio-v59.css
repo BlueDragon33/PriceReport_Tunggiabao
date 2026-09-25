@@ -110,14 +110,13 @@ body.v5-ui.reference-ui-v59 .shell .nav button.active{
   color:#fff;
 }
 body.v5-ui.reference-ui-v59 .shell .nav-glyph{font-size:22px}
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="customer"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="products"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="payment"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="terms"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="design"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="view"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="export"],
-body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .nav button[data-tab="presets"]{display:none}
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="customer"],
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="products"],
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="payment"],
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="terms"],
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="design"],
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="view"],
+body.v5-ui.reference-ui-v59 .shell .nav button[data-tab="presets"]{display:none}
 
 /* ---------- single global Studio header ---------- */
 body.v5-ui.reference-ui-v59 .studio-topbar{
