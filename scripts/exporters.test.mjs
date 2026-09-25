@@ -119,3 +119,42 @@ const priceListText = priceListWorkbook.rows.flat().join(' | ');
 assert.equal(priceListWorkbook.totalRows.length, 0);
 assert.equal(priceListText.includes('TỔNG CỘNG'), false);
 assert.equal(priceListText.includes('THÔNG TIN THANH TOÁN'), false);
+
+
+const safeCsv = csvFromRows([
+  ['Tên', 'Giá trị'],
+  ['Công thức nguy hiểm', '=HYPERLINK("https://example.com","x")'],
+  ['Cộng', '+SUM(1,2)'],
+  ['Trừ dạng text', '-cmd|test'],
+  ['At', '@SUM(1,2)'],
+  ['Số âm thật', -1200],
+]);
+assert.match(safeCsv, /'=""HYPERLINK\(""""https:\/\/example\.com"""",""""x""""\)""/);
+assert.match(safeCsv, /"'\+SUM\(1,2\)"/);
+assert.match(safeCsv, /'-cmd\|test/);
+assert.match(safeCsv, /"'@SUM\(1,2\)"/);
+assert.match(safeCsv, /,-1200(?:\r?\n|$)/);
+
+const normalizedRows = productRowsForExport([
+  { name: 'Không cho âm', qty: -3, price: -5000 },
+  { name: 'Giữ số hợp lệ', qty: 2.5, price: 10000 },
+]);
+assert.deepEqual(normalizedRows[1].slice(5, 8), [0, 0, 0]);
+assert.deepEqual(normalizedRows[2].slice(5, 8), [2.5, 10000, 25000]);
+
+const normalizedWorkbook = quotationWorkbookModel({
+  currency: 'VND',
+  showTotals: true,
+  showPaymentBlock: false,
+  showTerms: false,
+  products: [
+    { name: 'Âm phải chặn', qty: -2, price: 10000 },
+    { name: 'Giá âm phải chặn', qty: 3, price: -5000 },
+    { name: 'Hợp lệ', qty: 2, price: 15000 },
+  ],
+});
+assert.equal(normalizedWorkbook.total, 30000);
+const negativeExportText = normalizedWorkbook.rows.flat().join(' | ');
+assert.equal(negativeExportText.includes('-5000'), false);
+
+console.log('EXPORT HARDENING PASS');
