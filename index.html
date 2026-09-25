@@ -8,13 +8,14 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./src/styles.css">
   <link rel="stylesheet" href="./src/ui-v5.css">
+  <link rel="stylesheet" href="./src/studio-v58.css">
   <title>PriceReport Tùng Gia Bảo</title>
   <script>
     window.addEventListener('load', async () => {
       const shell = document.querySelector('.shell');
       if (!shell) return;
 
-      const recoveryKey = 'tgb-style-recovery-v3';
+      const recoveryKey = 'tgb-style-recovery-v4';
       const recoveryAttempt = Math.max(0, Number(sessionStorage.getItem(recoveryKey) || '0') || 0);
       const shellIsStyled = () => getComputedStyle(shell).display === 'grid';
 
@@ -86,7 +87,7 @@
     }, { once: true });
   </script>
 </head>
-<body class="v5-ui reference-ui-v57">
+<body class="v5-ui reference-ui-v58">
 <div id="app">
   <div class="shell app-workspace">
     <nav class="nav" aria-label="Điều hướng ứng dụng">
@@ -143,87 +144,130 @@
       <div class="tip"><b>Chế độ ứng dụng</b><br>Trang chủ để quản lý. Tạo báo giá để vào studio A4.</div>
     </nav>
 
-    <header class="studio-global-bar" aria-label="Thanh công cụ báo giá">
-      <div class="studio-global-context">
-        <span class="studio-global-doc-icon" aria-hidden="true">▧</span>
-        <div>
-          <strong id="studioGlobalTitle">Báo giá mới</strong>
-          <small>Mã báo giá: <span id="studioGlobalQuoteNo">—</span><i aria-hidden="true">•</i><span id="studioGlobalHistoryState">Chưa lưu lịch sử</span></small>
+    <header class="studio-topbar" aria-label="Thanh công cụ báo giá">
+      <div class="studio-topbar-context">
+        <span class="studio-topbar-doc" aria-hidden="true">▧</span>
+        <div class="studio-topbar-title">
+          <div class="studio-title-line">
+            <strong id="studioGlobalTitle">Báo giá mới</strong>
+            <span class="studio-status-badge status-draft" id="studioQuoteStatus">Bản nháp</span>
+          </div>
+          <small>
+            <span>Mã báo giá: <b id="studioGlobalQuoteNo">—</b></span>
+            <i aria-hidden="true">•</i>
+            <span id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
+            <i aria-hidden="true">•</i>
+            <span id="studioGlobalHistoryState">Chưa lưu lịch sử</span>
+          </small>
         </div>
       </div>
-      <div class="studio-global-middle">
-        <span class="document-health" id="studioGlobalHealth">Đang kiểm tra</span>
+
+      <div class="studio-topbar-center">
+        <button class="studio-icon-action" id="studioUndo" type="button" disabled aria-label="Hoàn tác" title="Hoàn tác sẽ được bổ sung khi có lịch sử thao tác an toàn">↶</button>
+        <button class="studio-icon-action" id="studioRedo" type="button" disabled aria-label="Làm lại" title="Làm lại sẽ được bổ sung khi có lịch sử thao tác an toàn">↷</button>
+        <div class="studio-command-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="studioCommandSearch" type="search" placeholder="Tìm kiếm (Ctrl + K)" autocomplete="off" aria-controls="studioCommandResults" aria-expanded="false">
+          <kbd>Ctrl K</kbd>
+          <div class="studio-command-results" id="studioCommandResults" role="listbox" hidden></div>
+        </div>
       </div>
-      <div class="studio-global-actions">
-        <button class="studio-global-action" id="studioGlobalSave" type="button">Lưu nháp</button>
-        <button class="studio-global-action" id="studioGlobalPreview" type="button">◉ Xem trước</button>
-        <button class="studio-global-action primary print-action" id="studioGlobalPdf" type="button">⇩ Xuất PDF</button>
+
+      <div class="studio-topbar-actions">
+        <span class="document-health" id="studioGlobalHealth">Đang kiểm tra</span>
+        <button class="studio-top-action" id="studioGlobalSave" type="button">Lưu nháp</button>
+        <button class="studio-top-action" id="studioGlobalPreview" type="button">◉ Xem trước</button>
+        <button class="studio-top-action primary print-action" id="studioGlobalPdf" type="button">⇩ Xuất PDF</button>
+        <button class="studio-icon-action" id="studioTopMenu" type="button" aria-label="Tùy chọn khác">⋯</button>
       </div>
     </header>
 
-    <section class="editor">
-      <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nhập liệu" title="Thu gọn / mở bảng nhập liệu">‹</button>
-      <div class="panel-head studio-panel-head">
-        <div class="studio-context-row">
+    <section class="editor content-library" data-content-mode="home">
+      <button class="panel-edge-toggle editor-edge-toggle" id="toggleEditorPanel" type="button" aria-label="Thu gọn bảng nội dung" title="Thu gọn / mở bảng nội dung">‹</button>
+
+      <div class="content-library-home" id="contentLibraryHome">
+        <header class="content-library-head">
+          <div>
+            <small>NỘI DUNG BÁO GIÁ</small>
+            <h2>Thêm nội dung</h2>
+          </div>
           <button class="studio-home-button" id="studioBackHome" type="button" aria-label="Về Trang chủ" title="Về Trang chủ">⌂</button>
-          <div class="studio-current-quote">
-            <small>ĐANG SOẠN</small>
-            <strong id="studioQuoteLabel">Báo giá mới</strong>
-          </div>
-          <div class="studio-context-badges">
-            <span class="studio-status-badge" id="studioQuoteStatus">Bản nháp</span>
-            <span class="studio-history-state" id="studioHistoryState">Chưa lưu lịch sử</span>
-            <span class="studio-autosave-state" id="studioAutosaveState" role="status" aria-live="polite">Đã nạp bản lưu</span>
-          </div>
+        </header>
+
+        <label class="content-library-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="contentLibrarySearch" type="search" placeholder="Tìm khối nội dung..." autocomplete="off">
+        </label>
+
+        <div class="content-library-section-label">Khối cơ bản</div>
+        <div class="content-block-list" id="contentBlockList">
+          <button class="content-block-row" type="button" data-content-block="general" data-search-text="thông tin chung doanh nghiệp báo giá">
+            <span class="content-block-icon">▤</span><span><b>Thông tin chung</b><small>Doanh nghiệp, mã báo giá, ngày lập</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="customer" data-search-text="khách hàng người nhận liên hệ">
+            <span class="content-block-icon">●</span><span><b>Khách hàng</b><small>Người nhận và đơn vị mua hàng</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="products" data-search-text="sản phẩm dịch vụ hàng hóa đơn giá">
+            <span class="content-block-icon">◆</span><span><b>Sản phẩm / Dịch vụ</b><small>Danh sách, quy cách, số lượng và giá</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="payment" data-search-text="thanh toán vat giảm giá ngân hàng">
+            <span class="content-block-icon">₫</span><span><b>Thanh toán</b><small>VAT, giảm giá, tổng tiền và tài khoản</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="terms" data-search-text="điều khoản thương mại hiệu lực">
+            <span class="content-block-icon">≡</span><span><b>Điều khoản</b><small>Chính sách và nội dung thương mại</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="signature" data-search-text="chữ ký ngày tháng đại diện">
+            <span class="content-block-icon">✎</span><span><b>Chữ ký</b><small>Ngày tháng, chức danh và người ký</small></span><em>›</em>
+          </button>
+          <button class="content-block-row" type="button" data-content-block="custom-text" data-search-text="văn bản tùy chỉnh lời mở đầu lời kết chân trang">
+            <span class="content-block-icon">T</span><span><b>Văn bản tùy chỉnh</b><small>Lời mở đầu, lời kết và chân trang</small></span><em>›</em>
+          </button>
         </div>
-        <div class="studio-pane-title">
+
+        <div class="content-library-section-head">
+          <span>Mẫu thiết kế</span>
+          <button type="button" data-open-inspector="design">Xem tất cả</button>
+        </div>
+        <div class="content-template-grid" id="contentTemplateGrid">
+          <button type="button" data-content-theme="modern" title="Chuẩn công ty"><span class="mini-paper mini-modern"></span><small>Chuẩn</small></button>
+          <button type="button" data-content-theme="corporate" title="Doanh nghiệp"><span class="mini-paper mini-corporate"></span><small>DN</small></button>
+          <button type="button" data-content-theme="minimal" title="Tối giản"><span class="mini-paper mini-minimal"></span><small>Tối giản</small></button>
+        </div>
+
+        <article class="layout-suggestion-card">
+          <span class="layout-suggestion-icon">✦</span>
+          <div><b>Gợi ý bố cục</b><small>Tối ưu bố cục A4 hiện tại bằng bộ sắp xếp cục bộ.</small></div>
+          <button id="runLayoutSuggestion" type="button" aria-label="Tối ưu bố cục">→</button>
+        </article>
+      </div>
+
+      <div class="content-library-detail-head" id="contentLibraryDetailHead" hidden>
+        <button class="content-detail-back" id="contentLibraryBack" type="button" aria-label="Quay lại Thêm nội dung">←</button>
+        <div>
+          <small>CHỈNH SỬA KHỐI</small>
           <h2 id="paneTitle">THÔNG TIN CHUNG</h2>
           <p id="paneSub">Logo, doanh nghiệp và thông tin báo giá.</p>
         </div>
-        <div class="studio-stepper" aria-label="Các bước soạn báo giá">
-          <button type="button" data-studio-step="general"><b>1</b><span>Thông tin</span></button>
-          <button type="button" data-studio-step="products"><b>2</b><span>Sản phẩm</span></button>
-          <button type="button" data-studio-step="payment"><b>3</b><span>Thanh toán</span></button>
-          <button type="button" data-studio-step="terms"><b>4</b><span>Điều khoản</span></button>
-          <button type="button" data-studio-step="design"><b>5</b><span>Thiết kế</span></button>
-          <button type="button" data-studio-step="export"><b>6</b><span>Xuất</span></button>
-        </div>
-        <div class="studio-commandbar" aria-label="Thao tác báo giá">
-          <div class="studio-command-main">
-            <button class="btn primary" id="studioSaveQuote" type="button">Lưu nháp</button>
-            <button class="btn" id="studioCheckQuote" type="button">Kiểm tra</button>
-            <button class="btn" id="studioPreviewQuote" type="button">Xem A4</button>
-          </div>
-          <div class="studio-flow-controls">
-            <button class="btn studio-flow-button" id="studioPrevStep" type="button" aria-label="Bước trước">←</button>
-            <span class="studio-workflow-position" id="studioWorkflowPosition">Bước 1/6</span>
-            <button class="btn studio-flow-button" id="studioNextStep" type="button" aria-label="Bước tiếp theo">→</button>
-          </div>
-          <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
-        </div>
-        <section class="studio-guidance-panel" id="studioGuidancePanel" hidden aria-live="polite">
-          <div class="studio-guidance-head">
-            <div>
-              <strong>KIỂM TRA BÁO GIÁ</strong>
-              <span id="studioGuidanceSummary">Không có mục cần xử lý.</span>
-            </div>
-            <button class="mini-action" id="closeStudioGuidance" type="button" aria-label="Đóng kết quả kiểm tra">×</button>
-          </div>
-          <div class="studio-guidance-list" id="studioGuidanceList"></div>
-        </section>
+        <span class="studio-document-health" id="studioDocumentHealth" role="status" aria-live="polite">Đang kiểm tra</span>
+      </div>
 
-        <div class="draft-recovery-banner" id="draftRecoveryBanner" role="status" hidden>
-          <div>
-            <strong>Có bản đang soạn chưa lưu hoàn chỉnh</strong>
-            <span id="draftRecoveryDetail">Có thể khôi phục dữ liệu gần nhất trên tab này.</span>
-          </div>
-          <div class="draft-recovery-actions">
-            <button class="btn primary" id="restoreDraftRecovery" type="button">Khôi phục</button>
-            <button class="btn" id="discardDraftRecovery" type="button">Bỏ qua</button>
-          </div>
+      <section class="studio-guidance-panel" id="studioGuidancePanel" hidden aria-live="polite">
+        <div class="studio-guidance-head">
+          <div><strong>KIỂM TRA BÁO GIÁ</strong><span id="studioGuidanceSummary">Không có mục cần xử lý.</span></div>
+          <button class="mini-action" id="closeStudioGuidance" type="button" aria-label="Đóng kết quả kiểm tra">×</button>
+        </div>
+        <div class="studio-guidance-list" id="studioGuidanceList"></div>
+      </section>
+
+      <div class="draft-recovery-banner" id="draftRecoveryBanner" role="status" hidden>
+        <div><strong>Có bản đang soạn chưa lưu hoàn chỉnh</strong><span id="draftRecoveryDetail">Có thể khôi phục dữ liệu gần nhất trên tab này.</span></div>
+        <div class="draft-recovery-actions">
+          <button class="btn primary" id="restoreDraftRecovery" type="button">Khôi phục</button>
+          <button class="btn" id="discardDraftRecovery" type="button">Bỏ qua</button>
         </div>
       </div>
-      <div class="panel-body">
+
+      <div class="panel-body content-library-detail">
         <div class="pane active app-dashboard app-workspace-pane" id="pane-dashboard">
           <header class="dashboard-topbar app-workspace-header">
             <div>
@@ -1148,27 +1192,29 @@
     <main class="preview">
       <div class="preview-tools">
         <div class="preview-left-tools">
-          <button class="toolbar-btn view-exit" id="exitReportView" type="button" hidden>←&nbsp; Chỉnh sửa</button>
-          <button class="toolbar-btn active-preview" id="fit">◉&nbsp; Xem trước</button>
-          <button class="toolbar-btn" id="wideView">⛶&nbsp; Màn hình rộng</button>
-        </div>
-        <div class="preview-right-tools">
+          <button class="toolbar-btn view-exit" id="exitReportView" type="button" hidden>← Chỉnh sửa</button>
+          <span class="paper-size-label">A4 <small>210 × 297 mm</small></span>
           <div class="zoom-control">
             <button class="zoom-btn" id="zoomOut" aria-label="Thu nhỏ">−</button>
-            <button class="zoom-value" id="actual"><span id="zoomText">82%</span></button>
+            <button class="zoom-value" id="actual" aria-label="Mức thu phóng"><span id="zoomText">82%</span></button>
             <button class="zoom-btn" id="zoomIn" aria-label="Phóng to">+</button>
           </div>
+          <button class="toolbar-icon-btn" id="fit" type="button" aria-label="Vừa trang" title="Vừa trang">⌗</button>
+          <button class="toolbar-icon-btn" id="wideView" type="button" aria-label="Màn hình rộng" title="Màn hình rộng">⛶</button>
+        </div>
+        <div class="preview-right-tools">
           <span class="page-estimate" id="pageEstimate">≈ 1 trang A4</span>
           <span class="document-health" id="documentHealth">Đang kiểm tra</span>
-          <button class="toolbar-btn" id="preflightCheck">✓&nbsp; Kiểm tra</button>
-          <button class="toolbar-btn import-data" id="openSmartImport" type="button">⇧&nbsp; Nhập dữ liệu</button>
-          <button class="toolbar-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false">✥&nbsp; Sắp xếp</button>
-          <button class="toolbar-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden>↺&nbsp; Tự động</button>
+          <button class="toolbar-icon-btn arrange" id="layoutEditToggle" type="button" aria-pressed="false" aria-label="Sắp xếp khối" title="Sắp xếp khối">✥</button>
+          <button class="toolbar-icon-btn auto-arrange" id="autoArrangeLayoutToolbar" type="button" hidden aria-label="Tự động sắp xếp" title="Tự động sắp xếp">↺</button>
           <span class="layout-selection" id="layoutSelection" hidden>Chọn khối để kéo</span>
-          <button class="toolbar-btn customize" id="customizePreview">⚙&nbsp; Tùy chỉnh</button>
-          <button class="toolbar-btn pdf print-action">⇩&nbsp; Tải PDF</button>
-          <button class="toolbar-btn print print-action">▣&nbsp; In</button>
-          <button class="toolbar-btn menu" id="toolbarMenu" aria-label="Tùy chọn">⋮</button>
+          <button class="toolbar-icon-btn" id="toolbarMenu" type="button" aria-expanded="false" aria-controls="previewOverflowMenu" aria-label="Công cụ khác">⋯</button>
+          <div class="preview-overflow-menu" id="previewOverflowMenu" hidden>
+            <button type="button" id="preflightCheck">✓ <span>Kiểm tra báo giá</span></button>
+            <button type="button" id="openSmartImport">⇧ <span>Nhập dữ liệu</span></button>
+            <button type="button" id="customizePreview">⚙ <span>Tùy chỉnh xem trước</span></button>
+            <button type="button" class="print-action">⇩ <span>Tải PDF / In</span></button>
+          </div>
         </div>
       </div>
 
