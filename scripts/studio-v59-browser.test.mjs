@@ -188,8 +188,9 @@ try {
 
     await page.locator('#doneContentWorkspace').click();
     if (!(await page.locator('#contentWorkspaceModal').evaluate(node => node.hidden))) fail(block + ' content workspace did not close cleanly');
-    if (!(await page.locator('#' + field).evaluate(node => Boolean(node.closest('#pane-' + (block === 'signature' ? 'terms' : block === 'custom-text' ? 'general' : block)) || node.closest('#pane-terms'))))) {
-      fail(block + ' field was not restored to its original source pane');
+    const expectedSourcePane = block === 'signature' ? 'terms' : block === 'custom-text' ? 'general' : block;
+    if (!(await page.locator('#' + field).evaluate((node, pane) => Boolean(node.closest('#pane-' + pane)), expectedSourcePane))) {
+      fail(block + ' field was not restored to its original source pane #' + expectedSourcePane);
     }
   }
 
