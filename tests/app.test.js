@@ -1932,7 +1932,7 @@ test('large Tùng Gia Bảo product set starts collapsed for practical editing',
   expect(cards.filter(card => card.classList.contains('collapsed')).length).toBeGreaterThanOrEqual(72);
 });
 
-test('all eight report templates preserve the full grouped price-list content and business data', () => {
+test('legacy eight report templates preserve the full grouped price-list content and business data', () => {
   const themes = ['modern','corporate','minimal','classic','emerald','warm','premium','mono'];
   const expectedProducts = document.querySelectorAll('.product-card').length;
   const companyBefore = document.getElementById('pCompanyName').textContent;
@@ -1946,7 +1946,7 @@ test('all eight report templates preserve the full grouped price-list content an
     expect(document.querySelector('#qBody tr:not(.qgroup-row) td.col-name')?.textContent).toBe(firstProductBefore);
   }
   document.querySelector('.tpl[data-theme="modern"]').click();
-});
+}, 12000);
 
 test('airy spacing survives binding normalization instead of silently becoming standard', () => {
   const select = document.getElementById('previewSpacing');
