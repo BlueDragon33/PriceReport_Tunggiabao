@@ -2,23 +2,22 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V5.8 Studio Pixel-Lock
+## Trạng thái hiện tại — V5.9 Unified Shell
 
-V5.8 là một **hard reset riêng phần Quotation Studio** theo ảnh mẫu 1664×912, không phải một lớp CSS chồng thêm lên V5.7.
+V5.9 xử lý dứt điểm hiện tượng giao diện “nhảy” giữa kiểu cũ và mới bằng cách giữ **một shell chính duy nhất** cho cả Workspace quản trị và Quotation Studio.
 
-- Studio có stylesheet riêng `src/studio-v58.css`; lớp override V5.7 cũ và phần chrome stepper/commandbar chết đã được dọn khỏi `src/ui-v5.css`.
-- Bố cục desktop khóa tại **118px rail → 320px “Thêm nội dung” → Preview linh hoạt → 384px Inspector**, topbar **72px**, preview toolbar **52px**.
-- Panel trái là đúng mô hình **Thêm nội dung** với 7 khối: Thông tin chung, Khách hàng, Sản phẩm/Dịch vụ, Thanh toán, Điều khoản, Chữ ký, Văn bản tùy chỉnh. Các khối chỉ điều hướng tới form/state hiện có, không nhân đôi dữ liệu.
-- Topbar chỉ còn một hierarchy chính: context báo giá, command search, Lưu nháp, Xem trước và Xuất PDF. Stepper 6 bước và commandbar V5.7 đã bỏ khỏi DOM Studio.
-- Preview toolbar được rút gọn; công cụ ít dùng chuyển vào overflow. Fit A4 khóa mục tiêu hiển thị khoảng **706px** tại viewport chuẩn.
-- Inspector phải giữ 3 tab **Thiết kế / Nội dung / Kiểm tra**; Design được sắp lại đúng thứ tự: Giao diện tổng thể → Màu chủ đạo → Font chữ → Thiết lập hiển thị → Cài đặt nâng cao → Brand Kit.
-- Theme selector trái/phải cùng dùng `applyTheme()`; Check dùng lại validation/preflight hiện có; gợi ý bố cục dùng bộ auto-arrange cục bộ hiện có.
-- Logic nghiệp vụ, import/export, local storage, history, PC storage, Device Gate và A4 report engine không bị fork hoặc viết lại.
-- Ngoài bảng sản phẩm, typography báo cáo vẫn cố định; chỉ `tableFontSize` là cỡ chữ báo cáo người dùng được chỉnh.
-- CI có thêm **Chromium/Playwright rendered pixel-lock gate** tại 1664×912 để đo bounding box thực tế của rail/topbar/panel/preview/inspector/A4, kiểm tra thứ tự nội dung, màu computed và runtime errors. CI xanh giờ không còn chỉ dựa vào chuỗi CSS/DOM.
-- Source of truth: `UI_REFERENCE_V5.8_PIXEL_LOCK.md`; audit triển khai: `AUDIT_V5.8_PIXEL_LOCK.md`.
-- PWA cache generation: **pricereport-shell-v58-pixel-lock**.
-- Package: **5.8.0**.
+- Rail trái luôn dùng cùng kích thước, màu, typography và tập điều hướng chính; các tab nội bộ của báo giá không còn xuất hiện/biến mất trên rail khi chuyển chế độ.
+- Topbar navy 72px luôn tồn tại. Khi ở Workspace nó hiện tên khu vực; khi vào báo giá nó chuyển sang context báo giá, trạng thái, lưu, xem trước và PDF mà không thay cả bộ khung.
+- Studio vẫn giữ geometry chuẩn: **118px rail → 320px “Thêm nội dung” → Preview → 384px Inspector**.
+- Các màn hình quản trị giữ nội dung sáng để đọc dữ liệu dễ, nhưng nằm trong cùng rail + topbar thay vì dùng một giao diện riêng.
+- Phần **Sản phẩm / Dịch vụ** không còn kéo dài panel trái theo số dòng. Panel trái giữ một vùng launcher cố định ~430px; bấm vào sẽ mở một modal nhập liệu lớn cố định.
+- Modal sản phẩm dùng trực tiếp `#productEditor` hiện có, không tạo state/form engine thứ hai. Kích thước desktop mục tiêu: **1400 × 820px** tại viewport 1664×912.
+- Trong modal có thêm dòng, dán bảng, nhập Excel, lấy từ danh mục, lưu danh mục, thao tác hàng loạt, sắp xếp, chỉnh cột hiển thị và phím nhanh.
+- Chuyển tab/top-level workspace sẽ tự đóng modal để tránh overlay cũ nằm đè lên giao diện mới.
+- CI có browser gate V5.9 để kiểm tra rail/topbar không đổi khi chuyển Dashboard ↔ Studio, thứ tự navigation không đổi, geometry Studio giữ đúng và modal sản phẩm mở/đóng đúng kích thước.
+- Stylesheet active: `src/studio-v59.css`; stylesheet V5.8 cũ đã bị xóa.
+- PWA cache generation: **pricereport-shell-v59-unified-shell**.
+- Package: **5.9.0**.
 
 ## Kiểm thử
 

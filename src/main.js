@@ -633,7 +633,35 @@ function updateStudioStepHealth() {
   });
 }
 
-function syncStudioContext() {
+const WORKSPACE_SHELL_META = {
+  dashboard: ['Trang chủ', 'Tổng quan và thao tác nhanh'],
+  history: ['Quản lý báo giá', 'Tìm kiếm, mở lại và theo dõi trạng thái'],
+  master: ['Khách hàng & sản phẩm', 'Danh mục dữ liệu dùng lại'],
+  system: ['Thiết bị & hệ thống', 'Thiết bị, Device Gate và kết nối quản trị'],
+  settings: ['Cài đặt ứng dụng', 'Khởi động, giao diện và lưu dữ liệu'],
+  export: ['Xuất bản & dữ liệu', 'PDF, Excel, OCR và sao lưu']
+};
+
+function syncStudioContext(tab = '') {
+  const shell = document.querySelector('.shell');
+  const workspaceMode = Boolean(shell?.classList.contains('app-workspace'));
+  const globalTitle = document.getElementById('studioGlobalTitle');
+  const workspaceSubtitle = document.getElementById('workspaceShellSubtitle');
+
+  document.querySelectorAll('[data-shell-quote-only]').forEach((element) => {
+    element.hidden = workspaceMode;
+  });
+  document.querySelectorAll('[data-shell-workspace-only]').forEach((element) => {
+    element.hidden = !workspaceMode;
+  });
+
+  if (workspaceMode) {
+    const meta = WORKSPACE_SHELL_META[tab] || ['Tunggiabao Workspace', 'Không gian làm việc thống nhất'];
+    if (globalTitle) globalTitle.textContent = meta[0];
+    if (workspaceSubtitle) workspaceSubtitle.textContent = meta[1];
+    return;
+  }
+
   const quoteStatus = document.getElementById('studioQuoteStatus');
   if (quoteStatus) {
     const currentStatus = state.quoteStatus || 'draft';
@@ -641,7 +669,6 @@ function syncStudioContext() {
     quoteStatus.className = 'studio-status-badge status-' + currentStatus;
   }
 
-  const globalTitle = document.getElementById('studioGlobalTitle');
   const globalQuoteNo = document.getElementById('studioGlobalQuoteNo');
   const globalHistoryState = document.getElementById('studioGlobalHistoryState');
   const quoteNo = String(state.quoteNo || '').trim();
@@ -760,7 +787,11 @@ function openContentBlock(block) {
   const subtitle = document.getElementById('paneSub');
   if (title) title.textContent = config.title;
   if (subtitle) subtitle.textContent = config.subtitle;
-  focusContentBlockTarget(block);
+  if (block === 'products') {
+    openProductWorkspace({ focusFirst: false });
+  } else {
+    focusContentBlockTarget(block);
+  }
   return true;
 }
 
@@ -810,6 +841,7 @@ document.getElementById('mobileMoreMenu')?.addEventListener('keydown', (event) =
 
 function openTab(tab, options = {}) {
   setMobileMoreMenu(false);
+  if (tab !== 'products') closeProductWorkspace({ restoreFocus: false });
   if (tab !== 'dashboard') closeDashboardSearchResults();
   const shell = document.querySelector('.shell');
   const appWorkspace = ['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab);
@@ -861,11 +893,6 @@ function openTab(tab, options = {}) {
     offerDataLibraryImportRecovery();
   }
   setTimeout(enhanceCollapsibleCards, 0);
-  if (tab !== 'products') {
-    document.querySelector('.shell')?.classList.remove('product-focus');
-    const focusBtn = document.getElementById('productFocusToggle');
-    if (focusBtn) focusBtn.textContent = '⛶ Mở rộng vùng nhập';
-  }
 }
 
 document.querySelectorAll('.nav button[data-tab]').forEach((btn) => {
@@ -1467,6 +1494,7 @@ document.querySelectorAll('[data-create-quote]').forEach((btn) => {
 });
 
 function openMasterSection(section) {
+  closeProductWorkspace({ restoreFocus: false });
   openTab('master');
   const targetId = section === 'products' ? 'productCatalogCard' : 'customerLibraryCard';
   requestAnimationFrame(() => {
@@ -2194,6 +2222,51 @@ function renderEditorProducts() {
     collapseButton.textContent = collapsedProducts.size === state.products.length ? 'Mở tất cả' : 'Thu gọn tất cả';
   }
   syncProductBulkBar();
+  renderProductLaunchSummary();
+}
+
+function renderProductLaunchSummary() {
+  const meaningful = state.products.filter(productHasDraftContent);
+  const subtotal = state.products.reduce((sum, product) =>
+    sum + normalizeNonNegativeNumber(product.qty) * normalizeNonNegativeNumber(product.price), 0);
+
+  setText('productLaunchCount', state.products.length + ' dòng');
+  setText('productLaunchFilledCount', String(meaningful.length));
+  setText('productLaunchSubtotal', money(subtotal));
+  setText('productWorkspaceCount', state.products.length + ' dòng');
+  setText('productWorkspaceSubtotal', money(subtotal));
+
+  const list = document.getElementById('productLaunchList');
+  if (!list) return;
+  list.innerHTML = '';
+  const visible = meaningful.slice(0, 4);
+  if (!visible.length) {
+    const empty = document.createElement('div');
+    empty.className = 'product-launch-empty';
+    empty.textContent = 'Chưa có sản phẩm. Mở cửa sổ nhập để thêm dữ liệu.';
+    list.appendChild(empty);
+    return;
+  }
+
+  visible.forEach((product, index) => {
+    const row = document.createElement('div');
+    row.className = 'product-launch-row';
+    const order = document.createElement('span');
+    order.textContent = String(index + 1).padStart(2, '0');
+    const name = document.createElement('b');
+    name.textContent = String(product.name || '').trim() || 'Sản phẩm chưa đặt tên';
+    const amount = document.createElement('small');
+    amount.textContent = money(normalizeNonNegativeNumber(product.qty) * normalizeNonNegativeNumber(product.price));
+    row.append(order, name, amount);
+    list.appendChild(row);
+  });
+
+  if (meaningful.length > visible.length) {
+    const more = document.createElement('div');
+    more.className = 'product-launch-row';
+    more.innerHTML = '<span>…</span><b>Còn ' + (meaningful.length - visible.length) + ' sản phẩm</b><small>Mở để xem</small>';
+    list.appendChild(more);
+  }
 }
 
 function renderPreviewProducts() {
@@ -3704,7 +3777,7 @@ function setupSmartImport() {
   document.getElementById('addProductTop')?.addEventListener('click', () => {
     document.getElementById('addProduct')?.click();
   });
-  document.getElementById('pane-products')?.addEventListener('paste', (event) => {
+  document.getElementById('productWorkspaceModal')?.addEventListener('paste', (event) => {
     const text = String(event.clipboardData?.getData('text/plain') || '');
     if (!text.includes('\t') || !text.includes('\n')) return;
     event.preventDefault();
@@ -3891,6 +3964,70 @@ function enhanceCollapsibleCards() {
   });
 }
 
+let productWorkspaceLastFocus = null;
+
+function productWorkspaceFocusable() {
+  const modal = document.getElementById('productWorkspaceModal');
+  if (!modal || modal.hidden) return [];
+  return Array.from(modal.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+  )).filter(element => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+}
+
+function openProductWorkspace({ focusFirst = true } = {}) {
+  const modal = document.getElementById('productWorkspaceModal');
+  if (!modal) return;
+  if (modal.hidden) {
+    productWorkspaceLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
+  modal.hidden = false;
+  document.body.classList.add('product-workspace-open');
+  renderProductLaunchSummary();
+  requestAnimationFrame(() => {
+    const target = focusFirst
+      ? document.querySelector('#productEditor [data-product-key="name"]') || document.getElementById('addProductTop')
+      : document.getElementById('productWorkspaceTitle');
+    target?.focus?.();
+  });
+}
+
+function closeProductWorkspace({ restoreFocus = true } = {}) {
+  const modal = document.getElementById('productWorkspaceModal');
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  document.body.classList.remove('product-workspace-open');
+  renderProductLaunchSummary();
+  if (restoreFocus) requestAnimationFrame(() => productWorkspaceLastFocus?.focus?.());
+}
+
+document.getElementById('productWorkspaceModal')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeProductWorkspace();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const items = productWorkspaceFocusable();
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+
+document.getElementById('productWorkspaceModal')?.addEventListener('pointerdown', (event) => {
+  if (event.target === event.currentTarget) closeProductWorkspace();
+});
+document.getElementById('openProductWorkspace')?.addEventListener('click', () => openProductWorkspace());
+document.getElementById('openProductWorkspaceBottom')?.addEventListener('click', () => openProductWorkspace());
+document.getElementById('closeProductWorkspace')?.addEventListener('click', () => closeProductWorkspace());
+document.getElementById('doneProductWorkspace')?.addEventListener('click', () => closeProductWorkspace());
+
 bindInputs();
 setupCustomerEntryAutocomplete();
 setupProductBulkActions();
@@ -3898,6 +4035,7 @@ setupMajorPanelToggles();
 enhanceCollapsibleCards();
 renderEditorProducts();
 render();
+renderProductLaunchSummary();
 offerDraftRecovery();
 
 document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () => {
@@ -3906,13 +4044,6 @@ document.getElementById('applyTungGiaBaoProfile')?.addEventListener('click', () 
 
 document.getElementById('addProduct').addEventListener('click', () => {
   appendBlankProduct({ focusKey: 'name' });
-});
-
-document.getElementById('productFocusToggle').addEventListener('click', () => {
-  const shell = document.querySelector('.shell');
-  const enabled = shell.classList.toggle('product-focus');
-  document.getElementById('productFocusToggle').textContent = enabled ? '↙ Thu gọn vùng nhập' : '⛶ Mở rộng vùng nhập';
-  requestAnimationFrame(() => document.getElementById('fit').click());
 });
 
 document.getElementById('collapseAllProducts').addEventListener('click', () => {

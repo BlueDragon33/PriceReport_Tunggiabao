@@ -6,7 +6,7 @@ const PORT = 4173;
 const URL = `http://${HOST}:${PORT}/`;
 
 function fail(message) {
-  throw new Error('V5.8 BROWSER PIXEL-LOCK FAIL: ' + message);
+  throw new Error('V5.9 BROWSER UNIFIED-SHELL FAIL: ' + message);
 }
 
 function near(name, actual, expected, tolerance) {
@@ -48,8 +48,29 @@ try {
   page.on('pageerror', error => pageErrors.push(String(error?.message || error)));
 
   await page.goto(URL, { waitUntil: 'networkidle' });
+
+  // The application workspace and quotation Studio must share one primary shell.
+  const dashboardRail = await page.locator('.shell.app-workspace > .nav').boundingBox();
+  const dashboardHeader = await page.locator('.shell.app-workspace > .studio-topbar').boundingBox();
+  if (!dashboardRail || !dashboardHeader) fail('dashboard is not using the unified rail/topbar shell');
+  near('dashboard rail width', dashboardRail.width, 118, 2);
+  near('dashboard header height', dashboardHeader.height, 72, 2);
+  near('dashboard header x', dashboardHeader.x, 118, 2);
+  if (await page.locator('.shell.app-workspace [data-shell-workspace-only]:visible').count() < 1) {
+    fail('workspace context is not visible in the shared topbar');
+  }
+
+  const primaryTabsBefore = await page.locator('.shell.app-workspace > .nav button[data-tab]:visible').evaluateAll(nodes =>
+    nodes.map(node => node.getAttribute('data-tab'))
+  );
   await page.locator('[data-tab="general"]').click();
   await page.locator('.shell:not(.app-workspace)').waitFor();
+  const primaryTabsStudio = await page.locator('.shell:not(.app-workspace) > .nav button[data-tab]:visible').evaluateAll(nodes =>
+    nodes.map(node => node.getAttribute('data-tab'))
+  );
+  if (JSON.stringify(primaryTabsStudio) !== JSON.stringify(primaryTabsBefore)) {
+    fail('primary navigation changes between workspace and Studio: ' + JSON.stringify(primaryTabsBefore) + ' → ' + JSON.stringify(primaryTabsStudio));
+  }
   await page.locator('#fit').click();
   await page.waitForTimeout(120);
 
@@ -122,14 +143,33 @@ try {
   if (colors.preview !== 'rgb(38, 58, 84)') fail('preview canvas color drifted: ' + colors.preview);
   if (colors.inspector !== 'rgb(11, 39, 72)') fail('inspector color drifted: ' + colors.inspector);
 
+
+  // Product entry must use a large, fixed dialog instead of stretching the left panel.
+  await page.locator('#contentBlockList [data-content-block="products"]').click();
+  await page.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  const productDialog = await box('#productWorkspaceModal:not([hidden]) .product-workspace-dialog');
+  near('product dialog width', productDialog.width, 1400, 8);
+  near('product dialog height', productDialog.height, 820, 8);
+  if (await page.locator('#productWorkspaceModal #productEditor').count() !== 1) fail('product editor is not single-source inside the product dialog');
+  if (await page.locator('#pane-products #productEditor').count()) fail('product editor leaked back into the narrow Studio pane');
+  await page.locator('#closeProductWorkspace').click();
+  if (!(await page.locator('#productWorkspaceModal').evaluate(node => node.hidden))) fail('product modal did not close cleanly');
+
+  // Return from the product detail to the content library, then to management.
+  await page.locator('#contentLibraryBack').click();
+  await page.locator('#studioBackHome').click();
+  const returnHeader = await box('.shell.app-workspace > .studio-topbar');
+  near('return dashboard header height', returnHeader.height, 72, 2);
+  near('return dashboard header x', returnHeader.x, 118, 2);
+  await page.locator('[data-tab="general"]').click();
+
   const search = page.locator('#studioCommandSearch');
   await search.focus();
   await search.fill('Sản phẩm');
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
-  await page.locator('#contentLibraryBack').evaluate(node => node.click());
-  console.log('V5.8 BROWSER PIXEL-LOCK PASS: canonical 1664x912 geometry and visible hierarchy verified');
+  console.log('V5.9 BROWSER UNIFIED-SHELL PASS: shell continuity, Studio geometry and fixed product modal verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

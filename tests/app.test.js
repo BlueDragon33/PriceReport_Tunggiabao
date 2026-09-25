@@ -47,17 +47,37 @@ test('V4 boots into application dashboard and exposes separate new-quote and edi
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
 });
 
-test('V5.8 quotation studio shows quote context and routes through the content library', () => {
+test('V5.9 unified shell keeps one chrome and opens products in a fixed modal workspace', () => {
+  const shell = document.querySelector('.shell');
+  expect(shell.classList.contains('app-workspace')).toBe(true);
+  expect(document.querySelector('.studio-topbar')).toBeTruthy();
+  expect(document.getElementById('studioGlobalTitle').textContent).toBe('Trang chủ');
+  expect(document.querySelector('[data-shell-workspace-only]').hidden).toBe(false);
+
+  const workspaceTabs = Array.from(document.querySelectorAll('.nav button[data-tab]'))
+    .filter(button => !['customer','products','payment','terms','design','view','presets'].includes(button.dataset.tab))
+    .map(button => button.dataset.tab);
+
   document.querySelector('[data-tab="general"]').click();
-  const quoteNo = document.getElementById('quoteNo').value;
-  expect(document.getElementById('studioGlobalQuoteNo').textContent).toBe(quoteNo || '—');
+  expect(shell.classList.contains('app-workspace')).toBe(false);
+  expect(document.querySelector('[data-shell-workspace-only]').hidden).toBe(true);
+  expect(document.getElementById('studioQuoteStatus').hidden).toBe(false);
   expect(document.querySelector('.content-library').dataset.contentMode).toBe('home');
-  expect(document.querySelectorAll('#contentBlockList [data-content-block]').length).toBe(7);
+
+  const studioTabs = Array.from(document.querySelectorAll('.nav button[data-tab]'))
+    .filter(button => !['customer','products','payment','terms','design','view','presets'].includes(button.dataset.tab))
+    .map(button => button.dataset.tab);
+  expect(studioTabs).toEqual(workspaceTabs);
 
   document.querySelector('#contentBlockList [data-content-block="products"]').click();
   expect(document.getElementById('pane-products').classList.contains('active')).toBe(true);
   expect(document.querySelector('.content-library').dataset.contentMode).toBe('detail');
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(false);
+  expect(document.getElementById('productEditor').closest('#productWorkspaceModal')).toBeTruthy();
+  expect(document.querySelector('#pane-products #productEditor')).toBeFalsy();
 
+  document.getElementById('closeProductWorkspace').click();
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(true);
   document.getElementById('contentLibraryBack').click();
   expect(document.querySelector('.content-library').dataset.contentMode).toBe('home');
 
@@ -67,11 +87,12 @@ test('V5.8 quotation studio shows quote context and routes through the content l
   document.getElementById('studioBackHome').click();
   expect(document.getElementById('designPanel').classList.contains('open')).toBe(false);
   expect(document.getElementById('pane-dashboard').classList.contains('active')).toBe(true);
+  expect(document.querySelector('[data-shell-workspace-only]').hidden).toBe(false);
 
   document.querySelector('[data-tab="general"]').click();
 });
 
-test('V5.8 quotation studio exposes seven content blocks and one command hierarchy', () => {
+test('V5.9 quotation studio exposes seven content blocks and one command hierarchy', () => {
   document.querySelector('[data-tab="general"]').click();
   const blocks = Array.from(document.querySelectorAll('#contentBlockList [data-content-block]'));
   expect(blocks.map(button => button.dataset.contentBlock)).toEqual([
