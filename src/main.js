@@ -4011,15 +4011,24 @@ function rebuildSmartImportProductsFromMapping() {
 let smartImportIssueCursor = -1;
 
 function smartImportDuplicateIndexSet() {
-  const duplicates = smartImportDraft?.spreadsheetMeta?.duplicates;
-  const indexes = new Set();
-  (Array.isArray(duplicates) ? duplicates : []).forEach(group => {
-    (Array.isArray(group?.indexes) ? group.indexes : []).forEach(index => {
-      const numeric = Number(index);
-      if (Number.isInteger(numeric) && numeric >= 0) indexes.add(numeric);
-    });
+  const products = Array.isArray(smartImportDraft?.products) ? smartImportDraft.products : [];
+  const signatures = new Map();
+  products.forEach((product, index) => {
+    const signature = [product?.name, product?.unit, product?.pack]
+      .map(value => canonicalLibraryText(value))
+      .join('|');
+    if (!signature.replace(/\|/g, '')) return;
+    const indexes = signatures.get(signature) || [];
+    indexes.push(index);
+    signatures.set(signature, indexes);
   });
-  return indexes;
+
+  const duplicateIndexes = new Set();
+  signatures.forEach(indexes => {
+    if (indexes.length < 2) return;
+    indexes.forEach(index => duplicateIndexes.add(index));
+  });
+  return duplicateIndexes;
 }
 
 function renderSmartImportDashboard() {
