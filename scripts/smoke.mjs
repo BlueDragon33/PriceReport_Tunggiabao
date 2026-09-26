@@ -108,7 +108,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v616-standalone-system-ui")) fail('Service-worker cache version was not aligned with the V6.14 standalone access release');
+if (!sw.includes("pricereport-shell-v617-system-ux-readability")) fail('Service-worker cache version was not aligned with V6.17 system UX readability');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
@@ -398,6 +398,8 @@ if (!html.includes('data-tab="system"') || !html.includes('id="pane-system"')) f
 if (!html.includes('id="systemLocalDeviceCode"') || !html.includes('id="systemRegistryDeviceCode"')) fail('V4.8 must distinguish local and registry device codes');
 if (!html.includes('id="systemManagedDetails"') || !html.includes('id="systemManagedSummary"')) fail('V6.16 optional managed-mode disclosure is missing');
 if (!html.includes('Hệ thống local-first') || !html.includes('Quản trị tập trung')) fail('V6.16 standalone-first system hierarchy is missing');
+if (!html.includes('Dịch vụ quản trị thiết bị') || html.includes('<h3>Control Plane</h3>')) fail('V6.17 system workspace must prefer user-facing language over control-plane jargon');
+if (!js.includes("managedDetails.dataset.attention") || !js.includes("managedDetailsAutoOpened")) fail('V6.17 managed-mode attention disclosure is missing');
 if (!html.includes('id="systemBoundaryQuote"') || !html.includes('id="systemBoundaryCustomer"') || !html.includes('id="systemBoundaryPrivateKey"')) fail('V4.8 data-boundary indicators are missing');
 if (!js.includes('function renderSystemWorkspace()') || !js.includes('function refreshSystemWorkspace()')) fail('V4.8 system runtime renderer/refresh is missing');
 if (!js.includes("window.addEventListener('pricereport:device-access'")) fail('V4.8 must react to live Device Gate events');

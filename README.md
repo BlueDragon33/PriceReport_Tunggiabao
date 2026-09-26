@@ -2,21 +2,20 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.16 Standalone-first System UI
+## Trạng thái hiện tại — V6.17 System UX Readability
 
-V6.16 hoàn thiện phần giao diện sau khi V6.15 đã dọn contract: **tab Hệ thống giờ nhìn theo góc độ người dùng local-first trước, quản trị tập trung sau**.
+V6.17 tiếp tục hoàn thiện tab **Hệ thống local-first** theo hướng dành cho người dùng vận hành, không phải dành cho lập trình viên.
 
-- Trạng thái chính chỉ còn: thiết bị hiện tại, chế độ truy cập và dữ liệu nghiệp vụ local-first.
-- Application Management + Remote Admin được đưa vào khối **Quản trị tập trung** mặc định đóng.
-- Registry KT-, Control Plane readiness và Admin API không còn chiếm diện tích chính khi app đang Standalone.
-- Các ID/runtime contract cũ vẫn được giữ để không phá logic Managed Mode.
-- Nhãn legacy `classification-only` khi gặp dữ liệu cũ được hiển thị như trạng thái local-first thay vì một chế độ riêng.
-- Dashboard dùng ngôn ngữ **Managed Mode đang bật** thay vì “đã kết nối quản trị”.
-- Tablet/phone có layout riêng cho khối quản trị tùy chọn.
-- PWA cache generation: **pricereport-shell-v616-standalone-system-ui**.
-- Package: **6.16.0**.
+- Đổi các nhãn kỹ thuật như Control Plane, Device Registry, Device Gateway, Admin API thành ngôn ngữ dễ hiểu.
+- Tăng cỡ chữ phần **Quản trị tập trung** để đọc tốt hơn trên desktop, tablet và điện thoại.
+- Khi Managed Mode hoặc Device Gate thật sự cần chú ý, khối quản trị được đánh dấu và tự mở một lần.
+- Ở Standalone Mode, khối này vẫn gọn và không chiếm sự chú ý chính.
+- Dashboard dùng nhãn **Quản trị tập trung đang bật** thay cho thuật ngữ Managed Mode ở vị trí người dùng nhìn thấy.
+- Regression tests bảo vệ hierarchy, ngôn ngữ và attention state mới.
+- PWA cache generation: **pricereport-shell-v617-system-ux-readability**.
+- Package: **6.17.0**.
 
-V6.15 tiếp tục là nền contract: source mặc định `standalone`, không yêu cầu duyệt thiết bị, và mọi capability quản trị tập trung chỉ là tùy chọn.
+V6.16 vẫn là nền bố cục: local-first trước, quản trị tập trung là lớp tùy chọn.
 
 ## Kiểm thử
 

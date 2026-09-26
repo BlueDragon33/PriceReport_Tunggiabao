@@ -2505,11 +2505,15 @@ test('V6.16 system center is standalone-first and keeps managed controls optiona
   }));
   expect(document.getElementById('systemAccessState').textContent).toContain('Chờ duyệt');
   expect(document.getElementById('systemRegistryDeviceCode').textContent).toBe('KT-TEST-0001');
+  expect(document.getElementById('systemManagedDetails').open).toBe(true);
+  expect(document.getElementById('systemManagedDetails').dataset.attention).toBe('true');
 
   window.dispatchEvent(new CustomEvent('pricereport:device-access', {
     detail: { state: 'standalone', identity: null, message: 'Chế độ độc lập local-first đang bật.' }
   }));
   expect(document.getElementById('systemAccessState').textContent).toContain('Độc lập');
+  expect(document.getElementById('systemManagedDetails').dataset.attention).toBe('false');
+  expect(document.querySelector('#systemManagedDetails h3').textContent).toContain('Dịch vụ quản trị thiết bị');
   document.querySelector('[data-tab="general"]').click();
 });
 

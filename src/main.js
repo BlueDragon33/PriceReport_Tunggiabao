@@ -550,6 +550,8 @@ const setText = (id, value) => {
   if (el) el.textContent = value == null ? '' : value;
 };
 
+let managedDetailsAutoOpened = false;
+
 let latestDeviceAccess = {
   state: String(document.documentElement?.dataset?.priceReportDeviceAccess || ''),
   deviceCode: '',
@@ -2133,14 +2135,24 @@ function renderSystemWorkspace() {
           : 'Managed Mode chưa đạt đầy đủ readiness.'))
   );
   setText('systemRemoteAdminState', runtime?.remoteAdminReady ? 'Sẵn sàng' : (runtime?.defaultAccessMode === 'standalone' ? 'Tùy chọn · đang tắt' : 'Chưa sẵn sàng'));
+  const managedNeedsAttention = runtime?.defaultAccessMode === 'managed'
+    || ['pending', 'blocked', 'offline', 'checking'].includes(accessState);
   setText(
     'systemManagedSummary',
     runtime?.remoteAdminReady
-      ? 'Managed Mode đang bật'
+      ? 'Quản trị tập trung đang bật'
       : (runtime?.defaultAccessMode === 'standalone'
         ? 'Đang tắt · không ảnh hưởng ứng dụng'
         : 'Cần hoàn tất cấu hình')
   );
+  const managedDetails = document.getElementById('systemManagedDetails');
+  if (managedDetails) {
+    managedDetails.dataset.attention = managedNeedsAttention ? 'true' : 'false';
+    if (managedNeedsAttention && !managedDetailsAutoOpened) {
+      managedDetails.open = true;
+      managedDetailsAutoOpened = true;
+    }
+  }
 
   setText('systemDetailDeviceClass', local.deviceLabel || profile.label || local.deviceClass || profile.id || '—');
   setText('systemUiProfile', local.uiProfile || profile.shell || '—');
@@ -2211,17 +2223,17 @@ function updateDashboardSystemState() {
   const runtime = window.PriceReportManagement;
   const accessState = document.documentElement?.dataset?.priceReportDeviceAccess || '';
   if (runtime?.remoteAdminReady) {
-    stateEl.textContent = 'Managed Mode đang bật';
-    detailEl.textContent = 'Quản trị tập trung đã được chủ động bật và contract production đã xác minh.';
+    stateEl.textContent = 'Quản trị tập trung đang bật';
+    detailEl.textContent = 'Quản trị tập trung đã được chủ động bật và cấu hình production đã được xác minh.';
     return;
   }
   if (accessState && !['classification-only', 'standalone'].includes(accessState)) {
     stateEl.textContent = 'Thiết bị đang được quản lý';
-    detailEl.textContent = 'Device Gate đang hoạt động ở trạng thái: ' + accessState + '.';
+    detailEl.textContent = 'Cơ chế kiểm duyệt thiết bị đang hoạt động ở trạng thái: ' + accessState + '.';
     return;
   }
   stateEl.textContent = 'Độc lập · sẵn sàng';
-  detailEl.textContent = 'Dữ liệu báo giá chạy local-first; có thể vào thẳng, Application Management chỉ bật khi cần quản trị tập trung.';
+  detailEl.textContent = 'Dữ liệu báo giá chạy local-first; có thể vào thẳng và chỉ kết nối trung tâm quản trị khi cần.';
 }
 
 let dashboardSearchActiveIndex = -1;
