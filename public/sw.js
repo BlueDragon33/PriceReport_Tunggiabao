@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v614-standalone-access';
+const CACHE = 'pricereport-shell-v615-standalone-contract-cleanup';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
