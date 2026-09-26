@@ -108,9 +108,16 @@ body.v5-ui .brand{
   color:#fff;
   display:grid;
   place-items:center;
+  overflow:hidden;
   font-size:16px;
   font-weight:900;
   letter-spacing:.5px;
+}
+body.v5-ui .brand img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
 }
 body.v5-ui .nav button{
   min-height:76px;
@@ -422,7 +429,7 @@ body.v5-ui .shell.app-workspace .app-brand{
   border-bottom:1px solid rgba(255,255,255,.09);
 }
 body.v5-ui .brand{
-  background:var(--v5-primary);
+  background:transparent;
   box-shadow:none;
 }
 body.v5-ui .shell.app-workspace .brand{
@@ -430,7 +437,7 @@ body.v5-ui .shell.app-workspace .brand{
   min-width:38px;
   height:38px;
   border-radius:10px;
-  background:var(--v5-primary);
+  background:transparent;
   box-shadow:none;
 }
 body.v5-ui .shell.app-workspace .brand-copy strong{

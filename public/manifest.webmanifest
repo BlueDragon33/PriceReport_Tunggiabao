@@ -1,12 +1,22 @@
 {
-  "name": "PriceReport Tùng Gia Bảo",
-  "short_name": "PriceReport",
+  "name": "Báo giá Tùng Gia Bảo",
+  "short_name": "Báo giá TGB",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#eef3f7",
   "theme_color": "#0b8f83",
-  "description": "WebApp tạo và quản lý bảng báo giá A4.",
+  "description": "Ứng dụng tạo, quản lý và xuất bảng báo giá chuyên nghiệp của Tùng Gia Bảo.",
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "./icon-192.svg",
