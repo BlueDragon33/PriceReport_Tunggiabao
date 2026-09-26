@@ -26,28 +26,28 @@
     ],
     "classification": "client-runtime",
     "localRecordKey": "tunggiabao-device-profile-v1",
-    "remoteRegistry": true,
+    "remoteRegistry": false,
     "accessAndEditSeparated": true,
     "uiProfiles": {
       "desktop": "workspace-wide",
       "tablet": "touch-split",
       "phone": "mobile-single"
     },
-    "identity": "P-256 non-extractable private key in IndexedDB",
-    "session": "revocable server-side KT session"
+    "identity": "Local device profile by default; P-256 identity is created only in optional Managed Mode",
+    "session": "No remote session in Standalone Mode; revocable KT session only in optional Managed Mode"
   },
   "readiness": {
     "runtime": "available",
     "deviceClassification": "available",
     "adaptiveUi": "available",
     "localDeviceRecord": "available",
-    "deviceRegistry": "implemented-requires-d1-deployment",
-    "deviceGateway": "implemented-requires-d1-and-app-origin",
-    "adminApi": "implemented-requires-control-secret-and-origin",
-    "remoteAuditApi": "implemented-requires-d1-deployment",
-    "p256DeviceIdentity": "implemented",
-    "revocableSessions": "implemented",
-    "deviceAccessGate": "implemented-rollout-off-until-live-readback"
+    "deviceRegistry": "optional-managed-deployment",
+    "deviceGateway": "optional-managed-deployment",
+    "adminApi": "optional-managed-deployment",
+    "remoteAuditApi": "optional-managed-deployment",
+    "p256DeviceIdentity": "optional-managed-mode",
+    "revocableSessions": "optional-managed-mode",
+    "deviceAccessGate": "available-but-disabled-in-standalone"
   },
   "policy": {
     "applicationManagementMayInventOperationsWithoutBackend": false,
