@@ -108,7 +108,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v611-touch-breakpoint-hardening")) fail('Service-worker cache version was not aligned with the V6.11 touch breakpoint hardening release');
+if (!sw.includes("pricereport-shell-v612-preview-direct-edit")) fail('Service-worker cache version was not aligned with the V6.12 preview direct-edit release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -479,6 +479,7 @@ if (!js.includes('function recordDataLibraryOperation') || !js.includes("'undo-a
 if (!js.includes('Có thể hoàn tác trong 8 giây')) fail('V5.5 undo window must be explicit to the operator');
 
 if (!html.includes('src/responsive-v610.css')) fail('V6.11 touch hardening stylesheet is not linked');
+if (!js.includes('openPreviewEditPopup') || !js.includes("previewPaper?.addEventListener('dblclick'")) fail('V6.12 direct preview double-click editor router is missing');
 if (
   !responsivePolishCss.includes('Tablet editing-first mode')
   || !responsivePolishCss.includes('(min-width:1024px) and (orientation:landscape)')
