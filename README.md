@@ -2,24 +2,19 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.12 Preview Direct Edit
+## Trạng thái hiện tại — V6.14 Standalone-first Access Mode
 
-V6.12 khôi phục luồng chỉnh sửa trực tiếp từ bản báo giá sau khi refactor làm mất hành vi popup tương ứng.
+V6.14 đồng bộ chính sách phát triển mới vào runtime thật: **Báo giá TGB mặc định chạy độc lập local-first và vào thẳng, không cần Application Management duyệt thiết bị**.
 
-- Trong **Xem báo cáo**, click một lần không còn đá người dùng khỏi preview.
-- **Nhấp đôi** vào vùng dữ liệu mở đúng popup chỉnh sửa hiện đại.
-- Tiêu đề / doanh nghiệp / mã báo giá → Thông tin chung.
-- Khách hàng → popup Khách hàng.
-- Lời mở đầu / lời kết / chân trang → Văn bản tùy chỉnh.
-- Bảng sản phẩm → popup Sản phẩm; nếu nhấp đôi một dòng, popup tự focus đúng sản phẩm đó.
-- Tổng tiền / thanh toán → popup Thanh toán.
-- Điều khoản → popup Điều khoản.
-- Chữ ký → popup Chữ ký.
-- Các vùng có thể chỉnh sửa có con trỏ và phản hồi hover rõ hơn trên desktop.
-- Chế độ Sắp xếp vẫn ưu tiên kéo/thả và không kích hoạt popup nhấp đôi.
-- Không đổi business state, import/export, lịch sử, catalog hay persistence.
-- Package: **6.12.0**.
-- PWA cache generation: **pricereport-shell-v612-preview-direct-edit**.
+- `device-control.json` có mode rõ ràng: `standalone` / `managed`.
+- Standalone Mode là mặc định; Device Gate không chặn app và không tạo cảnh báo giả.
+- Trung tâm Hệ thống hiển thị rõ **Độc lập · vào thẳng** và **Application Management là tùy chọn**.
+- Managed Mode vẫn được giữ nguyên cho lúc cần quản trị tập trung hoặc release có kiểm duyệt thiết bị.
+- Production materializer tự chuyển sang `managed` chỉ khi có `PRICE_REPORT_CONTROL_ORIGIN` hợp lệ và health read-back đạt yêu cầu.
+- Contract công bố rõ manager outage không được chặn core runtime local-first.
+- PWA cache generation: **pricereport-shell-v614-standalone-access**.
+- Package: **6.14.0**.
+- V6.13 site identity/favicons tiếp tục được giữ nguyên.
 
 ## Kiểm thử
 
