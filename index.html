@@ -751,9 +751,9 @@
               <div class="system-panel-head"><div><h3>Ranh giới dữ liệu</h3><p>Các dữ liệu cốt lõi vẫn thuộc runtime PriceReport, kể cả khi Managed Mode được bật.</p></div></div>
               <div class="system-boundary-list">
                 <div><span>Local-first</span><strong id="systemBoundaryLocal">Đang đọc contract</strong></div>
-                <div><span>Dữ liệu báo giá lên Control Plane</span><strong id="systemBoundaryQuote">Đang đọc contract</strong></div>
-                <div><span>Dữ liệu khách hàng lên Control Plane</span><strong id="systemBoundaryCustomer">Đang đọc contract</strong></div>
-                <div><span>Private key rời thiết bị</span><strong id="systemBoundaryPrivateKey">Đang đọc contract</strong></div>
+                <div><span>Báo giá gửi lên hệ quản trị</span><strong id="systemBoundaryQuote">Đang đọc contract</strong></div>
+                <div><span>Khách hàng gửi lên hệ quản trị</span><strong id="systemBoundaryCustomer">Đang đọc contract</strong></div>
+                <div><span>Khóa bảo mật rời thiết bị</span><strong id="systemBoundaryPrivateKey">Đang đọc contract</strong></div>
               </div>
             </section>
           </div>
@@ -762,7 +762,7 @@
             <summary>
               <span>
                 <b>Quản trị tập trung</b>
-                <small>Tùy chọn · chỉ cần khi muốn duyệt/khóa thiết bị từ Application Management.</small>
+                <small>Tùy chọn · chỉ mở khi cần quản lý, duyệt hoặc khóa thiết bị từ trung tâm.</small>
               </span>
               <strong id="systemManagedSummary">Đang tắt</strong>
             </summary>
@@ -771,23 +771,23 @@
               <section class="system-managed-status-grid" aria-label="Trạng thái quản trị tập trung">
                 <article class="system-status-card app-status-card" id="systemManagementCard">
                   <span class="system-status-icon management">⌁</span>
-                  <div><small>Application Management</small><strong id="systemManagementState">Đang đọc contract</strong><em id="systemManagementDetail">—</em></div>
+                  <div><small>Ứng dụng quản trị</small><strong id="systemManagementState">Đang đọc contract</strong><em id="systemManagementDetail">—</em></div>
                 </article>
                 <article class="system-status-card app-status-card">
                   <span class="system-status-icon remote">⚙</span>
-                  <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Chỉ hoạt động khi Managed Mode được bật và health check đạt yêu cầu.</em></div>
+                  <div><small>Quản trị từ xa</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Chỉ hoạt động khi chế độ quản trị tập trung được bật và hệ thống đã kiểm tra kết nối thành công.</em></div>
                 </article>
               </section>
 
               <div class="system-managed-grid">
                 <section class="system-center-panel app-surface-panel">
-                  <div class="system-panel-head"><div><h3>Control Plane</h3><p>Thông tin kỹ thuật tùy chọn; không quyết định khả năng mở và tạo báo giá ở Standalone Mode.</p></div></div>
+                  <div class="system-panel-head"><div><h3>Dịch vụ quản trị thiết bị</h3><p>Thông tin kỹ thuật dành cho quản trị viên; không ảnh hưởng việc mở ứng dụng và tạo báo giá ở chế độ độc lập.</p></div></div>
                   <div class="system-readiness-list">
-                    <div><span>Mã registry Device Gate</span><strong id="systemRegistryDeviceCode">Không dùng ở Standalone</strong></div>
-                    <div><span>Device registry</span><strong id="systemRegistryReady">Đang đọc</strong></div>
-                    <div><span>Device gateway</span><strong id="systemGatewayReady">Đang đọc</strong></div>
-                    <div><span>Admin API</span><strong id="systemAdminApiReady">Đang đọc</strong></div>
-                    <div><span>Remote audit API</span><strong id="systemAuditReady">Đang đọc</strong></div>
+                    <div><span>Mã thiết bị trên hệ quản trị</span><strong id="systemRegistryDeviceCode">Không dùng ở Standalone</strong></div>
+                    <div><span>Danh sách thiết bị</span><strong id="systemRegistryReady">Đang đọc</strong></div>
+                    <div><span>Cổng kiểm duyệt thiết bị</span><strong id="systemGatewayReady">Đang đọc</strong></div>
+                    <div><span>Kết nối quản trị</span><strong id="systemAdminApiReady">Đang đọc</strong></div>
+                    <div><span>Nhật ký quản trị</span><strong id="systemAuditReady">Đang đọc</strong></div>
                   </div>
                   <div class="system-contract-note">
                     <b id="systemContractApp">PriceReport Tùng Gia Bảo</b>
@@ -796,10 +796,10 @@
                 </section>
 
                 <section class="system-center-panel system-policy-panel app-surface-panel">
-                  <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Không giả lập kết nối hoặc trạng thái thiết bị khi backend quản trị chưa sẵn sàng.</p></div></div>
+                  <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Chỉ hiển thị trạng thái thật khi dịch vụ quản trị đã sẵn sàng.</p></div></div>
                   <div class="system-policy-note">
-                    <strong>Standalone là mặc định; Managed Mode là lựa chọn chủ động.</strong>
-                    <p>PriceReport luôn có thể mở trực tiếp và làm việc local-first. Chỉ khi chủ hệ thống bật Managed Mode, Device Gate mới dùng registry KT- và Application Management mới tham gia duyệt/khóa thiết bị.</p>
+                    <strong>Chế độ độc lập là mặc định; quản trị tập trung là lựa chọn chủ động.</strong>
+                    <p>PriceReport luôn có thể mở trực tiếp và làm việc local-first. Chỉ khi chủ hệ thống bật quản trị tập trung, cơ chế kiểm duyệt thiết bị và Application Management mới tham gia.</p>
                   </div>
                 </section>
               </div>
