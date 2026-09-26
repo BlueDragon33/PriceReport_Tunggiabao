@@ -2,19 +2,19 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.14 Standalone-first Access Mode
+## Trạng thái hiện tại — V6.15 Standalone Contract Cleanup
 
-V6.14 đồng bộ chính sách phát triển mới vào runtime thật: **Báo giá TGB mặc định chạy độc lập local-first và vào thẳng, không cần Application Management duyệt thiết bị**.
+V6.15 dọn phần legacy còn sót sau V6.14 để trạng thái checked-in phản ánh đúng chính sách **Standalone-first / local-first / vào thẳng**.
 
-- `device-control.json` có mode rõ ràng: `standalone` / `managed`.
-- Standalone Mode là mặc định; Device Gate không chặn app và không tạo cảnh báo giả.
-- Trung tâm Hệ thống hiển thị rõ **Độc lập · vào thẳng** và **Application Management là tùy chọn**.
-- Managed Mode vẫn được giữ nguyên cho lúc cần quản trị tập trung hoặc release có kiểm duyệt thiết bị.
-- Production materializer tự chuyển sang `managed` chỉ khi có `PRICE_REPORT_CONTROL_ORIGIN` hợp lệ và health read-back đạt yêu cầu.
-- Contract công bố rõ manager outage không được chặn core runtime local-first.
-- PWA cache generation: **pricereport-shell-v614-standalone-access**.
-- Package: **6.14.0**.
-- V6.13 site identity/favicons tiếp tục được giữ nguyên.
+- `management-contract.json` không còn quảng bá remote registry là đang bật khi app đang Standalone.
+- Các capability P-256, registry, session và admin API được mô tả đúng là **tùy chọn của Managed Mode**.
+- Nếu không đọc được `device-control.json`, app fallback về **Standalone local-first** thay vì trạng thái legacy `classification-only`.
+- Tài liệu KT Control nói rõ: Standalone không cần KT Control; chỉ Managed Mode mới dùng D1/device approval.
+- Smoke gate chặn việc đưa `classification-only` fallback quay trở lại.
+- PWA cache generation: **pricereport-shell-v615-standalone-contract-cleanup**.
+- Package: **6.15.0**.
+
+V6.14 vẫn là nền truy cập: `standalone` mặc định, `managed` chỉ được materialize khi có control origin hợp lệ và health read-back đạt yêu cầu.
 
 ## Kiểm thử
 
