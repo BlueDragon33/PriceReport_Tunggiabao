@@ -1,9 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "enabled": false,
   "baseUrl": "",
   "requestTimeoutMs": 5000,
   "pendingPollMs": 15000,
   "heartbeatMs": 60000,
-  "note": "Set enabled=true and baseUrl to the deployed KT Control Service only after D1 + secret + origin read-back pass."
+  "note": "Standalone local-first is the default. Set mode=managed with a verified control origin only when centralized device approval is intentionally enabled.",
+  "mode": "standalone"
 }
