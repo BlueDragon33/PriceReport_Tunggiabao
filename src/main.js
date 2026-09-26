@@ -8818,10 +8818,15 @@ function previewEditDescriptor(node) {
   };
 }
 
+const PREVIEW_FOCUS_TARGET_ALIASES = Object.freeze({
+  quickCustomerName: 'customerName'
+});
+
 function focusPreviewTargetAfterOpen(targetId = '') {
-  if (!targetId) return;
+  const resolvedTargetId = PREVIEW_FOCUS_TARGET_ALIASES[String(targetId || '').trim()] || String(targetId || '').trim();
+  if (!resolvedTargetId) return;
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    const target = document.getElementById(targetId);
+    const target = document.getElementById(resolvedTargetId);
     if (!target) return;
     target.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     target.focus?.();
