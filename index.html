@@ -1322,7 +1322,7 @@
       <div class="paper-wrap" id="paperWrap">
         <article class="paper theme-modern" id="paper">
           <div class="decor-top"></div><div class="decor-bottom"></div>
-          <header class="doc-head">
+          <header class="doc-head" data-preview-edit-block="general" data-preview-focus="companyName">
             <div class="logo-zone clickable" data-target="companyName" id="previewLogo" data-layout-block="logo" data-layout-label="Logo"></div>
             <div class="company-col" data-layout-block="company" data-layout-label="Thông tin công ty">
               <div class="company-block">
@@ -1339,7 +1339,7 @@
             </div>
           </header>
 
-          <div class="quote-top" data-layout-block="quote" data-layout-label="Tiêu đề báo giá">
+          <div class="quote-top" data-preview-edit-block="general" data-preview-focus="quoteTitle" data-layout-block="quote" data-layout-label="Tiêu đề báo giá">
             <div class="qtitle-wrap">
               <div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle" data-layout-block="quoteTitle" data-layout-label="Tiêu đề"></div>
               <div class="qsubtitle clickable" data-target="quoteSubtitle" id="pQuoteSubtitle" data-layout-block="quoteSubtitle" data-layout-label="Phụ đề"></div>
@@ -1355,9 +1355,9 @@
           <p class="intro clickable" data-target="intro" id="pIntro" data-layout-block="intro" data-layout-label="Lời mở đầu"></p>
           <div class="sectionbar clickable" data-target="sectionTitle" id="pSection" data-layout-block="section" data-layout-label="Tiêu đề nhóm"></div>
 
-          <table class="qtable" data-layout-block="table" data-layout-label="Bảng sản phẩm"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
+          <table class="qtable" data-preview-edit-block="products" data-layout-block="table" data-layout-label="Bảng sản phẩm"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
 
-          <table class="summary" id="summary" data-layout-block="summary" data-layout-label="Tổng cộng">
+          <table class="summary" id="summary" data-preview-edit-block="payment" data-preview-focus="discountPct" data-layout-block="summary" data-layout-label="Tổng cộng">
             <tbody>
               <tr><td>Tạm tính</td><td class="val" id="sub"></td></tr>
               <tr id="discRow"><td id="discLabel">Giảm giá</td><td class="val" id="disc"></td></tr>
@@ -1368,7 +1368,7 @@
           </table>
           <div class="words" id="words" data-layout-block="words" data-layout-label="Số tiền bằng chữ"></div>
 
-          <section class="payment-print" id="paymentPrint" data-layout-block="payment" data-layout-label="Thanh toán">
+          <section class="payment-print" id="paymentPrint" data-preview-edit-block="payment" data-preview-focus="paymentMethod" data-layout-block="payment" data-layout-label="Thanh toán">
             <h4>THÔNG TIN THANH TOÁN</h4>
             <div class="payment-grid">
               <div class="clickable" data-target="paymentMethod" data-layout-block="paymentMethod" data-layout-label="Phương thức thanh toán"><b>Phương thức:</b> <span id="pPaymentMethod"></span></div>
@@ -1378,13 +1378,13 @@
             </div>
           </section>
 
-          <section class="terms" id="termsBox" data-layout-block="terms" data-layout-label="Điều khoản">
+          <section class="terms" id="termsBox" data-preview-edit-block="terms" data-preview-focus="termsTitle" data-layout-block="terms" data-layout-label="Điều khoản">
             <h4 class="clickable" data-target="termsTitle" id="pTermsTitle" data-layout-block="termsTitle" data-layout-label="Tiêu đề điều khoản"></h4>
             <ol class="clickable" data-target="termsText" id="pTerms" data-layout-block="termsText" data-layout-label="Nội dung điều khoản"></ol>
             <div class="closing clickable" data-target="closingText" id="pClosing" data-layout-block="closing" data-layout-label="Lời kết"></div>
           </section>
 
-          <section class="signatures" id="signatures" data-layout-block="signatures" data-layout-label="Chữ ký">
+          <section class="signatures" id="signatures" data-preview-edit-block="signature" data-preview-focus="dateLine" data-layout-block="signatures" data-layout-label="Chữ ký">
             <div>
               <div class="clickable" data-target="dateLine" id="pDateLeft"></div>
               <div class="sig-title" id="pLeftTitle"></div>
@@ -1399,7 +1399,7 @@
             </div>
           </section>
 
-          <footer class="footer" data-layout-block="footer" data-layout-label="Chân trang">
+          <footer class="footer" data-preview-edit-block="custom-text" data-preview-focus="footerText" data-layout-block="footer" data-layout-label="Chân trang">
             <span class="clickable" data-target="slogan" id="pSlogan" data-layout-block="slogan" data-layout-label="Slogan"></span>
             <span id="footerSep"> • </span>
             <span class="clickable" data-target="footerText" id="pFooter" data-layout-block="footerText" data-layout-label="Nội dung chân trang"></span>
