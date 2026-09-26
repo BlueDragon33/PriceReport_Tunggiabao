@@ -375,7 +375,7 @@ if (!appCss.includes('.master-workspace-header') || !appCss.includes('.master-ta
 
 if (!html.includes('id="studioBackHome"') || !html.includes('id="contentLibraryHome"') || !html.includes('class="editor content-library"')) fail('V5.9 quotation Studio content library is missing');
 if (!js.includes("function syncStudioContext(tab = '')")) fail('Studio context synchronizer is missing');
-if (!js.includes('function openContentBlock(block)') || !js.includes('function showContentLibraryHome')) fail('V5.9 content-library controller is missing');
+if (!js.includes('function openContentBlock(') || !js.includes('function showContentLibraryHome')) fail('V5.9 content-library controller is missing');
 if (!js.includes('function openStudioCommandPalette') || !js.includes('function applyTheme')) fail('V5.9 shared Studio command/theme controllers are missing');
 if (!studioCss.includes('.content-library-home') || !studioCss.includes('.studio-topbar') || !studioCss.includes('.inspector-section')) fail('V5.9 Studio pixel-lock styling is missing');
 
