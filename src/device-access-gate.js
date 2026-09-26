@@ -176,7 +176,7 @@ function gateElement() {
     '<div class="price-report-device-code hidden" id="priceReportDeviceCodeWrap"><span>Mã thiết bị</span><strong id="priceReportDeviceCode">—</strong><button type="button" id="priceReportDeviceCopy">Sao chép</button></div>',
     '<div class="price-report-device-status"><i></i><span id="priceReportDeviceStatus">Đang kiểm tra…</span></div>',
     '<button type="button" class="price-report-device-retry" id="priceReportDeviceRetry">Kiểm tra lại</button>',
-    '<small>Private key P-256 chỉ nằm trên thiết bị này. Trung tâm chỉ duyệt/khóa registry KT- qua Control API của PriceReport.</small>',
+    '<small>Managed Mode: private key P-256 chỉ nằm trên thiết bị này; Application Management chỉ duyệt/khóa registry KT- khi quản trị tập trung được chủ động bật.</small>',
     '</div>',
   ].join('');
   document.body.appendChild(gate);
@@ -275,8 +275,8 @@ export async function startPriceReportDeviceAccess() {
   try {
     config = await readConfig();
   } catch (error) {
-    publishState('classification-only', null, error instanceof Error ? error.message : 'Device Gate chưa cấu hình.');
-    return null;
+    publishState('standalone', null, `Độc lập local-first · bỏ qua Device Gate (${error instanceof Error ? error.message : 'không đọc được cấu hình'}).`);
+    return { enabled: false, mode: 'standalone', degraded: true };
   }
 
   if (!config.enabled) {
