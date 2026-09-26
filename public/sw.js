@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v611-touch-breakpoint-hardening';
+const CACHE = 'pricereport-shell-v612-preview-direct-edit';
 const CORE = [
   './index.html',
   './manifest.webmanifest',
