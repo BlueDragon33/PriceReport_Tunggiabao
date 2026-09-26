@@ -1,6 +1,6 @@
 # KT Control Service deployment
 
-PriceReport remains local-first for quotation/customer/catalog data. Only device access metadata is stored in the client-owned KT Control D1.
+PriceReport remains local-first for quotation/customer/catalog data. In Standalone Mode it does not require KT Control at all. Only when optional Managed Mode is enabled is device access metadata stored in the client-owned KT Control D1.
 
 ## Production boundary
 
@@ -31,7 +31,7 @@ Variables:
 
 Deployment is manual and fail-closed. The deploy workflow first applies D1 migrations, deploys the Worker, rotates the control secret, and requires a successful public health read-back. It then triggers the Pages workflow.
 
-The Pages workflow runs `scripts/production-config.mjs`. When `PRICE_REPORT_CONTROL_ORIGIN` is empty, the checked-in source remains classification-only. When the origin is configured, the script re-verifies `/health` before it:
+The Pages workflow runs `scripts/production-config.mjs`. When `PRICE_REPORT_CONTROL_ORIGIN` is empty, the checked-in source remains Standalone Mode: local-first, direct-entry, and independent from Application Management. When the origin is configured, the script re-verifies `/health` before it:
 - enables `public/device-control.json`,
 - publishes live readiness in `public/management-contract.json`,
 - marks `policy.remoteAdminReady=true`, and
