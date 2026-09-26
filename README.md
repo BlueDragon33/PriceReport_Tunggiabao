@@ -2,18 +2,22 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.11 Touch Breakpoint Hardening
+## Trạng thái hiện tại — V6.12 Preview Direct Edit
 
-V6.11 là vòng hardening sau V6.10, tập trung vào hai lỗi mà breakpoint cũ chưa bao phủ: **iPad Pro dọc 1024 px** bị ép split-view và **tablet ngang 900–1023 px** để lại preview A4 quá hẹp. Browser regression được thêm trước và đã tái hiện lỗi trên CI trước khi sửa.
+V6.12 khôi phục thao tác chỉnh sửa trực tiếp trên bản xem trước A4: **nhấp đôi vào vùng nội dung → mở đúng popup chỉnh sửa hiện đại và focus đúng trường tương ứng**.
 
-- Tablet/iPad **portrait ở mọi chiều rộng**: ưu tiên nhập liệu, editor gần full-width và ẩn live A4 trong lúc soạn.
-- Tablet **landscape dưới 1024 px**: cũng ưu tiên nhập liệu, tránh ép A4 vào cột hẹp.
-- Tablet/iPad **landscape từ 1024 px**: bật split view với editor khoảng 320 px và phần preview còn đủ rộng.
-- Browser gates khóa thêm iPad Pro portrait 1024×1366, compact landscape 900×700 và boundary landscape 1024×768, bên cạnh 834×1112 và 1112×834 đã có.
-- Phone tăng độ đọc cho status/meta, bottom navigation, mô tả khối, Flow Navigator và các nút footer; input vẫn giữ 16 px+ để tránh iOS focus zoom.
-- Không tạo mobile state riêng, không sửa business state, dữ liệu local-first và desktop workflow được giữ nguyên.
-- Package: **6.11.0**.
-- PWA cache generation: **pricereport-shell-v611-touch-breakpoint-hardening**.
+- Tên/logo/địa chỉ/MST/SĐT/tiêu đề/số báo giá/ngày/hiệu lực → popup **Thông tin chung**.
+- Khách hàng → popup **Khách hàng**.
+- Bảng hàng hóa → popup **Sản phẩm / Dịch vụ**.
+- Tổng tiền/thanh toán → popup **Thanh toán**.
+- Điều khoản → popup **Điều khoản**.
+- Chữ ký → popup **Chữ ký**.
+- Lời mở đầu/lời kết/chân trang → popup **Văn bản tùy chỉnh**.
+- Router dùng event delegation trên #paper nên vẫn hoạt động với bảng sản phẩm render động.
+- Single-click cũ vẫn được giữ làm fallback, nhưng được trì hoãn ngắn để không tranh chấp với double-click.
+- Không thay đổi business state, dữ liệu báo giá, import/export hay persistence.
+- Package: **6.12.0**.
+- PWA cache generation: **pricereport-shell-v612-preview-direct-edit**.
 
 ## Kiểm thử
 
