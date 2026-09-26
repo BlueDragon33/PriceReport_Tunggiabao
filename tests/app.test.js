@@ -2504,9 +2504,9 @@ test('V4.8 device and system center shows real runtime state and separates local
   expect(document.getElementById('systemRegistryDeviceCode').textContent).toBe('KT-TEST-0001');
 
   window.dispatchEvent(new CustomEvent('pricereport:device-access', {
-    detail: { state: 'classification-only', identity: null, message: 'Remote Device Gate chưa bật.' }
+    detail: { state: 'standalone', identity: null, message: 'Chế độ độc lập local-first đang bật.' }
   }));
-  expect(document.getElementById('systemAccessState').textContent).toContain('Phân loại cục bộ');
+  expect(document.getElementById('systemAccessState').textContent).toContain('Độc lập');
   document.querySelector('[data-tab="general"]').click();
 });
 
@@ -2627,10 +2627,10 @@ test('device classification runtime exposes a managed UI profile without gating 
 });
 
 
-test('KT Device Gate starts in rollout-safe classification-only mode before production backend enablement', async () => {
+test('KT Device Gate defaults to standalone local-first mode before managed access is intentionally enabled', async () => {
   await new Promise((resolve) => setTimeout(resolve, 0));
   const accessState = document.documentElement.dataset.priceReportDeviceAccess;
-  expect(['classification-only', undefined]).toContain(accessState);
+  expect(['standalone', 'classification-only', undefined]).toContain(accessState);
   expect(document.getElementById('deviceProfileChip')).toBeTruthy();
 });
 
