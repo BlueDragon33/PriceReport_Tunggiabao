@@ -108,7 +108,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v612-preview-direct-edit")) fail('Service-worker cache version was not aligned with the V6.12 preview direct edit release');
+if (!sw.includes("pricereport-shell-v614-standalone-access")) fail('Service-worker cache version was not aligned with the V6.14 standalone access release');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
 if (!html.includes("const recoveryKey = 'tgb-style-recovery-v5'")) fail('Bounded V5.9 stylesheet recovery key is missing');
@@ -312,6 +312,9 @@ if (managementContract.application?.category !== 'Kế toán') fail('PriceReport
 if (managementContract.device?.namespace !== 'KT-') fail('Accounting device namespace must be KT-');
 if (managementContract.policy?.remoteAdminReady !== false) fail('Checked-in source contract must remain rollout-off before production materialization');
 if (!deviceProfileJs.includes('resolveRemoteAdminReady')) fail('Runtime management readiness resolver is missing');
+if (!deviceProfileJs.includes('resolveDefaultAccessMode')) fail('Standalone/managed access-mode resolver is missing');
+if (managementContract.policy?.defaultAccessMode !== 'standalone') fail('Management contract must default to standalone access');
+if (managementContract.access?.coreRuntimeBlockedByManagerOutage !== false) fail('Manager outages must not block the standalone core runtime');
 if (!deviceProfileJs.includes("MANAGEMENT_CONTRACT_URL = './management-contract.json'")) fail('Runtime must read the deployed management contract');
 if (!deviceProfileJs.includes("cache: 'no-store'")) fail('Runtime management readiness must bypass stale HTTP caches');
 if (!deviceProfileJs.includes('refreshManagementReadiness')) fail('Runtime management readiness refresh API is missing');
@@ -324,7 +327,7 @@ if (!js.includes('startPriceReportDeviceAccess')) fail('KT Device Gate runtime i
 if (!fs.existsSync('src/device-access-gate.js')) fail('KT Device Gate module is missing');
 if (!fs.existsSync('public/device-control.json')) fail('KT device-control rollout config is missing');
 const ktControlConfig = JSON.parse(fs.readFileSync('public/device-control.json','utf8'));
-if (ktControlConfig.enabled !== false) fail('KT Device Gate must remain rollout-off until live control read-back passes');
+if (ktControlConfig.mode !== 'standalone' || ktControlConfig.enabled !== false) fail('KT Device Gate must default to standalone local-first mode');
 if (!fs.existsSync('control-service/src/index.ts') || !fs.existsSync('control-service/src/device-store.ts')) fail('KT Control Service source is missing');
 if (!fs.existsSync('control-service/migrations/0001_device_control.sql')) fail('KT Control D1 migration is missing');
 
