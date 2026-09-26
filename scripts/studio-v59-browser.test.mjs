@@ -398,6 +398,39 @@ try {
   const resultCount = await page.locator('#studioCommandResults [role="option"]').count();
   if (resultCount < 1) fail('command search does not expose matching Studio actions');
 
+  // V6.12: direct preview editing must open the modern popup that owns the clicked field.
+  await page.locator('.shell > .nav > button[data-tab="general"]').click();
+  await page.locator('.shell:not(.app-workspace):not(.report-view)').waitFor();
+
+  await page.locator('#pCompanyName').dblclick();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'general') {
+    fail('V6.12 double-clicking company name must open the General workspace');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'companyName') {
+    fail('V6.12 company-name direct edit must focus #companyName');
+  }
+  await page.locator('#doneContentWorkspace').click();
+
+  await page.locator('#pCustomer').dblclick();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'customer') {
+    fail('V6.12 double-clicking customer preview must open the Customer workspace');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'customerName') {
+    fail('V6.12 customer direct edit must focus #customerName');
+  }
+  await page.locator('#doneContentWorkspace').click();
+
+  await page.locator('.qtable').dblclick();
+  await page.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  if (!(await page.locator('#productWorkspaceModal .product-workspace-dialog').isVisible())) {
+    fail('V6.12 double-clicking the product table must open Product workspace');
+  }
+  await page.locator('#doneProductWorkspace').click();
+
   // V6.10: iPad portrait focuses on editing instead of squeezing an unreadable A4 preview.
   const tabletContext = await browser.newContext({
     viewport: { width: 834, height: 1112 },
