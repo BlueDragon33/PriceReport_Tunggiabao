@@ -2,19 +2,21 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.15 Standalone Contract Cleanup
+## Trạng thái hiện tại — V6.16 Standalone-first System UI
 
-V6.15 dọn phần legacy còn sót sau V6.14 để trạng thái checked-in phản ánh đúng chính sách **Standalone-first / local-first / vào thẳng**.
+V6.16 hoàn thiện phần giao diện sau khi V6.15 đã dọn contract: **tab Hệ thống giờ nhìn theo góc độ người dùng local-first trước, quản trị tập trung sau**.
 
-- `management-contract.json` không còn quảng bá remote registry là đang bật khi app đang Standalone.
-- Các capability P-256, registry, session và admin API được mô tả đúng là **tùy chọn của Managed Mode**.
-- Nếu không đọc được `device-control.json`, app fallback về **Standalone local-first** thay vì trạng thái legacy `classification-only`.
-- Tài liệu KT Control nói rõ: Standalone không cần KT Control; chỉ Managed Mode mới dùng D1/device approval.
-- Smoke gate chặn việc đưa `classification-only` fallback quay trở lại.
-- PWA cache generation: **pricereport-shell-v615-standalone-contract-cleanup**.
-- Package: **6.15.0**.
+- Trạng thái chính chỉ còn: thiết bị hiện tại, chế độ truy cập và dữ liệu nghiệp vụ local-first.
+- Application Management + Remote Admin được đưa vào khối **Quản trị tập trung** mặc định đóng.
+- Registry KT-, Control Plane readiness và Admin API không còn chiếm diện tích chính khi app đang Standalone.
+- Các ID/runtime contract cũ vẫn được giữ để không phá logic Managed Mode.
+- Nhãn legacy `classification-only` khi gặp dữ liệu cũ được hiển thị như trạng thái local-first thay vì một chế độ riêng.
+- Dashboard dùng ngôn ngữ **Managed Mode đang bật** thay vì “đã kết nối quản trị”.
+- Tablet/phone có layout riêng cho khối quản trị tùy chọn.
+- PWA cache generation: **pricereport-shell-v616-standalone-system-ui**.
+- Package: **6.16.0**.
 
-V6.14 vẫn là nền truy cập: `standalone` mặc định, `managed` chỉ được materialize khi có control origin hợp lệ và health read-back đạt yêu cầu.
+V6.15 tiếp tục là nền contract: source mặc định `standalone`, không yêu cầu duyệt thiết bị, và mọi capability quản trị tập trung chỉ là tùy chọn.
 
 ## Kiểm thử
 

@@ -2048,7 +2048,7 @@ function dashboardRevenueLabel(history) {
 function systemAccessLabel(value) {
   return ({
     standalone: 'Độc lập · vào thẳng',
-    'classification-only': 'Phân loại cục bộ',
+    'classification-only': 'Độc lập · local-first',
     authorized: 'Đã duyệt',
     pending: 'Chờ duyệt',
     blocked: 'Đã khóa',
@@ -2062,7 +2062,7 @@ function managementStateLabel(value) {
     ready: 'Sẵn sàng quản trị từ xa',
     standalone: 'Độc lập · local-first',
     'managed-unavailable': 'Managed Mode chưa sẵn sàng',
-    'classification-only': 'Chỉ phân loại cục bộ',
+    'classification-only': 'Độc lập · local-first',
     unavailable: 'Không đọc được contract',
     loading: 'Đang đọc contract'
   })[String(value || '')] || 'Đang đọc contract';
@@ -2071,6 +2071,8 @@ function managementStateLabel(value) {
 function readinessLabel(value) {
   const raw = String(value || '');
   if (raw === 'available') return 'Sẵn sàng';
+  if (raw === 'available-but-disabled-in-standalone') return 'Có sẵn · đang tắt';
+  if (raw.startsWith('optional-managed')) return 'Tùy chọn · chưa bật';
   if (raw.startsWith('implemented')) return 'Đã triển khai · chờ hạ tầng';
   if (!raw) return 'Chưa xác minh';
   return raw;
@@ -2131,11 +2133,23 @@ function renderSystemWorkspace() {
           : 'Managed Mode chưa đạt đầy đủ readiness.'))
   );
   setText('systemRemoteAdminState', runtime?.remoteAdminReady ? 'Sẵn sàng' : (runtime?.defaultAccessMode === 'standalone' ? 'Tùy chọn · đang tắt' : 'Chưa sẵn sàng'));
+  setText(
+    'systemManagedSummary',
+    runtime?.remoteAdminReady
+      ? 'Managed Mode đang bật'
+      : (runtime?.defaultAccessMode === 'standalone'
+        ? 'Đang tắt · không ảnh hưởng ứng dụng'
+        : 'Cần hoàn tất cấu hình')
+  );
 
   setText('systemDetailDeviceClass', local.deviceLabel || profile.label || local.deviceClass || profile.id || '—');
   setText('systemUiProfile', local.uiProfile || profile.shell || '—');
   setText('systemLocalDeviceCode', local.deviceCode || '—');
-  setText('systemRegistryDeviceCode', latestDeviceAccess.deviceCode || 'Chưa cấp registry');
+  setText(
+    'systemRegistryDeviceCode',
+    latestDeviceAccess.deviceCode
+      || (runtime?.defaultAccessMode === 'standalone' ? 'Không dùng ở Standalone' : 'Chưa cấp registry')
+  );
   setText('systemViewport', local.width && local.height ? local.width + ' × ' + local.height + ' px' : '—');
   setText('systemPlatform', local.platform || '—');
   setText('systemLastSeen', local.lastSeenAt ? new Date(local.lastSeenAt).toLocaleString('vi-VN') : '—');
@@ -2197,8 +2211,8 @@ function updateDashboardSystemState() {
   const runtime = window.PriceReportManagement;
   const accessState = document.documentElement?.dataset?.priceReportDeviceAccess || '';
   if (runtime?.remoteAdminReady) {
-    stateEl.textContent = 'Đã kết nối quản trị';
-    detailEl.textContent = 'Thiết bị và Application Management đang dùng contract production đã xác minh.';
+    stateEl.textContent = 'Managed Mode đang bật';
+    detailEl.textContent = 'Quản trị tập trung đã được chủ động bật và contract production đã xác minh.';
     return;
   }
   if (accessState && !['classification-only', 'standalone'].includes(accessState)) {

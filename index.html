@@ -709,39 +709,34 @@
           <div class="system-workspace-header app-workspace-header">
             <div>
               <span class="workspace-eyebrow">THIẾT BỊ & ỨNG DỤNG</span>
-              <h2>Thiết bị & trạng thái hệ thống</h2>
-              <p>Hiển thị trạng thái local-first của thiết bị, Device Gate và kết nối Application Management khi được bật.</p>
+              <h2>Hệ thống local-first</h2>
+              <p>PriceReport hoạt động độc lập trên thiết bị. Quản trị tập trung chỉ xuất hiện như một lớp tùy chọn khi chủ hệ thống chủ động bật Managed Mode.</p>
             </div>
-            <button class="btn primary" id="systemRefreshRuntime" type="button">↻ Kiểm tra lại</button>
+            <button class="btn primary" id="systemRefreshRuntime" type="button">↻ Kiểm tra trạng thái</button>
           </div>
 
-          <section class="system-status-grid" aria-label="Trạng thái hệ thống">
+          <section class="system-status-grid system-standalone-status-grid" aria-label="Trạng thái hệ thống chính">
             <article class="system-status-card app-status-card">
               <span class="system-status-icon">▣</span>
               <div><small>Thiết bị hiện tại</small><strong id="systemDeviceLabel">Đang nhận diện</strong><em id="systemDeviceClass">—</em></div>
             </article>
             <article class="system-status-card app-status-card" id="systemAccessCard">
               <span class="system-status-icon access">✓</span>
-              <div><small>Device Gate</small><strong id="systemAccessState">Đang kiểm tra</strong><em id="systemAccessMessage">—</em></div>
+              <div><small>Chế độ truy cập</small><strong id="systemAccessState">Đang kiểm tra</strong><em id="systemAccessMessage">—</em></div>
             </article>
-            <article class="system-status-card app-status-card" id="systemManagementCard">
-              <span class="system-status-icon management">⌁</span>
-              <div><small>Application Management</small><strong id="systemManagementState">Đang đọc contract</strong><em id="systemManagementDetail">—</em></div>
-            </article>
-            <article class="system-status-card app-status-card">
-              <span class="system-status-icon remote">⚙</span>
-              <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Là lớp tùy chọn; chỉ bật khi chủ hệ thống chuyển sang Managed Mode.</em></div>
+            <article class="system-status-card app-status-card system-local-data-card">
+              <span class="system-status-icon local">⌂</span>
+              <div><small>Dữ liệu nghiệp vụ</small><strong>Local-first</strong><em>Báo giá, khách hàng và danh mục không phụ thuộc Control Plane.</em></div>
             </article>
           </section>
 
-          <div class="system-center-grid">
+          <div class="system-center-grid system-primary-grid">
             <section class="system-center-panel app-surface-panel">
-              <div class="system-panel-head"><div><h3>Thiết bị hiện tại</h3><p>Phân loại UI cục bộ hoạt động độc lập; registry Device Gate chỉ tham gia khi Managed Mode được bật.</p></div></div>
+              <div class="system-panel-head"><div><h3>Thiết bị hiện tại</h3><p>Phân loại UI cục bộ luôn hoạt động, không cần duyệt thiết bị.</p></div></div>
               <div class="system-detail-grid">
                 <div><small>Loại thiết bị</small><strong id="systemDetailDeviceClass">—</strong></div>
                 <div><small>UI profile</small><strong id="systemUiProfile">—</strong></div>
-                <div><small>Mã phân loại cục bộ</small><strong id="systemLocalDeviceCode">—</strong></div>
-                <div><small>Mã registry Device Gate</small><strong id="systemRegistryDeviceCode">Chưa cấp</strong></div>
+                <div><small>Mã thiết bị cục bộ</small><strong id="systemLocalDeviceCode">—</strong></div>
                 <div><small>Kích thước viewport</small><strong id="systemViewport">—</strong></div>
                 <div><small>Nền tảng</small><strong id="systemPlatform">—</strong></div>
                 <div><small>Lần nhận diện gần nhất</small><strong id="systemLastSeen">—</strong></div>
@@ -752,22 +747,8 @@
               </div>
             </section>
 
-            <section class="system-center-panel app-surface-panel">
-              <div class="system-panel-head"><div><h3>Readiness của Control Plane</h3><p>Đọc trực tiếp từ management contract đã tải ở runtime.</p></div></div>
-              <div class="system-readiness-list">
-                <div><span>Device registry</span><strong id="systemRegistryReady">Đang đọc</strong></div>
-                <div><span>Device gateway</span><strong id="systemGatewayReady">Đang đọc</strong></div>
-                <div><span>Admin API</span><strong id="systemAdminApiReady">Đang đọc</strong></div>
-                <div><span>Remote audit API</span><strong id="systemAuditReady">Đang đọc</strong></div>
-              </div>
-              <div class="system-contract-note">
-                <b id="systemContractApp">PriceReport Tùng Gia Bảo</b>
-                <span id="systemContractMeta">Kế toán · namespace KT-</span>
-              </div>
-            </section>
-
             <section class="system-center-panel system-boundary-panel app-surface-panel">
-              <div class="system-panel-head"><div><h3>Ranh giới dữ liệu</h3><p>Những gì Application Management được phép và không được phép đọc.</p></div></div>
+              <div class="system-panel-head"><div><h3>Ranh giới dữ liệu</h3><p>Các dữ liệu cốt lõi vẫn thuộc runtime PriceReport, kể cả khi Managed Mode được bật.</p></div></div>
               <div class="system-boundary-list">
                 <div><span>Local-first</span><strong id="systemBoundaryLocal">Đang đọc contract</strong></div>
                 <div><span>Dữ liệu báo giá lên Control Plane</span><strong id="systemBoundaryQuote">Đang đọc contract</strong></div>
@@ -775,15 +756,55 @@
                 <div><span>Private key rời thiết bị</span><strong id="systemBoundaryPrivateKey">Đang đọc contract</strong></div>
               </div>
             </section>
-
-            <section class="system-center-panel system-policy-panel app-surface-panel">
-              <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Ứng dụng này không giả lập danh sách thiết bị quản trị khi backend chưa sẵn sàng.</p></div></div>
-              <div class="system-policy-note">
-                <strong>Quản trị danh sách thiết bị thực hiện tại Application Management.</strong>
-                <p>PriceReport chỉ hiển thị thiết bị hiện tại và trạng thái thật mà runtime đã công bố. Mặc định ứng dụng ở Standalone Mode: vào thẳng, local-first và không cần duyệt thiết bị; khi chuyển sang Managed Mode, Device Gate mới đảm nhiệm kiểm duyệt tập trung.</p>
-              </div>
-            </section>
           </div>
+
+          <details class="system-managed-details app-surface-panel" id="systemManagedDetails">
+            <summary>
+              <span>
+                <b>Quản trị tập trung</b>
+                <small>Tùy chọn · chỉ cần khi muốn duyệt/khóa thiết bị từ Application Management.</small>
+              </span>
+              <strong id="systemManagedSummary">Đang tắt</strong>
+            </summary>
+
+            <div class="system-managed-body">
+              <section class="system-managed-status-grid" aria-label="Trạng thái quản trị tập trung">
+                <article class="system-status-card app-status-card" id="systemManagementCard">
+                  <span class="system-status-icon management">⌁</span>
+                  <div><small>Application Management</small><strong id="systemManagementState">Đang đọc contract</strong><em id="systemManagementDetail">—</em></div>
+                </article>
+                <article class="system-status-card app-status-card">
+                  <span class="system-status-icon remote">⚙</span>
+                  <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Chỉ hoạt động khi Managed Mode được bật và health check đạt yêu cầu.</em></div>
+                </article>
+              </section>
+
+              <div class="system-managed-grid">
+                <section class="system-center-panel app-surface-panel">
+                  <div class="system-panel-head"><div><h3>Control Plane</h3><p>Thông tin kỹ thuật tùy chọn; không quyết định khả năng mở và tạo báo giá ở Standalone Mode.</p></div></div>
+                  <div class="system-readiness-list">
+                    <div><span>Mã registry Device Gate</span><strong id="systemRegistryDeviceCode">Không dùng ở Standalone</strong></div>
+                    <div><span>Device registry</span><strong id="systemRegistryReady">Đang đọc</strong></div>
+                    <div><span>Device gateway</span><strong id="systemGatewayReady">Đang đọc</strong></div>
+                    <div><span>Admin API</span><strong id="systemAdminApiReady">Đang đọc</strong></div>
+                    <div><span>Remote audit API</span><strong id="systemAuditReady">Đang đọc</strong></div>
+                  </div>
+                  <div class="system-contract-note">
+                    <b id="systemContractApp">PriceReport Tùng Gia Bảo</b>
+                    <span id="systemContractMeta">Kế toán · namespace KT-</span>
+                  </div>
+                </section>
+
+                <section class="system-center-panel system-policy-panel app-surface-panel">
+                  <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Không giả lập kết nối hoặc trạng thái thiết bị khi backend quản trị chưa sẵn sàng.</p></div></div>
+                  <div class="system-policy-note">
+                    <strong>Standalone là mặc định; Managed Mode là lựa chọn chủ động.</strong>
+                    <p>PriceReport luôn có thể mở trực tiếp và làm việc local-first. Chỉ khi chủ hệ thống bật Managed Mode, Device Gate mới dùng registry KT- và Application Management mới tham gia duyệt/khóa thiết bị.</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </details>
         </div>
 
         <div class="pane studio-pane studio-pane-customer" id="pane-customer">
