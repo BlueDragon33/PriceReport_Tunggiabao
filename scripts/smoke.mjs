@@ -480,6 +480,7 @@ if (!js.includes('Có thể hoàn tác trong 8 giây')) fail('V5.5 undo window m
 
 if (!html.includes('src/responsive-v610.css')) fail('V6.11 touch hardening stylesheet is not linked');
 if (!js.includes('openPreviewEditPopup') || !js.includes("previewPaper?.addEventListener('dblclick'")) fail('V6.12 direct preview double-click editor router is missing');
+if (!html.includes('data-preview-edit-block="products"') || !html.includes('data-preview-edit-block="payment"') || !html.includes('data-preview-edit-block="signature"')) fail('V6.12 semantic preview edit routes are missing');
 if (
   !responsivePolishCss.includes('Tablet editing-first mode')
   || !responsivePolishCss.includes('(min-width:1024px) and (orientation:landscape)')
