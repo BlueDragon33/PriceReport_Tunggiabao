@@ -8836,6 +8836,15 @@ function previewEditRouteFromElement(element) {
     }
   }
 
+  const explicitNode = element.closest('[data-preview-edit-block]');
+  const explicitBlock = String(explicitNode?.dataset?.previewEditBlock || '').trim();
+  if (CONTENT_BLOCKS[explicitBlock]) {
+    return {
+      block: explicitBlock,
+      focusId: String(explicitNode?.dataset?.previewFocus || '').trim()
+    };
+  }
+
   const layoutNode = element.closest('[data-layout-block]');
   const layoutKey = String(layoutNode?.dataset?.layoutBlock || '').trim();
   const route = PREVIEW_EDIT_ROUTE_BY_LAYOUT[layoutKey];
@@ -8884,7 +8893,7 @@ previewPaper?.addEventListener('dblclick', (event) => {
   if (!openPreviewEditPopup(source)) return;
   event.preventDefault();
   event.stopPropagation();
-});
+}, true);
 
 let zoom = 82;
 setupLayoutEditor();
