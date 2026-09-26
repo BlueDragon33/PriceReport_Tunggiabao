@@ -3561,6 +3561,8 @@ function renderPreviewProducts() {
 
     const row = document.createElement('tr');
     row.dataset.previewProductIndex = String(sourceIndex);
+    row.dataset.editBlock = 'products';
+    row.dataset.editTarget = 'productEditor';
     const missingName = !String(product.name || '').trim();
     if (missingName) row.classList.add('draft-missing-name');
     cols.forEach(([, key]) => {
@@ -8827,7 +8829,10 @@ function openPreviewEditWorkspace(node) {
     if (descriptor.productIndex >= 0 && descriptor.productIndex < state.products.length) {
       productWorkspaceActiveIndex = descriptor.productIndex;
     }
-    const opened = openContentBlock('products');
+    setActiveContentBlock('products');
+    closeContentWorkspace({ restoreFocus: false, clearActive: false });
+    openProductWorkspace({ focusFirst: false });
+    const opened = !document.getElementById('productWorkspaceModal')?.hidden;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const index = descriptor.productIndex >= 0 ? descriptor.productIndex : productWorkspaceActiveIndex;
       const card = Number.isInteger(index) && index >= 0
