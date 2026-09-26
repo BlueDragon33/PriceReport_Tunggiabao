@@ -392,6 +392,92 @@ try {
   await page.locator('#templateLibraryModal:not([hidden])').waitFor();
   await page.locator('#closeTemplateLibrary').click();
 
+  // V6.12: report preview is directly editable — single click stays put, double click opens the matching popup.
+  const reportModeBeforeDirectEdit = await page.locator('.shell').evaluate(node => node.classList.contains('report-view'));
+  if (!reportModeBeforeDirectEdit) {
+    await page.locator('#studioGlobalPreview').click();
+    await page.locator('.shell.report-view').waitFor();
+  }
+
+  await page.locator('#pQuoteTitle').click();
+  if (!(await page.locator('.shell').evaluate(node => node.classList.contains('report-view')))) {
+    fail('V6.12 a single click on preview content must not navigate away from report view');
+  }
+
+  await page.locator('#pQuoteTitle').dblclick();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'general') {
+    fail('V6.12 double-clicking the quotation title must open the General popup');
+  }
+  if (!(await page.locator('.shell').evaluate(node => node.classList.contains('report-view')))) {
+    fail('V6.12 direct-edit popup must keep report view behind the modal');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#pCustomer').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'customer') {
+    fail('V6.12 double-clicking customer preview must open the Customer popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'customerName') {
+    fail('V6.12 customer direct edit must focus the mounted #customerName field');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#summary').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'payment') {
+    fail('V6.12 double-clicking quotation summary must open the Payment popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'discountPct') {
+    fail('V6.12 summary direct edit must focus #discountPct');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#pTermsTitle').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'terms') {
+    fail('V6.12 double-clicking terms must open the Terms popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'termsTitle') {
+    fail('V6.12 terms direct edit must focus #termsTitle');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#pDate').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'signature') {
+    fail('V6.12 double-clicking signature date must open the Signature popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'dateLine') {
+    fail('V6.12 signature direct edit must focus #dateLine');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#pIntro').dblclick();
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'custom-text') {
+    fail('V6.12 double-clicking the introduction must open the Custom Text popup');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  const previewProductRow = page.locator('#qBody tr[data-preview-product-index]').first();
+  const previewProductIndex = Number(await previewProductRow.getAttribute('data-preview-product-index'));
+  await previewProductRow.dblclick();
+  await page.locator('#productWorkspaceModal:not([hidden])').waitFor();
+  const focusedProductIndex = await page.evaluate(() => {
+    const card = document.activeElement?.closest?.('.product-card');
+    return Number(card?.dataset?.productIndex ?? -1);
+  });
+  if (!Number.isInteger(previewProductIndex) || previewProductIndex < 0 || focusedProductIndex !== previewProductIndex) {
+    fail('V6.12 double-clicking a product row must open and focus the corresponding product card');
+  }
+  await page.locator('#doneProductWorkspace').click();
+
   const search = page.locator('#studioCommandSearch');
   await search.focus();
   await search.fill('Sản phẩm');

@@ -3542,7 +3542,7 @@ function renderPreviewProducts() {
 
   let activeGroup = null;
   let groupIndex = 0;
-  draftProducts.forEach(({ product }, visibleIndex) => {
+  draftProducts.forEach(({ product, sourceIndex }, visibleIndex) => {
     const productGroup = String(product.group || '').trim();
     if (productGroup !== activeGroup) {
       activeGroup = productGroup;
@@ -3560,6 +3560,17 @@ function renderPreviewProducts() {
     groupIndex += 1;
 
     const row = document.createElement('tr');
+    row.dataset.previewProductIndex = String(sourceIndex);
+    row.dataset.editBlock = 'products';
+    row.dataset.editTarget = 'productEditor';
+    row.classList.add('preview-direct-edit');
+    row.title = 'Nhấp đúp để chỉnh sửa sản phẩm này';
+    row.addEventListener('dblclick', (event) => {
+      if (layoutEditEnabled) return;
+      event.preventDefault();
+      event.stopPropagation();
+      openPreviewProductWorkspace(sourceIndex);
+    });
     const missingName = !String(product.name || '').trim();
     if (missingName) row.classList.add('draft-missing-name');
     cols.forEach(([, key]) => {
@@ -8744,9 +8755,163 @@ function setupLayoutEditor() {
   });
 }
 
+const PREVIEW_TARGET_CONTENT_BLOCK = Object.freeze({
+  quickCustomerName: 'customer',
+  intro: 'custom-text',
+  closingText: 'custom-text',
+  footerText: 'custom-text',
+  dateLine: 'signature',
+  leftTitle: 'signature',
+  leftNote: 'signature',
+  leftName: 'signature',
+  rightTitle: 'signature',
+  rightNote: 'signature',
+  rightName: 'signature',
+  productEditor: 'products',
+  discountPct: 'payment',
+  vatPct: 'payment',
+  otherFee: 'payment',
+  paymentMethod: 'payment',
+  bankName: 'payment',
+  bankAccount: 'payment',
+  bankOwner: 'payment',
+  termsTitle: 'terms',
+  termsText: 'terms'
+});
+
+function previewContentBlockForTarget(targetId = '') {
+  const cleanId = String(targetId || '').trim();
+  if (!cleanId) return '';
+  if (PREVIEW_TARGET_CONTENT_BLOCK[cleanId]) return PREVIEW_TARGET_CONTENT_BLOCK[cleanId];
+
+  const target = document.getElementById(cleanId);
+  const pane = target?.closest?.('.pane');
+  const paneId = String(pane?.id || '').replace(/^pane-/, '');
+  return CONTENT_BLOCKS[paneId] ? paneId : '';
+}
+
+function previewEditDescriptor(node) {
+  const element = node instanceof Element ? node : null;
+  if (!element) return { block: '', targetId: '', productIndex: -1 };
+
+  const targetElement = element.closest('[data-target]');
+  const directEditElement = element.closest('[data-edit-block]');
+  const targetId = String(
+    targetElement?.dataset?.target
+      || directEditElement?.dataset?.editTarget
+      || ''
+  ).trim();
+  const inferredBlock = previewContentBlockForTarget(targetId);
+  const explicitBlock = String(directEditElement?.dataset?.editBlock || '').trim();
+  const block = CONTENT_BLOCKS[inferredBlock]
+    ? inferredBlock
+    : CONTENT_BLOCKS[explicitBlock]
+      ? explicitBlock
+      : '';
+
+  const productRow = element.closest('[data-preview-product-index]');
+  const productIndex = Number(productRow?.dataset?.previewProductIndex);
+  return {
+    block,
+    targetId,
+    productIndex: Number.isInteger(productIndex) && productIndex >= 0 ? productIndex : -1
+  };
+}
+
+const PREVIEW_FOCUS_TARGET_ALIASES = Object.freeze({
+  quickCustomerName: 'customerName'
+});
+
+function focusPreviewTargetAfterOpen(targetId = '') {
+  const resolvedTargetId = PREVIEW_FOCUS_TARGET_ALIASES[String(targetId || '').trim()] || String(targetId || '').trim();
+  if (!resolvedTargetId) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const target = document.getElementById(resolvedTargetId);
+    if (!target) return;
+    target.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    target.focus?.();
+    if (typeof target.select === 'function' && /^(INPUT|TEXTAREA)$/.test(target.tagName || '')) target.select();
+  }));
+}
+
+function openPreviewProductWorkspace(productIndex = -1) {
+  const index = Number(productIndex);
+  if (Number.isInteger(index) && index >= 0 && index < state.products.length) {
+    productWorkspaceActiveIndex = index;
+  }
+  setActiveContentBlock('products');
+  closeContentWorkspace({ restoreFocus: false, clearActive: false });
+  openProductWorkspace({ focusFirst: false });
+  const opened = !document.getElementById('productWorkspaceModal')?.hidden;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const activeIndex = Number.isInteger(index) && index >= 0 ? index : productWorkspaceActiveIndex;
+    const card = Number.isInteger(activeIndex) && activeIndex >= 0
+      ? document.querySelector('#productEditor .product-card[data-product-index="' + activeIndex + '"]')
+      : null;
+    const target = card?.querySelector('[data-product-key="name"]')
+      || document.querySelector('#productEditor [data-product-key="name"]')
+      || document.getElementById('addProductTop');
+    card?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    target?.focus?.();
+    target?.select?.();
+  }));
+  return opened;
+}
+
+function openPreviewEditWorkspace(node) {
+  const descriptor = previewEditDescriptor(node);
+  if (!descriptor.block) return false;
+
+  if (descriptor.block === 'products') {
+    return openPreviewProductWorkspace(descriptor.productIndex);
+  }
+
+  const opened = openContentBlock(descriptor.block);
+  if (opened) focusPreviewTargetAfterOpen(descriptor.targetId || CONTENT_BLOCKS[descriptor.block]?.focusId || '');
+  return opened;
+}
+
+function setupPreviewDirectEdit() {
+  const paper = document.getElementById('paper');
+  if (!paper) return;
+
+  paper.querySelectorAll('.clickable,[data-edit-block]').forEach((element) => {
+    const descriptor = previewEditDescriptor(element);
+    if (!descriptor.block) return;
+    element.classList.add('preview-direct-edit');
+    if (!element.hasAttribute('title')) {
+      const label = CONTENT_BLOCKS[descriptor.block]?.displayTitle || 'nội dung';
+      element.setAttribute('title', 'Nhấp đúp để chỉnh sửa ' + label);
+    }
+  });
+
+  paper.addEventListener('dblclick', (event) => {
+    if (layoutEditEnabled) return;
+
+    const productRow = event.target?.closest?.('#qBody tr[data-preview-product-index]');
+    if (productRow) {
+      event.preventDefault();
+      event.stopPropagation();
+      openPreviewProductWorkspace(Number(productRow.dataset.previewProductIndex));
+      return;
+    }
+
+    const descriptor = previewEditDescriptor(event.target);
+    if (!descriptor.block) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openPreviewEditWorkspace(event.target);
+  });
+}
+
 $$('.clickable').forEach((el) => {
   el.addEventListener('click', (event) => {
     if (layoutEditEnabled) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (document.querySelector('.shell')?.classList.contains('report-view')) {
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -8764,6 +8929,7 @@ $$('.clickable').forEach((el) => {
 
 let zoom = 82;
 setupLayoutEditor();
+setupPreviewDirectEdit();
 setupSmartImport();
 
 function resetReportViewScale() {

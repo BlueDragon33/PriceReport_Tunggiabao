@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v611-touch-breakpoint-hardening', 'V6.11 touch breakpoint hardening release must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v612-preview-direct-edit', 'V6.12 preview direct edit release must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });

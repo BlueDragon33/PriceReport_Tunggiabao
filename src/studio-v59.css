@@ -2322,3 +2322,19 @@ body.v5-ui.reference-ui-v59 .library-thumb.sky-minimal{
   --lib-accent:#4b9be8;--lib-soft:#e3f0fa;background:radial-gradient(88px 62px at 108% -2%,#d8edff 0 55%,transparent 56%),#fff
 }
 
+
+
+/* V6.12 — direct editing from the report preview. */
+body.v5-ui.reference-ui-v59 .shell.report-view #paper .preview-direct-edit{
+  cursor:pointer;
+  transition:outline-color .14s ease, box-shadow .14s ease, background-color .14s ease;
+}
+body.v5-ui.reference-ui-v59 .shell.report-view #paper .preview-direct-edit:hover{
+  outline:1px dashed rgba(22,119,255,.62);
+  outline-offset:2px;
+  box-shadow:0 0 0 3px rgba(22,119,255,.07);
+}
+body.v5-ui.reference-ui-v59 .shell.report-view #paper .preview-direct-edit:focus-visible{
+  outline:2px solid rgba(22,119,255,.76);
+  outline-offset:2px;
+}
