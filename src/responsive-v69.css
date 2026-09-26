@@ -456,6 +456,9 @@
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .dashboard-kpis{
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
   }
+  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .system-managed-grid{
+    grid-template-columns:1fr!important;
+  }
 
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .mobile-more-menu{
     left:max(18px,env(safe-area-inset-left))!important;
@@ -769,6 +772,14 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .dashboard-main-grid{
     grid-template-columns:1fr!important;
+  }
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .system-managed-status-grid,
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .system-managed-grid{
+    grid-template-columns:1fr!important;
+  }
+  body.v5-ui.reference-ui-v59[data-device-class="phone"] .system-managed-details>summary{
+    align-items:flex-start!important;
+    flex-direction:column!important;
   }
 
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-menu{
