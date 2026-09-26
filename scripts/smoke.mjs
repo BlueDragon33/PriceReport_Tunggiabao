@@ -478,6 +478,9 @@ if (!html.includes('id="dataLibraryActivity"') || !html.includes('id="dataLibrar
 if (!js.includes('function recordDataLibraryOperation') || !js.includes("'undo-available'") || !js.includes("'undone'")) fail('V5.5 operator-visible mutation state tracking is missing');
 if (!js.includes('Có thể hoàn tác trong 8 giây')) fail('V5.5 undo window must be explicit to the operator');
 
+if (!js.includes('function setupPreviewDirectEdit') || !js.includes("paper.addEventListener('dblclick'")) fail('V6.12 direct-edit preview controller is missing');
+if (!js.includes('function openPreviewEditWorkspace') || !js.includes('data-preview-product-index')) fail('V6.12 preview-to-popup routing or product-row mapping is missing');
+if (!html.includes('data-edit-block="products"') || !html.includes('data-edit-block="payment"') || !html.includes('data-edit-block="signature"')) fail('V6.12 preview edit hotspots are incomplete');
 if (!html.includes('src/responsive-v610.css')) fail('V6.11 touch hardening stylesheet is not linked');
 if (
   !responsivePolishCss.includes('Tablet editing-first mode')
