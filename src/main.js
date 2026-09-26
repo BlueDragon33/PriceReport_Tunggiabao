@@ -8872,7 +8872,7 @@ function setupPreviewDirectEdit() {
   });
 }
 
-$('.clickable').forEach((el) => {
+$$('.clickable').forEach((el) => {
   el.addEventListener('click', (event) => {
     if (layoutEditEnabled) {
       event.preventDefault();
