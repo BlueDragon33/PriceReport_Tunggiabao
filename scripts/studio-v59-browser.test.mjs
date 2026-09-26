@@ -414,6 +414,50 @@ try {
   }
   await page.locator('#closeContentWorkspace').click();
 
+  await page.locator('#pCustomer').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'customer') {
+    fail('V6.12 double-clicking customer preview must open the Customer popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'customerName') {
+    fail('V6.12 customer direct edit must focus the mounted #customerName field');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#summary').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'payment') {
+    fail('V6.12 double-clicking quotation summary must open the Payment popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'discountPct') {
+    fail('V6.12 summary direct edit must focus #discountPct');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#pTermsTitle').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'terms') {
+    fail('V6.12 double-clicking terms must open the Terms popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'termsTitle') {
+    fail('V6.12 terms direct edit must focus #termsTitle');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
+  await page.locator('#pDate').dispatchEvent('dblclick');
+  await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+  if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'signature') {
+    fail('V6.12 double-clicking signature date must open the Signature popup');
+  }
+  await page.waitForTimeout(120);
+  if (await page.evaluate(() => document.activeElement?.id) !== 'dateLine') {
+    fail('V6.12 signature direct edit must focus #dateLine');
+  }
+  await page.locator('#closeContentWorkspace').click();
+
   await page.locator('#pIntro').dblclick();
   await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
   if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'custom-text') {
