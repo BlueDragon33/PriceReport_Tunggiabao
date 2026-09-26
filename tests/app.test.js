@@ -2486,12 +2486,15 @@ test('report view tab enters a dedicated responsive preview mode and exits clean
   expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 });
 
-test('V4.8 device and system center shows real runtime state and separates local from registry code', () => {
+test('V6.16 system center is standalone-first and keeps managed controls optional', () => {
   document.querySelector('[data-tab="system"]').click();
   expect(document.querySelector('.shell').classList.contains('app-workspace')).toBe(true);
   expect(document.getElementById('pane-system').classList.contains('active')).toBe(true);
   expect(document.getElementById('systemLocalDeviceCode').textContent).toMatch(/^KT-/);
   expect(document.getElementById('systemDetailDeviceClass').textContent.length).toBeGreaterThan(0);
+  expect(document.getElementById('systemManagedDetails').open).toBe(false);
+  expect(document.getElementById('systemManagedSummary').textContent).toContain('Đang tắt');
+  expect(document.getElementById('systemRegistryDeviceCode').textContent).toContain('Standalone');
 
   window.dispatchEvent(new CustomEvent('pricereport:device-access', {
     detail: {
