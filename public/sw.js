@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v612-preview-direct-edit';
+const CACHE = 'pricereport-shell-v614-standalone-access';
 const CORE = [
   './index.html',
   './manifest.webmanifest',

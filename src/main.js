@@ -2047,6 +2047,7 @@ function dashboardRevenueLabel(history) {
 
 function systemAccessLabel(value) {
   return ({
+    standalone: 'Độc lập · vào thẳng',
     'classification-only': 'Phân loại cục bộ',
     authorized: 'Đã duyệt',
     pending: 'Chờ duyệt',
@@ -2059,6 +2060,8 @@ function systemAccessLabel(value) {
 function managementStateLabel(value) {
   return ({
     ready: 'Sẵn sàng quản trị từ xa',
+    standalone: 'Độc lập · local-first',
+    'managed-unavailable': 'Managed Mode chưa sẵn sàng',
     'classification-only': 'Chỉ phân loại cục bộ',
     unavailable: 'Không đọc được contract',
     loading: 'Đang đọc contract'
@@ -2110,10 +2113,24 @@ function renderSystemWorkspace() {
   setText('systemDeviceLabel', local.deviceLabel || profile.label || 'Chưa nhận diện');
   setText('systemDeviceClass', [local.deviceClass || profile.id, local.uiProfile || profile.shell].filter(Boolean).join(' · ') || '—');
   setText('systemAccessState', systemAccessLabel(accessState));
-  setText('systemAccessMessage', latestDeviceAccess.message || (accessState === 'classification-only' ? 'Remote Device Gate chưa bật.' : '—'));
+  setText(
+    'systemAccessMessage',
+    latestDeviceAccess.message
+      || (['standalone', 'classification-only'].includes(accessState)
+        ? 'Ứng dụng đang chạy độc lập local-first; không cần duyệt thiết bị.'
+        : '—')
+  );
   setText('systemManagementState', managementStateLabel(runtime?.managementReadiness));
-  setText('systemManagementDetail', runtime?.managementError || (runtime?.remoteAdminReady ? 'Contract production đã xác minh readiness.' : 'Remote Admin chưa đạt đầy đủ readiness.'));
-  setText('systemRemoteAdminState', runtime?.remoteAdminReady ? 'Sẵn sàng' : 'Chưa bật');
+  setText(
+    'systemManagementDetail',
+    runtime?.managementError
+      || (runtime?.remoteAdminReady
+        ? 'Contract production đã xác minh readiness.'
+        : (runtime?.defaultAccessMode === 'standalone'
+          ? 'Application Management là lớp quản trị tùy chọn; ứng dụng vẫn mở và làm việc độc lập.'
+          : 'Managed Mode chưa đạt đầy đủ readiness.'))
+  );
+  setText('systemRemoteAdminState', runtime?.remoteAdminReady ? 'Sẵn sàng' : (runtime?.defaultAccessMode === 'standalone' ? 'Tùy chọn · đang tắt' : 'Chưa sẵn sàng'));
 
   setText('systemDetailDeviceClass', local.deviceLabel || profile.label || local.deviceClass || profile.id || '—');
   setText('systemUiProfile', local.uiProfile || profile.shell || '—');
@@ -2184,13 +2201,13 @@ function updateDashboardSystemState() {
     detailEl.textContent = 'Thiết bị và Application Management đang dùng contract production đã xác minh.';
     return;
   }
-  if (accessState && accessState !== 'classification-only') {
+  if (accessState && !['classification-only', 'standalone'].includes(accessState)) {
     stateEl.textContent = 'Thiết bị đang được quản lý';
     detailEl.textContent = 'Device Gate đang hoạt động ở trạng thái: ' + accessState + '.';
     return;
   }
-  stateEl.textContent = 'Ứng dụng sẵn sàng';
-  detailEl.textContent = 'Dữ liệu báo giá chạy local-first; quản trị từ xa đang ở chế độ an toàn.';
+  stateEl.textContent = 'Độc lập · sẵn sàng';
+  detailEl.textContent = 'Dữ liệu báo giá chạy local-first; có thể vào thẳng, Application Management chỉ bật khi cần quản trị tập trung.';
 }
 
 let dashboardSearchActiveIndex = -1;

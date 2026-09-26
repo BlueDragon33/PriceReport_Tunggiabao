@@ -68,6 +68,11 @@ export function resolveRemoteAdminReady(contract) {
     && readiness.adminApi === 'available';
 }
 
+export function resolveDefaultAccessMode(contract) {
+  if (!contract || typeof contract !== 'object' || Array.isArray(contract)) return 'standalone';
+  return contract.policy?.defaultAccessMode === 'managed' ? 'managed' : 'standalone';
+}
+
 async function readManagementContract(fetchImpl = fetch) {
   const response = await fetchImpl(MANAGEMENT_CONTRACT_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error('Không đọc được management contract.');
@@ -175,7 +180,7 @@ export function currentDeviceInput() {
 
 export function deviceGateOwnsDeviceChip(state) {
   const value = String(state || '');
-  return Boolean(value && value !== 'classification-only');
+  return Boolean(value && !['classification-only', 'standalone'].includes(value));
 }
 
 function updateDeviceChip(record) {
@@ -237,6 +242,7 @@ export function startDeviceProfileRuntime() {
     category: 'Kế toán',
     deviceNamespace: DEVICE_NAMESPACE,
     remoteAdminReady: false,
+    defaultAccessMode: 'standalone',
     managementReadiness: 'loading',
     getDeviceProfile: () => ({ ...profile }),
     getLocalDeviceRecord: () => ({ ...record }),
@@ -245,7 +251,10 @@ export function startDeviceProfileRuntime() {
       try {
         const contract = await readManagementContract();
         managementRuntime.remoteAdminReady = resolveRemoteAdminReady(contract);
-        managementRuntime.managementReadiness = managementRuntime.remoteAdminReady ? 'ready' : 'classification-only';
+        managementRuntime.defaultAccessMode = resolveDefaultAccessMode(contract);
+        managementRuntime.managementReadiness = managementRuntime.remoteAdminReady
+          ? 'ready'
+          : (managementRuntime.defaultAccessMode === 'standalone' ? 'standalone' : 'managed-unavailable');
         managementRuntime.managementContract = contract;
       } catch (error) {
         managementRuntime.remoteAdminReady = false;

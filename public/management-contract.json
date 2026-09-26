@@ -2,8 +2,8 @@
   "contractVersion": 2,
   "application": {
     "id": "price-report-tunggiabao",
-    "name": "PriceReport Tùng Gia Bảo",
-    "shortName": "Báo giá Tùng Gia Bảo",
+    "name": "Báo giá Tùng Gia Bảo",
+    "shortName": "Báo giá TGB",
     "category": "Kế toán",
     "repository": "BlueDragon33/PriceReport_Tunggiabao",
     "publicUrl": "https://bluedragon33.github.io/PriceReport_Tunggiabao/"
@@ -55,7 +55,10 @@
     "applicationManagementMayReadCustomerData": false,
     "remoteAdminReady": false,
     "clientOwnsRegistry": true,
-    "privateKeyMayLeaveDevice": false
+    "privateKeyMayLeaveDevice": false,
+    "defaultAccessMode": "standalone",
+    "managementApprovalRequiredByDefault": false,
+    "remoteAdminOptional": true
   },
   "controlService": {
     "owner": "BlueDragon33/PriceReport_Tunggiabao",
@@ -79,6 +82,13 @@
       "verify": "/api/device/verify",
       "heartbeat": "/api/device/heartbeat",
       "deviceStatus": "/api/device/status"
-    }
+    },
+    "rollout": "standalone"
+  },
+  "access": {
+    "defaultMode": "standalone",
+    "managedModeAvailable": true,
+    "approvalRequiredInStandalone": false,
+    "coreRuntimeBlockedByManagerOutage": false
   }
 }

@@ -380,7 +380,7 @@
               </article>
               <article class="dashboard-panel system-card app-surface-panel">
                 <div class="system-indicator" aria-hidden="true">✓</div>
-                <div class="system-card-copy"><small>Trạng thái hệ thống</small><strong id="dashSystemState">Đang kiểm tra</strong><p id="dashSystemDetail">Đang đọc trạng thái thiết bị và kết nối quản trị.</p></div>
+                <div class="system-card-copy"><small>Trạng thái hệ thống</small><strong id="dashSystemState">Đang kiểm tra</strong><p id="dashSystemDetail">Đang đọc trạng thái local-first và lớp quản trị tùy chọn.</p></div>
                 <button class="system-card-open" type="button" data-open-tab="system">Chi tiết →</button>
               </article>
             </aside>
@@ -689,7 +689,7 @@
                 <strong>Local-first</strong>
               </div>
               <div class="settings-info-row">
-                <span><b>Device Gate</b><small>Quản trị thiết bị tách khỏi dữ liệu báo giá.</small></span>
+                <span><b>Device Gate</b><small>Tùy chọn; tách khỏi dữ liệu báo giá và không chặn chế độ độc lập.</small></span>
                 <button class="link-button" type="button" data-open-tab="system">Mở trạng thái →</button>
               </div>
               <div class="settings-info-row">
@@ -710,7 +710,7 @@
             <div>
               <span class="workspace-eyebrow">THIẾT BỊ & ỨNG DỤNG</span>
               <h2>Thiết bị & trạng thái hệ thống</h2>
-              <p>Hiển thị trạng thái thật của thiết bị hiện tại, Device Gate và kết nối Application Management.</p>
+              <p>Hiển thị trạng thái local-first của thiết bị, Device Gate và kết nối Application Management khi được bật.</p>
             </div>
             <button class="btn primary" id="systemRefreshRuntime" type="button">↻ Kiểm tra lại</button>
           </div>
@@ -730,13 +730,13 @@
             </article>
             <article class="system-status-card app-status-card">
               <span class="system-status-icon remote">⚙</span>
-              <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Chỉ bật khi backend production đã read-back đạt gate.</em></div>
+              <div><small>Remote Admin</small><strong id="systemRemoteAdminState">Chưa xác minh</strong><em>Là lớp tùy chọn; chỉ bật khi chủ hệ thống chuyển sang Managed Mode.</em></div>
             </article>
           </section>
 
           <div class="system-center-grid">
             <section class="system-center-panel app-surface-panel">
-              <div class="system-panel-head"><div><h3>Thiết bị hiện tại</h3><p>Phân loại UI cục bộ và registry Device Gate được hiển thị tách biệt.</p></div></div>
+              <div class="system-panel-head"><div><h3>Thiết bị hiện tại</h3><p>Phân loại UI cục bộ hoạt động độc lập; registry Device Gate chỉ tham gia khi Managed Mode được bật.</p></div></div>
               <div class="system-detail-grid">
                 <div><small>Loại thiết bị</small><strong id="systemDetailDeviceClass">—</strong></div>
                 <div><small>UI profile</small><strong id="systemUiProfile">—</strong></div>
@@ -780,7 +780,7 @@
               <div class="system-panel-head"><div><h3>Nguyên tắc quản trị</h3><p>Ứng dụng này không giả lập danh sách thiết bị quản trị khi backend chưa sẵn sàng.</p></div></div>
               <div class="system-policy-note">
                 <strong>Quản trị danh sách thiết bị thực hiện tại Application Management.</strong>
-                <p>PriceReport chỉ hiển thị thiết bị hiện tại và trạng thái thật mà Device Gate/runtime đã công bố. Khi rollout production chưa bật, màn hình này giữ trạng thái classification-only thay vì tạo dữ liệu giả.</p>
+                <p>PriceReport chỉ hiển thị thiết bị hiện tại và trạng thái thật mà runtime đã công bố. Mặc định ứng dụng ở Standalone Mode: vào thẳng, local-first và không cần duyệt thiết bị; khi chuyển sang Managed Mode, Device Gate mới đảm nhiệm kiểm duyệt tập trung.</p>
               </div>
             </section>
           </div>

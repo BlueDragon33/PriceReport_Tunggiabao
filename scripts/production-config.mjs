@@ -45,34 +45,45 @@ export function materializeProductionConfig({
   const baseUrl = normalizeControlOrigin(origin);
   const enabled = Boolean(baseUrl);
   const fingerprint = createHash('sha256')
-    .update(baseUrl || 'classification-only')
+    .update(baseUrl || 'standalone')
     .digest('hex')
     .slice(0, 8);
 
   const nextDeviceConfig = {
     ...deviceConfig,
-    schemaVersion: 1,
+    schemaVersion: 2,
+    mode: enabled ? 'managed' : 'standalone',
     enabled,
     baseUrl,
     requestTimeoutMs: Number(deviceConfig.requestTimeoutMs || 5000),
     pendingPollMs: Number(deviceConfig.pendingPollMs || 15000),
     heartbeatMs: Number(deviceConfig.heartbeatMs || 60000),
     note: enabled
-      ? 'Production KT Control origin verified and injected by GitHub Pages workflow.'
-      : 'Device Gate remains classification-only until PRICE_REPORT_CONTROL_ORIGIN is configured.',
+      ? 'Managed Mode enabled with a verified KT Control origin injected by the GitHub Pages workflow.'
+      : 'Standalone local-first mode is active; centralized device approval is optional.',
   };
 
   const nextManagementContract = {
     ...managementContract,
+    access: {
+      ...(managementContract.access || {}),
+      defaultMode: enabled ? 'managed' : 'standalone',
+      managedModeAvailable: true,
+      approvalRequiredInStandalone: false,
+      coreRuntimeBlockedByManagerOutage: false,
+    },
     readiness: rolloutReadiness(enabled, managementContract.readiness),
     policy: {
       ...(managementContract.policy || {}),
+      defaultAccessMode: enabled ? 'managed' : 'standalone',
+      managementApprovalRequiredByDefault: enabled,
+      remoteAdminOptional: true,
       remoteAdminReady: enabled,
     },
     controlService: {
       ...(managementContract.controlService || {}),
       ...(enabled ? { origin: baseUrl } : {}),
-      rollout: enabled ? 'enabled' : 'classification-only',
+      rollout: enabled ? 'managed' : 'standalone',
     },
   };
 
@@ -151,7 +162,7 @@ export async function materializeProductionFiles({
   fs.writeFileSync(serviceWorkerPath, output.serviceWorkerSource);
 
   console.log(`PriceReport Device Gate: ${output.enabled ? 'ENABLED' : 'DISABLED'}`);
-  console.log(`PriceReport management contract: ${output.enabled ? 'REMOTE ADMIN READY' : 'CLASSIFICATION ONLY'}`);
+  console.log(`PriceReport management contract: ${output.enabled ? 'MANAGED MODE READY' : 'STANDALONE MODE'}`);
   console.log(`PriceReport PWA cache: ${output.cacheName}`);
   return output;
 }

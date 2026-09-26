@@ -104,8 +104,12 @@ async function readConfig() {
   const response = await fetch(CONFIG_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error('Không đọc được cấu hình Device Gate.');
   const config = await response.json();
+  const requestedMode = config?.mode === 'managed'
+    ? 'managed'
+    : (config?.mode === 'standalone' ? 'standalone' : (config?.enabled === true ? 'managed' : 'standalone'));
   return {
-    enabled: config?.enabled === true,
+    mode: requestedMode,
+    enabled: requestedMode === 'managed',
     baseUrl: typeof config?.baseUrl === 'string' ? config.baseUrl.replace(/\/+$/, '') : '',
     requestTimeoutMs: Number(config?.requestTimeoutMs || 5000),
     pendingPollMs: Number(config?.pendingPollMs || 15000),
@@ -276,8 +280,8 @@ export async function startPriceReportDeviceAccess() {
   }
 
   if (!config.enabled) {
-    publishState('classification-only', null, 'Remote Device Gate chưa bật.');
-    return { enabled: false };
+    publishState('standalone', null, 'Chế độ độc lập local-first đang bật; không cần duyệt thiết bị qua Application Management.');
+    return { enabled: false, mode: 'standalone' };
   }
 
   if (!crypto?.subtle || !window.indexedDB) {
@@ -380,6 +384,7 @@ export async function startPriceReportDeviceAccess() {
 
   return {
     enabled: true,
+    mode: 'managed',
     refresh: () => reconcile(true),
     stop() { clearTimers(); },
   };
