@@ -6,7 +6,8 @@ import {
 } from './production-config.mjs';
 
 const baseDevice = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  mode: 'standalone',
   enabled: false,
   baseUrl: '',
   requestTimeoutMs: 5000,
@@ -56,8 +57,13 @@ const local = materializeProductionConfig({
   serviceWorkerSource: sw,
 });
 assert.equal(local.enabled, false);
+assert.equal(local.deviceConfig.mode, 'standalone');
 assert.equal(local.deviceConfig.enabled, false);
+assert.equal(local.managementContract.access.defaultMode, 'standalone');
+assert.equal(local.managementContract.policy.defaultAccessMode, 'standalone');
+assert.equal(local.managementContract.policy.managementApprovalRequiredByDefault, false);
 assert.equal(local.managementContract.policy.remoteAdminReady, false);
+assert.equal(local.managementContract.controlService.rollout, 'standalone');
 assert.equal(local.managementContract.readiness.deviceRegistry, 'implemented-requires-d1-deployment');
 assert.match(local.cacheName, /^pricereport-shell-v26-local-[a-f0-9]{8}$/);
 
@@ -69,7 +75,11 @@ const live = materializeProductionConfig({
 });
 assert.equal(live.enabled, true);
 assert.equal(live.baseUrl, 'https://control.example.com');
+assert.equal(live.deviceConfig.mode, 'managed');
 assert.equal(live.deviceConfig.baseUrl, 'https://control.example.com');
+assert.equal(live.managementContract.access.defaultMode, 'managed');
+assert.equal(live.managementContract.policy.defaultAccessMode, 'managed');
+assert.equal(live.managementContract.policy.managementApprovalRequiredByDefault, true);
 assert.equal(live.managementContract.policy.remoteAdminReady, true);
 assert.equal(live.managementContract.readiness.deviceRegistry, 'available');
 assert.equal(live.managementContract.readiness.deviceGateway, 'available');
@@ -77,7 +87,7 @@ assert.equal(live.managementContract.readiness.adminApi, 'available');
 assert.equal(live.managementContract.readiness.remoteAuditApi, 'available');
 assert.equal(live.managementContract.readiness.deviceAccessGate, 'available');
 assert.equal(live.managementContract.controlService.origin, 'https://control.example.com');
-assert.equal(live.managementContract.controlService.rollout, 'enabled');
+assert.equal(live.managementContract.controlService.rollout, 'managed');
 assert.match(live.serviceWorkerSource, /pricereport-shell-v26-managed-[a-f0-9]{8}/);
 
 // A UI release must retain its own cache generation through the Pages config step.
