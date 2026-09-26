@@ -4,6 +4,7 @@ const CORE = [
   './manifest.webmanifest',
   './management-contract.json',
   './device-control.json',
+  './favicon.svg',
   './icon-192.svg',
   './icon-512.svg'
 ];
