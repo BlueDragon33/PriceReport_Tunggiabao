@@ -3565,6 +3565,12 @@ function renderPreviewProducts() {
     row.dataset.editTarget = 'productEditor';
     row.classList.add('preview-direct-edit');
     row.title = 'Nhấp đúp để chỉnh sửa sản phẩm này';
+    row.addEventListener('dblclick', (event) => {
+      if (layoutEditEnabled) return;
+      event.preventDefault();
+      event.stopPropagation();
+      openPreviewProductWorkspace(sourceIndex);
+    });
     const missingName = !String(product.name || '').trim();
     if (missingName) row.classList.add('draft-missing-name');
     cols.forEach(([, key]) => {
