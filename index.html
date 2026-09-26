@@ -1344,7 +1344,7 @@
               <div class="qtitle clickable" data-target="quoteTitle" id="pQuoteTitle" data-layout-block="quoteTitle" data-layout-label="Tiêu đề"></div>
               <div class="qsubtitle clickable" data-target="quoteSubtitle" id="pQuoteSubtitle" data-layout-block="quoteSubtitle" data-layout-label="Phụ đề"></div>
             </div>
-            <div class="qmeta" data-layout-block="quoteMeta" data-layout-label="Số / ngày / hiệu lực">
+            <div class="qmeta" data-layout-block="quoteMeta" data-layout-label="Số / ngày / hiệu lực" data-edit-block="general" data-edit-target="quoteNo">
               <div><b>Số báo giá:</b> <span id="pQuoteNo"></span></div>
               <div><b>Ngày báo giá:</b> <span id="pQuoteDate"></span></div>
               <div><b>Hiệu lực:</b> <span id="pValidity"></span></div>
@@ -1355,9 +1355,9 @@
           <p class="intro clickable" data-target="intro" id="pIntro" data-layout-block="intro" data-layout-label="Lời mở đầu"></p>
           <div class="sectionbar clickable" data-target="sectionTitle" id="pSection" data-layout-block="section" data-layout-label="Tiêu đề nhóm"></div>
 
-          <table class="qtable" data-layout-block="table" data-layout-label="Bảng sản phẩm"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
+          <table class="qtable" data-layout-block="table" data-layout-label="Bảng sản phẩm" data-edit-block="products"><colgroup id="qCols"></colgroup><thead id="qHead"></thead><tbody id="qBody"></tbody></table>
 
-          <table class="summary" id="summary" data-layout-block="summary" data-layout-label="Tổng cộng">
+          <table class="summary" id="summary" data-layout-block="summary" data-layout-label="Tổng cộng" data-edit-block="payment" data-edit-target="discountPct">
             <tbody>
               <tr><td>Tạm tính</td><td class="val" id="sub"></td></tr>
               <tr id="discRow"><td id="discLabel">Giảm giá</td><td class="val" id="disc"></td></tr>
@@ -1366,7 +1366,7 @@
               <tr><td class="grand">Tổng cộng</td><td class="val grand" id="grand"></td></tr>
             </tbody>
           </table>
-          <div class="words" id="words" data-layout-block="words" data-layout-label="Số tiền bằng chữ"></div>
+          <div class="words" id="words" data-layout-block="words" data-layout-label="Số tiền bằng chữ" data-edit-block="payment" data-edit-target="discountPct"></div>
 
           <section class="payment-print" id="paymentPrint" data-layout-block="payment" data-layout-label="Thanh toán">
             <h4>THÔNG TIN THANH TOÁN</h4>
@@ -1387,15 +1387,15 @@
           <section class="signatures" id="signatures" data-layout-block="signatures" data-layout-label="Chữ ký">
             <div>
               <div class="clickable" data-target="dateLine" id="pDateLeft"></div>
-              <div class="sig-title" id="pLeftTitle"></div>
-              <div class="sig-note" id="pLeftNote"></div>
-              <div class="sig-name" id="pLeftName"></div>
+              <div class="sig-title" id="pLeftTitle" data-edit-block="signature" data-edit-target="leftTitle"></div>
+              <div class="sig-note" id="pLeftNote" data-edit-block="signature" data-edit-target="leftNote"></div>
+              <div class="sig-name" id="pLeftName" data-edit-block="signature" data-edit-target="leftName"></div>
             </div>
             <div>
               <div class="clickable" data-target="dateLine" id="pDate"></div>
-              <div class="sig-title" id="pRightTitle"></div>
-              <div class="sig-note" id="pRightNote"></div>
-              <div class="sig-name" id="pRightName"></div>
+              <div class="sig-title" id="pRightTitle" data-edit-block="signature" data-edit-target="rightTitle"></div>
+              <div class="sig-note" id="pRightNote" data-edit-block="signature" data-edit-target="rightNote"></div>
+              <div class="sig-name" id="pRightName" data-edit-block="signature" data-edit-target="rightName"></div>
             </div>
           </section>
 
