@@ -2325,18 +2325,16 @@ body.v5-ui.reference-ui-v59 .library-thumb.sky-minimal{
 
 
 /* V6.12 — direct editing from the report preview. */
-.shell.report-view #paper .preview-direct-edit{
+body.v5-ui.reference-ui-v59 .shell.report-view #paper .preview-direct-edit{
   cursor:pointer;
   transition:outline-color .14s ease, box-shadow .14s ease, background-color .14s ease;
 }
-@media (hover:hover) and (pointer:fine){
-  .shell.report-view #paper .preview-direct-edit:hover{
-    outline:1px dashed rgba(22,119,255,.62);
-    outline-offset:2px;
-    box-shadow:0 0 0 3px rgba(22,119,255,.07);
-  }
+body.v5-ui.reference-ui-v59 .shell.report-view #paper .preview-direct-edit:hover{
+  outline:1px dashed rgba(22,119,255,.62);
+  outline-offset:2px;
+  box-shadow:0 0 0 3px rgba(22,119,255,.07);
 }
-.shell.report-view #paper .preview-direct-edit:focus-visible{
+body.v5-ui.reference-ui-v59 .shell.report-view #paper .preview-direct-edit:focus-visible{
   outline:2px solid rgba(22,119,255,.76);
   outline-offset:2px;
 }
