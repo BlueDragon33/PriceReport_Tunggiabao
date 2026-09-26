@@ -3563,6 +3563,8 @@ function renderPreviewProducts() {
     row.dataset.previewProductIndex = String(sourceIndex);
     row.dataset.editBlock = 'products';
     row.dataset.editTarget = 'productEditor';
+    row.classList.add('preview-direct-edit');
+    row.title = 'Nhấp đúp để chỉnh sửa sản phẩm này';
     const missingName = !String(product.name || '').trim();
     if (missingName) row.classList.add('draft-missing-name');
     cols.forEach(([, key]) => {
@@ -8821,31 +8823,36 @@ function focusPreviewTargetAfterOpen(targetId = '') {
   }));
 }
 
+function openPreviewProductWorkspace(productIndex = -1) {
+  const index = Number(productIndex);
+  if (Number.isInteger(index) && index >= 0 && index < state.products.length) {
+    productWorkspaceActiveIndex = index;
+  }
+  setActiveContentBlock('products');
+  closeContentWorkspace({ restoreFocus: false, clearActive: false });
+  openProductWorkspace({ focusFirst: false });
+  const opened = !document.getElementById('productWorkspaceModal')?.hidden;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const activeIndex = Number.isInteger(index) && index >= 0 ? index : productWorkspaceActiveIndex;
+    const card = Number.isInteger(activeIndex) && activeIndex >= 0
+      ? document.querySelector('#productEditor .product-card[data-product-index="' + activeIndex + '"]')
+      : null;
+    const target = card?.querySelector('[data-product-key="name"]')
+      || document.querySelector('#productEditor [data-product-key="name"]')
+      || document.getElementById('addProductTop');
+    card?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    target?.focus?.();
+    target?.select?.();
+  }));
+  return opened;
+}
+
 function openPreviewEditWorkspace(node) {
   const descriptor = previewEditDescriptor(node);
   if (!descriptor.block) return false;
 
   if (descriptor.block === 'products') {
-    if (descriptor.productIndex >= 0 && descriptor.productIndex < state.products.length) {
-      productWorkspaceActiveIndex = descriptor.productIndex;
-    }
-    setActiveContentBlock('products');
-    closeContentWorkspace({ restoreFocus: false, clearActive: false });
-    openProductWorkspace({ focusFirst: false });
-    const opened = !document.getElementById('productWorkspaceModal')?.hidden;
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const index = descriptor.productIndex >= 0 ? descriptor.productIndex : productWorkspaceActiveIndex;
-      const card = Number.isInteger(index) && index >= 0
-        ? document.querySelector('#productEditor .product-card[data-product-index="' + index + '"]')
-        : null;
-      const target = card?.querySelector('[data-product-key="name"]')
-        || document.querySelector('#productEditor [data-product-key="name"]')
-        || document.getElementById('addProductTop');
-      card?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-      target?.focus?.();
-      target?.select?.();
-    }));
-    return opened;
+    return openPreviewProductWorkspace(descriptor.productIndex);
   }
 
   const opened = openContentBlock(descriptor.block);
@@ -8869,6 +8876,15 @@ function setupPreviewDirectEdit() {
 
   paper.addEventListener('dblclick', (event) => {
     if (layoutEditEnabled) return;
+
+    const productRow = event.target?.closest?.('#qBody tr[data-preview-product-index]');
+    if (productRow) {
+      event.preventDefault();
+      event.stopPropagation();
+      openPreviewProductWorkspace(Number(productRow.dataset.previewProductIndex));
+      return;
+    }
+
     const descriptor = previewEditDescriptor(event.target);
     if (!descriptor.block) return;
     event.preventDefault();
