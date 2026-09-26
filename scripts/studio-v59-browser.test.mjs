@@ -413,7 +413,7 @@ try {
   }
   await page.locator('#doneContentWorkspace').click();
 
-  await page.locator('#pCustomer').dblclick();
+  await page.locator('#pCustomer').dispatchEvent('dblclick');
   await page.locator('#contentWorkspaceModal:not([hidden])').waitFor();
   if (await page.locator('#contentWorkspaceDialog').getAttribute('data-block') !== 'customer') {
     fail('V6.12 double-clicking customer preview must open the Customer workspace');
