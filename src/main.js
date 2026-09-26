@@ -1588,7 +1588,7 @@ function closeContentWorkspace({ restoreFocus = true, clearActive = true } = {})
   if (restoreFocus) requestAnimationFrame(() => contentWorkspaceLastFocus?.focus?.());
 }
 
-function openContentWorkspace(block, { focusFirst = true } = {}) {
+function openContentWorkspace(block, { focusFirst = true, focusId = '' } = {}) {
   const config = CONTENT_BLOCKS[block];
   const modal = document.getElementById('contentWorkspaceModal');
   const dialog = document.getElementById('contentWorkspaceDialog');
@@ -1637,13 +1637,16 @@ function openContentWorkspace(block, { focusFirst = true } = {}) {
   requestAnimationFrame(() => {
     const mount = document.getElementById('contentWorkspaceMount');
     if (mount) mount.scrollTop = 0;
-    const target = focusFirst ? document.getElementById(config.focusId) : dialog;
+    const preferredFocusId = String(focusId || '').trim();
+    const preferredTarget = preferredFocusId ? document.getElementById(preferredFocusId) : null;
+    const target = focusFirst ? (preferredTarget || document.getElementById(config.focusId)) : dialog;
+    target?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
     target?.focus?.();
   });
   return true;
 }
 
-function openContentBlock(block) {
+function openContentBlock(block, { focusId = '' } = {}) {
   const config = CONTENT_BLOCKS[block];
   if (!config) return false;
 
@@ -1655,10 +1658,10 @@ function openContentBlock(block) {
 
   if (block === 'products') {
     closeContentWorkspace({ restoreFocus: false, clearActive: false });
-    openProductWorkspace({ focusFirst: false });
+    openProductWorkspace({ focusFirst: true });
     return true;
   }
-  return openContentWorkspace(block);
+  return openContentWorkspace(block, { focusFirst: true, focusId });
 }
 
 document.getElementById('contentWorkspaceModal')?.addEventListener('keydown', (event) => {
@@ -8744,22 +8747,143 @@ function setupLayoutEditor() {
   });
 }
 
-$$('.clickable').forEach((el) => {
-  el.addEventListener('click', (event) => {
-    if (layoutEditEnabled) {
-      event.preventDefault();
-      event.stopPropagation();
-      return;
+const PREVIEW_EDIT_BLOCK_BY_TARGET = {
+  companyName: 'general',
+  companyAddressDetail: 'general',
+  companyWard: 'general',
+  taxCode: 'general',
+  phone: 'general',
+  website: 'general',
+  companyEmail: 'general',
+  quoteTitle: 'general',
+  quoteSubtitle: 'general',
+  quoteNo: 'general',
+  quoteDate: 'general',
+  validity: 'general',
+  recipientLine: 'general',
+  quickCustomerName: 'customer',
+  customerName: 'customer',
+  customerCompany: 'customer',
+  customerContact: 'customer',
+  customerPhone: 'customer',
+  customerAddress: 'customer',
+  customerEmail: 'customer',
+  sectionTitle: 'custom-text',
+  intro: 'custom-text',
+  closingText: 'custom-text',
+  slogan: 'custom-text',
+  footerText: 'custom-text',
+  paymentMethod: 'payment',
+  bankName: 'payment',
+  bankAccount: 'payment',
+  bankOwner: 'payment',
+  termsTitle: 'terms',
+  termsText: 'terms',
+  dateLine: 'signature',
+  leftTitle: 'signature',
+  rightTitle: 'signature',
+  leftNote: 'signature',
+  rightNote: 'signature',
+  leftName: 'signature',
+  rightName: 'signature'
+};
+
+const PREVIEW_EDIT_ROUTE_BY_LAYOUT = {
+  logo: ['general', 'companyName'],
+  company: ['general', 'companyName'],
+  companyName: ['general', 'companyName'],
+  companyAddressDetail: ['general', 'companyAddressDetail'],
+  companyRegion: ['general', 'companyWard'],
+  taxCode: ['general', 'taxCode'],
+  phone: ['general', 'phone'],
+  website: ['general', 'website'],
+  companyEmail: ['general', 'companyEmail'],
+  quote: ['general', 'quoteTitle'],
+  quoteTitle: ['general', 'quoteTitle'],
+  quoteSubtitle: ['general', 'quoteSubtitle'],
+  quoteMeta: ['general', 'quoteNo'],
+  recipient: ['general', 'recipientLine'],
+  customer: ['customer', 'customerName'],
+  intro: ['custom-text', 'intro'],
+  section: ['custom-text', 'sectionTitle'],
+  table: ['products', ''],
+  summary: ['payment', 'discountPct'],
+  words: ['payment', 'currency'],
+  payment: ['payment', 'paymentMethod'],
+  paymentMethod: ['payment', 'paymentMethod'],
+  bankName: ['payment', 'bankName'],
+  bankAccount: ['payment', 'bankAccount'],
+  bankOwner: ['payment', 'bankOwner'],
+  terms: ['terms', 'termsTitle'],
+  termsTitle: ['terms', 'termsTitle'],
+  termsText: ['terms', 'termsText'],
+  closing: ['custom-text', 'closingText'],
+  signatures: ['signature', 'dateLine'],
+  slogan: ['custom-text', 'slogan'],
+  footer: ['custom-text', 'footerText'],
+  footerText: ['custom-text', 'footerText']
+};
+
+function previewEditRouteFromElement(element) {
+  if (!(element instanceof Element)) return null;
+  const targetNode = element.closest('[data-target]');
+  const targetId = String(targetNode?.dataset?.target || '').trim();
+  if (targetId) {
+    const block = PREVIEW_EDIT_BLOCK_BY_TARGET[targetId];
+    if (block) {
+      const focusId = targetId === 'quickCustomerName' ? 'customerName' : targetId;
+      return { block, focusId };
     }
-    const target = document.getElementById(el.dataset.target);
+  }
+
+  const layoutNode = element.closest('[data-layout-block]');
+  const layoutKey = String(layoutNode?.dataset?.layoutBlock || '').trim();
+  const route = PREVIEW_EDIT_ROUTE_BY_LAYOUT[layoutKey];
+  return route ? { block: route[0], focusId: route[1] || '' } : null;
+}
+
+function openPreviewEditPopup(element) {
+  const route = previewEditRouteFromElement(element);
+  if (!route) return false;
+  return openContentBlock(route.block, { focusId: route.focusId });
+}
+
+const previewPaper = document.getElementById('paper');
+let previewSingleClickTimer = null;
+previewPaper?.addEventListener('click', (event) => {
+  if (layoutEditEnabled) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  const clickable = event.target instanceof Element ? event.target.closest('.clickable[data-target]') : null;
+  if (!clickable || !previewPaper.contains(clickable)) return;
+
+  window.clearTimeout(previewSingleClickTimer);
+  previewSingleClickTimer = window.setTimeout(() => {
+    const target = document.getElementById(clickable.dataset.target);
     if (!target) return;
     const pane = target.closest('.pane');
     if (pane) openTab(pane.id.replace('pane-', ''));
-    setTimeout(() => {
+    window.setTimeout(() => {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       target.focus();
     }, 80);
-  });
+  }, 240);
+});
+
+previewPaper?.addEventListener('dblclick', (event) => {
+  if (layoutEditEnabled) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  window.clearTimeout(previewSingleClickTimer);
+  const source = event.target instanceof Element ? event.target : null;
+  if (!source) return;
+  if (!openPreviewEditPopup(source)) return;
+  event.preventDefault();
+  event.stopPropagation();
 });
 
 let zoom = 82;
