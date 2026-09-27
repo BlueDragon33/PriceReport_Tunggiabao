@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v617-system-ux-readability';
+const CACHE = 'pricereport-shell-v618-pdf-print-isolation';
 const CORE = [
   './index.html',
   './manifest.webmanifest',

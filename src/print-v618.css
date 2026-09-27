@@ -1,0 +1,86 @@
+/* V6.18 PDF / PRINT ISOLATION
+   Loaded with media="print" after all screen styles.
+   This file owns the final print cascade without increasing report/UI CSS debt. */
+
+@page{size:A4 portrait;margin:0}
+
+html,
+body,
+#app{
+  width:210mm!important;
+  min-width:0!important;
+  max-width:210mm!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  background:#fff!important;
+}
+
+body{
+  print-color-adjust:exact!important;
+  -webkit-print-color-adjust:exact!important;
+}
+
+/* Keep only the A4 report branch in the print formatting tree. */
+body>:not(#app),
+#app>:not(.shell),
+.shell>:not(.preview),
+.preview>:not(.paper-wrap){
+  display:none!important;
+}
+
+.shell,
+.shell.app-workspace,
+.shell.report-view,
+.preview,
+.paper-wrap{
+  position:static!important;
+  inset:auto!important;
+  display:block!important;
+  float:none!important;
+  width:210mm!important;
+  min-width:210mm!important;
+  max-width:210mm!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  background:#fff!important;
+  border:0!important;
+  box-shadow:none!important;
+  transform:none!important;
+  translate:none!important;
+  scale:1!important;
+  zoom:1!important;
+}
+
+.paper-wrap{min-height:297mm!important}
+
+.paper{
+  position:relative!important;
+  display:flex!important;
+  box-sizing:border-box!important;
+  width:210mm!important;
+  min-width:210mm!important;
+  max-width:210mm!important;
+  min-height:297mm!important;
+  height:auto!important;
+  max-height:none!important;
+  margin:0!important;
+  transform:none!important;
+  translate:none!important;
+  scale:1!important;
+  zoom:1!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+.paper.layout-edit-mode .layout-block,
+.clickable:hover{
+  outline:0!important;
+  box-shadow:none!important;
+}

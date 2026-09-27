@@ -8,6 +8,7 @@ const studioCss = fs.readFileSync('src/studio-v59.css', 'utf8');
 const contentWorkspaceCss = fs.readFileSync('src/content-workspace-v63.css', 'utf8');
 const responsiveCss = fs.readFileSync('src/responsive-v69.css', 'utf8');
 const responsivePolishCss = fs.readFileSync('src/responsive-v610.css', 'utf8');
+const printCss = fs.readFileSync('src/print-v618.css', 'utf8');
 const themeCss = fs.readFileSync('src/quotation-themes-v60.css', 'utf8');
 const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss + '\n' + responsiveCss + '\n' + responsivePolishCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
@@ -93,12 +94,15 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/responsive-v610.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/responsive-v610.css','src/print-v618.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
 if (!js.includes("serviceWorker.register('./sw.js'")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
+if (!js.includes('function printQuoteDocument()') || (js.match(/window\.print\(\)/g) || []).length !== 1) fail('V6.18 print actions must route through the isolated print controller');
+if (!html.includes('src/print-v618.css') || !html.includes('media="print"')) fail('V6.18 dedicated print stylesheet link is missing');
+if (!printCss.includes('V6.18 PDF / PRINT ISOLATION') || !printCss.includes('.shell>:not(.preview)') || !printCss.includes('.preview>:not(.paper-wrap)')) fail('V6.18 hard print isolation contract is missing');
 if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
@@ -108,7 +112,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v617-system-ux-readability")) fail('Service-worker cache version was not aligned with V6.17 system UX readability');
+if (!sw.includes("pricereport-shell-v618-pdf-print-isolation")) fail('Service-worker cache version was not aligned with V6.18 PDF print isolation');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
