@@ -1,0 +1,13 @@
+{
+  "quoteNo": "BG-LEGACY-001",
+  "quoteDate": "2026-09-27",
+  "currency": "VND",
+  "customerName": "",
+  "products": [
+    {
+      "name": "Sản phẩm cũ",
+      "qty": 1,
+      "price": 1000
+    }
+  ]
+}

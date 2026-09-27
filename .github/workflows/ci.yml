@@ -31,6 +31,14 @@ jobs:
         run: node scripts/storage-repository.test.mjs
       - name: History revision domain tests
         run: node scripts/history-domain.test.mjs
+      - name: Storage migration engine tests
+        run: node scripts/storage-migrations.test.mjs
+      - name: Backup service tests
+        run: node scripts/backup-service.test.mjs
+      - name: Quotation command layer tests
+        run: node scripts/quotation-commands.test.mjs
+      - name: Report view model tests
+        run: node scripts/report-view-model.test.mjs
       - name: Importer tests
         run: node scripts/importers.test.mjs
       - name: Exporter tests

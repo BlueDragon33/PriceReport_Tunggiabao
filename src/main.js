@@ -1,5 +1,4 @@
 import {
-  calculateQuoteBreakdown,
   calcQuoteTotal,
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
@@ -36,9 +35,19 @@ import {
   removeBackgroundDataUrl
 } from './logo-processing.js';
 import { hasQuotationItemDraftContent, validateQuotation } from './domain/validation.js';
-import { canTransitionQuotationStatus, createId, ensureQuotationItemIds } from './domain/entities.js';
+import { canTransitionQuotationStatus, createId, ensureQuotationItemIds, normalizeSearchText } from './domain/entities.js';
 import { buildVersionedHistoryRecord } from './domain/history.js';
 import { createStorageRepository } from './storage/repository.js';
+import { STORAGE_SCHEMA_VERSION, ensureStorageSchemaMarker } from './storage/migrations.js';
+import { buildBackupPayload, normalizeBackupPayload } from './services/backup-service.js';
+import { buildReportViewModel } from './report/report-view-model.js';
+import {
+  duplicateQuotationItemsById,
+  patchQuotationItemsById,
+  quotationItemIdsFromIndices,
+  quotationItemsById,
+  removeQuotationItemsById
+} from './application/quotation-commands.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -53,6 +62,10 @@ const DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS = 1000000;
 const DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS = 6 * 60 * 60 * 1000;
 const DATA_LIBRARY_OPERATION_HISTORY_LIMIT = 8;
 const storageRepository = createStorageRepository(localStorage);
+const storageSchemaStatus = ensureStorageSchemaMarker(storageRepository);
+if (!storageSchemaStatus.ok) {
+  console.warn('Storage schema marker needs attention; continuing with non-destructive legacy compatibility.', storageSchemaStatus);
+}
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -3642,7 +3655,7 @@ function renderPreviewProducts() {
 }
 
 function renderTotals() {
-  const { subtotal, discountPct, discount, vatPct, vat, fee, total } = calculateQuoteBreakdown(state);
+  const { subtotal, discountPct, discount, vatPct, vat, fee, total } = buildReportViewModel(state).totals;
 
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
@@ -4027,15 +4040,15 @@ function download(name, text, type) {
 }
 
 function fullBackupPayload() {
-  return {
-    schemaVersion: 4,
-    exportedAt: new Date().toISOString(),
+  return buildBackupPayload({
     current: clone(state),
     history: getHistory(),
     presets: getPresets(),
     customers: getCustomerLibrary(),
-    catalog: getProductCatalog()
-  };
+    catalog: getProductCatalog(),
+    appVersion: '6.19.0',
+    dataVersion: STORAGE_SCHEMA_VERSION
+  });
 }
 
 function productRowsForExport() {
@@ -6150,19 +6163,21 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
     let snapshot = null;
     try {
       const payload = JSON.parse(reader.result);
-      if (!isPlainObject(payload) || !isPlainObject(payload.current) || !Array.isArray(payload.history) || !isPlainObject(payload.presets)) {
-        throw new Error('invalid backup schema');
-      }
-      const schemaVersion = Number(payload.schemaVersion || 1);
-      if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
-        throw new Error('unsupported backup schema');
-      }
+      const normalizedBackup = normalizeBackupPayload(payload, {
+        current: merge,
+        history: normalizeHistoryRecords,
+        presets: normalizePresetStore,
+        customers: normalizeCustomerLibrary,
+        catalog: normalizeProductCatalog
+      }, {
+        maxDataVersion: STORAGE_SCHEMA_VERSION
+      });
 
-      const restoredState = merge(payload.current);
-      const restoredHistory = normalizeHistoryRecords(payload.history);
-      const restoredPresets = normalizePresetStore(payload.presets);
-      const restoredCustomers = normalizeCustomerLibrary(payload.customers);
-      const restoredCatalog = normalizeProductCatalog(payload.catalog);
+      const restoredState = normalizedBackup.current;
+      const restoredHistory = normalizedBackup.history;
+      const restoredPresets = normalizedBackup.presets;
+      const restoredCustomers = normalizedBackup.customers;
+      const restoredCatalog = normalizedBackup.catalog;
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
 
       previousState = clone(state);
@@ -7936,10 +7951,7 @@ function canonicalLibraryText(value) {
 }
 
 function canonicalSearchText(value) {
-  return canonicalLibraryText(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd');
+  return normalizeSearchText(value);
 }
 
 function canonicalLibraryPhone(value) {
@@ -7960,7 +7972,7 @@ function customerKey(customer) {
 
 function saveCurrentCustomerToLibrary() {
   const customer = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: createId('customer'),
     name: state.customerName || '',
     company: state.customerCompany || '',
     address: state.customerAddress || '',
@@ -8043,7 +8055,7 @@ function saveProductsToCatalog(products, { notify = true } = {}) {
   let changed = 0;
   validProducts.forEach(product => {
     const item = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      id: createId('product'),
       group: product.group || '',
       name: product.name || '',
       pack: product.pack || '',
@@ -8081,6 +8093,8 @@ function saveCurrentProductsToCatalog() {
 function applyProductBulkAction() {
   const indices = selectedProductIndices();
   if (!indices.length) return;
+  const itemIds = quotationItemIdsFromIndices(state.products, indices);
+  if (!itemIds.length) return;
   const action = document.getElementById('productBulkAction')?.value || '';
   const input = document.getElementById('productBulkValue');
   const rawValue = String(input?.value || '').trim();
@@ -8098,26 +8112,25 @@ function applyProductBulkAction() {
       input?.focus();
       return;
     }
-    indices.forEach(index => {
-      const current = Number(state.products[index]?.price || 0);
-      state.products[index].price = Math.max(0, Math.round((current * (1 + percent / 100)) * 100) / 100);
+    state.products = patchQuotationItemsById(state.products, itemIds, (item) => {
+      const current = Number(item.price || 0);
+      item.price = Math.max(0, Math.round((current * (1 + percent / 100)) * 100) / 100);
+      return item;
     });
   } else if (action === 'group') {
-    indices.forEach(index => { state.products[index].group = rawValue; });
+    state.products = patchQuotationItemsById(state.products, itemIds, (item) => ({ ...item, group: rawValue }));
   } else if (action === 'unit') {
-    indices.forEach(index => { state.products[index].unit = rawValue; });
+    state.products = patchQuotationItemsById(state.products, itemIds, (item) => ({ ...item, unit: rawValue }));
   } else if (action === 'duplicate') {
-    const copies = indices.map(index => clone(state.products[index]));
-    state.products.push(...copies);
+    state.products = duplicateQuotationItemsById(state.products, itemIds, () => createId('item'));
   } else if (action === 'catalog') {
-    const changed = saveProductsToCatalog(indices.map(index => state.products[index]), { notify: false });
+    const changed = saveProductsToCatalog(quotationItemsById(state.products, itemIds), { notify: false });
     toast(changed ? 'Đã lưu ' + changed + ' sản phẩm đã chọn vào danh mục' : 'Các dòng đã chọn chưa có tên sản phẩm.');
     return;
   } else if (action === 'delete') {
     if (!confirm('Xóa ' + indices.length + ' dòng sản phẩm đã chọn?')) return;
-    const selected = new Set(indices);
-    state.products = state.products.filter((_, index) => !selected.has(index));
-    if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+    state.products = removeQuotationItemsById(state.products, itemIds);
+    if (!state.products.length) state.products.push({ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
   } else {
     return;
   }

@@ -12,8 +12,13 @@ V6.19 bắt đầu chuẩn hóa bộ não nghiệp vụ theo kiến trúc local-
 - Có Storage Repository với write verification, JSON safety, snapshot/rollback verification.
 - History, Customer Library, Product Catalog và UI preferences bắt đầu đọc qua repository boundary.
 - Giữ nguyên storage keys/schema hiện hữu; V6.19 không phá dữ liệu V6.18.
-- Có unit gates riêng cho domain model và storage repository.
-- PWA cache: **pricereport-shell-v619-business-core-foundation**.
+- Có unit gates riêng cho domain model, storage repository, migration engine, backup service, command layer và report view model.
+- Bulk product operations đi qua itemId command layer thay vì trực tiếp dựa vào array index.
+- Backup/restore có service contract; backup mới ghi appVersion + dataVersion nhưng vẫn đọc backup schema v4 cũ.
+- Storage có schema marker + ordered migration engine để sẵn sàng vN → vN+1.
+- Report totals/Excel cùng đi qua canonical report view model.
+- Service Worker precache rõ các core ES modules để Standalone khởi động offline ổn định hơn.
+- PWA cache: **pricereport-shell-v619-architecture-final**.
 - Package: **6.19.0**.
 
 ## Trạng thái trước — V6.18 PDF Print Isolation

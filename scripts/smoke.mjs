@@ -17,6 +17,10 @@ const domainValidationJs = fs.readFileSync('src/domain/validation.js', 'utf8');
 const domainEntitiesJs = fs.readFileSync('src/domain/entities.js', 'utf8');
 const storageRepositoryJs = fs.readFileSync('src/storage/repository.js', 'utf8');
 const historyDomainJs = fs.readFileSync('src/domain/history.js', 'utf8');
+const storageMigrationsJs = fs.readFileSync('src/storage/migrations.js', 'utf8');
+const backupServiceJs = fs.readFileSync('src/services/backup-service.js', 'utf8');
+const quotationCommandsJs = fs.readFileSync('src/application/quotation-commands.js', 'utf8');
+const reportViewModelJs = fs.readFileSync('src/report/report-view-model.js', 'utf8');
 
 function fail(message) {
   console.error('SMOKE FAIL:', message);
@@ -107,7 +111,7 @@ if (!js.includes('window.print()')) fail('Print/PDF action is missing');
 if (!js.includes('function printQuoteDocument()') || (js.match(/window\.print\(\)/g) || []).length !== 1) fail('V6.18 print actions must route through the isolated print controller');
 if (!html.includes('src/print-v618.css') || !html.includes('media="print"')) fail('V6.18 dedicated print stylesheet link is missing');
 if (!printCss.includes('V6.18 PDF / PRINT ISOLATION') || !printCss.includes('.shell>:not(.preview)') || !printCss.includes('.preview>:not(.paper-wrap)')) fail('V6.18 hard print isolation contract is missing');
-if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
+if (!backupServiceJs.includes('BACKUP_SCHEMA_VERSION = 4') || !js.includes('buildBackupPayload({')) fail('Full backup schema v4 service boundary is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
 if (!js.includes('updatePageEstimate')) fail('A4 page estimation logic is missing');
@@ -116,7 +120,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v619-business-core-foundation")) fail('Service-worker cache version was not aligned with V6.19 business-core foundation');
+if (!sw.includes("pricereport-shell-v619-architecture-final")) fail('Service-worker cache version was not aligned with V6.19 architecture final');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
@@ -457,6 +461,10 @@ if (!js.includes('calculateQuoteBreakdown(state)')) fail('V6.19 preview totals m
 if (!js.includes('ensureQuotationItemIds(state.products)') || !js.includes("sourceProductId: String(product.id || product.productId || '')")) fail('V6.19 stable quotation-item identity/snapshot source is missing');
 if (!js.includes('canTransitionQuotationStatus') || !js.includes("key === 'quoteStatus'")) fail('V6.19 quotation state machine is not wired to the editor');
 if (!historyDomainJs.includes('buildVersionedHistoryRecord') || !js.includes('buildVersionedHistoryRecord({')) fail('V6.19 history revision owner is missing');
+if (!storageMigrationsJs.includes('migrateVersionedPayload') || !js.includes('ensureStorageSchemaMarker(storageRepository)')) fail('V6.19 versioned migration foundation is missing');
+if (!backupServiceJs.includes('normalizeBackupPayload') || !js.includes('normalizeBackupPayload(payload')) fail('V6.19 backup restore service boundary is missing');
+if (!quotationCommandsJs.includes('patchQuotationItemsById') || !js.includes('quotationItemIdsFromIndices(state.products, indices)')) fail('V6.19 itemId command boundary is missing');
+if (!reportViewModelJs.includes('buildReportViewModel') || !js.includes('buildReportViewModel(state).totals')) fail('V6.19 report view-model boundary is missing');
 if (!v5Css.includes('Shared Studio form / health utilities')) fail('Shared Studio form/health utilities are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 shared Studio primitives are missing');

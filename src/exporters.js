@@ -1,4 +1,4 @@
-import { calculateQuoteBreakdown } from './core.js';
+import { buildReportViewModel } from './report/report-view-model.js';
 
 const text = (value) => String(value ?? '').trim();
 
@@ -145,7 +145,7 @@ export function quotationWorkbookModel(data = {}) {
     vat,
     fee: otherFee,
     total
-  } = calculateQuoteBreakdown({ ...data, products });
+  } = buildReportViewModel({ ...data, products }).totals;
 
   if (data.showTotals !== false) {
     rows.push([]);

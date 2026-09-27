@@ -16,3 +16,14 @@ Implemented owners:
 - `src/exporters.js`: export adapter using the shared calculation engine.
 
 `main.js` remains the composition root during migration. Optional management/device services must never block standalone quotation operations.
+
+## V6.19 final extraction
+
+Additional implemented boundaries:
+- `src/application/quotation-commands.js`: itemId-oriented bulk mutations and move/query primitives.
+- `src/storage/migrations.js`: schema marker and ordered migration engine.
+- `src/services/backup-service.js`: backup envelope/version validation and normalization.
+- `src/report/report-view-model.js`: canonical report projection shared by preview totals and spreadsheet export.
+- `src/storage/integrity.js`: non-destructive valid/rejected partition and quarantine payload foundation.
+
+The composition root remains intentionally large because UI controllers are migrated only when a tested ownership boundary exists; new business rules must not be added directly to DOM handlers.

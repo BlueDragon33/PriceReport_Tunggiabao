@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v619-business-core-foundation', 'V6.19 business-core foundation must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v619-architecture-final', 'V6.19 business-core foundation must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
@@ -72,6 +72,9 @@ assert.ok(backgroundRefresh, 'cached assets must attach revalidation to event.wa
 await backgroundRefresh;
 
 assert.match(source, /event\.waitUntil\(network\.then\(\(\) => undefined\)\)/, 'stale-while-revalidate lifetime guard is missing');
+for (const coreModule of ['./src/main.js','./src/domain/validation.js','./src/storage/repository.js','./src/storage/migrations.js','./src/services/backup-service.js','./src/application/quotation-commands.js','./src/report/report-view-model.js']) {
+  assert.ok(source.includes(coreModule), 'offline core module missing from precache: ' + coreModule);
+}
 assert.match(source, /if \(cacheable\) await cache\.put\(event\.request, response\.clone\(\)\)/, 'background refresh must await cache write');
 assert.match(source, /event\.waitUntil\(caches\.open\(CACHE\)\.then\(cache => cache\.put\('\.\/index\.html', copy\)\)\)/, 'navigation cache write must stay alive');
 
