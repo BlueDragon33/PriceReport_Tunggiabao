@@ -2679,7 +2679,7 @@ function bindInputs() {
         state[key] = nextValue;
       }
 
-      $('[data-bind]').forEach((peer) => {
+      $$('[data-bind]').forEach((peer) => {
         if (peer === el || peer.dataset.bind !== key) return;
         if (peer.type === 'checkbox') peer.checked = Boolean(state[key]);
         else peer.value = state[key] == null ? '' : state[key];
