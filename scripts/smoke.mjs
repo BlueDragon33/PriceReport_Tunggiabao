@@ -99,6 +99,8 @@ for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css
 
 if (!js.includes("serviceWorker.register('./sw.js'")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
+if (!js.includes('function printQuoteDocument()') || (js.match(/window\.print\(\)/g) || []).length !== 1) fail('V6.18 print actions must route through the isolated print controller');
+if (!css.includes('V6.18 PRINT / PDF ISOLATION') || !css.includes('.shell>:not(.preview)') || !css.includes('.preview>:not(.paper-wrap)')) fail('V6.18 hard print isolation contract is missing');
 if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
@@ -108,7 +110,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v617-system-ux-readability")) fail('Service-worker cache version was not aligned with V6.17 system UX readability');
+if (!sw.includes("pricereport-shell-v618-pdf-print-isolation")) fail('Service-worker cache version was not aligned with V6.18 PDF print isolation');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
