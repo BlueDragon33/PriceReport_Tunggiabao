@@ -13,6 +13,9 @@ const themeCss = fs.readFileSync('src/quotation-themes-v60.css', 'utf8');
 const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss + '\n' + responsiveCss + '\n' + responsivePolishCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
 const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
+const domainValidationJs = fs.readFileSync('src/domain/validation.js', 'utf8');
+const domainEntitiesJs = fs.readFileSync('src/domain/entities.js', 'utf8');
+const storageRepositoryJs = fs.readFileSync('src/storage/repository.js', 'utf8');
 
 function fail(message) {
   console.error('SMOKE FAIL:', message);
@@ -112,7 +115,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v618-pdf-print-isolation")) fail('Service-worker cache version was not aligned with V6.18 PDF print isolation');
+if (!sw.includes("pricereport-shell-v619-business-core-foundation")) fail('Service-worker cache version was not aligned with V6.19 business-core foundation');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
@@ -444,9 +447,12 @@ if ((html.match(/data-content-block=/g) || []).length < 14) fail('V5.9 content n
 for (const block of ['general','customer','products','payment','terms','signature','custom-text']) {
   if (!html.includes('data-content-block="' + block + '"')) fail('V5.9 content library is missing block: ' + block);
 }
-if (!js.includes('function productHasDraftContent')) fail('V5.1 meaningful-product guard is missing');
+if (!js.includes('function productHasDraftContent') || !domainValidationJs.includes('hasQuotationItemDraftContent')) fail('V6.19 meaningful-product domain guard is missing');
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
-if (!js.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V5.1 unnamed meaningful-product validation is missing');
+if (!domainValidationJs.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V6.19 unnamed meaningful-product validation is missing');
+if (!js.includes('createStorageRepository(localStorage)') || !storageRepositoryJs.includes('STORAGE_VERIFY_FAILED')) fail('V6.19 storage repository boundary is missing');
+if (!domainEntitiesJs.includes('QUOTATION_STATUS_TRANSITIONS') || !domainEntitiesJs.includes('createQuotationItemSnapshot')) fail('V6.19 domain model foundation is missing');
+if (!js.includes('calculateQuoteBreakdown(state)')) fail('V6.19 preview totals must use the shared calculation engine');
 if (!v5Css.includes('Shared Studio form / health utilities')) fail('Shared Studio form/health utilities are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 shared Studio primitives are missing');

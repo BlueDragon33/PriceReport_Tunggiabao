@@ -2,7 +2,21 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.18 PDF Print Isolation
+## Trạng thái hiện tại — V6.19 Business Core Foundation
+
+V6.19 bắt đầu chuẩn hóa bộ não nghiệp vụ theo kiến trúc local-first mà không big-bang rewrite.
+
+- Một calculation engine duy nhất cho subtotal/discount/VAT/fee/total, dùng chung bởi preview + Excel.
+- Validation báo giá được tách khỏi DOM thành domain module thuần.
+- Có canonical entity helpers cho Customer/Product/QuotationItem và status-transition contract.
+- Có Storage Repository với write verification, JSON safety, snapshot/rollback verification.
+- History, Customer Library, Product Catalog và UI preferences bắt đầu đọc qua repository boundary.
+- Giữ nguyên storage keys/schema hiện hữu; V6.19 không phá dữ liệu V6.18.
+- Có unit gates riêng cho domain model và storage repository.
+- PWA cache: **pricereport-shell-v619-business-core-foundation**.
+- Package: **6.19.0**.
+
+## Trạng thái trước — V6.18 PDF Print Isolation
 
 V6.18 sửa lỗi **Xuất PDF/In bị lẫn giao diện ứng dụng** như topbar, nút Lưu nháp/Xem trước/Xuất PDF và vùng preview.
 

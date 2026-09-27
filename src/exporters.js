@@ -1,3 +1,5 @@
+import { calculateQuoteBreakdown } from './core.js';
+
 const text = (value) => String(value ?? '').trim();
 
 function nonNegativeNumber(value, fallback = 0) {
@@ -135,21 +137,15 @@ export function quotationWorkbookModel(data = {}) {
     moneyCells.push({ row, col: 7 });
   }
 
-  const subtotal = products.reduce((sum, product) => {
-    const qty = nonNegativeNumber(product?.qty, 0);
-    const price = nonNegativeNumber(product?.price, 0);
-    const meaningful = [product?.group, product?.name, product?.pack, product?.unit, product?.note].some((value) => text(value))
-      || qty !== 1
-      || price !== 0;
-    return meaningful ? sum + qty * price : sum;
-  }, 0);
-  const discountPct = Math.min(100, Math.max(0, number(data.discountPct, 0)));
-  const vatPct = Math.min(100, Math.max(0, number(data.vatPct, 0)));
-  const discount = subtotal * discountPct / 100;
-  const taxable = Math.max(0, subtotal - discount);
-  const vat = taxable * vatPct / 100;
-  const otherFee = money(data.otherFee);
-  const total = taxable + vat + otherFee;
+  const {
+    subtotal,
+    discountPct,
+    discount,
+    vatPct,
+    vat,
+    fee: otherFee,
+    total
+  } = calculateQuoteBreakdown({ ...data, products });
 
   if (data.showTotals !== false) {
     rows.push([]);

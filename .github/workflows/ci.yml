@@ -25,6 +25,10 @@ jobs:
         run: node scripts/ui-debt.test.mjs
       - name: Core business tests
         run: node scripts/core.test.mjs
+      - name: Domain model and validation tests
+        run: node scripts/domain.test.mjs
+      - name: Storage repository tests
+        run: node scripts/storage-repository.test.mjs
       - name: Importer tests
         run: node scripts/importers.test.mjs
       - name: Exporter tests

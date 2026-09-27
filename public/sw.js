@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v618-pdf-print-isolation';
+const CACHE = 'pricereport-shell-v619-business-core-foundation';
 const CORE = [
   './index.html',
   './manifest.webmanifest',

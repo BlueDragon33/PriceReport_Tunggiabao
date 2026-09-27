@@ -1,4 +1,5 @@
 import {
+  calculateQuoteBreakdown,
   calcQuoteTotal,
   historyTotalsByCurrency,
   nextDuplicateQuoteNo,
@@ -34,6 +35,8 @@ import {
   normalizeRemoveBgTolerance,
   removeBackgroundDataUrl
 } from './logo-processing.js';
+import { hasQuotationItemDraftContent, validateQuotation } from './domain/validation.js';
+import { createStorageRepository } from './storage/repository.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -47,6 +50,7 @@ const DATA_LIBRARY_IMPORT_RECOVERY = 'tunggiabao-price-report-data-library-impor
 const DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS = 1000000;
 const DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS = 6 * 60 * 60 * 1000;
 const DATA_LIBRARY_OPERATION_HISTORY_LIMIT = 8;
+const storageRepository = createStorageRepository(localStorage);
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -384,15 +388,12 @@ void deviceAccessRuntime;
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 function safeStore(key, value) {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch (error) {
-    console.error('Local storage write failed:', error);
-    const toastEl = document.getElementById('toast');
-    if (toastEl) toast('Không thể lưu dữ liệu: bộ nhớ trình duyệt có thể đã đầy.');
-    return false;
-  }
+  const result = storageRepository.writeRaw(key, value);
+  if (result.ok) return true;
+  console.error('Local storage write failed:', result.error);
+  const toastEl = document.getElementById('toast');
+  if (toastEl) toast('Không thể lưu dữ liệu: bộ nhớ trình duyệt có thể đã đầy.');
+  return false;
 }
 function saveLogoAsset(value) {
   try {
@@ -513,30 +514,18 @@ function offerDraftRecovery() {
 }
 
 function captureStorageSnapshot(keys) {
-  const snapshot = {};
-  try {
-    keys.forEach((key) => {
-      snapshot[key] = localStorage.getItem(key);
-    });
-    return snapshot;
-  } catch (error) {
-    console.error('Unable to capture storage snapshot:', error);
-    return null;
-  }
+  const result = storageRepository.capture(keys);
+  if (result.ok) return result.snapshot;
+  console.error('Unable to capture storage snapshot:', result.error);
+  return null;
 }
 
 function restoreStorageSnapshot(snapshot) {
   if (!snapshot) return false;
-  try {
-    Object.entries(snapshot).forEach(([key, value]) => {
-      if (value == null) localStorage.removeItem(key);
-      else localStorage.setItem(key, value);
-    });
-    return true;
-  } catch (error) {
-    console.error('Unable to roll back storage snapshot:', error);
-    return false;
-  }
+  const result = storageRepository.restore(snapshot);
+  if (result.ok) return true;
+  console.error('Unable to roll back storage snapshot:', result.error);
+  return false;
 }
 
 function storageWriteError(rollbackOk = true) {
@@ -2876,11 +2865,7 @@ function resetCollapsedProductsForState() {
 resetCollapsedProductsForState();
 
 function productHasDraftContent(product) {
-  if (!product) return false;
-  const textFields = [product.group, product.name, product.pack, product.unit, product.note];
-  if (textFields.some(value => String(value || '').trim())) return true;
-  if (normalizeNonNegativeNumber(product.price) > 0) return true;
-  return normalizeNonNegativeNumber(product.qty) !== 1;
+  return hasQuotationItemDraftContent(product);
 }
 
 function focusProductCell(index, key = 'name') {
@@ -3645,15 +3630,7 @@ function renderPreviewProducts() {
 }
 
 function renderTotals() {
-  const subtotal = state.products.reduce((sum, p) =>
-    sum + normalizeNonNegativeNumber(p.qty) * normalizeNonNegativeNumber(p.price), 0);
-  const discountPct = normalizeBoundedNumber(state.discountPct, 0, 100, 0);
-  const vatPct = normalizeBoundedNumber(state.vatPct, 0, 100, 0);
-  const discount = subtotal * discountPct / 100;
-  const taxable = Math.max(0, subtotal - discount);
-  const vat = taxable * vatPct / 100;
-  const fee = normalizeNonNegativeNumber(state.otherFee);
-  const total = calcQuoteTotal(state);
+  const { subtotal, discountPct, discount, vatPct, vat, fee, total } = calculateQuoteBreakdown(state);
 
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
@@ -5415,12 +5392,8 @@ function applyAppPreferences() {
 }
 
 function getUiState() {
-  try {
-    const data = JSON.parse(localStorage.getItem(UI_STATE));
-    return isPlainObject(data) ? data : {};
-  } catch {
-    return {};
-  }
+  const data = storageRepository.readJson(UI_STATE, {});
+  return isPlainObject(data) ? data : {};
 }
 
 function saveUiState(next) {
@@ -7280,58 +7253,7 @@ document.getElementById('reset').addEventListener('click', () => {
 });
 
 function validateQuote(data = state) {
-  const errors = [];
-  const warnings = [];
-
-  if (!String(data.companyName || '').trim()) errors.push('Thiếu tên công ty.');
-  if (!String(data.quoteTitle || '').trim()) errors.push('Thiếu tiêu đề báo giá.');
-  if (!String(data.recipientLine || '').trim()) warnings.push('Chưa có dòng Kính gửi.');
-  const finalStatus = data.quoteStatus && data.quoteStatus !== 'draft';
-  if (finalStatus && !String(data.quoteNo || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có số báo giá.');
-  if (finalStatus && !String(data.quoteDate || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có ngày báo giá.');
-  if (data.quoteDate && !isValidISODate(data.quoteDate)) {
-    (finalStatus ? errors : warnings).push('Ngày báo giá không hợp lệ; cần dùng định dạng ngày hợp lệ.');
-  }
-
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (data.companyEmail && !emailPattern.test(String(data.companyEmail))) warnings.push('Email công ty có vẻ chưa đúng định dạng.');
-  if (data.customerEmail && !emailPattern.test(String(data.customerEmail))) warnings.push('Email khách hàng có vẻ chưa đúng định dạng.');
-
-  const products = Array.isArray(data.products) ? data.products : [];
-  const namedProducts = products.filter(product => String(product?.name || '').trim());
-  if (!namedProducts.length) errors.push('Chưa có sản phẩm hợp lệ.');
-
-  products.forEach((product, index) => {
-    const name = String(product?.name || '').trim();
-    const qty = Number(product?.qty || 0);
-    const price = Number(product?.price || 0);
-    if (!name && productHasDraftContent(product)) {
-      errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
-      return;
-    }
-    if (name && qty < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng âm.');
-    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng bằng 0.');
-    if (name && price < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có đơn giá âm.');
-    else if (name && data.showPrice && price === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" chưa có đơn giá.');
-  });
-
-  if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
-  if (data.showLogo && !data.logo) warnings.push('Đang bật hiển thị logo nhưng chưa có file logo.');
-  if ((Number(data.discountPct || 0) > 0 || Number(data.vatPct || 0) > 0 || Number(data.otherFee || 0) > 0) && !data.showTotals) {
-    warnings.push('Có giảm giá/VAT/phí khác nhưng bảng tổng cộng đang bị ẩn.');
-  }
-  if (Number(data.vatPct || 0) > 0 && /đã bao gồm\s*VAT/i.test(String(data.termsText || ''))) {
-    warnings.push('Điều khoản ghi "đã bao gồm VAT" trong khi bảng tổng cộng đang cộng VAT riêng.');
-  }
-  if (data.showTerms && !String(data.termsText || '').trim()) warnings.push('Đang bật điều khoản nhưng nội dung điều khoản đang trống.');
-  if (data.showSignature && !String(data.rightTitle || '').trim()) warnings.push('Đang bật chữ ký nhưng chức danh đại diện công ty đang trống.');
-  const transferOnly = /^\s*chuyển khoản\s*$/i.test(String(data.paymentMethod || ''));
-  const partialBank = [data.bankName, data.bankAccount, data.bankOwner].some(Boolean) &&
-    ![data.bankName, data.bankAccount, data.bankOwner].every(Boolean);
-  if (data.showPaymentBlock && transferOnly && !data.bankName) warnings.push('Phương thức là chuyển khoản nhưng chưa nhập ngân hàng.');
-  if (data.showPaymentBlock && partialBank) warnings.push('Thông tin tài khoản ngân hàng đang nhập dở.');
-
-  return { errors, warnings };
+  return validateQuotation(data);
 }
 
 function validationTargetForMessage(message) {
@@ -7611,11 +7533,7 @@ function normalizeHistoryRecords(value) {
 }
 
 function getHistory() {
-  try {
-    return normalizeHistoryRecords(JSON.parse(localStorage.getItem(HISTORY)));
-  } catch {
-    return [];
-  }
+  return normalizeHistoryRecords(storageRepository.readJson(HISTORY, []));
 }
 
 function setHistory(items) {
@@ -7969,11 +7887,7 @@ function normalizeCustomerLibrary(items) {
 }
 
 function getCustomerLibrary() {
-  try {
-    return normalizeCustomerLibrary(JSON.parse(localStorage.getItem(CUSTOMERS)));
-  } catch {
-    return [];
-  }
+  return normalizeCustomerLibrary(storageRepository.readJson(CUSTOMERS, []));
 }
 
 function setCustomerLibrary(items) {
@@ -8073,11 +7987,7 @@ function normalizeProductCatalog(items) {
 }
 
 function getProductCatalog() {
-  try {
-    return normalizeProductCatalog(JSON.parse(localStorage.getItem(CATALOG)));
-  } catch {
-    return [];
-  }
+  return normalizeProductCatalog(storageRepository.readJson(CATALOG, []));
 }
 
 function setProductCatalog(items) {

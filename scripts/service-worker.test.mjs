@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v618-pdf-print-isolation', 'V6.18 PDF print isolation must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v619-business-core-foundation', 'V6.19 business-core foundation must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
