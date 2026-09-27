@@ -143,6 +143,57 @@ try {
   if (colors.preview !== 'rgb(38, 58, 84)') fail('preview canvas color drifted: ' + colors.preview);
   if (colors.inspector !== 'rgb(11, 39, 72)') fail('inspector color drifted: ' + colors.inspector);
 
+
+  // V6.18: real browser print media must isolate the A4 document from all app chrome.
+  await page.emulateMedia({ media: 'print' });
+  const printLayout = await page.evaluate(() => {
+    const display = selector => {
+      const node = document.querySelector(selector);
+      return node ? getComputedStyle(node).display : 'missing';
+    };
+    const rect = selector => {
+      const node = document.querySelector(selector);
+      if (!node) return null;
+      const box = node.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    };
+    return {
+      topbar: display('.studio-topbar'),
+      nav: display('.nav'),
+      editor: display('.editor'),
+      inspector: display('.design'),
+      previewTools: display('.preview-tools'),
+      previewCustomizer: display('.preview-customizer'),
+      preview: display('.preview'),
+      paperWrap: display('#paperWrap'),
+      paper: display('#paper'),
+      shellRect: rect('.shell'),
+      previewRect: rect('.preview'),
+      paperWrapRect: rect('#paperWrap'),
+      paperRect: rect('#paper')
+    };
+  });
+  for (const [name, value] of Object.entries({
+    topbar: printLayout.topbar,
+    nav: printLayout.nav,
+    editor: printLayout.editor,
+    inspector: printLayout.inspector,
+    previewTools: printLayout.previewTools,
+    previewCustomizer: printLayout.previewCustomizer
+  })) {
+    if (value !== 'none') fail('V6.18 print leak: ' + name + ' display=' + value);
+  }
+  if (printLayout.preview !== 'block' || printLayout.paperWrap !== 'block' || printLayout.paper === 'none') {
+    fail('V6.18 A4 report is not visible in print media');
+  }
+  const a4CssPx = 210 / 25.4 * 96;
+  near('V6.18 print shell A4 width', printLayout.shellRect?.width, a4CssPx, 4);
+  near('V6.18 print preview A4 width', printLayout.previewRect?.width, a4CssPx, 4);
+  near('V6.18 print paper-wrap A4 width', printLayout.paperWrapRect?.width, a4CssPx, 4);
+  near('V6.18 print paper A4 width', printLayout.paperRect?.width, a4CssPx, 4);
+  near('V6.18 print paper x origin', printLayout.paperRect?.x, 0, 2);
+  await page.emulateMedia({ media: 'screen' });
+
   // V6.3: every non-product content card opens one shared, wide modal while keeping Studio geometry unchanged.
   const workspaceCases = [
     ['general','companyName'],
