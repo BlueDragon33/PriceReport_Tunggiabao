@@ -1,13 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+const css = fs.readFileSync(new URL('../src/print-v618.css', import.meta.url), 'utf8');
 const js = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 
-const marker = 'V6.18 PRINT / PDF ISOLATION';
-const start = css.lastIndexOf(marker);
-assert.ok(start >= 0, 'V6.18 print isolation block is missing');
-const printCss = css.slice(start);
+const marker = 'V6.18 PDF / PRINT ISOLATION';
+assert.ok(css.includes(marker), 'V6.18 print isolation stylesheet is missing its release marker');
+const printCss = css;
 
 assert.match(printCss, /@page\{size:A4 portrait;margin:0\}/, 'A4 zero-margin page contract is missing');
 assert.match(printCss, /\.shell>:not\(\.preview\)/, 'application shell must isolate preview during print');
