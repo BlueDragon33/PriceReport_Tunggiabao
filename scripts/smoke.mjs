@@ -457,7 +457,7 @@ if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is 
 if (!domainValidationJs.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V6.19 unnamed meaningful-product validation is missing');
 if (!js.includes('createStorageRepository(localStorage)') || !storageRepositoryJs.includes('STORAGE_VERIFY_FAILED')) fail('V6.19 storage repository boundary is missing');
 if (!domainEntitiesJs.includes('QUOTATION_STATUS_TRANSITIONS') || !domainEntitiesJs.includes('createQuotationItemSnapshot')) fail('V6.19 domain model foundation is missing');
-if (!js.includes('calculateQuoteBreakdown(state)')) fail('V6.19 preview totals must use the shared calculation engine');
+if (!js.includes('buildReportViewModel(state).totals') || !reportViewModelJs.includes('calculateQuoteBreakdown')) fail('V6.19 preview totals must flow through the report view model and shared calculation engine');
 if (!js.includes('ensureQuotationItemIds(state.products)') || !js.includes("sourceProductId: String(product.id || product.productId || '')")) fail('V6.19 stable quotation-item identity/snapshot source is missing');
 if (!js.includes('canTransitionQuotationStatus') || !js.includes("key === 'quoteStatus'")) fail('V6.19 quotation state machine is not wired to the editor');
 if (!historyDomainJs.includes('buildVersionedHistoryRecord') || !js.includes('buildVersionedHistoryRecord({')) fail('V6.19 history revision owner is missing');
