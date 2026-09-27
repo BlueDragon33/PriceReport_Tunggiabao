@@ -1751,7 +1751,7 @@ document.getElementById('quoteReviewPreview')?.addEventListener('click', () => {
   openTab('view');
 });
 document.getElementById('quoteReviewExportPdf')?.addEventListener('click', () => {
-  if (runPreflight({ forPrint: true })) window.print();
+  if (runPreflight({ forPrint: true })) printQuoteDocument();
 });
 document.getElementById('quoteReviewModal')?.addEventListener('pointerdown', (event) => {
   if (event.target === event.currentTarget) closeQuoteReview();
@@ -6047,8 +6047,20 @@ document.getElementById('closeDesign').addEventListener('click', () => {
   if (window.innerWidth > 1280) setMajorPanelState('design', true);
 });
 
-$$('.print-action').forEach((el) => el.addEventListener('click', () => {
-  if (runPreflight({ forPrint: true })) window.print();
+function setPrintExportState(active) {
+  document.body.classList.toggle('print-export-active', Boolean(active));
+}
+
+function printQuoteDocument() {
+  setPrintExportState(true);
+  window.print();
+}
+
+window.addEventListener('beforeprint', () => setPrintExportState(true));
+window.addEventListener('afterprint', () => setPrintExportState(false));
+
+$('.print-action').forEach((el) => el.addEventListener('click', () => {
+  if (runPreflight({ forPrint: true })) printQuoteDocument();
 }));
 
 document.getElementById('preflightCheck')?.addEventListener('click', () => {
