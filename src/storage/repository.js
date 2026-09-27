@@ -11,7 +11,13 @@ export function createStorageRepository(storage) {
       catch(cause){ return {ok:false,error:storageError('STORAGE_WRITE_FAILED',key,cause)}; }
     },
     writeJson(key, value) { let serialized; try { serialized=JSON.stringify(value); } catch(cause){ return {ok:false,error:storageError('STORAGE_SERIALIZE_FAILED',key,cause)}; } return this.writeRaw(key,serialized); },
-    remove(key) { try { storage.removeItem(key); return {ok:true}; } catch(cause){ return {ok:false,error:storageError('STORAGE_REMOVE_FAILED',key,cause)}; } },
+    remove(key) {
+      try {
+        storage.removeItem(key);
+        if (storage.getItem(key) != null) return {ok:false,error:storageError('STORAGE_REMOVE_VERIFY_FAILED',key)};
+        return {ok:true};
+      } catch(cause){ return {ok:false,error:storageError('STORAGE_REMOVE_FAILED',key,cause)}; }
+    },
     capture(keys=[]) {
       try { const snapshot={}; for(const key of keys) snapshot[key]=storage.getItem(key); return {ok:true,snapshot}; }
       catch(cause){ return {ok:false,error:storageError('STORAGE_SNAPSHOT_FAILED','',cause)}; }

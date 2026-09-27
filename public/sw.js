@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v619-architecture-final';
+const CACHE = 'pricereport-shell-v620-storage-boundary';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
