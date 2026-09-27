@@ -353,14 +353,15 @@ function merge(data) {
 let state;
 let rawStored = null;
 try {
-  rawStored = JSON.parse(localStorage.getItem(STORAGE));
+  rawStored = storageRepository.readJson(STORAGE, null);
   const shouldMigrateLegacyProfile = looksLikeLegacyBienUyenBaoProfile(rawStored);
   if (shouldMigrateLegacyProfile) {
     rawStored = applyTungGiaBaoBaseline(rawStored);
     try {
       const persistedMigration = clone(rawStored);
       delete persistedMigration.logo;
-      localStorage.setItem(STORAGE, JSON.stringify(persistedMigration));
+      const migrationWrite = storageRepository.writeJson(STORAGE, persistedMigration);
+      if (!migrationWrite.ok) throw migrationWrite.error;
     } catch (error) {
       console.warn('Tùng Gia Bảo profile migration is active in memory but could not be persisted yet.', error);
     }
@@ -371,14 +372,21 @@ try {
 }
 
 try {
-  const separateLogo = localStorage.getItem(LOGO_STORAGE);
+  const separateLogo = storageRepository.readRaw(LOGO_STORAGE, '');
   state.logo = separateLogo || String(rawStored?.logo || '');
   if (!separateLogo && rawStored?.logo) {
     try {
-      localStorage.setItem(LOGO_STORAGE, rawStored.logo);
+      const snapshot = storageRepository.capture([LOGO_STORAGE, STORAGE]);
+      if (!snapshot.ok) throw snapshot.error;
+      const logoWrite = storageRepository.writeRaw(LOGO_STORAGE, rawStored.logo);
+      if (!logoWrite.ok) throw logoWrite.error;
       const migrated = clone(rawStored);
       delete migrated.logo;
-      localStorage.setItem(STORAGE, JSON.stringify(migrated));
+      const stateWrite = storageRepository.writeJson(STORAGE, migrated);
+      if (!stateWrite.ok) {
+        storageRepository.restore(snapshot.snapshot);
+        throw stateWrite.error;
+      }
     } catch (error) {
       console.warn('Legacy logo migration deferred; keeping loaded quotation state intact.', error);
     }
@@ -413,15 +421,13 @@ function safeStore(key, value) {
   return false;
 }
 function saveLogoAsset(value) {
-  try {
-    if (value) localStorage.setItem(LOGO_STORAGE, value);
-    else localStorage.removeItem(LOGO_STORAGE);
-    return true;
-  } catch (error) {
-    console.error('Logo storage write failed:', error);
-    toast('Không thể lưu logo: bộ nhớ trình duyệt có thể đã đầy.');
-    return false;
-  }
+  const result = value
+    ? storageRepository.writeRaw(LOGO_STORAGE, value)
+    : storageRepository.remove(LOGO_STORAGE);
+  if (result.ok) return true;
+  console.error('Logo storage write failed:', result.error);
+  toast('Không thể lưu logo: bộ nhớ trình duyệt có thể đã đầy.');
+  return false;
 }
 
 function stateForStorage() {
@@ -8455,11 +8461,7 @@ function normalizePresetStore(value) {
 }
 
 function getPresets() {
-  try {
-    return normalizePresetStore(JSON.parse(localStorage.getItem(PRESETS)));
-  } catch {
-    return {};
-  }
+  return normalizePresetStore(storageRepository.readJson(PRESETS, {}));
 }
 
 function createPresetState(source) {
