@@ -23,5 +23,6 @@ assert.match(js, /classList\.toggle\('print-export-active'/, 'print export state
 assert.match(js, /addEventListener\('beforeprint'/, 'beforeprint guard is missing');
 assert.match(js, /addEventListener\('afterprint'/, 'afterprint cleanup is missing');
 assert.equal((js.match(/window\.print\(\)/g) || []).length, 1, 'all print actions must route through printQuoteDocument');
+assert.match(js, /\$\$\('\.print-action'\)\.forEach/, 'all PDF buttons must keep the multi-element event binding');
 
 console.log('V6.18 PRINT/PDF ISOLATION PASS');
