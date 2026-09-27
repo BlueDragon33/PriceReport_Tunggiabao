@@ -8,6 +8,7 @@ const studioCss = fs.readFileSync('src/studio-v59.css', 'utf8');
 const contentWorkspaceCss = fs.readFileSync('src/content-workspace-v63.css', 'utf8');
 const responsiveCss = fs.readFileSync('src/responsive-v69.css', 'utf8');
 const responsivePolishCss = fs.readFileSync('src/responsive-v610.css', 'utf8');
+const printCss = fs.readFileSync('src/print-v618.css', 'utf8');
 const themeCss = fs.readFileSync('src/quotation-themes-v60.css', 'utf8');
 const appCss = css + '\n' + themeCss + '\n' + v5Css + '\n' + studioCss + '\n' + contentWorkspaceCss + '\n' + responsiveCss + '\n' + responsivePolishCss;
 const sw = fs.readFileSync('public/sw.js', 'utf8');
@@ -93,14 +94,15 @@ for (const target of new Set(targets)) {
   if (!ids.includes(target)) fail('Preview data-target points to missing editor field: #' + target);
 }
 
-for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/responsive-v610.css','src/main.js']) {
+for (const file of ['public/manifest.webmanifest','public/sw.js','src/styles.css','src/quotation-themes-v60.css','src/ui-v5.css','src/studio-v59.css','src/content-workspace-v63.css','src/responsive-v69.css','src/responsive-v610.css','src/print-v618.css','src/main.js']) {
   if (!fs.existsSync(file)) fail('Missing required file: ' + file);
 }
 
 if (!js.includes("serviceWorker.register('./sw.js'")) fail('Service worker registration is missing');
 if (!js.includes('window.print()')) fail('Print/PDF action is missing');
 if (!js.includes('function printQuoteDocument()') || (js.match(/window\.print\(\)/g) || []).length !== 1) fail('V6.18 print actions must route through the isolated print controller');
-if (!css.includes('V6.18 PRINT / PDF ISOLATION') || !css.includes('.shell>:not(.preview)') || !css.includes('.preview>:not(.paper-wrap)')) fail('V6.18 hard print isolation contract is missing');
+if (!html.includes('src/print-v618.css') || !html.includes('media="print"')) fail('V6.18 dedicated print stylesheet link is missing');
+if (!printCss.includes('V6.18 PDF / PRINT ISOLATION') || !printCss.includes('.shell>:not(.preview)') || !printCss.includes('.preview>:not(.paper-wrap)')) fail('V6.18 hard print isolation contract is missing');
 if (!js.includes('schemaVersion: 4')) fail('Full backup schema v4 is missing');
 if (!js.includes('generateUniqueQuoteNo')) fail('Unique quote number generator is missing');
 if (!js.includes('STATUS_LABELS')) fail('Quote lifecycle status mapping is missing');
