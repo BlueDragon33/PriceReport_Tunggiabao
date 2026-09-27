@@ -1178,7 +1178,7 @@
   .mobile-more-menu,
   .command-palette,
   .toast,
-  [role="dialog"]:not(.paper *){
+  [role="dialog"]{
     display:none!important;
   }
 
