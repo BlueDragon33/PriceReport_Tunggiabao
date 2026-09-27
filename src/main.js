@@ -379,7 +379,10 @@ try {
       const snapshot = storageRepository.capture([LOGO_STORAGE, STORAGE]);
       if (!snapshot.ok) throw snapshot.error;
       const logoWrite = storageRepository.writeRaw(LOGO_STORAGE, rawStored.logo);
-      if (!logoWrite.ok) throw logoWrite.error;
+      if (!logoWrite.ok) {
+        storageRepository.restore(snapshot.snapshot);
+        throw logoWrite.error;
+      }
       const migrated = clone(rawStored);
       delete migrated.logo;
       const stateWrite = storageRepository.writeJson(STORAGE, migrated);
