@@ -1171,17 +1171,6 @@
     overflow:visible!important;
   }
 
-  /* Explicit guards for chrome that historically leaked into PDF output. */
-  .studio-topbar,
-  .preview-tools,
-  .preview-customizer,
-  .mobile-more-menu,
-  .command-palette,
-  .toast,
-  [role="dialog"]{
-    display:none!important;
-  }
-
   .paper.layout-edit-mode .layout-block,
   .clickable:hover{
     outline:0!important;
