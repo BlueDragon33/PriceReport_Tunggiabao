@@ -12,7 +12,7 @@ const printCss = css.slice(start);
 assert.match(printCss, /@page\{size:A4 portrait;margin:0\}/, 'A4 zero-margin page contract is missing');
 assert.match(printCss, /\.shell>:not\(\.preview\)/, 'application shell must isolate preview during print');
 assert.match(printCss, /\.preview>:not\(\.paper-wrap\)/, 'preview must isolate the paper wrapper during print');
-assert.match(printCss, /\.studio-topbar[\s\S]*display:none!important/, 'studio topbar must never appear in PDF output');
+assert.match(printCss, /#app>:not\(\.shell\)[\s\S]*\.shell>:not\(\.preview\)[\s\S]*\.preview>:not\(\.paper-wrap\)[\s\S]*display:none!important/, 'print tree must structurally remove all application chrome');
 assert.match(printCss, /\.paper\{[\s\S]*box-sizing:border-box!important/, 'A4 paper must use border-box sizing in print');
 assert.match(printCss, /width:210mm!important/, 'print width must be locked to A4');
 assert.match(printCss, /min-height:297mm!important/, 'print minimum height must be locked to A4');
