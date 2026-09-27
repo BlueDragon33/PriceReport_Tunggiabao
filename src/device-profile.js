@@ -1,3 +1,4 @@
+import { createStorageRepository } from './storage/repository.js';
 const DEVICE_STORAGE_KEY = 'tunggiabao-device-profile-v1';
 const APP_ID = 'price-report-tunggiabao';
 const DEVICE_NAMESPACE = 'KT-';
@@ -109,23 +110,26 @@ function deviceCode(id) {
   return DEVICE_NAMESPACE + body.slice(0, 4) + '-' + body.slice(4, 8);
 }
 
-function safeStorageRead() {
+function deviceStorageRepository() {
   try {
-    const raw = localStorage.getItem(DEVICE_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : null;
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    if (!globalThis.localStorage) return null;
+    return createStorageRepository(globalThis.localStorage);
   } catch {
     return null;
   }
 }
 
+function safeStorageRead() {
+  const repository = deviceStorageRepository();
+  if (!repository) return null;
+  const parsed = repository.readJson(DEVICE_STORAGE_KEY, null);
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+}
+
 function safeStorageWrite(value) {
-  try {
-    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(value));
-    return true;
-  } catch {
-    return false;
-  }
+  const repository = deviceStorageRepository();
+  if (!repository) return false;
+  return repository.writeJson(DEVICE_STORAGE_KEY, value).ok;
 }
 
 function environmentSnapshot(profile) {
