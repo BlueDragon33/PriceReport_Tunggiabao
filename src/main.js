@@ -34,6 +34,20 @@ import {
   normalizeRemoveBgTolerance,
   removeBackgroundDataUrl
 } from './logo-processing.js';
+import { hasQuotationItemDraftContent, validateQuotation } from './domain/validation.js';
+import { canTransitionQuotationStatus, createId, ensureQuotationItemIds, normalizeSearchText } from './domain/entities.js';
+import { buildVersionedHistoryRecord } from './domain/history.js';
+import { createStorageRepository } from './storage/repository.js';
+import { STORAGE_SCHEMA_VERSION, ensureStorageSchemaMarker } from './storage/migrations.js';
+import { buildBackupPayload, normalizeBackupPayload } from './services/backup-service.js';
+import { buildReportViewModel } from './report/report-view-model.js';
+import {
+  duplicateQuotationItemsById,
+  patchQuotationItemsById,
+  quotationItemIdsFromIndices,
+  quotationItemsById,
+  removeQuotationItemsById
+} from './application/quotation-commands.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
 const PRESETS = 'tunggiabao-price-report-presets-v1';
@@ -47,6 +61,11 @@ const DATA_LIBRARY_IMPORT_RECOVERY = 'tunggiabao-price-report-data-library-impor
 const DATA_LIBRARY_IMPORT_RECOVERY_MAX_CHARS = 1000000;
 const DATA_LIBRARY_IMPORT_RECOVERY_TTL_MS = 6 * 60 * 60 * 1000;
 const DATA_LIBRARY_OPERATION_HISTORY_LIMIT = 8;
+const storageRepository = createStorageRepository(localStorage);
+const storageSchemaStatus = ensureStorageSchemaMarker(storageRepository);
+if (!storageSchemaStatus.ok) {
+  console.warn('Storage schema marker needs attention; continuing with non-destructive legacy compatibility.', storageSchemaStatus);
+}
 
 const LAYOUT_BLOCK_KEYS = [
   'logo','company','companyName','companyAddress','companyAddressDetail','companyRegion','branchKhanhHoa','branchDongNai','farmAddress',
@@ -202,17 +221,19 @@ function defaultSignatureDateLine(date = new Date()) {
 function merge(data) {
   const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
-    products: rawProducts.map((product) => ({
+    products: ensureQuotationItemIds(rawProducts.map((product) => ({
+      itemId: String(product?.itemId || ''),
+      sourceProductId: String(product?.sourceProductId || ''),
       group: String(product?.group || ''),
       name: String(product?.name || ''),
       pack: String(product?.pack || ''),
       unit: String(product?.unit || ''),
       qty: normalizeNonNegativeNumber(product?.qty),
-      price: normalizeNonNegativeNumber(product?.price),
+      price: normalizeNonNegativeNumber(product?.price ?? product?.unitPrice),
       note: String(product?.note || '')
-    }))
+    })))
   });
-  if (!merged.products.length) merged.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  if (!merged.products.length) merged.products = [{ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
 
   const hasStructuredCompanyAddress = data && (
     Object.prototype.hasOwnProperty.call(data, 'companyAddressDetail') ||
@@ -384,15 +405,12 @@ void deviceAccessRuntime;
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 function safeStore(key, value) {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch (error) {
-    console.error('Local storage write failed:', error);
-    const toastEl = document.getElementById('toast');
-    if (toastEl) toast('Không thể lưu dữ liệu: bộ nhớ trình duyệt có thể đã đầy.');
-    return false;
-  }
+  const result = storageRepository.writeRaw(key, value);
+  if (result.ok) return true;
+  console.error('Local storage write failed:', result.error);
+  const toastEl = document.getElementById('toast');
+  if (toastEl) toast('Không thể lưu dữ liệu: bộ nhớ trình duyệt có thể đã đầy.');
+  return false;
 }
 function saveLogoAsset(value) {
   try {
@@ -460,6 +478,7 @@ function readRecoverySnapshot() {
 }
 
 function save() {
+  state.products = ensureQuotationItemIds(state.products);
   updateAutosaveIndicator('saving');
   writeRecoverySnapshot();
   const persisted = safeStore(STORAGE, JSON.stringify(stateForStorage()));
@@ -513,30 +532,18 @@ function offerDraftRecovery() {
 }
 
 function captureStorageSnapshot(keys) {
-  const snapshot = {};
-  try {
-    keys.forEach((key) => {
-      snapshot[key] = localStorage.getItem(key);
-    });
-    return snapshot;
-  } catch (error) {
-    console.error('Unable to capture storage snapshot:', error);
-    return null;
-  }
+  const result = storageRepository.capture(keys);
+  if (result.ok) return result.snapshot;
+  console.error('Unable to capture storage snapshot:', result.error);
+  return null;
 }
 
 function restoreStorageSnapshot(snapshot) {
   if (!snapshot) return false;
-  try {
-    Object.entries(snapshot).forEach(([key, value]) => {
-      if (value == null) localStorage.removeItem(key);
-      else localStorage.setItem(key, value);
-    });
-    return true;
-  } catch (error) {
-    console.error('Unable to roll back storage snapshot:', error);
-    return false;
-  }
+  const result = storageRepository.restore(snapshot);
+  if (result.ok) return true;
+  console.error('Unable to roll back storage snapshot:', result.error);
+  return false;
 }
 
 function storageWriteError(rollbackOk = true) {
@@ -2675,7 +2682,14 @@ function bindInputs() {
         state[key] = value;
         if (Number(el.value) !== value) el.value = String(value);
       } else {
-        state[key] = el.value;
+        const nextValue = el.value;
+        if (key === 'quoteStatus' && !canTransitionQuotationStatus(state.quoteStatus || 'draft', nextValue)) {
+          const currentStatus = state.quoteStatus || 'draft';
+          el.value = currentStatus;
+          toast('Không thể chuyển trực tiếp từ ' + statusLabel(currentStatus) + ' sang ' + statusLabel(nextValue) + '. Hãy dùng quy trình nhân bản/mở lại phù hợp.');
+          return;
+        }
+        state[key] = nextValue;
       }
 
       $$('[data-bind]').forEach((peer) => {
@@ -2876,11 +2890,7 @@ function resetCollapsedProductsForState() {
 resetCollapsedProductsForState();
 
 function productHasDraftContent(product) {
-  if (!product) return false;
-  const textFields = [product.group, product.name, product.pack, product.unit, product.note];
-  if (textFields.some(value => String(value || '').trim())) return true;
-  if (normalizeNonNegativeNumber(product.price) > 0) return true;
-  return normalizeNonNegativeNumber(product.qty) !== 1;
+  return hasQuotationItemDraftContent(product);
 }
 
 function focusProductCell(index, key = 'name') {
@@ -2897,7 +2907,7 @@ function focusProductName(index) {
 }
 
 function appendBlankProduct({ focusKey = 'name' } = {}) {
-  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  state.products.push({ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
   const nextIndex = state.products.length - 1;
   collapsedProducts.delete(nextIndex);
   save();
@@ -3645,15 +3655,7 @@ function renderPreviewProducts() {
 }
 
 function renderTotals() {
-  const subtotal = state.products.reduce((sum, p) =>
-    sum + normalizeNonNegativeNumber(p.qty) * normalizeNonNegativeNumber(p.price), 0);
-  const discountPct = normalizeBoundedNumber(state.discountPct, 0, 100, 0);
-  const vatPct = normalizeBoundedNumber(state.vatPct, 0, 100, 0);
-  const discount = subtotal * discountPct / 100;
-  const taxable = Math.max(0, subtotal - discount);
-  const vat = taxable * vatPct / 100;
-  const fee = normalizeNonNegativeNumber(state.otherFee);
-  const total = calcQuoteTotal(state);
+  const { subtotal, discountPct, discount, vatPct, vat, fee, total } = buildReportViewModel(state).totals;
 
   setText('sub', money(subtotal));
   setText('disc', '- ' + money(discount));
@@ -4038,15 +4040,15 @@ function download(name, text, type) {
 }
 
 function fullBackupPayload() {
-  return {
-    schemaVersion: 4,
-    exportedAt: new Date().toISOString(),
+  return buildBackupPayload({
     current: clone(state),
     history: getHistory(),
     presets: getPresets(),
     customers: getCustomerLibrary(),
-    catalog: getProductCatalog()
-  };
+    catalog: getProductCatalog(),
+    appVersion: '6.19.0',
+    dataVersion: STORAGE_SCHEMA_VERSION
+  });
 }
 
 function productRowsForExport() {
@@ -5415,12 +5417,8 @@ function applyAppPreferences() {
 }
 
 function getUiState() {
-  try {
-    const data = JSON.parse(localStorage.getItem(UI_STATE));
-    return isPlainObject(data) ? data : {};
-  } catch {
-    return {};
-  }
+  const data = storageRepository.readJson(UI_STATE, {});
+  return isPlainObject(data) ? data : {};
 }
 
 function saveUiState(next) {
@@ -6165,19 +6163,21 @@ document.getElementById('importAllData').addEventListener('change', (event) => {
     let snapshot = null;
     try {
       const payload = JSON.parse(reader.result);
-      if (!isPlainObject(payload) || !isPlainObject(payload.current) || !Array.isArray(payload.history) || !isPlainObject(payload.presets)) {
-        throw new Error('invalid backup schema');
-      }
-      const schemaVersion = Number(payload.schemaVersion || 1);
-      if (!Number.isFinite(schemaVersion) || schemaVersion > 4) {
-        throw new Error('unsupported backup schema');
-      }
+      const normalizedBackup = normalizeBackupPayload(payload, {
+        current: merge,
+        history: normalizeHistoryRecords,
+        presets: normalizePresetStore,
+        customers: normalizeCustomerLibrary,
+        catalog: normalizeProductCatalog
+      }, {
+        maxDataVersion: STORAGE_SCHEMA_VERSION
+      });
 
-      const restoredState = merge(payload.current);
-      const restoredHistory = normalizeHistoryRecords(payload.history);
-      const restoredPresets = normalizePresetStore(payload.presets);
-      const restoredCustomers = normalizeCustomerLibrary(payload.customers);
-      const restoredCatalog = normalizeProductCatalog(payload.catalog);
+      const restoredState = normalizedBackup.current;
+      const restoredHistory = normalizedBackup.history;
+      const restoredPresets = normalizedBackup.presets;
+      const restoredCustomers = normalizedBackup.customers;
+      const restoredCatalog = normalizedBackup.catalog;
       if (!confirm('Khôi phục toàn bộ dữ liệu sẽ thay thế báo giá đang mở, lịch sử và mẫu đã lưu. Tiếp tục?')) return;
 
       previousState = clone(state);
@@ -7280,58 +7280,7 @@ document.getElementById('reset').addEventListener('click', () => {
 });
 
 function validateQuote(data = state) {
-  const errors = [];
-  const warnings = [];
-
-  if (!String(data.companyName || '').trim()) errors.push('Thiếu tên công ty.');
-  if (!String(data.quoteTitle || '').trim()) errors.push('Thiếu tiêu đề báo giá.');
-  if (!String(data.recipientLine || '').trim()) warnings.push('Chưa có dòng Kính gửi.');
-  const finalStatus = data.quoteStatus && data.quoteStatus !== 'draft';
-  if (finalStatus && !String(data.quoteNo || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có số báo giá.');
-  if (finalStatus && !String(data.quoteDate || '').trim()) errors.push('Báo giá đã rời trạng thái nháp nhưng chưa có ngày báo giá.');
-  if (data.quoteDate && !isValidISODate(data.quoteDate)) {
-    (finalStatus ? errors : warnings).push('Ngày báo giá không hợp lệ; cần dùng định dạng ngày hợp lệ.');
-  }
-
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (data.companyEmail && !emailPattern.test(String(data.companyEmail))) warnings.push('Email công ty có vẻ chưa đúng định dạng.');
-  if (data.customerEmail && !emailPattern.test(String(data.customerEmail))) warnings.push('Email khách hàng có vẻ chưa đúng định dạng.');
-
-  const products = Array.isArray(data.products) ? data.products : [];
-  const namedProducts = products.filter(product => String(product?.name || '').trim());
-  if (!namedProducts.length) errors.push('Chưa có sản phẩm hợp lệ.');
-
-  products.forEach((product, index) => {
-    const name = String(product?.name || '').trim();
-    const qty = Number(product?.qty || 0);
-    const price = Number(product?.price || 0);
-    if (!name && productHasDraftContent(product)) {
-      errors.push('Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.');
-      return;
-    }
-    if (name && qty < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng âm.');
-    else if (name && (data.showQty || data.showAmount || data.showTotals) && qty === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có số lượng bằng 0.');
-    if (name && price < 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" có đơn giá âm.');
-    else if (name && data.showPrice && price === 0) warnings.push('Dòng sản phẩm ' + (index + 1) + ' "' + name + '" chưa có đơn giá.');
-  });
-
-  if (data.showQuoteMeta && !String(data.quoteNo || '').trim()) warnings.push('Đang hiện hộp thông tin nhưng chưa có số báo giá.');
-  if (data.showLogo && !data.logo) warnings.push('Đang bật hiển thị logo nhưng chưa có file logo.');
-  if ((Number(data.discountPct || 0) > 0 || Number(data.vatPct || 0) > 0 || Number(data.otherFee || 0) > 0) && !data.showTotals) {
-    warnings.push('Có giảm giá/VAT/phí khác nhưng bảng tổng cộng đang bị ẩn.');
-  }
-  if (Number(data.vatPct || 0) > 0 && /đã bao gồm\s*VAT/i.test(String(data.termsText || ''))) {
-    warnings.push('Điều khoản ghi "đã bao gồm VAT" trong khi bảng tổng cộng đang cộng VAT riêng.');
-  }
-  if (data.showTerms && !String(data.termsText || '').trim()) warnings.push('Đang bật điều khoản nhưng nội dung điều khoản đang trống.');
-  if (data.showSignature && !String(data.rightTitle || '').trim()) warnings.push('Đang bật chữ ký nhưng chức danh đại diện công ty đang trống.');
-  const transferOnly = /^\s*chuyển khoản\s*$/i.test(String(data.paymentMethod || ''));
-  const partialBank = [data.bankName, data.bankAccount, data.bankOwner].some(Boolean) &&
-    ![data.bankName, data.bankAccount, data.bankOwner].every(Boolean);
-  if (data.showPaymentBlock && transferOnly && !data.bankName) warnings.push('Phương thức là chuyển khoản nhưng chưa nhập ngân hàng.');
-  if (data.showPaymentBlock && partialBank) warnings.push('Thông tin tài khoản ngân hàng đang nhập dở.');
-
-  return { errors, warnings };
+  return validateQuotation(data);
 }
 
 function validationTargetForMessage(message) {
@@ -7599,8 +7548,29 @@ function normalizeHistoryRecords(value) {
       ? record.status
       : data.quoteStatus;
     data.quoteStatus = status;
+    const revisions = (Array.isArray(record.revisions) ? record.revisions : []).flatMap((revision, revisionIndex) => {
+      if (!isPlainObject(revision) || !isPlainObject(revision.data)) return [];
+      const revisionData = merge(Object.assign({}, revision.data, {
+        products: Array.isArray(revision.data.products) ? revision.data.products : []
+      }));
+      revisionData.logo = '';
+      const revisionCurrency = normalizeCatalogCurrency(revision.currency || revisionData.currency || currency);
+      revisionData.currency = revisionCurrency;
+      return [{
+        revision: Math.max(1, Math.trunc(Number(revision.revision) || (revisionIndex + 1))),
+        savedAt: typeof revision.savedAt === 'string' ? revision.savedAt : '',
+        status: ['draft','sent','accepted','rejected','expired'].includes(revision.status) ? revision.status : revisionData.quoteStatus,
+        currency: revisionCurrency,
+        total: calcQuoteTotal(revisionData),
+        data: revisionData
+      }];
+    });
     return [{
       id,
+      recordId: String(record.recordId || id),
+      quotationId: String(record.quotationId || id),
+      revision: Math.max(1, Math.trunc(Number(record.revision) || 1)),
+      revisions,
       savedAt: typeof record.savedAt === 'string' ? record.savedAt : '',
       status,
       currency,
@@ -7611,11 +7581,7 @@ function normalizeHistoryRecords(value) {
 }
 
 function getHistory() {
-  try {
-    return normalizeHistoryRecords(JSON.parse(localStorage.getItem(HISTORY)));
-  } catch {
-    return [];
-  }
+  return normalizeHistoryRecords(storageRepository.readJson(HISTORY, []));
 }
 
 function setHistory(items) {
@@ -7657,21 +7623,21 @@ function saveCurrentQuote() {
     }
   }
 
-  const id = existingIndex >= 0
-    ? items[existingIndex].id
-    : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const existingRecord = existingIndex >= 0 ? items[existingIndex] : null;
+  const id = existingRecord?.id || createId('history');
 
   const historyData = clone(state);
   historyData.logo = '';
   historyData.historyRecordId = '';
-  const record = {
+  const record = buildVersionedHistoryRecord({
+    existingRecord,
     id,
     savedAt: now,
     status: state.quoteStatus || 'draft',
     currency: normalizeCatalogCurrency(state.currency),
     total: calcTotal(state),
     data: historyData
-  };
+  });
 
   if (existingIndex >= 0) items.splice(existingIndex, 1);
   items.unshift(record);
@@ -7820,7 +7786,7 @@ function createNewQuote() {
     rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
-  state.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  state.products = [{ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
@@ -7969,11 +7935,7 @@ function normalizeCustomerLibrary(items) {
 }
 
 function getCustomerLibrary() {
-  try {
-    return normalizeCustomerLibrary(JSON.parse(localStorage.getItem(CUSTOMERS)));
-  } catch {
-    return [];
-  }
+  return normalizeCustomerLibrary(storageRepository.readJson(CUSTOMERS, []));
 }
 
 function setCustomerLibrary(items) {
@@ -7989,10 +7951,7 @@ function canonicalLibraryText(value) {
 }
 
 function canonicalSearchText(value) {
-  return canonicalLibraryText(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd');
+  return normalizeSearchText(value);
 }
 
 function canonicalLibraryPhone(value) {
@@ -8013,7 +7972,7 @@ function customerKey(customer) {
 
 function saveCurrentCustomerToLibrary() {
   const customer = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: createId('customer'),
     name: state.customerName || '',
     company: state.customerCompany || '',
     address: state.customerAddress || '',
@@ -8073,11 +8032,7 @@ function normalizeProductCatalog(items) {
 }
 
 function getProductCatalog() {
-  try {
-    return normalizeProductCatalog(JSON.parse(localStorage.getItem(CATALOG)));
-  } catch {
-    return [];
-  }
+  return normalizeProductCatalog(storageRepository.readJson(CATALOG, []));
 }
 
 function setProductCatalog(items) {
@@ -8100,7 +8055,7 @@ function saveProductsToCatalog(products, { notify = true } = {}) {
   let changed = 0;
   validProducts.forEach(product => {
     const item = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      id: createId('product'),
       group: product.group || '',
       name: product.name || '',
       pack: product.pack || '',
@@ -8138,6 +8093,8 @@ function saveCurrentProductsToCatalog() {
 function applyProductBulkAction() {
   const indices = selectedProductIndices();
   if (!indices.length) return;
+  const itemIds = quotationItemIdsFromIndices(state.products, indices);
+  if (!itemIds.length) return;
   const action = document.getElementById('productBulkAction')?.value || '';
   const input = document.getElementById('productBulkValue');
   const rawValue = String(input?.value || '').trim();
@@ -8155,26 +8112,25 @@ function applyProductBulkAction() {
       input?.focus();
       return;
     }
-    indices.forEach(index => {
-      const current = Number(state.products[index]?.price || 0);
-      state.products[index].price = Math.max(0, Math.round((current * (1 + percent / 100)) * 100) / 100);
+    state.products = patchQuotationItemsById(state.products, itemIds, (item) => {
+      const current = Number(item.price || 0);
+      item.price = Math.max(0, Math.round((current * (1 + percent / 100)) * 100) / 100);
+      return item;
     });
   } else if (action === 'group') {
-    indices.forEach(index => { state.products[index].group = rawValue; });
+    state.products = patchQuotationItemsById(state.products, itemIds, (item) => ({ ...item, group: rawValue }));
   } else if (action === 'unit') {
-    indices.forEach(index => { state.products[index].unit = rawValue; });
+    state.products = patchQuotationItemsById(state.products, itemIds, (item) => ({ ...item, unit: rawValue }));
   } else if (action === 'duplicate') {
-    const copies = indices.map(index => clone(state.products[index]));
-    state.products.push(...copies);
+    state.products = duplicateQuotationItemsById(state.products, itemIds, () => createId('item'));
   } else if (action === 'catalog') {
-    const changed = saveProductsToCatalog(indices.map(index => state.products[index]), { notify: false });
+    const changed = saveProductsToCatalog(quotationItemsById(state.products, itemIds), { notify: false });
     toast(changed ? 'Đã lưu ' + changed + ' sản phẩm đã chọn vào danh mục' : 'Các dòng đã chọn chưa có tên sản phẩm.');
     return;
   } else if (action === 'delete') {
     if (!confirm('Xóa ' + indices.length + ' dòng sản phẩm đã chọn?')) return;
-    const selected = new Set(indices);
-    state.products = state.products.filter((_, index) => !selected.has(index));
-    if (!state.products.length) state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+    state.products = removeQuotationItemsById(state.products, itemIds);
+    if (!state.products.length) state.products.push({ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
   } else {
     return;
   }
@@ -8207,6 +8163,8 @@ function addCatalogProductsToQuote(products, { notify = true, navigate = true } 
       if (currencyMatches) existing.price = catalogPrice;
     } else {
       state.products.push({
+        itemId: createId('item'),
+        sourceProductId: String(product.id || product.productId || ''),
         group: product.group || '',
         name: product.name || '',
         pack: product.pack || '',

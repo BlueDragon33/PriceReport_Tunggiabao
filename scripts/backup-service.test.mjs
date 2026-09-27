@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { BACKUP_SCHEMA_VERSION, buildBackupPayload, normalizeBackupPayload, validateBackupPayload } from '../src/services/backup-service.js';
+const payload=buildBackupPayload({current:{quoteNo:'BG-1'},history:[],presets:{},customers:[],catalog:[],appVersion:'6.19.0',dataVersion:1,exportedAt:'2026-09-27T00:00:00.000Z'});
+assert.equal(payload.schemaVersion,BACKUP_SCHEMA_VERSION); assert.equal(payload.appVersion,'6.19.0'); assert.equal(payload.dataVersion,1);
+assert.equal(validateBackupPayload(payload,{maxDataVersion:1}).ok,true);
+assert.equal(validateBackupPayload({...payload,schemaVersion:99}).code,'BACKUP_VERSION_UNSUPPORTED');
+assert.equal(validateBackupPayload({...payload,dataVersion:9},{maxDataVersion:1}).code,'BACKUP_DATA_VERSION_UNSUPPORTED');
+const normalized=normalizeBackupPayload(payload,{current:value=>({...value,normalized:true})},{maxDataVersion:1});
+assert.equal(normalized.current.normalized,true);
+console.log('BACKUP SERVICE PASS');

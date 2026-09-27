@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { duplicateQuotationItemsById, moveQuotationItemById, patchQuotationItemsById, quotationItemIdsFromIndices, quotationItemsById, removeQuotationItemsById } from '../src/application/quotation-commands.js';
+const items=[{itemId:'a',name:'A',price:10},{itemId:'b',name:'B',price:20},{itemId:'c',name:'C',price:30}];
+assert.deepEqual(quotationItemIdsFromIndices(items,[0,2]),['a','c']);
+assert.deepEqual(quotationItemsById(items,['b']).map(x=>x.itemId),['b']);
+const patched=patchQuotationItemsById(items,['b'],item=>({...item,price:25}));
+assert.equal(patched[1].price,25); assert.equal(items[1].price,20);
+let n=0; const duplicated=duplicateQuotationItemsById(items,['a','c'],()=> 'copy-'+(++n));
+assert.deepEqual(duplicated.slice(-2).map(x=>x.itemId),['copy-1','copy-2']);
+assert.deepEqual(removeQuotationItemsById(items,['b']).map(x=>x.itemId),['a','c']);
+assert.deepEqual(moveQuotationItemById(items,'c',0).map(x=>x.itemId),['c','a','b']);
+console.log('QUOTATION COMMAND LAYER PASS');

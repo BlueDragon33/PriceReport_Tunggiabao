@@ -48,11 +48,11 @@ export function normalizePhone(value) {
   return String(value || '').replace(/\D+/g, '');
 }
 
-export function calcQuoteTotal(data = {}) {
+export function calculateQuoteBreakdown(data = {}) {
   const products = Array.isArray(data.products) ? data.products : [];
   const subtotal = products.reduce((sum, product) => {
     const qty = normalizeNonNegativeNumber(product?.qty);
-    const price = normalizeNonNegativeNumber(product?.price);
+    const price = normalizeNonNegativeNumber(product?.price ?? product?.unitPrice);
     return sum + qty * price;
   }, 0);
   const discountPct = clamp(data.discountPct || 0, 0, 100);
@@ -61,7 +61,12 @@ export function calcQuoteTotal(data = {}) {
   const taxable = Math.max(0, subtotal - discount);
   const vat = taxable * vatPct / 100;
   const fee = normalizeNonNegativeNumber(data.otherFee);
-  return taxable + vat + fee;
+  const total = taxable + vat + fee;
+  return { subtotal, discountPct, discount, taxable, vatPct, vat, fee, total };
+}
+
+export function calcQuoteTotal(data = {}) {
+  return calculateQuoteBreakdown(data).total;
 }
 
 export function nextDuplicateQuoteNo(base, usedQuoteNumbers = []) {

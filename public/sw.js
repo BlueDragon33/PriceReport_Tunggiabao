@@ -1,4 +1,23 @@
-const CACHE = 'pricereport-shell-v618-pdf-print-isolation';
+const CACHE = 'pricereport-shell-v619-architecture-final';
+const CORE_MODULES = [
+  './src/main.js',
+  './src/core.js',
+  './src/defaults-tunggiabao.js',
+  './src/importers.js',
+  './src/exporters.js',
+  './src/pc-storage.js',
+  './src/logo-processing.js',
+  './src/device-profile.js',
+  './src/device-access-gate.js',
+  './src/domain/entities.js',
+  './src/domain/validation.js',
+  './src/domain/history.js',
+  './src/storage/repository.js',
+  './src/storage/migrations.js',
+  './src/services/backup-service.js',
+  './src/application/quotation-commands.js',
+  './src/report/report-view-model.js'
+];
 const CORE = [
   './index.html',
   './manifest.webmanifest',
@@ -6,7 +25,8 @@ const CORE = [
   './device-control.json',
   './favicon.svg',
   './icon-192.svg',
-  './icon-512.svg'
+  './icon-512.svg',
+  ...CORE_MODULES
 ];
 
 async function precacheLinkedAssets() {
