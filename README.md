@@ -2,20 +2,21 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.17 System UX Readability
+## Trạng thái hiện tại — V6.18 PDF Print Isolation
 
-V6.17 tiếp tục hoàn thiện tab **Hệ thống local-first** theo hướng dành cho người dùng vận hành, không phải dành cho lập trình viên.
+V6.18 sửa lỗi **Xuất PDF/In bị lẫn giao diện ứng dụng** như topbar, nút Lưu nháp/Xem trước/Xuất PDF và vùng preview.
 
-- Đổi các nhãn kỹ thuật như Control Plane, Device Registry, Device Gateway, Admin API thành ngôn ngữ dễ hiểu.
-- Tăng cỡ chữ phần **Quản trị tập trung** để đọc tốt hơn trên desktop, tablet và điện thoại.
-- Khi Managed Mode hoặc Device Gate thật sự cần chú ý, khối quản trị được đánh dấu và tự mở một lần.
-- Ở Standalone Mode, khối này vẫn gọn và không chiếm sự chú ý chính.
-- Dashboard dùng nhãn **Quản trị tập trung đang bật** thay cho thuật ngữ Managed Mode ở vị trí người dùng nhìn thấy.
-- Regression tests bảo vệ hierarchy, ngôn ngữ và attention state mới.
-- PWA cache generation: **pricereport-shell-v617-system-ux-readability**.
-- Package: **6.17.0**.
+- Print cascade giờ hard-isolate duy nhất cây **A4 report**: `.preview > .paper-wrap > .paper`.
+- Toàn bộ chrome ứng dụng ở cùng cấp với preview bị loại khỏi print formatting tree.
+- Topbar, navigation, editor, inspector, preview toolbar, customizer, modal và toast không thể lọt vào PDF.
+- Khổ giấy được khóa **A4 210 × 297 mm**, margin trang in bằng 0.
+- Xóa transform/scale/zoom của chế độ xem màn hình khi in để PDF không phụ thuộc viewport.
+- Tất cả nút Xuất PDF dùng chung một controller và có beforeprint/afterprint state guard.
+- Có static print gate và Chromium print-media browser gate để chống regression.
+- PWA cache generation: **pricereport-shell-v618-pdf-print-isolation**.
+- Package: **6.18.0**.
 
-V6.16 vẫn là nền bố cục: local-first trước, quản trị tập trung là lớp tùy chọn.
+V6.17 vẫn là nền System UX; V6.18 chỉ thay đổi luồng in/PDF và không đổi dữ liệu nghiệp vụ.
 
 ## Kiểm thử
 
