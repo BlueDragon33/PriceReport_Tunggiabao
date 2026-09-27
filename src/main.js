@@ -6059,7 +6059,7 @@ function printQuoteDocument() {
 window.addEventListener('beforeprint', () => setPrintExportState(true));
 window.addEventListener('afterprint', () => setPrintExportState(false));
 
-$('.print-action').forEach((el) => el.addEventListener('click', () => {
+$$('.print-action').forEach((el) => el.addEventListener('click', () => {
   if (runPreflight({ forPrint: true })) printQuoteDocument();
 }));
 
