@@ -29,6 +29,8 @@ jobs:
         run: node scripts/domain.test.mjs
       - name: Storage repository tests
         run: node scripts/storage-repository.test.mjs
+      - name: History revision domain tests
+        run: node scripts/history-domain.test.mjs
       - name: Importer tests
         run: node scripts/importers.test.mjs
       - name: Exporter tests

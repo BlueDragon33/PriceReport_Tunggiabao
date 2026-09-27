@@ -10,3 +10,7 @@
 8. Import/restore must not leave partial persistence.
 9. UI must not claim saved before persistence verifies.
 10. Management/device services are optional to standalone core.
+
+11. Every persisted quotation line has a stable itemId within its quotation.
+12. Saving an existing quotation creates a new revision snapshot instead of discarding the previous version.
+13. Direct status changes must obey the domain transition table; final statuses are reopened only by an explicit workflow.

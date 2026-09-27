@@ -36,6 +36,8 @@ import {
   removeBackgroundDataUrl
 } from './logo-processing.js';
 import { hasQuotationItemDraftContent, validateQuotation } from './domain/validation.js';
+import { canTransitionQuotationStatus, createId, ensureQuotationItemIds } from './domain/entities.js';
+import { buildVersionedHistoryRecord } from './domain/history.js';
 import { createStorageRepository } from './storage/repository.js';
 
 const STORAGE = 'tunggiabao-price-report-v1';
@@ -206,17 +208,19 @@ function defaultSignatureDateLine(date = new Date()) {
 function merge(data) {
   const rawProducts = Array.isArray(data && data.products) ? data.products : clone(defaults.products);
   const merged = Object.assign(clone(defaults), data || {}, {
-    products: rawProducts.map((product) => ({
+    products: ensureQuotationItemIds(rawProducts.map((product) => ({
+      itemId: String(product?.itemId || ''),
+      sourceProductId: String(product?.sourceProductId || ''),
       group: String(product?.group || ''),
       name: String(product?.name || ''),
       pack: String(product?.pack || ''),
       unit: String(product?.unit || ''),
       qty: normalizeNonNegativeNumber(product?.qty),
-      price: normalizeNonNegativeNumber(product?.price),
+      price: normalizeNonNegativeNumber(product?.price ?? product?.unitPrice),
       note: String(product?.note || '')
-    }))
+    })))
   });
-  if (!merged.products.length) merged.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  if (!merged.products.length) merged.products = [{ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
 
   const hasStructuredCompanyAddress = data && (
     Object.prototype.hasOwnProperty.call(data, 'companyAddressDetail') ||
@@ -461,6 +465,7 @@ function readRecoverySnapshot() {
 }
 
 function save() {
+  state.products = ensureQuotationItemIds(state.products);
   updateAutosaveIndicator('saving');
   writeRecoverySnapshot();
   const persisted = safeStore(STORAGE, JSON.stringify(stateForStorage()));
@@ -2664,10 +2669,17 @@ function bindInputs() {
         state[key] = value;
         if (Number(el.value) !== value) el.value = String(value);
       } else {
-        state[key] = el.value;
+        const nextValue = el.value;
+        if (key === 'quoteStatus' && !canTransitionQuotationStatus(state.quoteStatus || 'draft', nextValue)) {
+          const currentStatus = state.quoteStatus || 'draft';
+          el.value = currentStatus;
+          toast('Không thể chuyển trực tiếp từ ' + statusLabel(currentStatus) + ' sang ' + statusLabel(nextValue) + '. Hãy dùng quy trình nhân bản/mở lại phù hợp.');
+          return;
+        }
+        state[key] = nextValue;
       }
 
-      $$('[data-bind]').forEach((peer) => {
+      $('[data-bind]').forEach((peer) => {
         if (peer === el || peer.dataset.bind !== key) return;
         if (peer.type === 'checkbox') peer.checked = Boolean(state[key]);
         else peer.value = state[key] == null ? '' : state[key];
@@ -2882,7 +2894,7 @@ function focusProductName(index) {
 }
 
 function appendBlankProduct({ focusKey = 'name' } = {}) {
-  state.products.push({ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
+  state.products.push({ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' });
   const nextIndex = state.products.length - 1;
   collapsedProducts.delete(nextIndex);
   save();
@@ -7521,8 +7533,29 @@ function normalizeHistoryRecords(value) {
       ? record.status
       : data.quoteStatus;
     data.quoteStatus = status;
+    const revisions = (Array.isArray(record.revisions) ? record.revisions : []).flatMap((revision, revisionIndex) => {
+      if (!isPlainObject(revision) || !isPlainObject(revision.data)) return [];
+      const revisionData = merge(Object.assign({}, revision.data, {
+        products: Array.isArray(revision.data.products) ? revision.data.products : []
+      }));
+      revisionData.logo = '';
+      const revisionCurrency = normalizeCatalogCurrency(revision.currency || revisionData.currency || currency);
+      revisionData.currency = revisionCurrency;
+      return [{
+        revision: Math.max(1, Math.trunc(Number(revision.revision) || (revisionIndex + 1))),
+        savedAt: typeof revision.savedAt === 'string' ? revision.savedAt : '',
+        status: ['draft','sent','accepted','rejected','expired'].includes(revision.status) ? revision.status : revisionData.quoteStatus,
+        currency: revisionCurrency,
+        total: calcQuoteTotal(revisionData),
+        data: revisionData
+      }];
+    });
     return [{
       id,
+      recordId: String(record.recordId || id),
+      quotationId: String(record.quotationId || id),
+      revision: Math.max(1, Math.trunc(Number(record.revision) || 1)),
+      revisions,
       savedAt: typeof record.savedAt === 'string' ? record.savedAt : '',
       status,
       currency,
@@ -7575,21 +7608,21 @@ function saveCurrentQuote() {
     }
   }
 
-  const id = existingIndex >= 0
-    ? items[existingIndex].id
-    : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const existingRecord = existingIndex >= 0 ? items[existingIndex] : null;
+  const id = existingRecord?.id || createId('history');
 
   const historyData = clone(state);
   historyData.logo = '';
   historyData.historyRecordId = '';
-  const record = {
+  const record = buildVersionedHistoryRecord({
+    existingRecord,
     id,
     savedAt: now,
     status: state.quoteStatus || 'draft',
     currency: normalizeCatalogCurrency(state.currency),
     total: calcTotal(state),
     data: historyData
-  };
+  });
 
   if (existingIndex >= 0) items.splice(existingIndex, 1);
   items.unshift(record);
@@ -7738,7 +7771,7 @@ function createNewQuote() {
     rightName: state.rightName
   };
   state = Object.assign(clone(defaults), keep);
-  state.products = [{ group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
+  state.products = [{ itemId: createId('item'), sourceProductId: '', group: '', name: '', pack: '', unit: '', qty: 1, price: 0, note: '' }];
   const d = new Date();
   state.quoteNo = generateUniqueQuoteNo();
   state.quoteDate = localDateISO(d);
@@ -8117,6 +8150,8 @@ function addCatalogProductsToQuote(products, { notify = true, navigate = true } 
       if (currencyMatches) existing.price = catalogPrice;
     } else {
       state.products.push({
+        itemId: createId('item'),
+        sourceProductId: String(product.id || product.productId || ''),
         group: product.group || '',
         name: product.name || '',
         pack: product.pack || '',

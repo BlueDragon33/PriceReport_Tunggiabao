@@ -75,3 +75,22 @@ export function createQuotationItemSnapshot(product = {}, options = {}) {
     tax:normalizeNonNegativeNumber(source.tax), note:String(source.note || '').trim()
   };
 }
+
+export function ensureQuotationItemIds(items = []) {
+  const list = Array.isArray(items) ? items : [];
+  const seen = new Set();
+  list.forEach((item, index) => {
+    if (!item || typeof item !== 'object') return;
+    const base = String(item.itemId || '').trim() || 'item-' + (index + 1);
+    let candidate = base;
+    let suffix = 2;
+    while (seen.has(candidate)) {
+      candidate = 'item-' + (index + 1) + '-' + suffix;
+      suffix += 1;
+    }
+    item.itemId = candidate;
+    item.sourceProductId = String(item.sourceProductId || '');
+    seen.add(candidate);
+  });
+  return list;
+}

@@ -16,6 +16,7 @@ const deviceProfileJs = fs.readFileSync('src/device-profile.js', 'utf8');
 const domainValidationJs = fs.readFileSync('src/domain/validation.js', 'utf8');
 const domainEntitiesJs = fs.readFileSync('src/domain/entities.js', 'utf8');
 const storageRepositoryJs = fs.readFileSync('src/storage/repository.js', 'utf8');
+const historyDomainJs = fs.readFileSync('src/domain/history.js', 'utf8');
 
 function fail(message) {
   console.error('SMOKE FAIL:', message);
@@ -453,6 +454,9 @@ if (!domainValidationJs.includes("Dòng sản phẩm ' + (index + 1) + ' đã c�
 if (!js.includes('createStorageRepository(localStorage)') || !storageRepositoryJs.includes('STORAGE_VERIFY_FAILED')) fail('V6.19 storage repository boundary is missing');
 if (!domainEntitiesJs.includes('QUOTATION_STATUS_TRANSITIONS') || !domainEntitiesJs.includes('createQuotationItemSnapshot')) fail('V6.19 domain model foundation is missing');
 if (!js.includes('calculateQuoteBreakdown(state)')) fail('V6.19 preview totals must use the shared calculation engine');
+if (!js.includes('ensureQuotationItemIds(state.products)') || !js.includes("sourceProductId: String(product.id || product.productId || '')")) fail('V6.19 stable quotation-item identity/snapshot source is missing');
+if (!js.includes('canTransitionQuotationStatus') || !js.includes("key === 'quoteStatus'")) fail('V6.19 quotation state machine is not wired to the editor');
+if (!historyDomainJs.includes('buildVersionedHistoryRecord') || !js.includes('buildVersionedHistoryRecord({')) fail('V6.19 history revision owner is missing');
 if (!v5Css.includes('Shared Studio form / health utilities')) fail('Shared Studio form/health utilities are missing');
 
 if (!v5Css.includes('Pass 18: unified Studio surfaces')) fail('V5 shared Studio primitives are missing');
