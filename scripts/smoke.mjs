@@ -120,7 +120,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v619-architecture-final")) fail('Service-worker cache version was not aligned with V6.19 architecture final');
+if (!sw.includes("pricereport-shell-v620-storage-boundary")) fail('Service-worker cache version was not aligned with V6.19 architecture final');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
@@ -456,6 +456,7 @@ if (!js.includes('function productHasDraftContent') || !domainValidationJs.inclu
 if (!js.includes("historyMode === 'dirty'")) fail('V5.1 dirty history status is missing');
 if (!domainValidationJs.includes("Dòng sản phẩm ' + (index + 1) + ' đã có dữ liệu nhưng chưa có tên.")) fail('V6.19 unnamed meaningful-product validation is missing');
 if (!js.includes('createStorageRepository(localStorage)') || !storageRepositoryJs.includes('STORAGE_VERIFY_FAILED')) fail('V6.19 storage repository boundary is missing');
+if (/localStorage\.(?:getItem|setItem|removeItem)\s*\(/.test(js.replace('createStorageRepository(localStorage)', ''))) fail('V6.20 main.js must not bypass the storage repository boundary');
 if (!domainEntitiesJs.includes('QUOTATION_STATUS_TRANSITIONS') || !domainEntitiesJs.includes('createQuotationItemSnapshot')) fail('V6.19 domain model foundation is missing');
 if (!js.includes('buildReportViewModel(state).totals') || !reportViewModelJs.includes('calculateQuoteBreakdown')) fail('V6.19 preview totals must flow through the report view model and shared calculation engine');
 if (!js.includes('ensureQuotationItemIds(state.products)') || !js.includes("sourceProductId: String(product.id || product.productId || '')")) fail('V6.19 stable quotation-item identity/snapshot source is missing');
