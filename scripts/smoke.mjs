@@ -270,7 +270,7 @@ if (!js.includes("showNote: false")) fail('Tùng Gia Bảo baseline should not w
 if (!js.includes('looksLikeLegacyBienUyenBaoProfile')) fail('Robust legacy Biển Uyên Bảo profile detection is missing');
 if (!js.includes('applyTungGiaBaoBaseline')) fail('Tùng Gia Bảo baseline replacement helper is missing');
 if (!html.includes('id="applyTungGiaBaoProfile"')) fail('Manual Tùng Gia Bảo apply action is missing');
-if (!js.includes('localStorage.setItem(STORAGE, JSON.stringify(persistedMigration))')) fail('Legacy profile migration must persist immediately');
+if (!js.includes('storageRepository.writeJson(STORAGE, persistedMigration)')) fail('Legacy profile migration must persist immediately through the storage repository');
 
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
 if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
