@@ -48,7 +48,7 @@ export function moveQuotationItemById(items, itemId, targetIndex) {
   const list = [...(Array.isArray(items) ? items : [])];
   const index = list.findIndex(item => String(item?.itemId || '') === String(itemId || ''));
   if (index < 0) return list;
-  const bounded = Math.max(0, Math.min(list.length - 1, Math.trunc(Number(targetIndex) || 0));
+  const bounded = Math.max(0, Math.min(list.length - 1, Math.trunc(Number(targetIndex) || 0)));
   const [item] = list.splice(index, 1);
   list.splice(bounded, 0, item);
   return list;
