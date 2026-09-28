@@ -10,8 +10,8 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
   .map(match => match[0]);
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
-assert.ok(importantCount(legacy) <= 262, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 22, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(legacy) <= 260, 'V6.9 responsive !important debt increased');
+assert.ok(importantCount(current) <= 18, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -67,7 +67,7 @@ for (const retired of [
 }
 assert.ok(current.includes('bottom:calc(var(--touch-nav-h) + 5px);'), 'Current phone More-menu ownership is missing');
 assert.ok(current.includes('min-height:44px!important'), 'Current phone footer button ownership is missing');
-assert.ok(current.includes('grid-template-columns:minmax(0,1fr) 88px!important'), 'Current phone quote-flow ownership is missing');
+assert.ok(current.includes('grid-template-columns:minmax(0,1fr) 88px;'), 'Current phone quote-flow ownership is missing');
 assert.ok(current.includes('min-height:190px!important'), 'Current phone template-card ownership is missing');
 
 function extractMediaBlock(source, header) {
@@ -181,6 +181,18 @@ for (const [selector, property, value] of [
 ]) {
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.52 phone workspace geometry missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.52 phone workspace geometry returned to !important: ' + selector + ' :: ' + property);
+}
+
+for (const [source, selector, property, value] of [
+  [legacy, '.quote-flow-navigator-card', 'padding', '8px'],
+  [legacy, '.quote-flow-review-button', 'min-height', '40px'],
+  [phoneCurrent, '.quote-flow-navigator-card', 'padding', '5px'],
+  [phoneCurrent, '.quote-flow-navigator-card', 'grid-template-columns', 'minmax(0,1fr) 88px'],
+  [phoneCurrent, '.quote-flow-step-button strong', 'font-size', '10px'],
+  [phoneCurrent, '.quote-flow-review-button', 'min-height', '36px']
+]) {
+  assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.53 Quote Flow ownership missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.53 Quote Flow ownership returned to !important: ' + selector + ' :: ' + property);
 }
 
 for (const [source, selector, property, value] of [
@@ -361,7 +373,8 @@ for (const [selector, property, value] of [
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.46 phone quote-flow declaration missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.46 phone quote-flow !important returned: ' + selector + ' :: ' + property);
 }
-assert.equal(ruleHasDeclaration(phoneCurrent, '.quote-flow-step-button strong', 'font-size', '10px!important'), true, 'V6.46 must preserve readable 10px phone flow-step label over the legacy 9.5px important owner');
+assert.equal(ruleHasDeclaration(phoneCurrent, '.quote-flow-step-button strong', 'font-size', '10px'), true, 'V6.53 phone flow-step label owner is missing');
+assert.equal(ruleHasDeclaration(phoneCurrent, '.quote-flow-step-button strong', 'font-size', '10px!important'), false, 'V6.53 phone flow-step label must remain on normal cascade');
 
 for (const [selector, property, value] of [
   ['.content-workspace-body,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-body', 'padding', '6px'],
