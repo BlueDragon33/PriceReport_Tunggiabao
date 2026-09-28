@@ -1,3 +1,13 @@
+## Trạng thái hiện tại — V6.53 Quote Flow Ownership
+
+V6.53 tiếp tục U4 theo UI/UX Constitution: sửa ownership Quote Flow xuyên cả base, touch baseline và phone refinement.
+
+- Base Quote Flow: 9.5px label và 34px review button không còn dùng `!important`.
+- `responsive-v69.css`: touch padding 8px và min-height 40px chuyển về normal cascade.
+- `responsive-v610.css`: **22 → 18 `!important`**; phone refinement 5px / 88px / 10px / 36px dùng normal cascade.
+- Package: **6.53.0**.
+- PWA cache: **pricereport-shell-v653-quote-flow-ownership**.
+
 ## Trạng thái hiện tại — V6.52 Phone Workspace Geometry
 
 V6.52 tiếp tục U4 theo UI/UX Constitution: retire 4 `!important` low-risk khỏi geometry của Content/Product workspace trên phone.
