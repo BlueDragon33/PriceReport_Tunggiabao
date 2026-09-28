@@ -637,7 +637,7 @@ A Constitution rule may be broken only when:
 2. Inspect current component/layout ownership.
 3. Identify Constitution rules relevant to the task.
 4. Reuse the established design system.
-5. Do not create a parallel UI system.
+5. Do not introduce a parallel design system or parallel UI system.
 6. Do not reintroduce deprecated patterns.
 7. Validate desktop.
 8. Validate tablet.
