@@ -101,7 +101,8 @@ assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'width', '34p
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'min-width', '34px'), false, 'Hidden phone Studio document min-width returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'height', '34px'), false, 'Hidden phone Studio document height returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'font-size', '15px'), false, 'Hidden phone Studio document font-size returned to V6.9');
-assert.ok(current.includes('.studio-topbar-doc{\n    display:none!important;'), 'Current phone Studio document hide owner is missing');
+assert.equal(ruleHasDeclaration(phoneCurrent, '.studio-topbar-doc', 'display', 'none'), true, 'Current phone Studio document hide owner is missing');
+assert.equal(ruleHasDeclaration(phoneCurrent, '.studio-topbar-doc', 'display', 'none!important'), false, 'Current phone Studio document hide must stay on normal cascade');
 for (const [selector, property, value] of [
   ['.studio-title-line>strong', 'font-size', '14.5px'],
   ['.studio-title-line>strong', 'line-height', '18px'],
