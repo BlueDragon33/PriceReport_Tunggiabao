@@ -10,7 +10,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
   .map(match => match[0]);
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
-assert.ok(importantCount(legacy) <= 279, 'V6.9 responsive !important debt increased');
+assert.ok(importantCount(legacy) <= 269, 'V6.9 responsive !important debt increased');
 assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 
@@ -66,6 +66,27 @@ assert.ok(current.includes('bottom:calc(var(--touch-nav-h) + 5px)!important'), '
 assert.ok(current.includes('min-height:44px!important'), 'Current phone footer button ownership is missing');
 assert.ok(current.includes('grid-template-columns:minmax(0,1fr) 88px!important'), 'Current phone quote-flow ownership is missing');
 assert.ok(current.includes('min-height:190px!important'), 'Current phone template-card ownership is missing');
+
+for (const retired of [
+  'font-size:17px!important',
+  'padding:12px 11px 22px',
+  'min-height:62px',
+  'padding:9px 10px',
+  'grid-template-rows:64px 42px minmax(0,1fr) 62px!important',
+  'grid-template-rows:64px minmax(0,1fr) 62px!important',
+  'min-height:64px!important',
+  'padding:8px 10px!important',
+  'padding:7px!important',
+  'gap:6px!important',
+  'padding:9px!important',
+  'grid-template-columns:1fr 1fr!important',
+  '7px 8px max(7px,env(safe-area-inset-bottom))!important'
+]) {
+  assert.equal(legacy.includes(retired), false, 'Same-breakpoint V6.9 declaration returned: ' + retired);
+}
+assert.ok(current.includes('font-size:18px!important'), 'Current phone nav-glyph owner missing');
+assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px!important'), 'Current phone content-workspace rows missing');
+assert.ok(current.includes('grid-template-rows:58px minmax(0,1fr) 58px!important'), 'Current phone product-workspace rows missing');
 
 assert.ok(current.includes('.shell>.design:not(.open)'), 'Closed touch inspector pointer-safety rule missing');
 assert.ok(current.includes('pointer-events:none'), 'Closed touch inspector must not intercept navigation');
