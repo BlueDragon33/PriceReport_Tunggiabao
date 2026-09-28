@@ -1,12 +1,12 @@
 {
   "name": "pricereport-tunggiabao",
   "private": true,
-  "version": "6.23.0",
+  "version": "6.24.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "test": "node --check src/main.js && node scripts/ui-v5.test.mjs && node scripts/ui-debt.test.mjs && node scripts/ui-ux-constitution.test.mjs && node scripts/design-tokens.test.mjs && node scripts/core.test.mjs && node scripts/domain.test.mjs && node scripts/storage-repository.test.mjs && node scripts/history-domain.test.mjs && node scripts/storage-migrations.test.mjs && node scripts/backup-service.test.mjs && node scripts/quotation-commands.test.mjs && node scripts/report-view-model.test.mjs && node scripts/importers.test.mjs && node scripts/exporters.test.mjs && node scripts/print-layout.test.mjs && node scripts/pc-storage.test.mjs && node scripts/logo-processing.test.mjs && node scripts/device-profile.test.mjs && node scripts/production-config.test.mjs && node scripts/service-worker.test.mjs && npm run test:dom && node scripts/smoke.mjs",
+    "test": "node --check src/main.js && node scripts/ui-v5.test.mjs && node scripts/ui-debt.test.mjs && node scripts/ui-ux-constitution.test.mjs && node scripts/design-tokens.test.mjs && node scripts/component-contract.test.mjs && node scripts/core.test.mjs && node scripts/domain.test.mjs && node scripts/storage-repository.test.mjs && node scripts/history-domain.test.mjs && node scripts/storage-migrations.test.mjs && node scripts/backup-service.test.mjs && node scripts/quotation-commands.test.mjs && node scripts/report-view-model.test.mjs && node scripts/importers.test.mjs && node scripts/exporters.test.mjs && node scripts/print-layout.test.mjs && node scripts/pc-storage.test.mjs && node scripts/logo-processing.test.mjs && node scripts/device-profile.test.mjs && node scripts/production-config.test.mjs && node scripts/service-worker.test.mjs && npm run test:dom && node scripts/smoke.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test:dom": "vitest run tests/app.test.js tests/migration.test.js"
   },

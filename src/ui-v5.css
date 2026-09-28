@@ -83,6 +83,22 @@
   --space-6:var(--v5-space-6);
   --space-8:var(--v5-space-8);
   --control-height:var(--v5-control);
+  --control-radius:var(--radius-medium);
+  --control-border:var(--border-strong);
+  --control-bg:var(--surface-panel);
+  --control-bg-hover:var(--surface-muted);
+  --control-text:var(--text-primary);
+  --control-placeholder:var(--text-muted);
+  --button-secondary-bg:var(--surface-panel);
+  --button-secondary-bg-hover:var(--surface-muted);
+  --button-secondary-border:var(--border-strong);
+  --button-secondary-text:var(--text-primary);
+  --button-primary-bg:var(--accent-primary);
+  --button-primary-bg-hover:var(--accent-primary-hover);
+  --button-primary-text:var(--text-inverse);
+  --button-danger-bg:var(--state-danger-soft);
+  --button-danger-border:#efcece;
+  --button-danger-text:var(--state-danger);
   --focus-ring:rgba(36,119,232,.16);
   --nav:118px;
   --edit:350px;
@@ -381,33 +397,33 @@ body.v5-ui #pane-general>.card:first-child h3{
 
 /* ---------- Base application controls ---------- */
 body.v5-ui .btn{
-  min-height:var(--v5-control);
+  min-height:var(--control-height);
   padding:8px 13px;
-  border:1px solid var(--v5-border-strong);
-  border-radius:var(--v5-radius-sm);
-  background:var(--surface-panel);
-  color:#324a69;
+  border:1px solid var(--button-secondary-border);
+  border-radius:var(--control-radius);
+  background:var(--button-secondary-bg);
+  color:var(--button-secondary-text);
   font-size:11px;
   font-weight:750;
   box-shadow:var(--v5-shadow-sm);
   transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
 }
 body.v5-ui .btn:hover{
-  background:var(--v5-surface-soft);
+  background:var(--button-secondary-bg-hover);
   border-color:#afbed0;
 }
 body.v5-ui .btn:active{transform:translateY(1px)}
 body.v5-ui .btn.primary{
-  background:var(--v5-primary);
-  border-color:var(--v5-primary);
-  color:#fff;
+  background:var(--button-primary-bg);
+  border-color:var(--button-primary-bg);
+  color:var(--button-primary-text);
   box-shadow:0 5px 14px rgba(36,119,232,.17);
 }
-body.v5-ui .btn.primary:hover{background:var(--v5-primary-hover);border-color:var(--v5-primary-hover)}
+body.v5-ui .btn.primary:hover{background:var(--button-primary-bg-hover);border-color:var(--button-primary-bg-hover)}
 body.v5-ui .btn.danger{
-  background:var(--v5-danger-soft);
-  border-color:#efcece;
-  color:var(--v5-danger);
+  background:var(--button-danger-bg);
+  border-color:var(--button-danger-border);
+  color:var(--button-danger-text);
 }
 body.v5-ui .link-button{
   border:0;
@@ -420,10 +436,10 @@ body.v5-ui .link-button{
 body.v5-ui input,
 body.v5-ui textarea,
 body.v5-ui select{
-  border:1px solid var(--v5-border-strong);
-  border-radius:var(--v5-radius-xs);
-  background:var(--surface-panel);
-  color:var(--text-primary);
+  border:1px solid var(--control-border);
+  border-radius:var(--radius-small);
+  background:var(--control-bg);
+  color:var(--control-text);
 }
 body.v5-ui input:hover,
 body.v5-ui textarea:hover,

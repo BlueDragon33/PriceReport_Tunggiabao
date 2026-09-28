@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v623-semantic-token-foundation';
+const CACHE = 'pricereport-shell-v624-component-contract';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',

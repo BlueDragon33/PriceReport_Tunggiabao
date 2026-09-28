@@ -236,9 +236,9 @@ body.v5-ui.reference-ui-v59 .content-workspace-toolbar .btn{
   min-height:32px;
   height:32px;
   padding:0 10px;
-  border-color:rgba(255,255,255,.11);
-  background:var(--surface-muted);
-  color:var(--text-primary);
+  border-color:var(--button-secondary-border);
+  background:var(--button-secondary-bg);
+  color:var(--button-secondary-text);
   font-size:10px;
 }
 
@@ -356,14 +356,14 @@ body.v5-ui.reference-ui-v59 .content-workspace-main .btn{
   font-weight:750;
 }
 body.v5-ui.reference-ui-v59 .content-workspace-main .btn.primary{
-  border-color:#1677ff;
-  background:#1677ff;
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-main .btn.danger{
-  border-color:#e3b9be;
-  background:#fff3f4;
-  color:#a63643;
+  border-color:var(--button-danger-border);
+  background:var(--button-danger-bg);
+  color:var(--button-danger-text);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-main .logo-edit{
   min-height:130px;
@@ -459,16 +459,16 @@ body.v5-ui.reference-ui-v59 .content-workspace-footer>div{
 body.v5-ui.reference-ui-v59 .content-workspace-footer .btn{
   min-height:38px;
   padding:0 13px;
-  border-color:rgba(255,255,255,.11);
-  background:var(--surface-muted);
-  color:var(--text-primary);
+  border-color:var(--button-secondary-border);
+  background:var(--button-secondary-bg);
+  color:var(--button-secondary-text);
   font-size:10.5px;
 }
 body.v5-ui.reference-ui-v59 .content-workspace-footer .btn.primary{
   min-width:100px;
-  border-color:#1677ff;
-  background:#1677ff;
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
 }
 
 /* V6.4 — contextual assistant inside each workspace */
@@ -1019,15 +1019,15 @@ body.v5-ui.reference-ui-v59 .quote-review-footer>div{
 body.v5-ui.reference-ui-v59 .quote-review-footer .btn{
   min-height:38px;
   padding:0 12px;
-  border-color:rgba(255,255,255,.12);
-  background:var(--surface-muted);
-  color:#dce9f7;
+  border-color:var(--button-secondary-border);
+  background:var(--button-secondary-bg);
+  color:var(--button-secondary-text);
   font-size:9.5px;
 }
 body.v5-ui.reference-ui-v59 .quote-review-footer .btn.primary{
-  border-color:#1677ff;
-  background:#1677ff;
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
 }
 body.v5-ui.reference-ui-v59 .quote-review-footer .btn.primary:disabled{
   border-color:#334b66;

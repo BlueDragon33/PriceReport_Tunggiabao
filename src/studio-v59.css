@@ -38,6 +38,22 @@ body.v5-ui.reference-ui-v59{
   --state-danger:#d85d5d;
   --state-info:var(--studio-primary);
   --focus-ring:rgba(22,119,255,.26);
+  --control-radius:9px;
+  --control-border:var(--border-strong);
+  --control-bg:var(--studio-input);
+  --control-bg-hover:var(--surface-muted);
+  --control-text:var(--text-primary);
+  --control-placeholder:var(--text-muted);
+  --button-secondary-bg:var(--surface-raised);
+  --button-secondary-bg-hover:var(--surface-muted);
+  --button-secondary-border:var(--border-strong);
+  --button-secondary-text:var(--text-primary);
+  --button-primary-bg:var(--accent-primary);
+  --button-primary-bg-hover:var(--accent-primary-hover);
+  --button-primary-text:var(--text-inverse);
+  --button-danger-bg:rgba(216,93,93,.12);
+  --button-danger-border:rgba(216,93,93,.32);
+  --button-danger-text:#ffb5b5;
   --studio-header-h:72px;
   --studio-rail-w:118px;
   --studio-left-w:320px;
@@ -222,10 +238,10 @@ body.v5-ui.reference-ui-v59 .studio-icon-action,
 body.v5-ui.reference-ui-v59 .studio-top-action{
   height:40px;
   min-height:40px;
-  border:1px solid var(--border-strong);
-  border-radius:9px;
-  background:var(--surface-raised);
-  color:#dce8f6;
+  border:1px solid var(--button-secondary-border);
+  border-radius:var(--control-radius);
+  background:var(--button-secondary-bg);
+  color:var(--button-secondary-text);
   font-size:12px;
   font-weight:700;
 }
@@ -242,14 +258,14 @@ body.v5-ui.reference-ui-v59 .studio-icon-action:disabled{
 body.v5-ui.reference-ui-v59 .studio-top-action{padding:0 14px}
 body.v5-ui.reference-ui-v59 .studio-top-action:hover,
 body.v5-ui.reference-ui-v59 .studio-icon-action:not(:disabled):hover{
-  border-color:#3b79bd;
-  background:#173f6b;
+  border-color:var(--accent-primary);
+  background:var(--button-secondary-bg-hover);
   color:var(--text-inverse);
 }
 body.v5-ui.reference-ui-v59 .studio-top-action.primary{
-  border-color:var(--accent-primary);
-  background:var(--accent-primary);
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
 }
 body.v5-ui.reference-ui-v59 .studio-command-search{
   position:relative;
@@ -669,20 +685,20 @@ body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library select{
   height:40px;
   min-height:40px;
   padding:7px 9px;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
-  background:var(--studio-input);
-  color:#eef5ff;
+  border:1px solid var(--control-border);
+  border-radius:var(--control-radius);
+  background:var(--control-bg);
+  color:var(--control-text);
   font-size:13px;
   line-height:18px;
 }
 body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library textarea{
   min-height:84px;
   padding:8px 9px;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
-  background:var(--studio-input);
-  color:#eef5ff;
+  border:1px solid var(--control-border);
+  border-radius:var(--control-radius);
+  background:var(--control-bg);
+  color:var(--control-text);
   font-size:13px;
   line-height:18px;
 }
@@ -694,17 +710,17 @@ body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .logo-up
 }
 body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .btn{
   min-height:38px;
-  border-color:var(--studio-border-strong);
-  border-radius:8px;
-  background:#15385f;
-  color:#e7f0fa;
+  border-color:var(--button-secondary-border);
+  border-radius:var(--control-radius);
+  background:var(--button-secondary-bg);
+  color:var(--button-secondary-text);
   font-size:12px;
   font-weight:700;
 }
 body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .btn.primary{
-  border-color:var(--accent-primary);
-  background:var(--accent-primary);
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
 }
 
 /* ---------- unified management shell ---------- */
@@ -958,10 +974,10 @@ body.v5-ui.reference-ui-v59 .design input:not([type="checkbox"]):not([type="rang
 body.v5-ui.reference-ui-v59 .design select{
   height:40px;
   min-height:40px;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
-  background:var(--studio-input);
-  color:#eef5ff;
+  border:1px solid var(--control-border);
+  border-radius:var(--control-radius);
+  background:var(--control-bg);
+  color:var(--control-text);
   font-size:13px;
 }
 body.v5-ui.reference-ui-v59 .design .check{
@@ -1868,9 +1884,9 @@ body.v5-ui.reference-ui-v59 .product-workspace-flow-actions .btn{
   font-size:9.5px;
 }
 body.v5-ui.reference-ui-v59 .product-workspace-flow-actions .btn.primary{
-  border-color:#1677ff;
-  background:#1677ff;
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
 }
 body.v5-ui.reference-ui-v59 .product-workspace-dialog .product-card{
   background:#fff;
@@ -1958,9 +1974,9 @@ body.v5-ui.reference-ui-v59 .template-preview-back{
   color:#dcecff;
 }
 body.v5-ui.reference-ui-v59 .template-preview-apply{
-  border-color:#1677ff;
-  background:#1677ff;
-  color:var(--text-inverse);
+  border-color:var(--button-primary-bg);
+  background:var(--button-primary-bg);
+  color:var(--button-primary-text);
   box-shadow:0 7px 18px rgba(22,119,255,.24);
 }
 body.v5-ui.reference-ui-v59 .template-preview-apply:hover{background:#0e68e7}

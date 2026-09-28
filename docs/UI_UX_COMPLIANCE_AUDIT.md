@@ -89,15 +89,25 @@ Exit gate for the foundation:
 - no new parallel token system.
 
 ### Phase U3 — Component consolidation
-Target:
-- Button/IconButton;
-- Input/Select/Textarea/Search;
+**Status: foundation implemented in V6.24; continue incrementally**
+
+Implemented:
+- canonical control tokens for height, radius, border, background, hover, text and placeholder;
+- canonical button tokens for Secondary, Primary and Danger variants;
+- existing `.btn` remains the primary primitive; no parallel button system was introduced;
+- Studio and Content Workspace variants now consume the shared component contract;
+- automated component-contract regression gate added.
+
+Remaining:
+- IconButton normalization;
+- Input/Select/Textarea/Search state consolidation;
 - Badge/Chip/Alert/Toast;
 - Card/Panel;
 - Toolbar/Tabs;
-- Modal/Drawer.
+- Modal/Drawer;
+- deprecate/remove historical variants only after usages are migrated.
 
-Method:
+Method remains:
 mark old variants deprecated → migrate usages → test → remove obsolete selectors.
 
 ### Phase U4 — Responsive consolidation

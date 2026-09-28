@@ -2,7 +2,18 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.23 Semantic Token Foundation
+## Trạng thái hiện tại — V6.24 Component Contract Foundation
+
+V6.24 tiếp tục Phase U3 theo UI/UX Constitution: chuẩn hóa component contract trên chính primitive hiện có, không tạo design system song song.
+
+- Shared control tokens cho input/select/textarea.
+- Shared button tokens cho Secondary/Primary/Danger.
+- Studio và Content Workspace bắt đầu dùng cùng component contract.
+- Có `scripts/component-contract.test.mjs` chống regression.
+- Package: **6.24.0**.
+- PWA cache: **pricereport-shell-v624-component-contract**.
+
+## Trạng thái trước — V6.23 Semantic Token Foundation
 
 V6.23 bắt đầu Phase U2 theo UI/UX Constitution: chuẩn hóa semantic design tokens và migrate App Shell/Studio/Content Workspace theo kiểu incremental, không thay đổi report themes hay business logic.
 
