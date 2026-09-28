@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.45 Phone Workspace Spacing Cascade
+
+V6.45 tiếp tục U4 theo UI/UX Constitution: giảm thêm responsive `!important` ở spacing an toàn mà không đổi selector/value.
+
+- `responsive-v610.css`: **66 → 61 `!important`**.
+- Phone workspace body/main/row spacing dùng normal cascade.
+- Không đụng các card/heading còn phụ thuộc owner cũ có `!important`.
+- Regression guard khóa ownership mới.
+- Package: **6.45.0**.
+- PWA cache: **pricereport-shell-v645-phone-workspace-spacing-cascade**.
+
 ## Trạng thái hiện tại — V6.44 Phone Workspace Header Cascade
 
 V6.44 tiếp tục U4 theo UI/UX Constitution: chuyển thêm phone Content Workspace header/chrome khỏi `!important` sang normal cascade mà không đổi selector/value.

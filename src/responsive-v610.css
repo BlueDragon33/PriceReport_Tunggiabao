@@ -313,8 +313,8 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-body,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-body{
-    padding:6px!important;
-    gap:5px!important;
+    padding:6px;
+    gap:5px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-navigator-card{
     padding:5px!important;
@@ -343,8 +343,8 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-main{
-    padding:8px!important;
-    border-radius:10px!important;
+    padding:8px;
+    border-radius:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.section-block{
@@ -357,7 +357,7 @@
     font-size:14px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main .row{
-    margin-bottom:9px!important;
+    margin-bottom:9px;
   }
 
   /* Footer text no longer becomes microscopic. */
