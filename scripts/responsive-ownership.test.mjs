@@ -50,7 +50,8 @@ assert.deepEqual(redundant, [], 'Later responsive layer repeats declarations alr
 assert.equal(legacy.includes('grid-template-columns:1fr 1fr!important;\n    gap:6px!important;'), false, 'Legacy phone product-toolbar grid ownership must stay retired');
 assert.equal(legacy.includes('.product-toolbar-spacer{\n    display:none!important;'), false, 'Legacy phone product-toolbar spacer ownership must stay retired');
 assert.ok(current.includes('.product-workspace-toolbar .btn'), 'Current touch product-toolbar button ownership is missing');
-assert.ok(current.includes('min-height:42px!important'), 'Current touch product-toolbar height contract is missing');
+assert.equal(ruleHasDeclaration(current, '.product-workspace-toolbar .btn', 'min-height', '42px'), true, 'Current touch product-toolbar height contract is missing');
+assert.equal(ruleHasDeclaration(current, '.product-workspace-toolbar .btn', 'min-height', '42px!important'), false, 'Touch product-toolbar height must no longer require !important');
 
 for (const retired of [
   'left:8px!important',
