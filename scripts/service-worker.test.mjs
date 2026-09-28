@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v643-touch-chrome-cascade', 'V6.43 touch chrome cascade');
+assert.equal(activeCache, 'pricereport-shell-v644-phone-workspace-header-cascade', 'V6.44 phone workspace header cascade');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });

@@ -295,21 +295,21 @@
     padding:7px 9px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-icon{
-    width:34px!important;
-    min-width:34px!important;
-    height:34px!important;
-    border-radius:9px!important;
+    width:34px;
+    min-width:34px;
+    height:34px;
+    border-radius:9px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-head h2,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-head h2{
-    font-size:15px!important;
-    line-height:18px!important;
+    font-size:15px;
+    line-height:18px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-toolbar{
-    padding:0 9px!important;
+    padding:0 9px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-toolbar small{
-    display:none!important;
+    display:none;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-body,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-body{
