@@ -156,6 +156,14 @@ V6.31:
 - added a regression ceiling so V6.9 responsive debt cannot silently increase;
 - no intended computed UI change because V6.10 already supplied the active touch toolbar layout.
 
+V6.32:
+- retired additional V6.9 phone declarations already superseded by V6.10 in the same `max-width:599px` context;
+- cleanup covers topbar metadata, More sheet positioning, flow/footer sizing and template-card sizing;
+- retained unsuperseded properties such as overflow, border radius, width/display/gap and review action spacing;
+- reduced `responsive-v69.css` from 292 to 279 `!important` and 1002 to 972 lines;
+- added regression guards for retired values and their current V6.10 owners;
+- no intended computed UI change; browser viewport gates remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
