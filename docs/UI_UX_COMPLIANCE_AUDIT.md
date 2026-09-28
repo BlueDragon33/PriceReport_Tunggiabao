@@ -215,6 +215,13 @@ V6.40:
 - added regression guards for both baseline and refinement ownership;
 - 360×800 and 390×844 browser gates remain authoritative.
 
+V6.41:
+- retired 6 phone Content Home `!important` flags for section padding, completion/flow card padding, content-list gap and content-row min-height/padding;
+- reduced `responsive-v610.css` from 95 to 89 `!important`;
+- V6.9 now supplies only normal baseline values, while the later V6.10 phone selectors own refinements through normal cascade;
+- added regression assertions that these declarations remain present and non-important;
+- phone browser gates at 360×800 and 390×844 remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
