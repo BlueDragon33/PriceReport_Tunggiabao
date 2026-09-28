@@ -10,8 +10,8 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
   .map(match => match[0]);
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
-assert.ok(importantCount(legacy) <= 269, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 101, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(legacy) <= 266, 'V6.9 responsive !important debt increased');
+assert.ok(importantCount(current) <= 95, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -152,7 +152,22 @@ for (const [selector, property, value] of [
     'Same-breakpoint V6.9 declaration returned: ' + selector + ' :: ' + property + ':' + value
   );
 }
-assert.ok(current.includes('font-size:18px!important'), 'Current phone nav-glyph owner missing');
+assert.equal(ruleHasDeclaration(phoneCurrent, '.shell>.nav .nav-glyph', 'font-size', '18px'), true, 'Current phone nav-glyph owner missing');
+assert.equal(ruleHasDeclaration(phoneCurrent, '.shell>.nav .nav-glyph', 'font-size', '18px!important'), false, 'Phone nav-glyph must stay on normal cascade');
+for (const [source, selector, property, value] of [
+  [legacy, '.shell>.nav>button[data-tab="dashboard"]', 'min-height', '0'],
+  [legacy, '.shell>.nav>button[data-tab="dashboard"]', 'border-radius', '10px'],
+  [phoneLegacy, '.shell>.nav', 'padding', '4px max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))'],
+  [phoneCurrent, '.shell>.nav', 'gap', '2px'],
+  [phoneCurrent, '.shell>.nav', 'padding-top', '5px'],
+  [phoneCurrent, '.shell>.nav>button[data-tab]', 'min-height', '52px'],
+  [phoneCurrent, '.shell>.nav>button[data-tab]', 'border-radius', '12px'],
+  [phoneCurrent, '.shell>.nav>button[data-tab]', 'font-size', '10px']
+]) {
+  assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.40 phone navigation declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.40 phone navigation !important returned: ' + selector + ' :: ' + property);
+}
+
 assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px!important'), 'Current phone content-workspace rows missing');
 assert.ok(current.includes('grid-template-rows:58px minmax(0,1fr) 58px!important'), 'Current phone product-workspace rows missing');
 

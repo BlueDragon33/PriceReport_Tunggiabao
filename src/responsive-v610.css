@@ -208,17 +208,17 @@
 
   /* Bottom navigation gets readable touch targets and active pill feedback. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav{
-    gap:2px!important;
-    padding-top:5px!important;
+    gap:2px;
+    padding-top:5px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>button[data-tab],
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav>.mobile-more-toggle{
-    min-height:52px!important;
-    border-radius:12px!important;
-    font-size:10px!important;
+    min-height:52px;
+    border-radius:12px;
+    font-size:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav .nav-glyph{
-    font-size:18px!important;
+    font-size:18px;
   }
 
   /* Content home: shorter first screen, clearer hierarchy. */

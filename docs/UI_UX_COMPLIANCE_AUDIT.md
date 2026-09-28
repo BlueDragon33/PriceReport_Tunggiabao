@@ -207,6 +207,14 @@ V6.39:
 - added regression assertions for the new normal-cascade ownership;
 - browser phone/tablet gates remain authoritative.
 
+V6.40:
+- moved phone bottom-navigation ownership from layered `!important` overrides to normal cascade where selector specificity and load order are sufficient;
+- V6.9 touch baseline keeps normal `min-height:0`, `border-radius:10px` and phone safe-area padding;
+- V6.10 phone refinement keeps normal gap, top padding, 52px touch height, 12px radius, 10px label text and 18px glyph size;
+- reduced `responsive-v69.css` from 269 to 266 `!important` and `responsive-v610.css` from 101 to 95;
+- added regression guards for both baseline and refinement ownership;
+- 360×800 and 390×844 browser gates remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
