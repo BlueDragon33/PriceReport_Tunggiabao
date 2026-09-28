@@ -126,7 +126,6 @@
     grid-template-columns:minmax(0,1fr)!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell:not(.app-workspace):not(.report-view)>.editor{
-    grid-column:1!important;
     width:100%!important;
     border-right:0!important;
   }
@@ -170,12 +169,6 @@
   body.v5-ui.reference-ui-v59[data-device-class="tablet"]{
     --touch-editor-w:320px;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell:not(.app-workspace):not(.report-view){
-    grid-template-columns:var(--touch-editor-w) minmax(0,1fr)!important;
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell:not(.app-workspace):not(.report-view)>.preview{
-    display:block!important;
-  }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-library-home{
     padding:16px 14px 26px!important;
   }
@@ -186,11 +179,6 @@
 
 /* ---------------- phone ---------------- */
 @media screen and (max-width:599px) {
-  body.v5-ui.reference-ui-v59[data-device-class="phone"]{
-    --touch-header-h:58px;
-    --touch-nav-h:66px;
-  }
-
   /* More deliberate header hierarchy. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-doc{
     display:none!important;
@@ -381,7 +369,6 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-footer>div,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-flow-actions{
     grid-template-columns:minmax(72px,.8fr) minmax(130px,1.5fr) minmax(68px,.75fr)!important;
-    gap:5px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-footer .btn,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-flow-actions .btn{
@@ -423,30 +410,16 @@
     grid-template-rows:1fr!important;
     align-items:center!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .library-thumb{
-    width:108px!important;
-    height:153px!important;
-  }
-
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-summary{
-    grid-template-columns:1fr 1fr!important;
-    gap:7px!important;
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-grid{
-    grid-template-columns:1fr!important;
-  }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer{
     padding:7px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer>div{
     width:100%;
     display:grid!important;
-    grid-template-columns:1fr 1fr!important;
     gap:6px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer .btn{
     min-width:0!important;
-    min-height:44px!important;
   }
 
   /* Management surfaces: don't force desktop tables into the phone viewport. */
