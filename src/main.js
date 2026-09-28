@@ -4018,6 +4018,8 @@ function toast(message, action = null) {
   if (!el) return;
   if (toastTimer) clearTimeout(toastTimer);
   el.innerHTML = '';
+  const tone = ['neutral', 'info', 'success', 'warning', 'danger'].includes(action?.tone) ? action.tone : 'neutral';
+  el.dataset.tone = tone;
   const text = document.createElement('span');
   text.textContent = message;
   el.appendChild(text);

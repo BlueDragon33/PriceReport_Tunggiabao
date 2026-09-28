@@ -117,11 +117,18 @@ Completed additionally in V6.27:
 - shared Overlay backdrop and Dialog surface/border/radius contract;
 - Studio inspector tabs, Studio panels, Product Workspace modal and Content/Review dialogs consume the shared contract.
 
+Completed additionally in V6.28:
+- shared Search surface, border, radius, icon, placeholder and result-hover contract;
+- Dashboard, History, master-data, Studio command/content/template/product searches and Content Workspace customer search consume the shared Search contract;
+- Toast now supports whitelisted Neutral / Info / Success / Warning / Danger semantic tones while remaining backward compatible;
+- existing Preview Customizer is formally governed as the Drawer primitive instead of introducing a duplicate component;
+- automated Search/feedback/Drawer regression gate added.
+
 Remaining:
-- Search-specific behavior and affordance consolidation;
-- Alert/Toast persistence and severity variants;
-- Drawer-specific behavior where a real drawer concept exists;
+- migrate critical error flows away from ephemeral toast where persistent error UX is required;
 - deprecate/remove historical variants only after usages are migrated.
+
+U3 component foundation is now complete enough to move primary effort to U4 Responsive Consolidation while continuing opportunistic component cleanup.
 
 Method remains:
 mark old variants deprecated → migrate usages → test → remove obsolete selectors.

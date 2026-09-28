@@ -138,6 +138,28 @@
   --dialog-bg:var(--surface-panel);
   --dialog-border:var(--border-strong);
   --dialog-radius:var(--radius-large);
+  --search-bg:var(--control-bg);
+  --search-border:var(--control-border);
+  --search-radius:var(--control-radius);
+  --search-icon:var(--text-muted);
+  --search-placeholder:var(--control-placeholder);
+  --search-result-hover:var(--accent-primary-soft);
+  --toast-bg:#172640;
+  --toast-text:var(--text-inverse);
+  --toast-border:transparent;
+  --toast-radius:var(--radius-small);
+  --toast-info-bg:#173b66;
+  --toast-info-text:#d9ebff;
+  --toast-success-bg:#155d48;
+  --toast-success-text:#e4fff5;
+  --toast-warning-bg:#76511d;
+  --toast-warning-text:#fff3d5;
+  --toast-danger-bg:#7b3030;
+  --toast-danger-text:#ffe4e4;
+  --drawer-bg:var(--surface-panel);
+  --drawer-border:var(--border-default);
+  --drawer-radius:var(--radius-large);
+  --drawer-shadow:0 18px 48px rgba(26,47,72,.16);
   --focus-ring:rgba(36,119,232,.16);
   --nav:118px;
   --edit:350px;
@@ -777,7 +799,7 @@ body.v5-ui .dashboard-search{
   gap:8px;
   padding:0 11px;
 }
-body.v5-ui .dashboard-search>span{font-size:18px;color:#5d7592}
+body.v5-ui .dashboard-search>span{font-size:18px;color:var(--search-icon)}
 body.v5-ui .dashboard-search input{
   height:36px;
   padding:0;
@@ -1109,7 +1131,7 @@ body.v5-ui .history-search-box{
   gap:7px;
   padding:0 10px;
 }
-body.v5-ui .history-search-box span{font-size:16px;color:#68809c}
+body.v5-ui .history-search-box span{font-size:16px;color:var(--search-icon)}
 body.v5-ui .history-search-box input{
   height:34px;
   padding:0;
@@ -1219,7 +1241,7 @@ body.v5-ui .master-search-box{
   gap:7px;
   padding:0 10px;
 }
-body.v5-ui .master-search-box>span{font-size:16px;color:#68809c}
+body.v5-ui .master-search-box>span{font-size:16px;color:var(--search-icon)}
 body.v5-ui .master-search-box input{
   height:34px;
   padding:0;
@@ -1293,9 +1315,9 @@ body.v5-ui .master-toolbar{margin-bottom:12px}
 body.v5-ui .history-search-box,
 body.v5-ui .master-search-box,
 body.v5-ui .dashboard-search{
-  border:1px solid var(--v5-border-strong);
-  border-radius:var(--v5-radius-sm);
-  background:var(--surface-panel);
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
+  background:var(--search-bg);
   box-shadow:none;
 }
 body.v5-ui .history-result-summary,
@@ -1845,7 +1867,7 @@ body.v5-ui .dashboard-search-results{
 }
 body.v5-ui .dashboard-search-result{border-radius:9px}
 body.v5-ui .dashboard-search-result:hover,
-body.v5-ui .dashboard-search-result:focus-visible{background:var(--v5-primary-soft)}
+body.v5-ui .dashboard-search-result:focus-visible{background:var(--search-result-hover)}
 
 /* ---------- Draft recovery shared surface ---------- */
 body.v5-ui .draft-recovery-banner{
@@ -2010,10 +2032,10 @@ body.v5-ui .preview-customizer{
   width:300px;
   max-height:calc(100vh - 84px);
   overflow:auto;
-  border:1px solid var(--v5-border);
-  border-radius:12px;
-  background:var(--surface-panel);
-  box-shadow:0 18px 48px rgba(26,47,72,.16);
+  border:1px solid var(--drawer-border);
+  border-radius:var(--drawer-radius);
+  background:var(--drawer-bg);
+  box-shadow:var(--drawer-shadow);
   opacity:0;
   pointer-events:none;
   transform:translateX(calc(100% + 30px));
@@ -2700,9 +2722,10 @@ body.v5-ui .toast{
   bottom:20px;
   z-index:120;
   padding:10px 14px;
-  border-radius:9px;
-  background:#172640;
-  color:#fff;
+  border:1px solid var(--toast-border);
+  border-radius:var(--toast-radius);
+  background:var(--toast-bg);
+  color:var(--toast-text);
   font-size:11.5px;
   opacity:0;
   pointer-events:none;
@@ -2711,6 +2734,10 @@ body.v5-ui .toast{
   transition:opacity .2s ease,transform .2s ease;
 }
 body.v5-ui .toast.show{opacity:1;transform:none}
+body.v5-ui .toast[data-tone="info"]{background:var(--toast-info-bg);color:var(--toast-info-text)}
+body.v5-ui .toast[data-tone="success"]{background:var(--toast-success-bg);color:var(--toast-success-text)}
+body.v5-ui .toast[data-tone="warning"]{background:var(--toast-warning-bg);color:var(--toast-warning-text)}
+body.v5-ui .toast[data-tone="danger"]{background:var(--toast-danger-bg);color:var(--toast-danger-text)}
 body.v5-ui .logo-design-preview.logo-treatment-soft{
   border-color:#dce8e5;
   background:color-mix(in srgb,var(--accent,#0b8f83) 7%,#fff);
