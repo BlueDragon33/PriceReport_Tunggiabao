@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v631-responsive-toolbar-ownership';
+const CACHE = 'pricereport-shell-v632-phone-responsive-ownership';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
