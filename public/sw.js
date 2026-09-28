@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v651-tablet-editing-ownership';
+const CACHE = 'pricereport-shell-v652-phone-workspace-geometry';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
