@@ -446,15 +446,15 @@ body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.design.open{
 @media screen and (max-width:370px) {
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-title>small,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-status-badge{
-    display:none!important;
+    display:none;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-title-line>strong{
-    max-width:42vw!important;
+    max-width:42vw;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] #studioGlobalPreview,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] #studioGlobalPdf,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] #studioTopMenu{
-    width:36px!important;
-    min-width:36px!important;
+    width:36px;
+    min-width:36px;
   }
 }
