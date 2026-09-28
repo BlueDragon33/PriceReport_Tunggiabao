@@ -1,3 +1,13 @@
+## Trạng thái hiện tại — V6.50 Narrow-phone Header Cascade
+
+V6.50 tiếp tục U4 theo UI/UX Constitution: retire 4 `!important` low-risk trong refinement dành cho phone rất hẹp (≤370px).
+
+- `responsive-v610.css`: **34 → 30 `!important`**.
+- Header metadata hide, title max-width và kích thước action 36px dùng normal cascade.
+- Viewport 360×800 là browser authority cho refinement này.
+- Package: **6.50.0**.
+- PWA cache: **pricereport-shell-v650-narrow-phone-cascade**.
+
 ## Trạng thái hiện tại — V6.49 Phone Utility Cascade
 
 V6.49 tiếp tục U4 theo UI/UX Constitution: retire 7 `!important` low-risk khỏi các utility surface trên phone mà không đổi selector/value.
