@@ -1128,7 +1128,7 @@ body.v5-ui.reference-ui-v59 .quote-flow-step-button strong{
   margin:0!important;
   overflow:hidden;
   color:#edf6ff!important;
-  font-size:9.5px!important;
+  font-size:9.5px;
   line-height:12px!important;
   text-overflow:ellipsis;
   white-space:nowrap;
@@ -1143,7 +1143,7 @@ body.v5-ui.reference-ui-v59 .quote-flow-step-button small{
 body.v5-ui.reference-ui-v59 .quote-flow-step-button.current small{color:#a8caef!important}
 body.v5-ui.reference-ui-v59 .quote-flow-review-button{
   width:100%;
-  min-height:34px!important;
+  min-height:34px;
   margin-top:8px;
   border-color:#2f83e6!important;
   background:#156fd2!important;
