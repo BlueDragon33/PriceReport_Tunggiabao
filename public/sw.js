@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v638-touch-surface-important-retirement';
+const CACHE = 'pricereport-shell-v639-touch-action-rail-important-retirement';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
