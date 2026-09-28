@@ -66,6 +66,18 @@ body.v5-ui.reference-ui-v59{
   --icon-button-text:var(--button-secondary-text);
   --icon-button-danger-text:var(--button-danger-text);
   --component-disabled-opacity:.42;
+  --feedback-neutral-bg:rgba(255,255,255,.06);
+  --feedback-neutral-text:#c5d5e8;
+  --feedback-info-bg:var(--accent-primary-soft);
+  --feedback-info-text:#9dccff;
+  --feedback-success-bg:rgba(69,174,126,.14);
+  --feedback-success-text:#9fe0be;
+  --feedback-warning-bg:rgba(215,157,67,.14);
+  --feedback-warning-text:#f3bf62;
+  --feedback-danger-bg:rgba(216,93,93,.14);
+  --feedback-danger-text:#ffb5b5;
+  --feedback-radius:var(--radius-pill);
+  --feedback-border:var(--border-default);
   --studio-header-h:72px;
   --studio-rail-w:118px;
   --studio-left-w:320px;
@@ -219,10 +231,10 @@ body.v5-ui.reference-ui-v59 .studio-title-line>strong{
 body.v5-ui.reference-ui-v59 .studio-title-line .studio-status-badge{
   min-height:22px;
   padding:3px 7px;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:999px;
-  background:rgba(255,255,255,.06);
-  color:#c5d5e8;
+  border:1px solid var(--feedback-border);
+  border-radius:var(--feedback-radius);
+  background:var(--feedback-neutral-bg);
+  color:var(--feedback-neutral-text);
   font-size:10px;
   line-height:14px;
   white-space:nowrap;
@@ -1856,9 +1868,9 @@ body.v5-ui.reference-ui-v59 .product-quickfill-chip{
   min-height:28px;
   padding:0 8px;
   border:1px solid rgba(255,255,255,.10);
-  border-radius:999px;
-  background:#12375f;
-  color:#d8e8f8;
+  border-radius:var(--feedback-radius);
+  background:var(--feedback-info-bg);
+  color:var(--feedback-info-text);
   font-size:9px;
   font-weight:750;
 }

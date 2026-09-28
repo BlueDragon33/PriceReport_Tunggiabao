@@ -104,9 +104,15 @@ Completed additionally in V6.25:
 - shared disabled surface/text/opacity contract;
 - Studio and Content Workspace close/icon actions consume the same state model.
 
+Completed additionally in V6.26:
+- shared Neutral / Info / Success / Warning / Danger feedback tokens;
+- Studio status badge and quick-fill chips use shared status semantics;
+- Content Workspace chips consume the same feedback contract;
+- success/warning application affordances start using semantic feedback tokens.
+
 Remaining:
 - Search-specific behavior and affordance consolidation;
-- Badge/Chip/Alert/Toast;
+- Alert/Toast persistence and severity variants;
 - Card/Panel;
 - Toolbar/Tabs;
 - Modal/Drawer;
