@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 266, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 47, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 41, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -206,6 +206,18 @@ for (const [source, selector, property, value] of [
 ]) {
   assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.37 declaration missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.37 low-risk !important returned: ' + selector + ' :: ' + property);
+}
+
+for (const [selector, property, value] of [
+  ['.mobile-more-menu', 'left', '6px'],
+  ['.mobile-more-menu', 'right', '6px'],
+  ['.mobile-more-menu', 'bottom', 'calc(var(--touch-nav-h) + 5px)'],
+  ['.mobile-more-menu', 'padding', '10px'],
+  ['.mobile-more-grid button', 'min-height', '72px'],
+  ['.mobile-more-grid button', 'padding', '9px']
+]) {
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.48 phone More-sheet declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.48 phone More-sheet !important returned: ' + selector + ' :: ' + property);
 }
 
 for (const [source, selector, property, value] of [
