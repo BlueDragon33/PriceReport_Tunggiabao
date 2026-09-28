@@ -916,20 +916,10 @@
     position:sticky!important;
     top:0!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar{
-    display:grid!important;
-    grid-template-columns:1fr 1fr!important;
-    gap:6px!important;
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-toolbar-spacer{
-    display:none!important;
-  }
+  /* V6.31: product-toolbar responsive ownership moved to responsive-v610.css.
+     Keep only the legacy height behavior that is not superseded by the current touch rail. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar .btn{
-    width:100%!important;
-    min-height:42px!important;
     height:auto!important;
-    padding:7px!important;
-    white-space:normal!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-card-body{
     grid-template-columns:1fr!important;

@@ -149,6 +149,13 @@ V6.30:
 - added a regression rule: responsive layers may not introduce sub-10px text;
 - no intended computed typography regression because the later V6.10 readable values remain the active ownership.
 
+V6.31:
+- retired obsolete phone Product Workspace toolbar grid/spacer/button declarations from V6.9 after V6.10 became the sole touch toolbar owner;
+- reduced `responsive-v69.css` from 300 to 292 `!important` and 1012 to 1002 lines;
+- preserved the only unsuperseded legacy declaration (`height:auto`) to avoid behavior drift;
+- added a regression ceiling so V6.9 responsive debt cannot silently increase;
+- no intended computed UI change because V6.10 already supplied the active touch toolbar layout.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
