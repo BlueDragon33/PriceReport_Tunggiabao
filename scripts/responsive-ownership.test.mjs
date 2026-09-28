@@ -6,7 +6,7 @@ const current = fs.readFileSync(new URL('../src/responsive-v610.css', import.met
 
 const importantCount = source => (source.match(/!important/g) || []).length;
 assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt increased');
-assert.ok(current.split('\n').length <= 451, 'V6.10 responsive file grew beyond cleanup baseline');
+assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 
 function ruleMap(source) {
   const clean = source.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -38,6 +38,10 @@ for (const [selector, declarations] of currentRules) {
   }
 }
 assert.deepEqual(redundant, [], 'Later responsive layer repeats declarations already owned by V6.9: ' + redundant.join(' | '));
+
+assert.ok(current.includes('.shell>.design:not(.open)'), 'Closed touch inspector pointer-safety rule missing');
+assert.ok(current.includes('pointer-events:none'), 'Closed touch inspector must not intercept navigation');
+assert.ok(current.includes('pointer-events:auto'), 'Open touch inspector must restore interaction');
 
 for (const media of [
   '@media screen',
