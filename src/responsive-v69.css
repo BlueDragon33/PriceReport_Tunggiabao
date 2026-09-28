@@ -576,13 +576,11 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-status-badge{
     max-width:66px;
     overflow:hidden;
-    font-size:8px!important;
     text-overflow:ellipsis;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-title>small{
     max-width:48vw;
     margin-top:1px;
-    font-size:8.5px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-title>small i,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-title>small span:nth-of-type(n+2){
@@ -628,7 +626,6 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button[data-tab],
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav .mobile-more-toggle{
-    font-size:8px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav .nav-glyph{
     font-size:17px!important;
@@ -862,7 +859,6 @@
     padding:5px 6px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button strong{
-    font-size:8.7px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-navigator-card{
     display:grid!important;
@@ -880,7 +876,6 @@
     min-height:40px!important;
     margin:0!important;
     padding:0 5px!important;
-    font-size:8px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main input:not([type="checkbox"]):not([type="range"]):not([type="color"]),
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main select,
@@ -911,7 +906,6 @@
     min-width:0!important;
     min-height:46px!important;
     padding:0 4px!important;
-    font-size:8.7px!important;
   }
 
   /* Product entry becomes card-first on phone: no tiny spreadsheet header. */
