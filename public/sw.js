@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v628-search-feedback-drawer';
+const CACHE = 'pricereport-shell-v629-responsive-ownership';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',

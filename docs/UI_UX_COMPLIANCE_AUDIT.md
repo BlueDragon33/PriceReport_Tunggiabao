@@ -134,8 +134,17 @@ Method remains:
 mark old variants deprecated → migrate usages → test → remove obsolete selectors.
 
 ### Phase U4 — Responsive consolidation
-Target:
-- merge duplicated responsive ownership;
+**Status: started in V6.29**
+
+V6.29:
+- retired 11 proven-redundant `!important` declarations from the later V6.10 responsive layer;
+- reduced `responsive-v610.css` from 478 to 451 lines and 156 to 145 `!important`;
+- added a guard preventing the later responsive layer from repeating an identical property/value already owned by V6.9;
+- expanded real-browser Constitution coverage with 1366×768, 1280×800 and 360×800 in addition to the existing desktop/tablet/390px coverage;
+- no layout behavior was intentionally changed in this first cleanup slice.
+
+Remaining target:
+- continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
 - keep Phone / Tablet Portrait / Tablet Landscape / Desktop / Wide Desktop strategy explicit.
 
