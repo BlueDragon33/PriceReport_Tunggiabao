@@ -277,10 +277,10 @@ for (const [selector, property, value] of [
 }
 
 for (const [selector, property, value] of [
-  ['.content-workspace-body', 'padding', '6px'],
-  ['.content-workspace-body', 'gap', '5px'],
-  ['.content-workspace-main', 'padding', '8px'],
-  ['.content-workspace-main', 'border-radius', '10px'],
+  ['.content-workspace-body,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-body', 'padding', '6px'],
+  ['.content-workspace-body,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-body', 'gap', '5px'],
+  ['.content-workspace-main,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-main', 'padding', '8px'],
+  ['.content-workspace-main,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-main', 'border-radius', '10px'],
   ['.content-workspace-main .row', 'margin-bottom', '9px']
 ]) {
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.45 phone workspace spacing declaration missing: ' + selector + ' :: ' + property);
