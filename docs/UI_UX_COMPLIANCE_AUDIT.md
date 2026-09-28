@@ -312,6 +312,13 @@ V6.53:
 - phone browser gates remain authoritative for readable step labels and review geometry;
 - no business/report/print/storage changes.
 
+
+V6.54:
+- normalized Content Workspace card/heading ownership between base workspace and phone refinement;
+- base padding/radius/heading size and phone padding/radius/heading spacing/size now rely on normal cascade;
+- reduced `responsive-v610.css` important ceiling from 18 to 14;
+- no business/report/print/storage changes.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
