@@ -78,6 +78,21 @@ body.v5-ui.reference-ui-v59{
   --feedback-danger-text:#ffb5b5;
   --feedback-radius:var(--radius-pill);
   --feedback-border:var(--border-default);
+  --panel-bg:var(--surface-raised);
+  --panel-border:var(--border-default);
+  --panel-radius:10px;
+  --panel-shadow:none;
+  --toolbar-bg:#213650;
+  --toolbar-border:rgba(255,255,255,.07);
+  --tab-bg:transparent;
+  --tab-bg-hover:#14365c;
+  --tab-bg-active:var(--accent-primary);
+  --tab-text:#a9bdd6;
+  --tab-text-active:var(--text-inverse);
+  --overlay-backdrop:rgba(3,14,28,.74);
+  --dialog-bg:var(--surface-panel);
+  --dialog-border:var(--border-strong);
+  --dialog-radius:14px;
   --studio-header-h:72px;
   --studio-rail-w:118px;
   --studio-left-w:320px;
@@ -684,10 +699,10 @@ body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .card,
 body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .section-block.quick-customer{
   margin-bottom:10px;
   padding:12px;
-  border:1px solid var(--border-default);
-  border-radius:10px;
-  background:var(--surface-raised);
-  box-shadow:none;
+  border:1px solid var(--panel-border);
+  border-radius:var(--panel-radius);
+  background:var(--panel-bg);
+  box-shadow:var(--panel-shadow);
 }
 body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .card h3,
 body.v5-ui.reference-ui-v59 .shell:not(.app-workspace) .content-library .section-title{
@@ -826,8 +841,8 @@ body.v5-ui.reference-ui-v59 .preview-tools{
   height:var(--studio-preview-toolbar-h);
   margin:0 -18px 4px;
   padding:0 14px;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  background:#213650;
+  border-bottom:1px solid var(--toolbar-border);
+  background:var(--toolbar-bg);
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -952,8 +967,8 @@ body.v5-ui.reference-ui-v59 .design>.inspector-tabs{
   z-index:45;
   min-height:52px;
   padding:7px 12px;
-  border-bottom:1px solid var(--border-default);
-  background:#0a213d;
+  border-bottom:1px solid var(--toolbar-border);
+  background:var(--surface-panel);
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:6px;
@@ -963,17 +978,17 @@ body.v5-ui.reference-ui-v59 .design>.inspector-tabs button{
   min-height:38px;
   padding:0 8px;
   border:1px solid transparent;
-  border-radius:8px;
-  background:transparent;
-  color:#a9bdd6;
+  border-radius:var(--radius-small);
+  background:var(--tab-bg);
+  color:var(--tab-text);
   font-size:12px;
   font-weight:750;
 }
-body.v5-ui.reference-ui-v59 .design>.inspector-tabs button:hover{background:#14365c;color:#fff}
+body.v5-ui.reference-ui-v59 .design>.inspector-tabs button:hover{background:var(--tab-bg-hover);color:var(--tab-text-active)}
 body.v5-ui.reference-ui-v59 .design>.inspector-tabs button.active{
-  border-color:#2f7de1;
-  background:var(--accent-primary);
-  color:var(--text-inverse);
+  border-color:var(--accent-primary);
+  background:var(--tab-bg-active);
+  color:var(--tab-text-active);
 }
 body.v5-ui.reference-ui-v59 .design>.panel-head{display:none}
 body.v5-ui.reference-ui-v59 .design>.panel-body,
@@ -1547,7 +1562,7 @@ body.v5-ui.reference-ui-v59 .product-workspace-backdrop{
   inset:0;
   z-index:260;
   padding:24px;
-  background:rgba(3,14,28,.72);
+  background:var(--overlay-backdrop);
   backdrop-filter:blur(7px);
   display:grid;
   place-items:center;
@@ -1558,9 +1573,9 @@ body.v5-ui.reference-ui-v59 .product-workspace-dialog{
   height:min(820px,calc(100vh - 48px));
   min-height:620px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.11);
-  border-radius:14px;
-  background:#0b2748;
+  border:1px solid var(--dialog-border);
+  border-radius:var(--dialog-radius);
+  background:var(--dialog-bg);
   color:#edf5ff;
   display:grid;
   grid-template-rows:78px minmax(0,1fr) 54px;
