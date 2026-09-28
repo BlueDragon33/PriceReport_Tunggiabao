@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v639-touch-action-rail-important-retirement', 'V6.39 touch action rail important retirement');
+assert.equal(activeCache, 'pricereport-shell-v640-phone-nav-cascade-ownership', 'V6.40 phone navigation cascade ownership');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
