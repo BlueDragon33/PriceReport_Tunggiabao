@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v634-responsive-empty-rule-retirement';
+const CACHE = 'pricereport-shell-v635-responsive-hidden-owner-retirement';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
