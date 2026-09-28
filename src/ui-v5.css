@@ -99,6 +99,18 @@
   --button-danger-bg:var(--state-danger-soft);
   --button-danger-border:#efcece;
   --button-danger-text:var(--state-danger);
+  --control-focus-border:#77a9e9;
+  --control-focus-shadow:0 0 0 3px rgba(36,119,232,.09);
+  --control-disabled-bg:#f5f7fa;
+  --control-disabled-text:#66758b;
+  --icon-button-size:38px;
+  --icon-button-radius:var(--control-radius);
+  --icon-button-bg:var(--button-secondary-bg);
+  --icon-button-bg-hover:var(--button-secondary-bg-hover);
+  --icon-button-border:var(--button-secondary-border);
+  --icon-button-text:var(--button-secondary-text);
+  --icon-button-danger-text:var(--button-danger-text);
+  --component-disabled-opacity:.42;
   --focus-ring:rgba(36,119,232,.16);
   --nav:118px;
   --edit:350px;
@@ -305,7 +317,7 @@ body.v5-ui textarea{
 }
 body.v5-ui input::placeholder,
 body.v5-ui textarea::placeholder{color:#a9b4c2}
-body.v5-ui select:disabled{background:#f5f7fa;color:#66758b}
+body.v5-ui select:disabled{background:var(--control-disabled-bg);color:var(--control-disabled-text)}
 body.v5-ui .check{
   min-height:30px;
   margin:1px 0;
@@ -447,8 +459,8 @@ body.v5-ui select:hover{border-color:#aebdd0}
 body.v5-ui input:focus,
 body.v5-ui textarea:focus,
 body.v5-ui select:focus{
-  border-color:#77a9e9;
-  box-shadow:0 0 0 3px rgba(36,119,232,.09);
+  border-color:var(--control-focus-border);
+  box-shadow:var(--control-focus-shadow);
 }
 
 /* ---------- One shell language ---------- */
@@ -2120,22 +2132,22 @@ body.v5-ui .mini-action{
   width:29px;
   height:29px;
   padding:0;
-  border:1px solid var(--v5-border-strong);
-  border-radius:7px;
-  background:var(--surface-panel);
-  color:#3f526d;
+  border:1px solid var(--icon-button-border);
+  border-radius:var(--radius-small);
+  background:var(--icon-button-bg);
+  color:var(--icon-button-text);
   display:grid;
   place-items:center;
   font-size:12px;
   font-weight:700;
 }
 body.v5-ui .mini-action:hover:not(:disabled){
-  border-color:#abc5e2;
-  background:var(--v5-primary-soft);
-  color:var(--v5-primary);
+  border-color:var(--accent-primary);
+  background:var(--accent-primary-soft);
+  color:var(--accent-primary);
 }
-body.v5-ui .mini-action:disabled{opacity:.35;cursor:not-allowed}
-body.v5-ui .mini-action.danger-icon{color:var(--v5-danger)}
+body.v5-ui .mini-action:disabled{opacity:var(--component-disabled-opacity);cursor:not-allowed}
+body.v5-ui .mini-action.danger-icon{color:var(--icon-button-danger-text)}
 body.v5-ui .mini-action.danger-icon:hover{
   border-color:#efc7c7;
   background:var(--v5-danger-soft);
