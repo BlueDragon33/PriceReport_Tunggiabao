@@ -26,7 +26,7 @@ for (const action of ['design','view','presets']) {
   assert.ok(html.includes('data-open-tab="' + action + '"'), 'Action access lost after navigation cleanup: ' + action);
 }
 
-for (const section of ['Tổng quan','Công việc','Dữ liệu','Thiết kế &amp; xuất bản','Hệ thống']) {
+for (const section of ['Tổng quan','Công việc','Dữ liệu','Thiết kế & xuất bản','Hệ thống']) {
   assert.ok(nav.includes(section), 'Canonical navigation section missing: ' + section);
 }
 
