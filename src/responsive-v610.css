@@ -265,20 +265,20 @@
 
   /* Template samples are a horizontal rail; this removes a long wall of cards. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-template-grid{
-    display:flex!important;
-    grid-template-columns:none!important;
-    gap:9px!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    padding:2px 1px 7px!important;
+    display:flex;
+    grid-template-columns:none;
+    gap:9px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:2px 1px 7px;
     scroll-snap-type:x proximity;
     scrollbar-width:none;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-template-grid::-webkit-scrollbar{display:none}
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-template-grid button{
-    flex:0 0 146px!important;
-    width:146px!important;
-    min-height:104px!important;
+    flex:0 0 146px;
+    width:146px;
+    min-height:104px;
     scroll-snap-align:start;
   }
 

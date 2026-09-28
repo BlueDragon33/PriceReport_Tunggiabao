@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v641-phone-content-home-cascade';
+const CACHE = 'pricereport-shell-v642-phone-template-rail-cascade';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',

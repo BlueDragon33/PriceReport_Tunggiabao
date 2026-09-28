@@ -222,6 +222,13 @@ V6.41:
 - added regression assertions that these declarations remain present and non-important;
 - phone browser gates at 360×800 and 390×844 remain authoritative.
 
+V6.42:
+- retired all 9 `!important` flags from the phone template sample rail while preserving flex rail layout, scroll behavior, card width and minimum height;
+- reduced `responsive-v610.css` from 89 to 80 `!important`;
+- base Studio template grid remains normal grid ownership, while the later phone selector switches it to the horizontal rail through specificity/load order;
+- added regression assertions for every migrated rail property;
+- 360×800 and 390×844 browser gates remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
