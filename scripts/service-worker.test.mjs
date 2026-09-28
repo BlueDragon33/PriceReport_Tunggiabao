@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v623-semantic-token-foundation', 'V6.23 semantic-token foundation must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v624-component-contract', 'V6.24 component-contract foundation must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
