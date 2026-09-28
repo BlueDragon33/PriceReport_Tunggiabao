@@ -334,7 +334,7 @@
     height:20px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button strong{
-    font-size:10px;
+    font-size:10px!important;
     line-height:12px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-review-button{
