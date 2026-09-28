@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.44 Phone Workspace Header Cascade
+
+V6.44 tiếp tục U4 theo UI/UX Constitution: chuyển thêm phone Content Workspace header/chrome khỏi `!important` sang normal cascade mà không đổi selector/value.
+
+- `responsive-v610.css`: **74 → 66 `!important`**.
+- Icon, heading và toolbar trên phone dùng cascade bình thường.
+- Regression guard khóa ownership mới.
+- Không thay đổi business logic, report, print/PDF hay storage.
+- Package: **6.44.0**.
+- PWA cache: **pricereport-shell-v644-phone-workspace-header-cascade**.
+
 ## Trạng thái hiện tại — V6.43 Touch Chrome Cascade Ownership
 
 V6.43 tiếp tục U4 theo UI/UX Constitution: chuyển thêm touch chrome khỏi `!important` sang normal cascade mà không đổi selector/value.
