@@ -1,3 +1,13 @@
+## Trạng thái hiện tại — V6.48 Phone More-sheet Cascade
+
+V6.48 tiếp tục U4 theo UI/UX Constitution: retire 6 `!important` low-risk khỏi geometry của menu More trên phone.
+
+- `responsive-v610.css`: **47 → 41 `!important`**.
+- Left/right/bottom/padding và button sizing dùng normal cascade.
+- Phone browser gates tiếp tục xác minh hành vi một tay và vị trí sheet.
+- Package: **6.48.0**.
+- PWA cache: **pricereport-shell-v648-phone-more-sheet-cascade**.
+
 ## Trạng thái hiện tại — V6.47 Tablet Layout Cascade
 
 V6.47 tiếp tục U4 theo UI/UX Constitution: retire 5 `!important` low-risk khỏi layout tablet khi không có competing important owner.
