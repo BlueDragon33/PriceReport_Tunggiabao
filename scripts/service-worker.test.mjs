@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v632-phone-responsive-ownership', 'V6.32 phone-responsive ownership');
+assert.equal(activeCache, 'pricereport-shell-v633-phone-owner-retirement', 'V6.33 phone-owner retirement');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });

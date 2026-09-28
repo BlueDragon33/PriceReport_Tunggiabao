@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v632-phone-responsive-ownership';
+const CACHE = 'pricereport-shell-v633-phone-owner-retirement';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',

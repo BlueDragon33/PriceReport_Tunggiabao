@@ -164,6 +164,13 @@ V6.32:
 - added regression guards for retired values and their current V6.10 owners;
 - no intended computed UI change; browser viewport gates remain authoritative.
 
+V6.33:
+- used media-context-aware ownership analysis to identify declarations where V6.9 and V6.10 own the exact same selector/property inside `max-width:599px`;
+- removed 20 V6.9 declarations only when every selector in the grouped rule had a current V6.10 owner;
+- reduced `responsive-v69.css` from 279 to 269 `!important` and 972 to 952 lines;
+- current V6.10 values remain unchanged, so this is ownership retirement rather than visual redesign;
+- strengthened regression guards around phone navigation, content/product workspace rows and retired legacy values.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;

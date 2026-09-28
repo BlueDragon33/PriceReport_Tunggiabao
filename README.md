@@ -2,7 +2,18 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.32 Phone Responsive Ownership
+## Trạng thái hiện tại — V6.33 Phone Owner Retirement
+
+V6.33 tiếp tục U4 theo UI/UX Constitution bằng audit có nhận biết media context, chỉ retire declaration V6.9 khi cùng selector/property đã có owner V6.10 trong cùng breakpoint phone.
+
+- Retire 20 declaration V6.9.
+- `responsive-v69.css`: 279 → 269 `!important`.
+- Dòng CSS: 972 → 952.
+- Không đổi giá trị V6.10 hiện hành.
+- Package: **6.33.0**.
+- PWA cache: **pricereport-shell-v633-phone-owner-retirement**.
+
+## Trạng thái trước — V6.32 Phone Responsive Ownership
 
 V6.32 tiếp tục U4 theo UI/UX Constitution: xóa thêm ownership phone V6.9 đã bị V6.10 supersede trong cùng breakpoint `max-width:599px`.
 
