@@ -10,7 +10,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
   .map(match => match[0]);
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
-assert.ok(importantCount(legacy) <= 292, 'V6.9 responsive !important debt increased');
+assert.ok(importantCount(legacy) <= 279, 'V6.9 responsive !important debt increased');
 assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 
@@ -49,6 +49,23 @@ assert.equal(legacy.includes('grid-template-columns:1fr 1fr!important;\n    gap:
 assert.equal(legacy.includes('.product-toolbar-spacer{\n    display:none!important;'), false, 'Legacy phone product-toolbar spacer ownership must stay retired');
 assert.ok(current.includes('.product-workspace-toolbar .btn'), 'Current touch product-toolbar button ownership is missing');
 assert.ok(current.includes('min-height:42px!important'), 'Current touch product-toolbar height contract is missing');
+
+for (const retired of [
+  'left:8px!important',
+  'right:8px!important',
+  'bottom:calc(var(--touch-nav-h) + 7px)!important',
+  'grid-template-columns:1fr 1.25fr 1fr!important',
+  'min-height:46px!important',
+  'grid-template-columns:minmax(0,1fr) 108px',
+  'min-height:236px!important',
+  'grid-template-rows:160px auto!important'
+]) {
+  assert.equal(legacy.includes(retired), false, 'Superseded phone ownership returned to V6.9: ' + retired);
+}
+assert.ok(current.includes('bottom:calc(var(--touch-nav-h) + 5px)!important'), 'Current phone More-menu ownership is missing');
+assert.ok(current.includes('min-height:44px!important'), 'Current phone footer button ownership is missing');
+assert.ok(current.includes('grid-template-columns:minmax(0,1fr) 88px!important'), 'Current phone quote-flow ownership is missing');
+assert.ok(current.includes('min-height:190px!important'), 'Current phone template-card ownership is missing');
 
 assert.ok(current.includes('.shell>.design:not(.open)'), 'Closed touch inspector pointer-safety rule missing');
 assert.ok(current.includes('pointer-events:none'), 'Closed touch inspector must not intercept navigation');
