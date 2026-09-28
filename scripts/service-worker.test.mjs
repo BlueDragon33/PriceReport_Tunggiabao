@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v652-phone-workspace-geometry', 'V6.52 phone workspace geometry');
+assert.equal(activeCache, 'pricereport-shell-v653-quote-flow-ownership', 'V6.53 Quote Flow ownership');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
