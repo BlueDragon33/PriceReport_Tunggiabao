@@ -436,7 +436,7 @@ body.v5-ui select:focus{
 }
 
 /* ---------- One shell language ---------- */
-body.v5-ui .shell{background:var(--v5-bg)}
+body.v5-ui .shell{background:var(--surface-app)}
 body.v5-ui .shell.app-workspace{
   grid-template-columns:var(--v5-sidebar-width) minmax(0,1fr);
   background:var(--surface-app);
@@ -2431,7 +2431,7 @@ body.v5-ui .shell.product-focus .product-field:first-child{grid-column:span 2}
 body.v5-ui .shell.product-focus .product-field:last-child{grid-column:1/-1}
 
 /* Design tool column */
-body.v5-ui .design{background:var(--v5-surface)}
+body.v5-ui .design{background:var(--surface-panel)}
 body.v5-ui .design .panel-head{padding:14px 18px 12px}
 body.v5-ui .design .panel-head h2{font-size:14px}
 body.v5-ui .design .panel-head p{display:none}
