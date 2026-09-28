@@ -381,10 +381,10 @@
 
   /* Product cards need vertical breathing room, not a second nested scrollbar. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-data-grid-shell{
-    overflow:visible!important;
+    overflow:visible;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-editor-list{
-    overflow:visible!important;
+    overflow:visible;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-card{
     border-radius:11px!important;
@@ -411,22 +411,22 @@
     align-items:center!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer{
-    padding:7px!important;
+    padding:7px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer>div{
     width:100%;
-    display:grid!important;
-    gap:6px!important;
+    display:grid;
+    gap:6px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer .btn{
-    min-width:0!important;
+    min-width:0;
   }
 
   /* Management surfaces: don't force desktop tables into the phone viewport. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .recent-quote-table,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .history-table-shell,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .master-table-shell{
-    overflow-x:auto!important;
+    overflow-x:auto;
     overscroll-behavior-x:contain;
     -webkit-overflow-scrolling:touch;
   }
