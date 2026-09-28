@@ -65,7 +65,7 @@ for (const retired of [
 ]) {
   assert.equal(legacy.includes(retired), false, 'Superseded phone ownership returned to V6.9: ' + retired);
 }
-assert.ok(current.includes('bottom:calc(var(--touch-nav-h) + 5px)!important'), 'Current phone More-menu ownership is missing');
+assert.ok(current.includes('bottom:calc(var(--touch-nav-h) + 5px);'), 'Current phone More-menu ownership is missing');
 assert.ok(current.includes('min-height:44px!important'), 'Current phone footer button ownership is missing');
 assert.ok(current.includes('grid-template-columns:minmax(0,1fr) 88px!important'), 'Current phone quote-flow ownership is missing');
 assert.ok(current.includes('min-height:190px!important'), 'Current phone template-card ownership is missing');
