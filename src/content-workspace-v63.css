@@ -270,9 +270,9 @@ body.v5-ui.reference-ui-v59 .content-workspace-main>.card,
 body.v5-ui.reference-ui-v59 .content-workspace-main>.section-block{
   min-width:0;
   margin:0!important;
-  padding:18px!important;
+  padding:18px;
   border:1px solid #d8e2ed!important;
-  border-radius:12px!important;
+  border-radius:12px;
   background:#fff!important;
   color:#263a54!important;
   box-shadow:0 5px 18px rgba(34,57,82,.055)!important;
@@ -291,7 +291,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-main h3,
 body.v5-ui.reference-ui-v59 .content-workspace-main .section-title{
   margin:0 0 14px;
   color:#183552!important;
-  font-size:15px!important;
+  font-size:15px;
   font-weight:800!important;
   line-height:20px!important;
   text-transform:none!important;

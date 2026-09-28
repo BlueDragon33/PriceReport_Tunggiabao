@@ -348,13 +348,13 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.section-block{
-    padding:13px!important;
-    border-radius:10px!important;
+    padding:13px;
+    border-radius:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main h3,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main .section-title{
-    margin-bottom:10px!important;
-    font-size:14px!important;
+    margin-bottom:10px;
+    font-size:14px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main .row{
     margin-bottom:9px;

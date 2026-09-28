@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const legacy = fs.readFileSync(new URL('../src/responsive-v69.css', import.meta.url), 'utf8');
 const current = fs.readFileSync(new URL('../src/responsive-v610.css', import.meta.url), 'utf8');
+const baseWorkspace = fs.readFileSync(new URL('../src/content-workspace-v63.css', import.meta.url), 'utf8');
 
 const importantCount = source => (source.match(/!important/g) || []).length;
 const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
@@ -11,7 +12,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 260, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 18, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 14, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -181,6 +182,19 @@ for (const [selector, property, value] of [
 ]) {
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.52 phone workspace geometry missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.52 phone workspace geometry returned to !important: ' + selector + ' :: ' + property);
+}
+
+for (const [source, selector, property, value] of [
+  [baseWorkspace, '.content-workspace-main>.card,\nbody.v5-ui.reference-ui-v59 .content-workspace-main>.section-block', 'padding', '18px'],
+  [baseWorkspace, '.content-workspace-main>.card,\nbody.v5-ui.reference-ui-v59 .content-workspace-main>.section-block', 'border-radius', '12px'],
+  [baseWorkspace, '.content-workspace-main h3,\nbody.v5-ui.reference-ui-v59 .content-workspace-main .section-title', 'font-size', '15px'],
+  [phoneCurrent, '.content-workspace-main>.card,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.section-block', 'padding', '13px'],
+  [phoneCurrent, '.content-workspace-main>.card,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.section-block', 'border-radius', '10px'],
+  [phoneCurrent, '.content-workspace-main h3,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main .section-title', 'margin-bottom', '10px'],
+  [phoneCurrent, '.content-workspace-main h3,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main .section-title', 'font-size', '14px']
+]) {
+  assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.54 content card/heading ownership missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.54 content card/heading ownership returned to !important: ' + selector + ' :: ' + property);
 }
 
 for (const [source, selector, property, value] of [
