@@ -317,8 +317,8 @@
     gap:5px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-navigator-card{
-    padding:5px!important;
-    grid-template-columns:minmax(0,1fr) 88px!important;
+    padding:5px;
+    grid-template-columns:minmax(0,1fr) 88px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-list{
     gap:4px;
@@ -334,11 +334,11 @@
     height:20px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button strong{
-    font-size:10px!important;
+    font-size:10px;
     line-height:12px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-review-button{
-    min-height:36px!important;
+    min-height:36px;
     font-size:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main,
