@@ -81,10 +81,10 @@ body.v5-ui.reference-ui-v59 .content-workspace-dialog{
   height:min(820px,calc(100vh - 48px));
   min-height:min(640px,calc(100vh - 48px));
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid var(--border-strong);
   border-radius:15px;
-  background:#0b2748;
-  color:#edf5ff;
+  background:var(--surface-panel);
+  color:var(--text-primary);
   box-shadow:0 32px 90px rgba(0,0,0,.45);
   display:grid;
   grid-template-rows:82px 50px minmax(0,1fr) 58px;
@@ -93,7 +93,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-dialog{
 body.v5-ui.reference-ui-v59 .content-workspace-head{
   min-width:0;
   padding:12px 16px;
-  border-bottom:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid var(--border-default);
   background:linear-gradient(135deg,#071d36,#092746);
   display:flex;
   align-items:center;
@@ -129,7 +129,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-head .eyebrow{
 body.v5-ui.reference-ui-v59 .content-workspace-head h2{
   margin:2px 0 2px;
   overflow:hidden;
-  color:#fff;
+  color:var(--text-inverse);
   font-size:18px;
   line-height:22px;
   text-overflow:ellipsis;
@@ -164,7 +164,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-width-control{
   height:36px;
   border:1px solid rgba(255,255,255,.11);
   border-radius:9px;
-  background:#102f53;
+  background:var(--surface-raised);
   display:flex;
   align-items:center;
   overflow:hidden;
@@ -188,7 +188,7 @@ body.v5-ui.reference-ui-v59 #contentWorkspaceWidthReset{
 }
 body.v5-ui.reference-ui-v59 .content-workspace-width-control button:hover{
   background:#183d64;
-  color:#fff;
+  color:var(--text-inverse);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-close{
   width:38px;
@@ -197,8 +197,8 @@ body.v5-ui.reference-ui-v59 .content-workspace-close{
   padding:0;
   border:1px solid rgba(255,255,255,.11);
   border-radius:9px;
-  background:#102f53;
-  color:#dce8f6;
+  background:var(--surface-raised);
+  color:var(--text-primary);
   font-size:21px;
   line-height:1;
 }
@@ -237,15 +237,15 @@ body.v5-ui.reference-ui-v59 .content-workspace-toolbar .btn{
   height:32px;
   padding:0 10px;
   border-color:rgba(255,255,255,.11);
-  background:#14385f;
-  color:#dce8f6;
+  background:var(--surface-muted);
+  color:var(--text-primary);
   font-size:10px;
 }
 
 body.v5-ui.reference-ui-v59 .content-workspace-body{
   min-height:0;
   padding:14px;
-  background:#122c48;
+  background:var(--surface-app);
   display:grid;
   grid-template-columns:minmax(0,1fr) 270px;
   gap:12px;
@@ -358,7 +358,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-main .btn{
 body.v5-ui.reference-ui-v59 .content-workspace-main .btn.primary{
   border-color:#1677ff;
   background:#1677ff;
-  color:#fff;
+  color:var(--text-inverse);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-main .btn.danger{
   border-color:#e3b9be;
@@ -409,7 +409,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-side>section{
   padding:14px;
   border:1px solid rgba(255,255,255,.08);
   border-radius:11px;
-  background:#0b2748;
+  background:var(--surface-panel);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-side .eyebrow{
   color:#6faeff;
@@ -460,15 +460,15 @@ body.v5-ui.reference-ui-v59 .content-workspace-footer .btn{
   min-height:38px;
   padding:0 13px;
   border-color:rgba(255,255,255,.11);
-  background:#14385f;
-  color:#dce8f6;
+  background:var(--surface-muted);
+  color:var(--text-primary);
   font-size:10.5px;
 }
 body.v5-ui.reference-ui-v59 .content-workspace-footer .btn.primary{
   min-width:100px;
   border-color:#1677ff;
   background:#1677ff;
-  color:#fff;
+  color:var(--text-inverse);
 }
 
 /* V6.4 — contextual assistant inside each workspace */
@@ -503,7 +503,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-tool-button{
   padding:0 9px;
   border:1px solid rgba(255,255,255,.11);
   border-radius:8px;
-  background:#14385f;
+  background:var(--surface-muted);
   color:#dce9f7;
   font:inherit;
   font-size:9.8px;
@@ -514,7 +514,7 @@ body.v5-ui.reference-ui-v59 .content-workspace-chip:hover,
 body.v5-ui.reference-ui-v59 .content-workspace-tool-button:hover{
   border-color:rgba(109,177,255,.35);
   background:#1a4677;
-  color:#fff;
+  color:var(--text-inverse);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-tool-button{
   width:100%;
@@ -523,13 +523,13 @@ body.v5-ui.reference-ui-v59 .content-workspace-tool-button{
 body.v5-ui.reference-ui-v59 .content-workspace-tool-button.primary{
   border-color:#2f83e6;
   background:#156fd2;
-  color:#fff;
+  color:var(--text-inverse);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-customer-search{
   width:100%;
   min-height:34px;
   padding:7px 9px;
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid var(--border-strong);
   border-radius:8px;
   outline:0;
   background:#081e38;
@@ -684,7 +684,7 @@ body.v5-ui.reference-ui-v59 .quote-flow-start{
   border:1px solid #3689e7;
   border-radius:8px;
   background:#1677ff;
-  color:#fff;
+  color:var(--text-inverse);
   font:inherit;
   font-size:9px;
   font-weight:850;
@@ -738,9 +738,9 @@ body.v5-ui.reference-ui-v59 .quote-review-dialog{
   height:min(790px,calc(100vh - 40px));
   min-height:min(620px,calc(100vh - 40px));
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid var(--border-strong);
   border-radius:16px;
-  background:#0b2748;
+  background:var(--surface-panel);
   color:#eef6ff;
   box-shadow:0 34px 90px rgba(0,0,0,.46);
   display:grid;
@@ -749,7 +749,7 @@ body.v5-ui.reference-ui-v59 .quote-review-dialog{
 body.v5-ui.reference-ui-v59 .quote-review-head{
   min-height:92px;
   padding:14px 18px;
-  border-bottom:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid var(--border-default);
   background:linear-gradient(135deg,#071d36,#0d2e50);
   display:grid;
   grid-template-columns:minmax(0,1fr) 40px;
@@ -764,7 +764,7 @@ body.v5-ui.reference-ui-v59 .quote-review-head .eyebrow{
 }
 body.v5-ui.reference-ui-v59 .quote-review-head h2{
   margin:4px 0 3px;
-  color:#fff;
+  color:var(--text-inverse);
   font-size:20px;
   line-height:25px;
 }
@@ -781,7 +781,7 @@ body.v5-ui.reference-ui-v59 .quote-review-close{
   border:1px solid rgba(255,255,255,.11);
   border-radius:9px;
   background:#12375f;
-  color:#dce8f6;
+  color:var(--text-primary);
   font-size:21px;
 }
 body.v5-ui.reference-ui-v59 .quote-review-body{
@@ -1020,14 +1020,14 @@ body.v5-ui.reference-ui-v59 .quote-review-footer .btn{
   min-height:38px;
   padding:0 12px;
   border-color:rgba(255,255,255,.12);
-  background:#14385f;
+  background:var(--surface-muted);
   color:#dce9f7;
   font-size:9.5px;
 }
 body.v5-ui.reference-ui-v59 .quote-review-footer .btn.primary{
   border-color:#1677ff;
   background:#1677ff;
-  color:#fff;
+  color:var(--text-inverse);
 }
 body.v5-ui.reference-ui-v59 .quote-review-footer .btn.primary:disabled{
   border-color:#334b66;
