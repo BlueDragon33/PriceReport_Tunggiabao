@@ -321,25 +321,25 @@
     grid-template-columns:minmax(0,1fr) 88px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-list{
-    gap:4px!important;
+    gap:4px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button{
-    width:92px!important;
-    min-height:36px!important;
-    padding:4px 5px!important;
-    grid-template-columns:21px minmax(0,1fr)!important;
+    width:92px;
+    min-height:36px;
+    padding:4px 5px;
+    grid-template-columns:21px minmax(0,1fr);
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-marker{
-    width:20px!important;
-    height:20px!important;
+    width:20px;
+    height:20px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button strong{
-    font-size:10px!important;
-    line-height:12px!important;
+    font-size:10px;
+    line-height:12px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-review-button{
     min-height:36px!important;
-    font-size:10px!important;
+    font-size:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-main{
