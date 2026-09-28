@@ -288,6 +288,14 @@ V6.50:
 - the narrow-phone media block is now explicitly regression-guarded;
 - 360×800 browser gate remains authoritative; no business/report/print/storage changes.
 
+
+V6.51:
+- normalized four tablet baseline owners in V6.9 and their four editing-first refinements in V6.10;
+- scope: shell columns, editor width, preview visibility, and Design drawer width;
+- `responsive-v69.css` legacy important ceiling reduced from 266 to 262 and `responsive-v610.css` from 30 to 26;
+- portrait/compact-landscape still owns editing-first layout through load order and equal/greater specificity, while wide-tablet retains the baseline split;
+- tablet browser gates remain authoritative; no business/report/print/storage changes.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
