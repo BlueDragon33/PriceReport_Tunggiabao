@@ -180,11 +180,20 @@ Mandatory viewport validation:
 1664×912, 1366×768, 1280×800, 1112×834, 1024×768, 834×1194, 390×844, 360×800.
 
 ### Phase U5 — Shell / Navigation cleanup
-Target:
-- converge all destinations onto one hierarchy;
-- remove duplicate or obsolete navigation;
+**Status: started in V6.34**
+
+V6.34:
+- primary navigation now contains destinations only: Trang chủ, Soạn báo giá, Quản lý báo giá, Khách hàng & sản phẩm, Xuất bản & dữ liệu, Cài đặt ứng dụng, Thiết bị & hệ thống;
+- quotation workflow children (Khách hàng, Sản phẩm, Thanh toán, Điều khoản, Thiết kế, Xem báo cáo, Lưu mẫu) remain reachable through Content Navigator, Studio actions and mobile More, but no longer masquerade as top-level destinations;
+- opening any quotation child keeps the primary navigation highlight on Soạn báo giá while Studio context tracks the actual child state independently;
+- obsolete CSS whose only purpose was hiding child navigation buttons was removed;
+- automated navigation-governance gate added.
+
+Remaining target:
+- continue auditing duplicate/obsolete shell affordances;
 - keep workspace actions out of primary navigation;
-- preserve one shell across Dashboard, Studio and System.
+- preserve one shell across Dashboard, Studio and System;
+- validate whether the combined master-data destination should remain combined or later split only if the product architecture gains independent Customer/Product destinations.
 
 ### Phase U6 — Studio and workspace cleanup
 Target:

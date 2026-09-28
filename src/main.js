@@ -1839,7 +1839,16 @@ document.getElementById('mobileMoreMenu')?.addEventListener('keydown', (event) =
   }
 });
 
+let activeTabId = 'dashboard';
+
+function primaryNavigationDestination(tab) {
+  return ['general', 'customer', 'products', 'payment', 'terms', 'design', 'view', 'presets', 'signature', 'custom-text'].includes(tab)
+    ? 'general'
+    : tab;
+}
+
 function openTab(tab, options = {}) {
+  activeTabId = tab;
   setMobileMoreMenu(false);
   if (!options.keepQuoteReview) closeQuoteReview({ restoreFocus: false });
   if (!options.keepContentWorkspace) closeContentWorkspace({ restoreFocus: false });
@@ -1848,8 +1857,9 @@ function openTab(tab, options = {}) {
   const shell = document.querySelector('.shell');
   const appWorkspace = ['dashboard', 'history', 'master', 'system', 'settings', 'export'].includes(tab);
 
+  const navDestination = primaryNavigationDestination(tab);
   document.querySelectorAll('.nav button[data-tab]').forEach((el) => {
-    const active = el.dataset.tab === tab;
+    const active = el.dataset.tab === navDestination;
     el.classList.toggle('active', active);
     if (active) el.setAttribute('aria-current', 'page');
     else el.removeAttribute('aria-current');
@@ -3836,9 +3846,8 @@ function renderLogo() {
     if (state.showLogo) docHead.style.removeProperty('grid-template-columns');
     else docHead.style.gridTemplateColumns = '1fr';
   }
-  const activeTab = document.querySelector('.nav button[data-tab].active')?.dataset?.tab || '';
-  syncStudioContext(activeTab);
-  if (activeTab === 'export') renderExportCenter();
+  syncStudioContext(activeTabId);
+  if (activeTabId === 'export') renderExportCenter();
 }
 
 function layoutOffset(key) {

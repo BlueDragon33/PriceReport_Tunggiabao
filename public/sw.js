@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v633-phone-owner-retirement';
+const CACHE = 'pricereport-shell-v634-destination-navigation';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',

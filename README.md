@@ -2,7 +2,19 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.33 Phone Owner Retirement
+## Trạng thái hiện tại — V6.34 Destination Navigation
+
+V6.34 bắt đầu U5 theo UI/UX Constitution: primary navigation chỉ còn destination thật, còn các bước con của báo giá ở đúng Content Navigator/Studio action.
+
+- Primary nav: Trang chủ · Soạn báo giá · Quản lý báo giá · Khách hàng & sản phẩm · Xuất bản & dữ liệu · Cài đặt · Thiết bị & hệ thống.
+- Các bước Khách hàng/Sản phẩm/Thanh toán/Điều khoản/Thiết kế/Xem báo cáo/Lưu mẫu không còn là top-level nav.
+- Workflow state tách khỏi nav DOM; child workflow vẫn highlight Soạn báo giá.
+- Xóa hidden-child-nav CSS đã obsolete.
+- Có `scripts/navigation-governance.test.mjs` chống regression.
+- Package: **6.34.0**.
+- PWA cache: **pricereport-shell-v634-destination-navigation**.
+
+## Trạng thái trước — V6.33 Phone Owner Retirement
 
 V6.33 tiếp tục U4 theo UI/UX Constitution bằng audit có nhận biết media context, chỉ retire declaration V6.9 khi cùng selector/property đã có owner V6.10 trong cùng breakpoint phone.
 

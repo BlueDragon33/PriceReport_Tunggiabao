@@ -5,6 +5,26 @@ import { beforeAll, expect, test, vi } from 'vitest';
 const html = fs.readFileSync('index.html', 'utf8');
 const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
 
+function openWorkflow(tab) {
+  const primary = document.querySelector('[data-tab="' + tab + '"]');
+  if (primary) {
+    primary.click();
+    return primary;
+  }
+
+  if (['customer','products','payment','terms','signature','custom-text'].includes(tab)) {
+    const content = document.querySelector('#contentBlockList [data-content-block="' + tab + '"]');
+    if (!content) throw new Error('Content workflow launcher missing: ' + tab);
+    content.click();
+    return content;
+  }
+
+  const action = document.querySelector('[data-open-tab="' + tab + '"]');
+  if (!action) throw new Error('Workflow action missing: ' + tab);
+  action.click();
+  return action;
+}
+
 beforeAll(async () => {
   localStorage.clear();
   document.body.innerHTML = body.replace(/<script[^>]*src="\.\/src\/main\.js"[^>]*><\/script>/i, '');
@@ -583,7 +603,7 @@ test('V5.8 Check inspector reflects validation health without a workflow stepper
 });
 
 test('V5.3 product warning guidance focuses the matching product row', async () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   document.getElementById('addProduct').click();
 
   let card = document.querySelector('#productEditor .product-card:last-child');
@@ -613,7 +633,7 @@ test('V5.3 product warning guidance focuses the matching product row', async () 
 });
 
 test('V5.3 duplicate product names still route a warning to the exact row and field', async () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   document.getElementById('addProduct').click();
   document.getElementById('addProduct').click();
 
@@ -648,7 +668,7 @@ test('V5.3 duplicate product names still route a warning to the exact row and fi
 });
 
 test('V5.3 payment guidance targets the actionable missing control', async () => {
-  document.querySelector('[data-tab="payment"]').click();
+  openWorkflow('payment');
   const showTotals = document.getElementById('showTotals');
   const discount = document.getElementById('discountPct');
   const previousTotals = showTotals.checked;
@@ -787,7 +807,7 @@ test('V5 Pass 18 applies one Studio surface language across all editor panes', (
 });
 
 test('V5.2 product entry uses one spreadsheet-style grid surface', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const shell = document.querySelector('.product-data-grid-shell');
   const header = document.querySelector('.product-data-grid-head');
   const editor = document.getElementById('productEditor');
@@ -802,7 +822,7 @@ test('V5.2 product entry uses one spreadsheet-style grid surface', () => {
 });
 
 test('Enter on the last product cell creates a new row for continuous data entry', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const before = document.querySelectorAll('#productEditor .product-card').length;
   const lastName = document.querySelector('#productEditor .product-card:last-child [data-product-key="name"]');
   lastName.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -1544,7 +1564,7 @@ test('V5.4 product import excludes duplicate groups and preserves currency varia
 });
 
 test('V5.2 product grid exposes direct save-to-library without a second catalog engine', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const quickSave = document.getElementById('saveProductsToCatalogTop');
   expect(quickSave).toBeTruthy();
   expect(quickSave.textContent).toContain('Lưu danh mục');
@@ -1591,7 +1611,7 @@ test('customer library treats +84 and local-format phones as the same reusable c
 }, 10000);
 
 test('product grid exposes autocomplete sources for name group and unit', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const first = document.querySelector('#productEditor .product-card');
   expect(first.querySelector('[data-product-key="name"]').getAttribute('list')).toBe('productNameSuggestions');
   expect(first.querySelector('[data-product-key="group"]').getAttribute('list')).toBe('productGroupSuggestions');
@@ -1616,7 +1636,7 @@ test('product autocomplete matches catalog names canonically and fills reusable 
   }];
   localStorage.setItem(key, JSON.stringify(catalog));
 
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const first = document.querySelector('#productEditor .product-card:first-child');
   const original = Object.fromEntries(
     ['group','name','pack','unit','qty','price','note'].map(field => [
@@ -1662,7 +1682,7 @@ test('product editor adds a blank draft row without polluting A4 until content i
 });
 
 test('bulk product toolbar applies one change to multiple selected grid rows', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const initialCount = document.querySelectorAll('#productEditor .product-card').length;
   document.getElementById('addProduct').click();
   document.getElementById('addProduct').click();
@@ -1693,7 +1713,7 @@ test('bulk product toolbar applies one change to multiple selected grid rows', (
 });
 
 test('product grid preserves negative input and shows inline validation instead of silently clamping', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   document.getElementById('addProduct').click();
   const card = document.querySelector('#productEditor .product-card:last-child');
   const name = card.querySelector('[data-product-key="name"]');
@@ -1718,7 +1738,7 @@ test('product grid preserves negative input and shows inline validation instead 
 });
 
 test('meaningful unnamed product is visibly flagged and blocks print preflight', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   document.getElementById('addProduct').click();
   const lastCard = document.querySelector('.product-card:last-child');
   const price = lastCard.querySelector('[data-product-key="price"]');
@@ -1747,7 +1767,7 @@ test('pasted numbered terms are normalized and customer block is structured for 
   showCustomer.dispatchEvent(new Event('change', { bubbles: true }));
   expect(document.getElementById('pCustomer').textContent).toContain('Khách hàng:');
 
-  document.querySelector('[data-tab="terms"]').click();
+  openWorkflow('terms');
   const terms = document.getElementById('termsText');
   terms.value = '1. Giao hàng trong ngày\n2) Thanh toán chuyển khoản\n- Giá trị báo giá';
   terms.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1891,10 +1911,12 @@ test('malformed local collections are normalized instead of crashing management 
 });
 
 
-test('navigation exposes the active pane to assistive technology', () => {
-  document.querySelector('[data-tab="products"]').click();
-  expect(document.querySelector('[data-tab="products"]').getAttribute('aria-current')).toBe('page');
-  expect(document.querySelector('[data-tab="general"]').hasAttribute('aria-current')).toBe(false);
+test('navigation exposes the active quotation destination to assistive technology', () => {
+  openWorkflow('products');
+  expect(document.querySelector('[data-tab="products"]')).toBeNull();
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
+  expect(document.getElementById('productWorkspaceModal').hidden).toBe(false);
+  document.getElementById('closeProductWorkspace').click();
 });
 
 
@@ -2384,7 +2406,7 @@ test('corrected OCR raw text replaces prior handwriting recognition instead of k
 });
 
 test('automatic arrangement hides empty optional Pack and Note columns only', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const showPack = document.getElementById('showPack');
   const showNote = document.getElementById('showNote');
   showPack.checked = true;
@@ -2474,11 +2496,12 @@ test('outside-table font-size controls are removed so report typography stays fi
 });
 
 test('report view tab enters a dedicated responsive preview mode and exits cleanly', () => {
-  document.querySelector('[data-tab="view"]').click();
+  openWorkflow('view');
   expect(document.querySelector('.shell').classList.contains('report-view')).toBe(true);
   expect(document.body.classList.contains('report-view-active')).toBe(true);
   expect(document.getElementById('exitReportView').hidden).toBe(false);
-  expect(document.querySelector('[data-tab="view"]').getAttribute('aria-current')).toBe('page');
+  expect(document.querySelector('[data-tab="view"]')).toBeNull();
+  expect(document.querySelector('[data-tab="general"]').getAttribute('aria-current')).toBe('page');
 
   document.getElementById('exitReportView').click();
   expect(document.querySelector('.shell').classList.contains('report-view')).toBe(false);
@@ -2730,7 +2753,7 @@ test('updating a saved quotation cannot reuse another quotation number', () => {
 
 
 test('product group heading repeats correctly after an ungrouped break', () => {
-  document.querySelector('[data-tab="products"]').click();
+  openWorkflow('products');
   const addDraft = ({ group = '', name }) => {
     document.getElementById('addProduct').click();
     const card = document.querySelector('.product-card:last-child');
@@ -2752,7 +2775,7 @@ test('product group heading repeats correctly after an ungrouped break', () => {
 });
 
 test('professional report suppresses empty terms and empty payment rows', () => {
-  document.querySelector('[data-tab="payment"]').click();
+  openWorkflow('payment');
   const showPayment = document.getElementById('showPaymentBlock');
   showPayment.checked = true;
   showPayment.dispatchEvent(new Event('change', { bubbles: true }));
@@ -2770,7 +2793,7 @@ test('professional report suppresses empty terms and empty payment rows', () => 
   expect(document.getElementById('pBankAccount').closest('div').style.display).toBe('none');
   expect(document.getElementById('pBankOwner').closest('div').style.display).toBe('none');
 
-  document.querySelector('[data-tab="terms"]').click();
+  openWorkflow('terms');
   const showTerms = document.getElementById('showTerms');
   showTerms.checked = true;
   showTerms.dispatchEvent(new Event('change', { bubbles: true }));

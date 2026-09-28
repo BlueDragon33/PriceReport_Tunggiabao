@@ -120,7 +120,7 @@ if (!js.includes('getProductCatalog')) fail('Product catalog is missing');
 if (!js.includes("if (/chưa có sản phẩm hợp lệ/i.test(text))")) fail('No-product validation must route to the Products Studio step');
 if (!js.includes('function safeStore')) fail('Safe local-storage wrapper is missing');
 if (!js.includes('const MAX_LOGO_FILE_BYTES = 3 * 1024 * 1024')) fail('3 MB logo storage guard is missing');
-if (!sw.includes("pricereport-shell-v633-phone-owner-retirement")) fail('Service-worker cache version was not aligned with V6.19 architecture final');
+if (!sw.includes("pricereport-shell-v634-destination-navigation")) fail('Service-worker cache version was not aligned with V6.19 architecture final');
 if (!sw.includes("event.request.mode === 'navigate'")) fail('Navigation network-first strategy is missing');
 if (fs.readFileSync('src/device-access-gate.js', 'utf8').includes("publishState('classification-only'")) fail('Legacy classification-only fallback returned');
 if (!sw.includes('precacheLinkedAssets')) fail('First-load linked asset precache is missing');
@@ -273,7 +273,8 @@ if (!html.includes('id="applyTungGiaBaoProfile"')) fail('Manual Tùng Gia Bảo 
 if (!js.includes('storageRepository.writeJson(STORAGE, persistedMigration)')) fail('Legacy profile migration must persist immediately through the storage repository');
 
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
-if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
+if (html.includes('data-tab="view"')) fail('Report view must not return as a primary navigation destination');
+if (!html.includes('data-open-tab="view"')) fail('Report-view action is missing');
 if (!html.includes('Xuất bản & dữ liệu')) fail('Publishing/Data navigation label is missing');
 if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
 if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
