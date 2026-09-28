@@ -432,6 +432,16 @@
   }
 }
 
+/* Overlay inspector must never intercept navigation while visually closed. */
+body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.design:not(.open),
+body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.design:not(.open){
+  pointer-events:none;
+}
+body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.design.open,
+body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.design.open{
+  pointer-events:auto;
+}
+
 /* Very narrow phones: collapse nonessential header metadata and keep actions tappable. */
 @media screen and (max-width:370px) {
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-title>small,
