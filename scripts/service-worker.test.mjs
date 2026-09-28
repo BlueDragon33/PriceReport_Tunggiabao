@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v644-phone-workspace-header-cascade', 'V6.44 phone workspace header cascade');
+assert.equal(activeCache, 'pricereport-shell-v645-phone-workspace-spacing-cascade', 'V6.45 phone workspace spacing cascade');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
