@@ -149,6 +149,12 @@ V6.30:
 - added a regression rule: responsive layers may not introduce sub-10px text;
 - no intended computed typography regression because the later V6.10 readable values remain the active ownership.
 
+V6.31:
+- added `docs/RESPONSIVE_ARCHITECTURE.md` as the repository-owned capability/breakpoint contract;
+- documented Phone, Compact Phone exception, Tablet editing-first, Tablet landscape split, Desktop and Wide Desktop behavior;
+- CI now rejects undocumented media-query families;
+- any new numeric breakpoint requires a demonstrated need, browser evidence, documentation and regression coverage.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
