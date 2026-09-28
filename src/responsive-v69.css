@@ -559,12 +559,6 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar.command-palette-open .studio-topbar-center{
     top:64px;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-topbar-doc{
-    width:34px;
-    min-width:34px;
-    height:34px;
-    font-size:15px;
-  }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .studio-title-line{
     gap:5px;
   }

@@ -176,6 +176,11 @@ V6.34:
 - reduced `responsive-v69.css` from 952 to 933 lines without changing any declaration or computed style;
 - added a regression rule preventing empty responsive selectors from accumulating again.
 
+V6.35:
+- retired the V6.9 phone-specific width/min-width/height/font-size rule for `.studio-topbar-doc` because V6.10 is the active ≤599px owner and hides that element completely;
+- reduced `responsive-v69.css` from 933 to 927 lines with no intended rendered change;
+- added ownership guards tying the retirement to the current V6.10 hide rule.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
