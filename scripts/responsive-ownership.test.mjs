@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 266, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 61, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 52, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -275,6 +275,22 @@ for (const [selector, property, value] of [
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.44 phone workspace header declaration missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.44 phone workspace header !important returned: ' + selector + ' :: ' + property);
 }
+
+for (const [selector, property, value] of [
+  ['.quote-flow-step-list', 'gap', '4px'],
+  ['.quote-flow-step-button', 'width', '92px'],
+  ['.quote-flow-step-button', 'min-height', '36px'],
+  ['.quote-flow-step-button', 'padding', '4px 5px'],
+  ['.quote-flow-step-button', 'grid-template-columns', '21px minmax(0,1fr)'],
+  ['.quote-flow-step-marker', 'width', '20px'],
+  ['.quote-flow-step-marker', 'height', '20px'],
+  ['.quote-flow-step-button strong', 'line-height', '12px'],
+  ['.quote-flow-review-button', 'font-size', '10px']
+]) {
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.46 phone quote-flow declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.46 phone quote-flow !important returned: ' + selector + ' :: ' + property);
+}
+assert.equal(ruleHasDeclaration(phoneCurrent, '.quote-flow-step-button strong', 'font-size', '10px!important'), true, 'V6.46 must preserve readable 10px phone flow-step label over the legacy 9.5px important owner');
 
 for (const [selector, property, value] of [
   ['.content-workspace-body,\n  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-body', 'padding', '6px'],

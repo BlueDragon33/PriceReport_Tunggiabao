@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.46 Phone Quote Flow Cascade
+
+V6.46 tiếp tục U4 theo UI/UX Constitution: retire 9 `!important` low-risk khỏi Quote Flow phone mà không đổi selector/value.
+
+- `responsive-v610.css`: **61 → 52 `!important`**.
+- Step list/button/marker chủ yếu dùng normal cascade; giữ `font-size:10px!important` cho label vì browser gate chứng minh base 9.5px vẫn là important owner.
+- Giữ lại các flag còn cần để thắng owner V6.9 quan trọng.
+- Regression guard khóa ownership mới.
+- Package: **6.46.0**.
+- PWA cache: **pricereport-shell-v646-phone-quote-flow-cascade**.
+
 ## Trạng thái hiện tại — V6.45 Phone Workspace Spacing Cascade
 
 V6.45 tiếp tục U4 theo UI/UX Constitution: giảm thêm responsive `!important` ở spacing an toàn mà không đổi selector/value.

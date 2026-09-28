@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v645-phone-workspace-spacing-cascade';
+const CACHE = 'pricereport-shell-v646-phone-quote-flow-cascade';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
