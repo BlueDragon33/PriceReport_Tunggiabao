@@ -80,10 +80,10 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar{
     display:flex!important;
     align-items:stretch!important;
-    gap:7px!important;
+    gap:7px;
     overflow-x:auto!important;
     overflow-y:hidden!important;
-    padding-bottom:4px!important;
+    padding-bottom:4px;
     scrollbar-width:none;
     overscroll-behavior-x:contain;
   }
@@ -93,9 +93,9 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar .btn{
     flex:0 0 auto!important;
     width:auto!important;
-    min-width:126px!important;
-    min-height:42px!important;
-    padding:7px 10px!important;
+    min-width:126px;
+    min-height:42px;
+    padding:7px 10px;
     white-space:nowrap!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .product-toolbar-spacer,
@@ -106,7 +106,7 @@
   /* Final review is easier to scan on touch. */
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-review-panel,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-panel{
-    border-radius:12px!important;
+    border-radius:12px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-review-step,
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-review-issue,
@@ -135,22 +135,22 @@
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-library-home{
     width:min(720px,100%);
     margin:0 auto;
-    padding:20px 22px 32px!important;
+    padding:20px 22px 32px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-block-list{
     display:grid!important;
     grid-template-columns:1fr 1fr!important;
-    gap:10px!important;
+    gap:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-block-row{
-    min-height:76px!important;
+    min-height:76px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-template-grid{
     grid-template-columns:repeat(4,minmax(0,1fr))!important;
-    gap:10px!important;
+    gap:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-template-grid button{
-    min-height:112px!important;
+    min-height:112px;
   }
 
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .shell>.design{
@@ -170,10 +170,10 @@
     --touch-editor-w:320px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-library-home{
-    padding:16px 14px 26px!important;
+    padding:16px 14px 26px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-block-row{
-    min-height:60px!important;
+    min-height:60px;
   }
 }
 
