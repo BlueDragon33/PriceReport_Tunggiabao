@@ -272,6 +272,14 @@ V6.48:
 - retained separate positioning/surface flags still owned by the earlier responsive layer;
 - phone browser gates remain authoritative for one-handed More-sheet behavior.
 
+
+V6.49:
+- retired 7 low-risk phone utility `!important` flags while preserving selectors and values;
+- scope: Product Workspace overflow, Quote Review footer layout, and management horizontal scrolling;
+- reduced `responsive-v610.css` from 41 to 34 `!important`;
+- added regression assertions so these declarations remain on normal cascade;
+- phone browser gates remain authoritative; no business/report/print/storage changes.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
