@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v629-responsive-ownership', 'V6.29 responsive ownership cleanup');
+assert.equal(activeCache, 'pricereport-shell-v630-readable-responsive-type', 'V6.30 readable responsive typography');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });

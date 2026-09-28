@@ -5,6 +5,11 @@ const legacy = fs.readFileSync(new URL('../src/responsive-v69.css', import.meta.
 const current = fs.readFileSync(new URL('../src/responsive-v610.css', import.meta.url), 'utf8');
 
 const importantCount = source => (source.match(/!important/g) || []).length;
+const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
+  .filter(match => Number(match[1]) < 10)
+  .map(match => match[0]);
+assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
+assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 
@@ -52,6 +57,7 @@ for (const media of [
 }
 
 console.log('RESPONSIVE OWNERSHIP CLEANUP PASS', {
+  v69Important: importantCount(legacy),
   v610Important: importantCount(current),
   v610Lines: current.split('\n').length,
   duplicateOwnedDeclarations: redundant.length

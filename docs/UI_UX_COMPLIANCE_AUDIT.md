@@ -143,6 +143,12 @@ V6.29:
 - expanded real-browser Constitution coverage with 1366×768, 1280×800 and 360×800 in addition to the existing desktop/tablet/390px coverage;
 - no layout behavior was intentionally changed in this first cleanup slice.
 
+V6.30:
+- retired the remaining six legacy responsive font-size declarations below 10px that V6.10 already superseded with readable values or intentionally hidden metadata;
+- reduced `responsive-v69.css` from 305 to 300 `!important` and 1018 to 1012 lines;
+- added a regression rule: responsive layers may not introduce sub-10px text;
+- no intended computed typography regression because the later V6.10 readable values remain the active ownership.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
