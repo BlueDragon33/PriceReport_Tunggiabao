@@ -181,6 +181,12 @@ V6.35:
 - reduced `responsive-v69.css` from 933 to 927 lines with no intended rendered change;
 - added ownership guards tying the retirement to the current V6.10 hide rule.
 
+V6.36:
+- retired 15 low-risk `!important` flags from the V6.10 phone layer while preserving every selector and value;
+- scope is limited to typography/spacing properties where prior CSS has no important owner for the same component surface;
+- reduced `responsive-v610.css` from 145 to 130 `!important`;
+- 360×800 and 390×844 browser gates remain authoritative for computed behavior.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
