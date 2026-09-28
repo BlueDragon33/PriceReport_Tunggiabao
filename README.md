@@ -1,3 +1,13 @@
+## Trạng thái hiện tại — V6.47 Tablet Layout Cascade
+
+V6.47 tiếp tục U4 theo UI/UX Constitution: retire 5 `!important` low-risk khỏi layout tablet khi không có competing important owner.
+
+- `responsive-v610.css`: **52 → 47 `!important`**.
+- Editor border, Content Block grid, Template grid và management grids dùng normal cascade.
+- Tablet browser gates tiếp tục xác minh computed layout.
+- Package: **6.47.0**.
+- PWA cache: **pricereport-shell-v647-tablet-layout-cascade**.
+
 ## Trạng thái hiện tại — V6.46 Phone Quote Flow Cascade
 
 V6.46 tiếp tục U4 theo UI/UX Constitution: retire 9 `!important` low-risk khỏi Quote Flow phone mà không đổi selector/value.
