@@ -2,7 +2,19 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.24 Component Contract Foundation
+## Trạng thái hiện tại — V6.25 Interaction Component States
+
+V6.25 tiếp tục U3 theo Hiến pháp UI/UX: chuẩn hóa IconButton, focus và disabled states trên chính component hiện có.
+
+- Shared IconButton tokens.
+- Shared focus border/shadow.
+- Shared disabled background/text/opacity.
+- Studio + Content Workspace dùng cùng interaction contract.
+- Có `scripts/interaction-components.test.mjs` chống regression.
+- Package: **6.25.0**.
+- PWA cache: **pricereport-shell-v625-interaction-states**.
+
+## Trạng thái trước — V6.24 Component Contract Foundation
 
 V6.24 tiếp tục Phase U3 theo UI/UX Constitution: chuẩn hóa component contract trên chính primitive hiện có, không tạo design system song song.
 
