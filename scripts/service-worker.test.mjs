@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v626-status-feedback', 'V6.26 status feedback semantics must rotate the application shell cache');
+assert.equal(activeCache, 'pricereport-shell-v627-surface-navigation', 'V6.27 surface navigation components must rotate the application shell cache');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });
