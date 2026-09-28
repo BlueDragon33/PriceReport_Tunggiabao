@@ -56,7 +56,7 @@
   /* Keep touch dialogs visually app-like and reduce desktop chrome. */
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-workspace-width-control,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-width-control{
-    display:none;
+    display:none!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-workspace-save-state,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-save-state{
@@ -100,7 +100,7 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .product-toolbar-spacer,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-toolbar-spacer{
-    display:none!important;
+    display:none;
   }
 
   /* Final review is easier to scan on touch. */
