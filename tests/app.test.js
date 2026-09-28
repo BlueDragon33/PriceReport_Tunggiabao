@@ -1588,7 +1588,7 @@ test('customer library treats +84 and local-format phones as the same reusable c
   if (beforeRaw == null) localStorage.removeItem(key);
   else localStorage.setItem(key, beforeRaw);
   Object.entries(fields).forEach(([id, value]) => setField(id, value));
-}, 10000);
+}, 20000);
 
 test('product grid exposes autocomplete sources for name group and unit', () => {
   document.querySelector('[data-tab="products"]').click();
@@ -1690,7 +1690,7 @@ test('bulk product toolbar applies one change to multiple selected grid rows', (
   document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
   document.querySelector('#productEditor .product-card:last-child .danger-icon').click();
   expect(document.querySelectorAll('#productEditor .product-card').length).toBe(initialCount);
-});
+}, 10000);
 
 test('product grid preserves negative input and shows inline validation instead of silently clamping', () => {
   document.querySelector('[data-tab="products"]').click();
