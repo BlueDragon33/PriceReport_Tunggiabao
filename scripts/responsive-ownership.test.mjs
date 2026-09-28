@@ -4,6 +4,24 @@ import fs from 'node:fs';
 const legacy = fs.readFileSync(new URL('../src/responsive-v69.css', import.meta.url), 'utf8');
 const current = fs.readFileSync(new URL('../src/responsive-v610.css', import.meta.url), 'utf8');
 
+const allowedMediaQueries = new Set([
+  'screen',
+  'screen and (min-width:600px)',
+  'screen and (max-width:599px)',
+  'screen and (orientation:portrait), screen and (max-width:1023px) and (orientation:landscape)',
+  'screen and (min-width:1024px) and (orientation:landscape)',
+  'screen and (max-width:370px)'
+]);
+const mediaQueries = source => [...source.matchAll(/@media\s+([^\{]+)\{/g)].map(match => match[1].trim());
+for (const query of [...mediaQueries(legacy), ...mediaQueries(current)]) {
+  assert.ok(allowedMediaQueries.has(query), 'Undocumented responsive breakpoint/query: ' + query);
+}
+const responsiveArchitecture = fs.readFileSync(new URL('../docs/RESPONSIVE_ARCHITECTURE.md', import.meta.url), 'utf8');
+for (const query of allowedMediaQueries) {
+  assert.ok(responsiveArchitecture.includes(query), 'Responsive Architecture must document media query: ' + query);
+}
+assert.ok(responsiveArchitecture.includes('real-browser viewport evidence'), 'Breakpoint exception policy must require browser evidence');
+
 const importantCount = source => (source.match(/!important/g) || []).length;
 const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
   .filter(match => Number(match[1]) < 10)
