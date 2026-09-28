@@ -98,9 +98,14 @@ Implemented:
 - Studio and Content Workspace variants now consume the shared component contract;
 - automated component-contract regression gate added.
 
+Completed additionally in V6.25:
+- IconButton size/radius/border/background/text contract;
+- shared focus border/shadow contract;
+- shared disabled surface/text/opacity contract;
+- Studio and Content Workspace close/icon actions consume the same state model.
+
 Remaining:
-- IconButton normalization;
-- Input/Select/Textarea/Search state consolidation;
+- Search-specific behavior and affordance consolidation;
 - Badge/Chip/Alert/Toast;
 - Card/Panel;
 - Toolbar/Tabs;
