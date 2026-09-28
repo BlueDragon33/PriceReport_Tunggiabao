@@ -265,6 +265,13 @@ V6.47:
 - tablet portrait/landscape browser gates remain authoritative for computed behavior;
 - no business/report/print/storage changes.
 
+V6.48:
+- retired 6 low-risk phone More-sheet geometry `!important` flags;
+- scope: left/right/bottom/padding plus More-grid button min-height/padding;
+- reduced `responsive-v610.css` from 47 to 41 `!important`;
+- retained separate positioning/surface flags still owned by the earlier responsive layer;
+- phone browser gates remain authoritative for one-handed More-sheet behavior.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
