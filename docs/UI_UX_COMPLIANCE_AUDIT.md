@@ -229,6 +229,13 @@ V6.42:
 - added regression assertions for every migrated rail property;
 - 360×800 and 390×844 browser gates remain authoritative.
 
+V6.43:
+- retired 6 additional `!important` flags from low-risk touch chrome ownership while preserving selectors and values;
+- scope: touch Content Library background, Content Workspace width-control visibility, phone Studio document visibility, phone topbar horizontal padding and topbar-context gap;
+- reduced `responsive-v610.css` from 80 to 74 `!important`;
+- added regression assertions so these properties remain on normal cascade;
+- no report/business/storage changes; real phone/tablet browser gates remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
