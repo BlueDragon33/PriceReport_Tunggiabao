@@ -1,3 +1,13 @@
+## Trạng thái hiện tại — V6.49 Phone Utility Cascade
+
+V6.49 tiếp tục U4 theo UI/UX Constitution: retire 7 `!important` low-risk khỏi các utility surface trên phone mà không đổi selector/value.
+
+- `responsive-v610.css`: **41 → 34 `!important`**.
+- Product overflow, Quote Review footer và management horizontal scrolling chuyển sang normal cascade.
+- Phone browser gates tiếp tục xác minh computed layout và khả năng thao tác.
+- Package: **6.49.0**.
+- PWA cache: **pricereport-shell-v649-phone-utility-cascade**.
+
 ## Trạng thái hiện tại — V6.48 Phone More-sheet Cascade
 
 V6.48 tiếp tục U4 theo UI/UX Constitution: retire 6 `!important` low-risk khỏi geometry của menu More trên phone.
