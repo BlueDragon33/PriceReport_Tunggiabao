@@ -10,8 +10,8 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
   .map(match => match[0]);
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
-assert.ok(importantCount(legacy) <= 266, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 30, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(legacy) <= 262, 'V6.9 responsive !important debt increased');
+assert.ok(importantCount(current) <= 26, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -242,6 +242,20 @@ for (const [selector, property, value] of [
 ]) {
   assert.equal(ruleHasDeclaration(narrowPhoneCurrent, selector, property, value), true, 'V6.50 narrow-phone declaration missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(narrowPhoneCurrent, selector, property, value + '!important'), false, 'V6.50 narrow-phone !important returned: ' + selector + ' :: ' + property);
+}
+
+for (const [source, selector, property, value] of [
+  [legacy, '.shell:not(.app-workspace):not(.report-view)', 'grid-template-columns', 'var(--touch-editor-w) minmax(0,1fr)'],
+  [legacy, '.shell:not(.app-workspace):not(.report-view)>.editor', 'width', 'auto'],
+  [legacy, '.shell:not(.app-workspace):not(.report-view)>.preview', 'display', 'block'],
+  [legacy, '.shell>.design', 'width', 'min(390px,78vw)'],
+  [tabletPortraitCurrent, '.shell:not(.app-workspace):not(.report-view)', 'grid-template-columns', 'minmax(0,1fr)'],
+  [tabletPortraitCurrent, '.shell:not(.app-workspace):not(.report-view)>.editor', 'width', '100%'],
+  [tabletPortraitCurrent, '.shell:not(.app-workspace):not(.report-view)>.preview', 'display', 'none'],
+  [tabletPortraitCurrent, '.shell>.design', 'width', 'min(560px,88vw)']
+]) {
+  assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.51 tablet ownership declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.51 tablet ownership returned to !important: ' + selector + ' :: ' + property);
 }
 
 for (const [source, selector, property, value] of [
