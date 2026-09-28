@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.38 Touch Surface Important Retirement
+
+V6.38 tiếp tục Phase U4 theo UI/UX Constitution, retire thêm các `!important` low-risk ở touch card surfaces/borders/shadows mà không thay đổi selector hay visual value.
+
+- `responsive-v610.css`: **117 → 109 `!important`**.
+- Content Completion, Quote Flow, Content Block và workspace shadow reset chuyển về normal cascade.
+- Có regression guard ngăn các `!important` vừa retire quay lại.
+- Không thay đổi business logic, report themes, print/PDF hay storage.
+- Package: **6.38.0**.
+- PWA cache: **pricereport-shell-v638-touch-surface-important-retirement**.
+
 # PriceReport_Tunggiabao
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
