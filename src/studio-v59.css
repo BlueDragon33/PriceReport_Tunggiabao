@@ -93,6 +93,28 @@ body.v5-ui.reference-ui-v59{
   --dialog-bg:var(--surface-panel);
   --dialog-border:var(--border-strong);
   --dialog-radius:14px;
+  --search-bg:var(--studio-input);
+  --search-border:var(--border-strong);
+  --search-radius:var(--control-radius);
+  --search-icon:var(--text-muted);
+  --search-placeholder:var(--control-placeholder);
+  --search-result-hover:var(--surface-muted);
+  --toast-bg:#0b213d;
+  --toast-text:var(--text-primary);
+  --toast-border:var(--border-strong);
+  --toast-radius:var(--radius-small);
+  --toast-info-bg:#123d69;
+  --toast-info-text:#d8ebff;
+  --toast-success-bg:#184d3d;
+  --toast-success-text:#dffbed;
+  --toast-warning-bg:#5c421c;
+  --toast-warning-text:#ffe7b0;
+  --toast-danger-bg:#5f2929;
+  --toast-danger-text:#ffdede;
+  --drawer-bg:var(--surface-panel);
+  --drawer-border:var(--border-strong);
+  --drawer-radius:var(--dialog-radius);
+  --drawer-shadow:0 24px 64px rgba(0,0,0,.32);
   --studio-header-h:72px;
   --studio-rail-w:118px;
   --studio-left-w:320px;
@@ -311,9 +333,9 @@ body.v5-ui.reference-ui-v59 .studio-command-search{
   position:relative;
   width:min(320px,100%);
   height:40px;
-  border:1px solid var(--border-strong);
-  border-radius:9px;
-  background:var(--studio-input);
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
+  background:var(--search-bg);
   color:#7893b1;
   display:grid;
   grid-template-columns:28px minmax(0,1fr) auto;
@@ -332,7 +354,7 @@ body.v5-ui.reference-ui-v59 .studio-command-search input{
   color:#eff6ff;
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v59 .studio-command-search input::placeholder{color:#6f89a7}
+body.v5-ui.reference-ui-v59 .studio-command-search input::placeholder{color:var(--search-placeholder)}
 body.v5-ui.reference-ui-v59 .studio-command-search kbd{
   padding:3px 6px;
   border:1px solid rgba(255,255,255,.10);
@@ -437,18 +459,18 @@ body.v5-ui.reference-ui-v59 .content-library-head .studio-home-button{
   min-width:34px;
   height:34px;
   min-height:34px;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
-  background:var(--surface-raised);
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
+  background:var(--search-bg);
   color:#bfd1e5;
 }
 body.v5-ui.reference-ui-v59 .content-library-search{
   height:38px;
   margin-top:8px;
   padding:0 9px;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
-  background:var(--surface-raised);
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
+  background:var(--search-bg);
   display:grid;
   grid-template-columns:24px minmax(0,1fr);
   align-items:center;
@@ -464,7 +486,7 @@ body.v5-ui.reference-ui-v59 .content-library-search input{
   color:#eff6ff;
   font-size:12.5px;
 }
-body.v5-ui.reference-ui-v59 .content-library-search input::placeholder{color:#7890ad}
+body.v5-ui.reference-ui-v59 .content-library-search input::placeholder{color:var(--search-placeholder)}
 body.v5-ui.reference-ui-v59 .content-library-section-label{
   margin:14px 0 7px;
   color:#b6c9df;
@@ -667,9 +689,9 @@ body.v5-ui.reference-ui-v59 .content-detail-back{
   height:32px;
   min-height:32px;
   padding:0;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
-  background:var(--surface-raised);
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
+  background:var(--search-bg);
   color:#d5e3f2;
   font-size:16px;
 }
@@ -1733,9 +1755,9 @@ body.v5-ui.reference-ui-v59 .product-assistant-search{
   min-height:36px;
   margin:8px 0 9px;
   padding:0 9px;
-  border:1px solid rgba(255,255,255,.11);
-  border-radius:8px;
-  background:#081e38;
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
+  background:var(--search-bg);
   display:grid;
   grid-template-columns:18px minmax(0,1fr);
   align-items:center;
@@ -2103,7 +2125,7 @@ body.v5-ui.reference-ui-v59 .template-library-search input{
   color:#eef6ff;
   font-size:12px;
 }
-body.v5-ui.reference-ui-v59 .template-library-search input::placeholder{color:#64809f}
+body.v5-ui.reference-ui-v59 .template-library-search input::placeholder{color:var(--search-placeholder)}
 body.v5-ui.reference-ui-v59 .template-library-close{
   width:40px;
   min-width:40px;
