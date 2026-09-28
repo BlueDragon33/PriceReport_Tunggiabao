@@ -257,7 +257,7 @@
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-flow-navigator-card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-navigator-card{
-    padding:8px!important;
+    padding:8px;
     border-radius:10px!important;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-flow-navigator-card>.eyebrow,
@@ -293,7 +293,7 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button small{display:none}
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-flow-review-button,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-review-button{
-    min-height:40px!important;
+    min-height:40px;
     margin-top:6px;
   }
 
