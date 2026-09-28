@@ -2,7 +2,17 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.22 UI/UX Constitution Governance
+## Trạng thái hiện tại — V6.23 Semantic Token Foundation
+
+V6.23 bắt đầu Phase U2 theo UI/UX Constitution: chuẩn hóa semantic design tokens và migrate App Shell/Studio/Content Workspace theo kiểu incremental, không thay đổi report themes hay business logic.
+
+- Canonical tokens cho surface, text, border, accent, state, spacing và radius.
+- Studio dark scope override cùng token names, không tạo design system song song.
+- Có `scripts/design-tokens.test.mjs` chặn regression và tăng hard-coded color debt.
+- Package: **6.23.0**.
+- PWA cache: **pricereport-shell-v623-semantic-token-foundation**.
+
+## Trạng thái trước — V6.22 UI/UX Constitution Governance
 
 V6.22 không thay đổi giao diện runtime. Đây là lớp quản trị thiết kế cố định của repository.
 
