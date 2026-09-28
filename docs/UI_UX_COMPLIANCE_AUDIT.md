@@ -296,6 +296,14 @@ V6.51:
 - portrait/compact-landscape still owns editing-first layout through load order and equal/greater specificity, while wide-tablet retains the baseline split;
 - tablet browser gates remain authoritative; no business/report/print/storage changes.
 
+
+V6.52:
+- retired 4 low-risk `!important` flags from phone Content/Product workspace geometry;
+- scope: Content dialog rows, Product dialog rows, shared header min-height and header padding;
+- reduced `responsive-v610.css` from 26 to 22 `!important`;
+- selectors and values remain unchanged; later responsive specificity/load order now owns the refinement;
+- phone browser gates remain authoritative; no business/report/print/storage changes.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;

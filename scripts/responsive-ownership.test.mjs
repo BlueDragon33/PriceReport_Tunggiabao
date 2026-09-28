@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 262, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 26, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 22, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -170,8 +170,18 @@ for (const [source, selector, property, value] of [
   assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.40 phone navigation !important returned: ' + selector + ' :: ' + property);
 }
 
-assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px!important'), 'Current phone content-workspace rows missing');
-assert.ok(current.includes('grid-template-rows:58px minmax(0,1fr) 58px!important'), 'Current phone product-workspace rows missing');
+assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px;'), 'Current phone content-workspace rows missing');
+assert.ok(current.includes('grid-template-rows:58px minmax(0,1fr) 58px;'), 'Current phone product-workspace rows missing');
+
+for (const [selector, property, value] of [
+  ['.content-workspace-dialog', 'grid-template-rows', '58px 38px minmax(0,1fr) 58px'],
+  ['.product-workspace-dialog', 'grid-template-rows', '58px minmax(0,1fr) 58px'],
+  ['.content-workspace-head,', 'min-height', '58px'],
+  ['.content-workspace-head,', 'padding', '7px 9px']
+]) {
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.52 phone workspace geometry missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.52 phone workspace geometry returned to !important: ' + selector + ' :: ' + property);
+}
 
 for (const [source, selector, property, value] of [
   [current, '.content-completion-card', 'border-color', 'var(--touch-border)'],
