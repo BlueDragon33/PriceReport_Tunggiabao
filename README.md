@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.43 Touch Chrome Cascade Ownership
+
+V6.43 tiếp tục U4 theo UI/UX Constitution: chuyển thêm touch chrome khỏi `!important` sang normal cascade mà không đổi selector/value.
+
+- `responsive-v610.css`: **80 → 74 `!important`**.
+- Content Library, Content Workspace width-control và phone Studio header dùng cascade bình thường.
+- Regression guard khóa ownership mới.
+- Không thay đổi business logic, report, print/PDF hay storage.
+- Package: **6.43.0**.
+- PWA cache: **pricereport-shell-v643-touch-chrome-cascade**.
+
 ## Trạng thái hiện tại — V6.40 Phone Navigation Cascade Ownership
 
 V6.40 tiếp tục Phase U4 theo UI/UX Constitution: chuyển bottom navigation trên phone khỏi mô hình override `!important` chồng lớp sang ownership bằng cascade bình thường.
