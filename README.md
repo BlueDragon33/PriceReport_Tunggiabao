@@ -1,3 +1,13 @@
+## Trạng thái hiện tại — V6.52 Phone Workspace Geometry
+
+V6.52 tiếp tục U4 theo UI/UX Constitution: retire 4 `!important` low-risk khỏi geometry của Content/Product workspace trên phone.
+
+- `responsive-v610.css`: **26 → 22 `!important`**.
+- Dialog rows, header min-height và header padding dùng normal cascade.
+- Selector/value không đổi; phone browser gates xác minh computed geometry.
+- Package: **6.52.0**.
+- PWA cache: **pricereport-shell-v652-phone-workspace-geometry**.
+
 ## Trạng thái hiện tại — V6.51 Tablet Editing Ownership
 
 V6.51 tiếp tục U4 theo UI/UX Constitution bằng cách sửa ownership ở cả lớp baseline V6.9 và refinement V6.10.
