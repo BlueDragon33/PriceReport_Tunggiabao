@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.54 Phone Card/Heading Ownership
+
+V6.54 tiếp tục U4 theo UI/UX Constitution: chuẩn hóa ownership cho card và heading của Content Workspace trên phone.
+
+- Base Content Workspace: padding 18px, radius 12px và heading 15px chuyển về normal cascade.
+- Phone refinement: padding 13px, radius 10px, heading margin 10px và size 14px không còn dùng `!important`.
+- `responsive-v610.css`: **18 → 14 `!important`**.
+- Package: **6.54.0**.
+- PWA cache: **pricereport-shell-v654-phone-card-heading-ownership**.
+- Không thay đổi business/report/print/storage.
+
 ## Trạng thái hiện tại — V6.53 Quote Flow Ownership
 
 V6.53 tiếp tục U4 theo UI/UX Constitution: sửa ownership Quote Flow xuyên cả base, touch baseline và phone refinement.
