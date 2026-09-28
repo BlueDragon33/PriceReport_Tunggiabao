@@ -280,6 +280,14 @@ V6.49:
 - added regression assertions so these declarations remain on normal cascade;
 - phone browser gates remain authoritative; no business/report/print/storage changes.
 
+
+V6.50:
+- retired 4 low-risk `!important` flags from the ≤370px Studio header refinement;
+- scope: metadata/status hiding, title max-width, and 36px compact action width/min-width;
+- reduced `responsive-v610.css` from 34 to 30 `!important`;
+- the narrow-phone media block is now explicitly regression-guarded;
+- 360×800 browser gate remains authoritative; no business/report/print/storage changes.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
