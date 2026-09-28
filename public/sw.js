@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v653-quote-flow-ownership';
+const CACHE = 'pricereport-shell-v654-phone-card-heading-ownership';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
