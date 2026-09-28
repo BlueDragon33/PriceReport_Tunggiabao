@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 269, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 130, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -93,11 +93,28 @@ function ruleHasDeclaration(source, selectorNeedle, property, value) {
 }
 
 const phoneLegacy = extractMediaBlock(legacy, '@media screen and (max-width:599px)');
+const phoneCurrent = extractMediaBlock(current, '@media screen and (max-width:599px)');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'width', '34px'), false, 'Hidden phone Studio document sizing returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'min-width', '34px'), false, 'Hidden phone Studio document min-width returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'height', '34px'), false, 'Hidden phone Studio document height returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'font-size', '15px'), false, 'Hidden phone Studio document font-size returned to V6.9');
 assert.ok(current.includes('.studio-topbar-doc{\n    display:none!important;'), 'Current phone Studio document hide owner is missing');
+for (const [selector, property, value] of [
+  ['.studio-title-line>strong', 'font-size', '14.5px'],
+  ['.studio-title-line>strong', 'line-height', '18px'],
+  ['.studio-status-badge', 'max-width', '70px'],
+  ['.studio-status-badge', 'font-size', '10px'],
+  ['.studio-topbar-title>small', 'font-size', '10px'],
+  ['.content-library-head', 'margin-bottom', '10px'],
+  ['.content-library-head h2', 'font-size', '20px'],
+  ['.quote-flow-card-copy small', 'line-height', '14px'],
+  ['.content-block-row b', 'font-size', '13.5px'],
+  ['.content-block-row small', 'font-size', '11.5px'],
+  ['.content-block-row small', 'line-height', '15px']
+]) {
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.36 current phone declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.36 low-risk !important returned: ' + selector + ' :: ' + property);
+}
 assert.ok(legacy.split('\n').length <= 927, 'V6.9 responsive file grew beyond V6.35 hidden-owner retirement baseline');
 for (const [selector, property, value] of [
   ['.shell>.nav .nav-glyph', 'font-size', '17px!important'],
