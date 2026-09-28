@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 266, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 74, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 66, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -260,6 +260,20 @@ for (const [selector, property, value] of [
 ]) {
   assert.equal(ruleHasDeclaration(current, selector, property, value), true, 'V6.43 touch chrome declaration missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(current, selector, property, value + '!important'), false, 'V6.43 touch chrome !important returned: ' + selector + ' :: ' + property);
+}
+
+for (const [selector, property, value] of [
+  ['.content-workspace-icon', 'width', '34px'],
+  ['.content-workspace-icon', 'min-width', '34px'],
+  ['.content-workspace-icon', 'height', '34px'],
+  ['.content-workspace-icon', 'border-radius', '9px'],
+  ['.content-workspace-head h2', 'font-size', '15px'],
+  ['.content-workspace-head h2', 'line-height', '18px'],
+  ['.content-workspace-toolbar', 'padding', '0 9px'],
+  ['.content-workspace-toolbar small', 'display', 'none']
+]) {
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.44 phone workspace header declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.44 phone workspace header !important returned: ' + selector + ' :: ' + property);
 }
 
 assert.ok(current.includes('.shell>.design:not(.open)'), 'Closed touch inspector pointer-safety rule missing');
