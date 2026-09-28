@@ -250,6 +250,13 @@ V6.45:
 - intentionally left card/heading flags untouched because their current base owners still use `!important`;
 - added regression assertions so the migrated spacing stays on normal cascade.
 
+V6.46:
+- retired 10 low-risk `!important` flags from phone Quote Flow step spacing, button geometry, marker geometry and readable labels;
+- preserved the Quote Flow navigator/card layout declarations that still override an important V6.9 owner;
+- preserved the review-button min-height flag because V6.9 still owns a competing `min-height:40px!important`;
+- reduced `responsive-v610.css` from 61 to 51 `!important`;
+- added exact ownership assertions so the migrated declarations cannot return to important cascade.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
