@@ -64,15 +64,28 @@ These values are **not permission to add more debt**. They are migration baselin
 - Add automated governance guard.
 
 ### Phase U2 — Semantic token consolidation
-Target:
-- inventory repeated colors, spacing, radii and typography values;
-- introduce/normalize semantic tokens;
-- migrate shared App Shell and common controls first;
+**Status: foundation implemented in V6.23; continue incrementally**
+
+Implemented:
+- canonical semantic aliases for application surfaces, text, borders, accent, state, spacing and radius;
+- dark Studio semantic overrides using the same token names;
+- App Shell/common UI and Content Workspace begin consuming semantic tokens;
+- report/theme CSS remains isolated and does not consume application tokens;
+- automated token-usage and hard-coded-color debt ceilings added.
+
+Measured V6.23 movement:
+- `ui-v5.css`: 0 → 98 semantic token references;
+- `studio-v59.css`: 0 → 70 semantic token references; hex literals 461 → 451;
+- `content-workspace-v63.css`: 0 → 29 semantic token references; hex literals 196 → 172.
+
+Remaining:
+- continue migrating repeated application colors and typography values;
+- migrate common component variants during U3 instead of duplicating token work;
 - do not alter report theme identity.
 
-Exit gate:
+Exit gate for the foundation:
 - no visual regression;
-- hard-coded common application colors decrease;
+- hard-coded common application colors decreased in migrated areas;
 - no new parallel token system.
 
 ### Phase U3 — Component consolidation
