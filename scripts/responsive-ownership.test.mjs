@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 266, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 66, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 61, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -274,6 +274,17 @@ for (const [selector, property, value] of [
 ]) {
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.44 phone workspace header declaration missing: ' + selector + ' :: ' + property);
   assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.44 phone workspace header !important returned: ' + selector + ' :: ' + property);
+}
+
+for (const [selector, property, value] of [
+  ['.content-workspace-body', 'padding', '6px'],
+  ['.content-workspace-body', 'gap', '5px'],
+  ['.content-workspace-main', 'padding', '8px'],
+  ['.content-workspace-main', 'border-radius', '10px'],
+  ['.content-workspace-main .row', 'margin-bottom', '9px']
+]) {
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value), true, 'V6.45 phone workspace spacing declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(phoneCurrent, selector, property, value + '!important'), false, 'V6.45 phone workspace spacing !important returned: ' + selector + ' :: ' + property);
 }
 
 assert.ok(current.includes('.shell>.design:not(.open)'), 'Closed touch inspector pointer-safety rule missing');
