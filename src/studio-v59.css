@@ -54,6 +54,18 @@ body.v5-ui.reference-ui-v59{
   --button-danger-bg:rgba(216,93,93,.12);
   --button-danger-border:rgba(216,93,93,.32);
   --button-danger-text:#ffb5b5;
+  --control-focus-border:#4389df;
+  --control-focus-shadow:0 0 0 3px rgba(54,126,216,.12);
+  --control-disabled-bg:#1a2f48;
+  --control-disabled-text:#8295aa;
+  --icon-button-size:40px;
+  --icon-button-radius:var(--control-radius);
+  --icon-button-bg:var(--button-secondary-bg);
+  --icon-button-bg-hover:var(--button-secondary-bg-hover);
+  --icon-button-border:var(--button-secondary-border);
+  --icon-button-text:var(--button-secondary-text);
+  --icon-button-danger-text:var(--button-danger-text);
+  --component-disabled-opacity:.42;
   --studio-header-h:72px;
   --studio-rail-w:118px;
   --studio-left-w:320px;
@@ -236,8 +248,8 @@ body.v5-ui.reference-ui-v59 .studio-topbar-center{
 }
 body.v5-ui.reference-ui-v59 .studio-icon-action,
 body.v5-ui.reference-ui-v59 .studio-top-action{
-  height:40px;
-  min-height:40px;
+  height:var(--icon-button-size);
+  min-height:var(--icon-button-size);
   border:1px solid var(--button-secondary-border);
   border-radius:var(--control-radius);
   background:var(--button-secondary-bg);
@@ -246,13 +258,14 @@ body.v5-ui.reference-ui-v59 .studio-top-action{
   font-weight:700;
 }
 body.v5-ui.reference-ui-v59 .studio-icon-action{
-  width:40px;
-  min-width:40px;
+  width:var(--icon-button-size);
+  min-width:var(--icon-button-size);
   padding:0;
+  border-radius:var(--icon-button-radius);
   font-size:17px;
 }
 body.v5-ui.reference-ui-v59 .studio-icon-action:disabled{
-  opacity:.42;
+  opacity:var(--component-disabled-opacity);
   cursor:not-allowed;
 }
 body.v5-ui.reference-ui-v59 .studio-top-action{padding:0 14px}
@@ -1572,14 +1585,14 @@ body.v5-ui.reference-ui-v59 .product-workspace-modal-status{
 body.v5-ui.reference-ui-v59 .product-workspace-modal-status span{color:#8fa7c2;font-size:9.5px}
 body.v5-ui.reference-ui-v59 .product-workspace-modal-status strong{color:#f5f9fe;font-size:13px}
 body.v5-ui.reference-ui-v59 .product-workspace-close{
-  width:38px;
-  min-width:38px;
-  height:38px;
+  width:var(--icon-button-size);
+  min-width:var(--icon-button-size);
+  height:var(--icon-button-size);
   padding:0;
-  border:1px solid rgba(255,255,255,.11);
-  border-radius:9px;
-  background:#102f53;
-  color:#dce8f6;
+  border:1px solid var(--icon-button-border);
+  border-radius:var(--icon-button-radius);
+  background:var(--icon-button-bg);
+  color:var(--icon-button-text);
   font-size:20px;
 }
 body.v5-ui.reference-ui-v59 .product-workspace-modal-body{

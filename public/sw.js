@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v624-component-contract';
+const CACHE = 'pricereport-shell-v625-interaction-states';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
