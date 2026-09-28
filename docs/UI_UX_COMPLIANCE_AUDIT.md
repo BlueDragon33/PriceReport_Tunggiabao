@@ -171,6 +171,11 @@ V6.33:
 - current V6.10 values remain unchanged, so this is ownership retirement rather than visual redesign;
 - strengthened regression guards around phone navigation, content/product workspace rows and retired legacy values.
 
+V6.34:
+- removed 12 empty legacy phone rules left behind by prior ownership retirement;
+- reduced `responsive-v69.css` from 952 to 933 lines without changing any declaration or computed style;
+- added a regression rule preventing empty responsive selectors from accumulating again.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
