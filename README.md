@@ -1,3 +1,14 @@
+## Trạng thái hiện tại — V6.51 Tablet Editing Ownership
+
+V6.51 tiếp tục U4 theo UI/UX Constitution bằng cách sửa ownership ở cả lớp baseline V6.9 và refinement V6.10.
+
+- `responsive-v69.css`: **262 owner ceiling** sau khi 4 tablet baseline declarations chuyển về normal cascade.
+- `responsive-v610.css`: **30 → 26 `!important`**.
+- Portrait/compact-landscape vẫn editing-first; wide-tablet vẫn giữ split editor + preview.
+- Tablet browser gates là authority cho computed layout.
+- Package: **6.51.0**.
+- PWA cache: **pricereport-shell-v651-tablet-editing-ownership**.
+
 ## Trạng thái hiện tại — V6.50 Narrow-phone Header Cascade
 
 V6.50 tiếp tục U4 theo UI/UX Constitution: retire 4 `!important` low-risk trong refinement dành cho phone rất hẹp (≤370px).
