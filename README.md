@@ -2,6 +2,18 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
+## Trạng thái hiện tại — V6.22 UI/UX Constitution Governance
+
+V6.22 không thay đổi giao diện runtime. Đây là lớp quản trị thiết kế cố định của repository.
+
+- Design Source of Truth: `docs/UI_UX_CONSTITUTION.md`.
+- Lịch sử policy: `docs/UI_UX_CHANGELOG.md`.
+- Audit và roadmap migration: `docs/UI_UX_COMPLIANCE_AUDIT.md`.
+- Mọi agent/developer phải đọc Constitution trước khi sửa UI thông qua `AGENTS.md`.
+- CI có gate riêng `scripts/ui-ux-constitution.test.mjs` để ngăn mất governance.
+- UI migration phải incremental, không big-bang rewrite, không tạo design system song song.
+- Business data, local-first, report, print/PDF và Production Release Authority giữ nguyên.
+
 ## Trạng thái hiện tại — V6.19 Business Core Foundation
 
 V6.19 bắt đầu chuẩn hóa bộ não nghiệp vụ theo kiến trúc local-first mà không big-bang rewrite.
