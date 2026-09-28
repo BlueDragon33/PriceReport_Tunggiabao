@@ -243,6 +243,13 @@ V6.44:
 - added regression assertions so these properties remain on normal cascade;
 - no report/business/storage changes; phone browser gates remain authoritative.
 
+V6.45:
+- retired 5 additional low-risk `!important` flags from phone workspace spacing while preserving selectors and values;
+- scope: content/product workspace body padding+gap, main padding+radius, and content row spacing;
+- reduced `responsive-v610.css` from 66 to 61 `!important`;
+- intentionally left card/heading flags untouched because their current base owners still use `!important`;
+- added regression assertions so the migrated spacing stays on normal cascade.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
