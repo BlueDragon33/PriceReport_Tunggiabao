@@ -36,21 +36,21 @@
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .quote-flow-card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-completion-card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-card{
-    border-color:var(--touch-border)!important;
-    background:var(--touch-card)!important;
-    box-shadow:0 5px 18px rgba(28,55,85,.06)!important;
+    border-color:var(--touch-border);
+    background:var(--touch-card);
+    box-shadow:0 5px 18px rgba(28,55,85,.06);
   }
 
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-block-row,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-block-row{
-    border:1px solid var(--touch-border)!important;
-    background:#fff!important;
-    box-shadow:0 3px 12px rgba(28,55,85,.045)!important;
+    border:1px solid var(--touch-border);
+    background:#fff;
+    box-shadow:0 3px 12px rgba(28,55,85,.045);
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-block-row:active,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-block-row:active{
     transform:scale(.995);
-    background:#f7faff!important;
+    background:#f7faff;
   }
 
   /* Keep touch dialogs visually app-like and reduce desktop chrome. */
@@ -72,7 +72,7 @@
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .content-workspace-main>.section-block,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-main>.section-block{
-    box-shadow:none!important;
+    box-shadow:none;
   }
 
   /* Product actions become a swipeable action rail instead of a tall toolbar grid. */
