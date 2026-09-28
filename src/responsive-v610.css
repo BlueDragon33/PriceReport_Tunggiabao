@@ -392,14 +392,14 @@
 
   /* More sheet and template gallery use one-handed reach and readable labels. */
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-menu{
-    left:6px!important;
-    right:6px!important;
-    bottom:calc(var(--touch-nav-h) + 5px)!important;
-    padding:10px!important;
+    left:6px;
+    right:6px;
+    bottom:calc(var(--touch-nav-h) + 5px);
+    padding:10px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .mobile-more-grid button{
-    min-height:72px!important;
-    padding:9px!important;
+    min-height:72px;
+    padding:9px;
   }
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .template-library-grid{
     grid-template-columns:1fr!important;
