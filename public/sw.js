@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v630-readable-responsive-type';
+const CACHE = 'pricereport-shell-v631-responsive-governance';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',
