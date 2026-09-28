@@ -41,7 +41,7 @@ let install;
 handlers.get('install')({ waitUntil: promise => { install = promise; } });
 await install;
 assert.equal(skipped, true, 'install must await skipWaiting');
-assert.equal(activeCache, 'pricereport-shell-v646-phone-quote-flow-cascade', 'V6.46 phone quote-flow cascade');
+assert.equal(activeCache, 'pricereport-shell-v647-tablet-layout-cascade', 'V6.46 phone quote-flow cascade');
 
 let activation;
 handlers.get('activate')({ waitUntil: promise => { activation = promise; } });

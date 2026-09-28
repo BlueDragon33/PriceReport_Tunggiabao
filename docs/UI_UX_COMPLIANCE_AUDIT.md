@@ -258,6 +258,13 @@ V6.46:
 - reduced `responsive-v610.css` from 61 to 52 `!important`;
 - added exact ownership assertions so the migrated declarations cannot return to important cascade.
 
+V6.47:
+- retired 5 low-risk tablet layout `!important` flags where no competing important owner exists;
+- scope: editor border-right, content-block-list display/columns, content-template-grid columns, and dashboard/history/master single-column layout;
+- reduced `responsive-v610.css` from 52 to 47 `!important`;
+- tablet portrait/landscape browser gates remain authoritative for computed behavior;
+- no business/report/print/storage changes.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
