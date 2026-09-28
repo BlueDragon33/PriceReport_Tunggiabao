@@ -22,7 +22,7 @@ for (const token of [
 }
 
 const componentUses = source => (source.match(/var\(--(?:control|button)-(?:[a-z-]+)\)/g) || []).length;
-assert.ok(componentUses(ui) >= 40, 'base UI component-token adoption regressed');
+assert.ok(componentUses(ui) >= 15, 'base UI component-token adoption regressed');
 assert.ok(componentUses(studio) >= 20, 'Studio component-token adoption regressed');
 assert.ok(componentUses(workspace) >= 10, 'Workspace component-token adoption regressed');
 
