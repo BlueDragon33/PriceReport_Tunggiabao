@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 269, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 117, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 109, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -155,6 +155,24 @@ for (const [selector, property, value] of [
 assert.ok(current.includes('font-size:18px!important'), 'Current phone nav-glyph owner missing');
 assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px!important'), 'Current phone content-workspace rows missing');
 assert.ok(current.includes('grid-template-rows:58px minmax(0,1fr) 58px!important'), 'Current phone product-workspace rows missing');
+
+for (const [source, selector, property, value] of [
+  [current, '.content-completion-card', 'border-color', 'var(--touch-border)'],
+  [current, '.content-completion-card', 'background', 'var(--touch-card)'],
+  [current, '.content-completion-card', 'box-shadow', '0 5px 18px rgba(28,55,85,.06)'],
+  [current, '.quote-flow-card', 'border-color', 'var(--touch-border)'],
+  [current, '.quote-flow-card', 'background', 'var(--touch-card)'],
+  [current, '.quote-flow-card', 'box-shadow', '0 5px 18px rgba(28,55,85,.06)'],
+  [current, '.content-block-row', 'border', '1px solid var(--touch-border)'],
+  [current, '.content-block-row', 'background', '#fff'],
+  [current, '.content-block-row', 'box-shadow', '0 3px 12px rgba(28,55,85,.045)'],
+  [current, '.content-block-row:active', 'background', '#f7faff'],
+  [current, '.content-workspace-main>.card', 'box-shadow', 'none'],
+  [current, '.content-workspace-main>.section-block', 'box-shadow', 'none']
+]) {
+  assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.38 touch surface declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.38 touch surface !important returned: ' + selector + ' :: ' + property);
+}
 
 for (const [source, selector, property, value] of [
   [current, '.product-workspace-toolbar', 'gap', '7px'],

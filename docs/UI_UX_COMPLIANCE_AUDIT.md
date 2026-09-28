@@ -193,6 +193,13 @@ V6.37:
 - tablet portrait/compact landscape and wide landscape declarations now rely on normal cascade where no prior important owner exists;
 - 834×1194, 1024×768 and 1112×834 browser coverage remains authoritative.
 
+V6.38:
+- retired 8 additional low-risk `!important` flags from touch Content/Quote card surfaces, borders, hover surface and workspace shadow resets while preserving every selector and value;
+- reduced `responsive-v610.css` from 117 to 109 `!important`;
+- added regression assertions that these surface declarations remain non-important;
+- no V6.9 competing owner exists for the migrated properties, so normal cascade now owns them;
+- browser viewport gates remain authoritative for tablet/phone computed behavior.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
