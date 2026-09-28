@@ -67,22 +67,62 @@ assert.ok(current.includes('min-height:44px!important'), 'Current phone footer b
 assert.ok(current.includes('grid-template-columns:minmax(0,1fr) 88px!important'), 'Current phone quote-flow ownership is missing');
 assert.ok(current.includes('min-height:190px!important'), 'Current phone template-card ownership is missing');
 
-for (const retired of [
-  'font-size:17px!important',
-  'padding:12px 11px 22px',
-  'min-height:62px',
-  'padding:9px 10px',
-  'grid-template-rows:64px 42px minmax(0,1fr) 62px!important',
-  'grid-template-rows:64px minmax(0,1fr) 62px!important',
-  'min-height:64px!important',
-  'padding:8px 10px!important',
-  'padding:7px!important',
-  'gap:6px!important',
-  'padding:9px!important',
-  'grid-template-columns:1fr 1fr!important',
-  '7px 8px max(7px,env(safe-area-inset-bottom))!important'
+function extractMediaBlock(source, header) {
+  const start = source.indexOf(header);
+  assert.ok(start >= 0, 'Responsive media block missing: ' + header);
+  const open = source.indexOf('{', start);
+  let depth = 1;
+  let cursor = open + 1;
+  while (cursor < source.length && depth) {
+    if (source[cursor] === '{') depth += 1;
+    else if (source[cursor] === '}') depth -= 1;
+    cursor += 1;
+  }
+  return source.slice(open + 1, cursor - 1);
+}
+
+function ruleHasDeclaration(source, selectorNeedle, property, value) {
+  for (const match of source.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!match[1].includes(selectorNeedle)) continue;
+    const declarations = match[2].split(';').map(item => item.trim());
+    if (declarations.includes(property + ':' + value)) return true;
+  }
+  return false;
+}
+
+const phoneLegacy = extractMediaBlock(legacy, '@media screen and (max-width:599px)');
+for (const [selector, property, value] of [
+  ['.shell>.nav .nav-glyph', 'font-size', '17px!important'],
+  ['.content-library-home', 'padding', '12px 11px 22px'],
+  ['.content-library-head h2', 'font-size', '18px'],
+  ['.content-block-list', 'gap', '8px'],
+  ['.content-block-row', 'min-height', '62px'],
+  ['.content-block-row', 'padding', '9px 10px'],
+  ['.content-block-row b', 'font-size', '13px'],
+  ['.content-block-row small', 'font-size', '10px'],
+  ['.content-template-grid', 'grid-template-columns', 'repeat(2,minmax(0,1fr))'],
+  ['.content-template-grid', 'gap', '9px'],
+  ['.content-template-grid button', 'min-height', '120px'],
+  ['.content-workspace-dialog', 'grid-template-rows', '64px 42px minmax(0,1fr) 62px!important'],
+  ['.product-workspace-dialog', 'grid-template-rows', '64px minmax(0,1fr) 62px!important'],
+  ['.content-workspace-head', 'min-height', '64px!important'],
+  ['.product-workspace-modal-head', 'min-height', '64px!important'],
+  ['.content-workspace-head', 'padding', '8px 10px!important'],
+  ['.product-workspace-modal-head', 'padding', '8px 10px!important'],
+  ['.content-workspace-body', 'padding', '7px!important'],
+  ['.product-workspace-modal-body', 'padding', '7px!important'],
+  ['.content-workspace-body', 'gap', '6px!important'],
+  ['.product-workspace-modal-body', 'gap', '6px!important'],
+  ['.content-workspace-main', 'padding', '9px!important'],
+  ['.product-workspace-main', 'padding', '9px!important'],
+  ['.template-library-grid', 'grid-template-columns', '1fr 1fr!important'],
+  ['.quote-review-footer', 'padding', '7px 8px max(7px,env(safe-area-inset-bottom))!important']
 ]) {
-  assert.equal(legacy.includes(retired), false, 'Same-breakpoint V6.9 declaration returned: ' + retired);
+  assert.equal(
+    ruleHasDeclaration(phoneLegacy, selector, property, value),
+    false,
+    'Same-breakpoint V6.9 declaration returned: ' + selector + ' :: ' + property + ':' + value
+  );
 }
 assert.ok(current.includes('font-size:18px!important'), 'Current phone nav-glyph owner missing');
 assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px!important'), 'Current phone content-workspace rows missing');
