@@ -501,10 +501,10 @@ body.v5-ui.reference-ui-v59 .content-workspace-chip,
 body.v5-ui.reference-ui-v59 .content-workspace-tool-button{
   min-height:32px;
   padding:0 9px;
-  border:1px solid rgba(255,255,255,.11);
-  border-radius:8px;
-  background:var(--surface-muted);
-  color:#dce9f7;
+  border:1px solid var(--feedback-border);
+  border-radius:var(--radius-small);
+  background:var(--feedback-neutral-bg);
+  color:var(--feedback-neutral-text);
   font:inherit;
   font-size:9.8px;
   font-weight:750;
