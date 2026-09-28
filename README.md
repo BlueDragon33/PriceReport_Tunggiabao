@@ -1,3 +1,15 @@
+## Trạng thái hiện tại — V6.40 Phone Navigation Cascade Ownership
+
+V6.40 tiếp tục Phase U4 theo UI/UX Constitution: chuyển bottom navigation trên phone khỏi mô hình override `!important` chồng lớp sang ownership bằng cascade bình thường.
+
+- `responsive-v69.css`: **269 → 266 `!important`**.
+- `responsive-v610.css`: **101 → 95 `!important`**.
+- Giữ nguyên safe-area padding, touch height, radius, label/glyph size và hành vi navigation.
+- Regression guard khóa cả baseline V6.9 và refinement V6.10.
+- Không thay đổi business logic, report, print/PDF hay storage.
+- Package: **6.40.0**.
+- PWA cache: **pricereport-shell-v640-phone-nav-cascade-ownership**.
+
 ## Trạng thái hiện tại — V6.38 Touch Surface Important Retirement
 
 V6.38 tiếp tục Phase U4 theo UI/UX Constitution, retire thêm các `!important` low-risk ở touch card surfaces/borders/shadows mà không thay đổi selector hay visual value.
