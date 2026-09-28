@@ -11,7 +11,7 @@ const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
 assert.deepEqual(subTenFonts(legacy), [], 'Legacy responsive layer must not contain sub-10px text');
 assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not contain sub-10px text');
 assert.ok(importantCount(legacy) <= 269, 'V6.9 responsive !important debt increased');
-assert.ok(importantCount(current) <= 130, 'V6.10 responsive !important debt increased');
+assert.ok(importantCount(current) <= 117, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
@@ -50,7 +50,8 @@ assert.deepEqual(redundant, [], 'Later responsive layer repeats declarations alr
 assert.equal(legacy.includes('grid-template-columns:1fr 1fr!important;\n    gap:6px!important;'), false, 'Legacy phone product-toolbar grid ownership must stay retired');
 assert.equal(legacy.includes('.product-toolbar-spacer{\n    display:none!important;'), false, 'Legacy phone product-toolbar spacer ownership must stay retired');
 assert.ok(current.includes('.product-workspace-toolbar .btn'), 'Current touch product-toolbar button ownership is missing');
-assert.ok(current.includes('min-height:42px!important'), 'Current touch product-toolbar height contract is missing');
+assert.equal(ruleHasDeclaration(current, '.product-workspace-toolbar .btn', 'min-height', '42px'), true, 'Current touch product-toolbar height contract is missing');
+assert.equal(ruleHasDeclaration(current, '.product-workspace-toolbar .btn', 'min-height', '42px!important'), false, 'Touch product-toolbar height must no longer require !important');
 
 for (const retired of [
   'left:8px!important',
@@ -94,6 +95,8 @@ function ruleHasDeclaration(source, selectorNeedle, property, value) {
 
 const phoneLegacy = extractMediaBlock(legacy, '@media screen and (max-width:599px)');
 const phoneCurrent = extractMediaBlock(current, '@media screen and (max-width:599px)');
+const tabletPortraitCurrent = extractMediaBlock(current, '@media screen and (orientation:portrait), screen and (max-width:1023px) and (orientation:landscape)');
+const tabletLandscapeCurrent = extractMediaBlock(current, '@media screen and (min-width:1024px) and (orientation:landscape)');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'width', '34px'), false, 'Hidden phone Studio document sizing returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'min-width', '34px'), false, 'Hidden phone Studio document min-width returned to V6.9');
 assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'height', '34px'), false, 'Hidden phone Studio document height returned to V6.9');
@@ -152,6 +155,24 @@ for (const [selector, property, value] of [
 assert.ok(current.includes('font-size:18px!important'), 'Current phone nav-glyph owner missing');
 assert.ok(current.includes('grid-template-rows:58px 38px minmax(0,1fr) 58px!important'), 'Current phone content-workspace rows missing');
 assert.ok(current.includes('grid-template-rows:58px minmax(0,1fr) 58px!important'), 'Current phone product-workspace rows missing');
+
+for (const [source, selector, property, value] of [
+  [current, '.product-workspace-toolbar', 'gap', '7px'],
+  [current, '.product-workspace-toolbar', 'padding-bottom', '4px'],
+  [current, '.product-workspace-toolbar .btn', 'min-width', '126px'],
+  [current, '.product-workspace-toolbar .btn', 'min-height', '42px'],
+  [current, '.quote-review-panel', 'border-radius', '12px'],
+  [tabletPortraitCurrent, '.content-library-home', 'padding', '20px 22px 32px'],
+  [tabletPortraitCurrent, '.content-block-list', 'gap', '10px'],
+  [tabletPortraitCurrent, '.content-block-row', 'min-height', '76px'],
+  [tabletPortraitCurrent, '.content-template-grid', 'gap', '10px'],
+  [tabletPortraitCurrent, '.content-template-grid button', 'min-height', '112px'],
+  [tabletLandscapeCurrent, '.content-library-home', 'padding', '16px 14px 26px'],
+  [tabletLandscapeCurrent, '.content-block-row', 'min-height', '60px']
+]) {
+  assert.equal(ruleHasDeclaration(source, selector, property, value), true, 'V6.37 declaration missing: ' + selector + ' :: ' + property);
+  assert.equal(ruleHasDeclaration(source, selector, property, value + '!important'), false, 'V6.37 low-risk !important returned: ' + selector + ' :: ' + property);
+}
 
 assert.ok(current.includes('.shell>.design:not(.open)'), 'Closed touch inspector pointer-safety rule missing');
 assert.ok(current.includes('pointer-events:none'), 'Closed touch inspector must not intercept navigation');
