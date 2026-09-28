@@ -801,8 +801,11 @@ try {
     if (viewport.mobile) {
       await viewportPage.locator('.shell > .nav > button[data-tab="general"]').click();
       await viewportPage.locator('.shell:not(.app-workspace)').waitFor();
-      const inputFont = await viewportPage.locator('#companyName').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
-      if (inputFont < 16) fail('Constitution 360px phone input text must remain 16px+');
+      await viewportPage.locator('#contentBlockList [data-content-block="general"]').click();
+      await viewportPage.locator('#contentWorkspaceModal:not([hidden])').waitFor();
+      const inputFont = await viewportPage.locator('#contentWorkspaceModal #companyName').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+      if (inputFont < 16) fail('Constitution 360px phone workspace input text must remain 16px+');
+      await viewportPage.locator('#doneContentWorkspace').click();
     }
     if (viewportErrors.length) fail('Constitution viewport ' + viewport.width + 'x' + viewport.height + ' runtime error(s): ' + viewportErrors.join(' | '));
     await context.close();
