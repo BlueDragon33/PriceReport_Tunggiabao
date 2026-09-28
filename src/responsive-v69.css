@@ -617,11 +617,7 @@
     grid-row:3!important;
     padding:4px max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav button[data-tab],
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav .mobile-more-toggle{
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell>.nav .nav-glyph{
-  }
+
 
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell:not(.app-workspace):not(.report-view)>.editor,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .shell.app-workspace>.editor{
@@ -668,14 +664,12 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-library-home{
     min-height:0;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-library-head h2{
-  }
+
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-completion-card,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-card{
     border-radius:12px;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-block-list{
-  }
+
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-block-row{
     border-radius:12px;
   }
@@ -683,12 +677,7 @@
     width:36px;
     height:36px;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-block-row b{
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-block-row small{
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-template-grid{
-  }
+
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-template-grid button{
     border-radius:10px;
   }
@@ -786,13 +775,7 @@
     border:0!important;
     border-radius:0!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-dialog{
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-dialog{
-  }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-head,
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-modal-head{
-  }
+
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .content-workspace-head-actions{
     gap:4px!important;
   }
@@ -822,8 +805,7 @@
     min-height:0!important;
     overflow:auto!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-step-button strong{
-  }
+
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-flow-navigator-card{
     display:grid!important;
     align-items:start;
@@ -940,8 +922,7 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-grid{
     grid-template-columns:1fr!important;
   }
-  body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer{
-  }
+
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .quote-review-footer>div{
     grid-template-columns:1fr 1fr!important;
   }
