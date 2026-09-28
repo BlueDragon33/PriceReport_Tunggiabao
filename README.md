@@ -2,7 +2,18 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.27 Surface & Navigation Components
+## Trạng thái hiện tại — V6.31 Responsive Toolbar Ownership
+
+V6.31 tiếp tục Phase U4 theo UI/UX Constitution: chuyển ownership của Product Workspace touch toolbar hoàn toàn sang responsive-v610.css và xóa override cũ đã bị supersede ở V6.9.
+
+- `responsive-v69.css`: 300 → 292 `!important`.
+- Dòng CSS: 1012 → 1002.
+- Không đổi computed toolbar behavior; V6.10 vẫn là active owner.
+- Thêm regression ceiling chống responsive debt quay lại.
+- Package: **6.31.0**.
+- PWA cache: **pricereport-shell-v631-responsive-toolbar-ownership**.
+
+## Trạng thái trước — V6.27 Surface & Navigation Components
 
 V6.27 tiếp tục U3 theo Hiến pháp UI/UX: chuẩn hóa Panel/Card, Toolbar, Tabs, Overlay và Dialog trên component hiện có.
 
