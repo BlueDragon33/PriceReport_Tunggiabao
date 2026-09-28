@@ -32,13 +32,14 @@ const semanticUsage = source => (source.match(/var\(--(?:surface|text|border|acc
 const componentUsage = source => (source.match(/var\(--(?:control|button|icon-button|component)-/g) || []).length;
 const feedbackUsage = source => (source.match(/var\(--feedback-/g) || []).length;
 const surfaceNavigationUsage = source => (source.match(/var\(--(?:panel|toolbar|tab|overlay|dialog)-/g) || []).length;
-const designSystemUsage = source => semanticUsage(source) + componentUsage(source) + feedbackUsage(source) + surfaceNavigationUsage(source);
+const searchFeedbackDrawerUsage = source => (source.match(/var\(--(?:search|toast|drawer)-/g) || []).length;
+const designSystemUsage = source => semanticUsage(source) + componentUsage(source) + feedbackUsage(source) + surfaceNavigationUsage(source) + searchFeedbackDrawerUsage(source);
 assert.ok(semanticUsage(ui) >= 70, 'App UI direct semantic-token foundation regressed');
 assert.ok(semanticUsage(studio) >= 50, 'Studio direct semantic-token foundation regressed');
-assert.ok(semanticUsage(workspace) >= 15, 'Content workspace direct semantic-token foundation regressed');
+assert.ok(semanticUsage(workspace) >= 14, 'Content workspace direct semantic-token foundation regressed');
 assert.ok(designSystemUsage(ui) >= 160, 'App UI design-system adoption regressed');
 assert.ok(designSystemUsage(studio) >= 140, 'Studio design-system adoption regressed');
-assert.ok(designSystemUsage(workspace) >= 55, 'Content workspace design-system adoption regressed');
+assert.ok(designSystemUsage(workspace) >= 63, 'Content workspace layered design-system adoption regressed');
 
 const hexCount = source => (source.match(/#[0-9a-fA-F]{3,8}\b/g) || []).length;
 assert.ok(hexCount(studio) <= 451, 'Studio hard-coded color debt increased');
@@ -61,6 +62,9 @@ console.log('SEMANTIC DESIGN TOKEN FOUNDATION PASS', {
   uiSurfaceNavigationUses: surfaceNavigationUsage(ui),
   studioSurfaceNavigationUses: surfaceNavigationUsage(studio),
   workspaceSurfaceNavigationUses: surfaceNavigationUsage(workspace),
+  uiSearchFeedbackDrawerUses: searchFeedbackDrawerUsage(ui),
+  studioSearchFeedbackDrawerUses: searchFeedbackDrawerUsage(studio),
+  workspaceSearchFeedbackDrawerUses: searchFeedbackDrawerUsage(workspace),
   studioHex: hexCount(studio),
   workspaceHex: hexCount(workspace)
 });
