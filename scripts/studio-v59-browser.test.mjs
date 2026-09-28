@@ -776,7 +776,39 @@ try {
   if (phoneErrors.length) fail('V6.10 phone runtime page error(s): ' + phoneErrors.join(' | '));
   await phoneContext.close();
 
-  console.log('V6.10 BROWSER PASS: desktop regression plus iPad portrait focus, iPad landscape split and polished phone touch UI verified');
+  // UI/UX Constitution viewport coverage: protect required desktop and compact-phone widths.
+  for (const viewport of [
+    { width: 1366, height: 768, mobile: false },
+    { width: 1280, height: 800, mobile: false },
+    { width: 360, height: 800, mobile: true }
+  ]) {
+    const context = await browser.newContext({
+      viewport: { width: viewport.width, height: viewport.height },
+      deviceScaleFactor: viewport.mobile ? 3 : 1,
+      hasTouch: viewport.mobile,
+      isMobile: viewport.mobile,
+      userAgent: viewport.mobile
+        ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+        : undefined
+    });
+    const viewportPage = await context.newPage();
+    const viewportErrors = [];
+    viewportPage.on('pageerror', error => viewportErrors.push(String(error?.message || error)));
+    await viewportPage.goto(URL, { waitUntil: 'networkidle' });
+    if (viewport.mobile) await viewportPage.waitForFunction(() => document.body.dataset.deviceClass === 'phone');
+    const overflow = await viewportPage.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    if (overflow > 2) fail('Constitution viewport ' + viewport.width + 'x' + viewport.height + ' has horizontal overflow: ' + overflow + 'px');
+    if (viewport.mobile) {
+      await viewportPage.locator('.shell > .nav > button[data-tab="general"]').click();
+      await viewportPage.locator('.shell:not(.app-workspace)').waitFor();
+      const inputFont = await viewportPage.locator('#companyName').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+      if (inputFont < 16) fail('Constitution 360px phone input text must remain 16px+');
+    }
+    if (viewportErrors.length) fail('Constitution viewport ' + viewport.width + 'x' + viewport.height + ' runtime error(s): ' + viewportErrors.join(' | '));
+    await context.close();
+  }
+
+  console.log('V6.29 BROWSER PASS: Constitution desktop/tablet/phone viewport coverage and responsive ownership verified');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
