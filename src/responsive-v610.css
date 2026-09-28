@@ -78,11 +78,11 @@
   /* Product actions become a swipeable action rail instead of a tall toolbar grid. */
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .product-workspace-toolbar,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar{
-    display:flex!important;
-    align-items:stretch!important;
+    display:flex;
+    align-items:stretch;
     gap:7px;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
+    overflow-x:auto;
+    overflow-y:hidden;
     padding-bottom:4px;
     scrollbar-width:none;
     overscroll-behavior-x:contain;
@@ -91,16 +91,16 @@
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar::-webkit-scrollbar{display:none}
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .product-workspace-toolbar .btn,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-workspace-toolbar .btn{
-    flex:0 0 auto!important;
-    width:auto!important;
+    flex:0 0 auto;
+    width:auto;
     min-width:126px;
     min-height:42px;
     padding:7px 10px;
-    white-space:nowrap!important;
+    white-space:nowrap;
   }
   body.v5-ui.reference-ui-v59[data-device-class="tablet"] .product-toolbar-spacer,
   body.v5-ui.reference-ui-v59[data-device-class="phone"] .product-toolbar-spacer{
-    display:none!important;
+    display:none;
   }
 
   /* Final review is easier to scan on touch. */

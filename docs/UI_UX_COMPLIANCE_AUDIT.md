@@ -200,6 +200,13 @@ V6.38:
 - no V6.9 competing owner exists for the migrated properties, so normal cascade now owns them;
 - browser viewport gates remain authoritative for tablet/phone computed behavior.
 
+V6.39:
+- retired 8 additional `!important` flags from the touch Product Workspace action rail: display, alignment, overflow, button flex/width/white-space and spacer visibility;
+- reduced `responsive-v610.css` from 109 to 101 `!important`;
+- preserved the separate V6.9 phone `height:auto!important` owner because it is not yet superseded;
+- added regression assertions for the new normal-cascade ownership;
+- browser phone/tablet gates remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
