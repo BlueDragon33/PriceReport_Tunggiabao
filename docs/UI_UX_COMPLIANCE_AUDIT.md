@@ -187,6 +187,12 @@ V6.36:
 - reduced `responsive-v610.css` from 145 to 130 `!important`;
 - 360×800 and 390×844 browser gates remain authoritative for computed behavior.
 
+V6.37:
+- retired 13 additional low-risk `!important` flags from touch/tablet spacing, min-size and radius rules while preserving all selectors and values;
+- reduced `responsive-v610.css` from 130 to 117 `!important`;
+- tablet portrait/compact landscape and wide landscape declarations now rely on normal cascade where no prior important owner exists;
+- 834×1194, 1024×768 and 1112×834 browser coverage remains authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
