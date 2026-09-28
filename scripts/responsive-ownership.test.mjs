@@ -13,6 +13,8 @@ assert.deepEqual(subTenFonts(current), [], 'Current responsive layer must not co
 assert.ok(importantCount(legacy) <= 269, 'V6.9 responsive !important debt increased');
 assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt increased');
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
+assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
+assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
 
 function ruleMap(source) {
   const clean = source.replace(/\/\*[\s\S]*?\*\//g, '');
