@@ -236,6 +236,13 @@ V6.43:
 - added regression assertions so these properties remain on normal cascade;
 - no report/business/storage changes; real phone/tablet browser gates remain authoritative.
 
+V6.44:
+- retired 8 additional `!important` flags from phone Content Workspace header/chrome while preserving selectors and values;
+- scope: workspace icon geometry, heading typography, toolbar padding and toolbar helper visibility;
+- reduced `responsive-v610.css` from 74 to 66 `!important`;
+- added regression assertions so these properties remain on normal cascade;
+- no report/business/storage changes; phone browser gates remain authoritative.
+
 Remaining target:
 - continue merging duplicated responsive ownership;
 - eliminate viewport-specific `!important` patches where cascade can be corrected;
