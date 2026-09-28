@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const legacy = fs.readFileSync(new URL('../src/responsive-v69.css', import.meta.url), 'utf8');
 const current = fs.readFileSync(new URL('../src/responsive-v610.css', import.meta.url), 'utf8');
+const baseWorkspace = fs.readFileSync(new URL('../src/content-workspace-v63.css', import.meta.url), 'utf8');
 
 const importantCount = source => (source.match(/!important/g) || []).length;
 const subTenFonts = source => [...source.matchAll(/font-size:\s*([0-9.]+)px/g)]
