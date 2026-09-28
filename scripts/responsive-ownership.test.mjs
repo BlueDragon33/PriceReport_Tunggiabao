@@ -15,6 +15,12 @@ assert.ok(importantCount(current) <= 145, 'V6.10 responsive !important debt incr
 assert.ok(current.split('\n').length <= 461, 'V6.10 responsive file grew beyond cleanup + pointer-safety baseline');
 assert.equal(/[^{}@]+\{\s*\}/.test(legacy), false, 'V6.9 responsive layer must not retain empty legacy rules');
 assert.ok(legacy.split('\n').length <= 933, 'V6.9 responsive file grew beyond V6.34 empty-rule retirement baseline');
+assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'width', '34px'), false, 'Hidden phone Studio document sizing returned to V6.9');
+assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'min-width', '34px'), false, 'Hidden phone Studio document min-width returned to V6.9');
+assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'height', '34px'), false, 'Hidden phone Studio document height returned to V6.9');
+assert.equal(ruleHasDeclaration(phoneLegacy, '.studio-topbar-doc', 'font-size', '15px'), false, 'Hidden phone Studio document font-size returned to V6.9');
+assert.ok(current.includes('.studio-topbar-doc{\n    display:none!important;'), 'Current phone Studio document hide owner is missing');
+assert.ok(legacy.split('\n').length <= 927, 'V6.9 responsive file grew beyond V6.35 hidden-owner retirement baseline');
 
 function ruleMap(source) {
   const clean = source.replace(/\/\*[\s\S]*?\*\//g, '');
