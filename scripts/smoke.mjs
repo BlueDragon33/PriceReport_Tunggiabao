@@ -273,7 +273,8 @@ if (!html.includes('id="applyTungGiaBaoProfile"')) fail('Manual Tùng Gia Bảo 
 if (!js.includes('storageRepository.writeJson(STORAGE, persistedMigration)')) fail('Legacy profile migration must persist immediately through the storage repository');
 
 if (html.includes('id="branchKhanhHoa"') || html.includes('id="branchDongNai"') || html.includes('id="farmAddress"')) fail('Removed legacy company fields are still visible');
-if (!html.includes('data-tab="view"')) fail('Dedicated report-view tab is missing');
+if (html.includes('data-tab="view"')) fail('Report view must not return as a primary navigation destination');
+if (!html.includes('data-open-tab="view"')) fail('Report-view action is missing');
 if (!html.includes('Xuất bản & dữ liệu')) fail('Publishing/Data navigation label is missing');
 if (!html.includes('id="exportExcel"') || !html.includes('id="importExcelQuick"')) fail('Excel import/export controls are missing from export pane');
 if (!html.includes('id="choosePcFolder"') || !html.includes('id="restorePcLatest"')) fail('PC workspace controls are missing');
