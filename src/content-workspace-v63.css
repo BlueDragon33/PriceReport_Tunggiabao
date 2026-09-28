@@ -529,16 +529,16 @@ body.v5-ui.reference-ui-v59 .content-workspace-customer-search{
   width:100%;
   min-height:34px;
   padding:7px 9px;
-  border:1px solid var(--border-strong);
-  border-radius:8px;
+  border:1px solid var(--search-border);
+  border-radius:var(--search-radius);
   outline:0;
   background:#081e38;
   color:#eef6ff;
   font-size:10px;
 }
 body.v5-ui.reference-ui-v59 .content-workspace-customer-search:focus{
-  border-color:#4c9af0;
-  box-shadow:0 0 0 3px rgba(76,154,240,.12);
+  border-color:var(--control-focus-border);
+  box-shadow:var(--control-focus-shadow);
 }
 body.v5-ui.reference-ui-v59 .content-workspace-customer-list{
   display:grid;
