@@ -50,7 +50,7 @@ body.v5-ui.reference-ui-v59{
 body.v5-ui.reference-ui-v59:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace):not(.report-view){
   grid-template-columns:var(--studio-rail-w) var(--studio-left-w) minmax(0,1fr) var(--studio-right-w);
   grid-template-rows:var(--studio-header-h) minmax(0,1fr);
-  background:var(--surface-app);
+  background:var(--studio-bg);
 }
 body.v5-ui.reference-ui-v59:not([data-device-class="tablet"]):not([data-device-class="phone"]) .shell:not(.app-workspace):not(.report-view)>.nav{
   grid-column:1;
