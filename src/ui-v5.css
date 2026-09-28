@@ -604,13 +604,6 @@ body.v5-ui .shell.app-workspace .nav-glyph{
   font-size:16px;
   opacity:.95;
 }
-body.v5-ui .shell.app-workspace .nav button[data-tab="customer"],
-body.v5-ui .shell.app-workspace .nav button[data-tab="products"],
-body.v5-ui .shell.app-workspace .nav button[data-tab="payment"],
-body.v5-ui .shell.app-workspace .nav button[data-tab="terms"],
-body.v5-ui .shell.app-workspace .nav button[data-tab="design"],
-body.v5-ui .shell.app-workspace .nav button[data-tab="view"],
-body.v5-ui .shell.app-workspace .nav button[data-tab="presets"]{display:none}
 body.v5-ui .shell.app-workspace .mobile-more-toggle{display:none}
 body.v5-ui .mobile-more-menu{display:none}
 
@@ -4063,14 +4056,7 @@ body.v5-ui .studio-stepper button.active{
   body.v5-ui .shell.app-workspace .nav-section-label,
   body.v5-ui .shell.app-workspace .device-profile-chip,
   body.v5-ui .shell.app-workspace .tip{display:none}
-  body.v5-ui .shell.app-workspace .nav button[data-tab="customer"],
-  body.v5-ui .shell.app-workspace .nav button[data-tab="products"],
-  body.v5-ui .shell.app-workspace .nav button[data-tab="payment"],
-  body.v5-ui .shell.app-workspace .nav button[data-tab="terms"],
-  body.v5-ui .shell.app-workspace .nav button[data-tab="design"],
-  body.v5-ui .shell.app-workspace .nav button[data-tab="view"],
   body.v5-ui .shell.app-workspace .nav button[data-tab="export"],
-  body.v5-ui .shell.app-workspace .nav button[data-tab="presets"],
   body.v5-ui .shell.app-workspace .nav button[data-tab="system"],
   body.v5-ui .shell.app-workspace .nav button[data-tab="settings"]{display:none}
   body.v5-ui .shell.app-workspace .mobile-more-toggle{
