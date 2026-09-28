@@ -110,12 +110,17 @@ Completed additionally in V6.26:
 - Content Workspace chips consume the same feedback contract;
 - success/warning application affordances start using semantic feedback tokens.
 
+Completed additionally in V6.27:
+- shared Panel/Card surface contract;
+- shared Toolbar surface/border contract;
+- shared Tab default/hover/active/text contract;
+- shared Overlay backdrop and Dialog surface/border/radius contract;
+- Studio inspector tabs, Studio panels, Product Workspace modal and Content/Review dialogs consume the shared contract.
+
 Remaining:
 - Search-specific behavior and affordance consolidation;
 - Alert/Toast persistence and severity variants;
-- Card/Panel;
-- Toolbar/Tabs;
-- Modal/Drawer;
+- Drawer-specific behavior where a real drawer concept exists;
 - deprecate/remove historical variants only after usages are migrated.
 
 Method remains:

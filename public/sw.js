@@ -1,4 +1,4 @@
-const CACHE = 'pricereport-shell-v626-status-feedback';
+const CACHE = 'pricereport-shell-v627-surface-navigation';
 const CORE_MODULES = [
   './src/main.js',
   './src/core.js',

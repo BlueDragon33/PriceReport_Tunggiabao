@@ -2,7 +2,20 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.26 Status & Feedback Semantics
+## Trạng thái hiện tại — V6.27 Surface & Navigation Components
+
+V6.27 tiếp tục U3 theo Hiến pháp UI/UX: chuẩn hóa Panel/Card, Toolbar, Tabs, Overlay và Dialog trên component hiện có.
+
+- Shared panel/card surface contract.
+- Shared toolbar contract.
+- Shared tab states.
+- Shared overlay backdrop + dialog shell contract.
+- Studio Inspector, Product Workspace, Content Workspace và Quote Review bắt đầu dùng cùng contract.
+- Có `scripts/surface-navigation.test.mjs` chống regression.
+- Package: **6.27.0**.
+- PWA cache: **pricereport-shell-v627-surface-navigation**.
+
+## Trạng thái trước — V6.26 Status & Feedback Semantics
 
 V6.26 tiếp tục U3 theo Hiến pháp UI/UX: chuẩn hóa Neutral/Info/Success/Warning/Danger cho badge, chip và feedback state.
 

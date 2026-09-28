@@ -123,6 +123,21 @@
   --feedback-danger-text:var(--state-danger);
   --feedback-radius:var(--radius-pill);
   --feedback-border:var(--border-default);
+  --panel-bg:var(--surface-panel);
+  --panel-border:var(--border-default);
+  --panel-radius:var(--radius-medium);
+  --panel-shadow:var(--v5-shadow-sm);
+  --toolbar-bg:var(--surface-muted);
+  --toolbar-border:var(--border-default);
+  --tab-bg:transparent;
+  --tab-bg-hover:var(--surface-muted);
+  --tab-bg-active:var(--accent-primary);
+  --tab-text:var(--text-secondary);
+  --tab-text-active:var(--text-inverse);
+  --overlay-backdrop:rgba(3,14,28,.74);
+  --dialog-bg:var(--surface-panel);
+  --dialog-border:var(--border-strong);
+  --dialog-radius:var(--radius-large);
   --focus-ring:rgba(36,119,232,.16);
   --nav:118px;
   --edit:350px;
@@ -269,7 +284,7 @@ body.v5-ui .pane.active{display:block}
 body.v5-ui .card{
   margin-bottom:14px;
   padding:12px;
-  background:var(--surface-panel);
+  background:var(--panel-bg);
 }
 body.v5-ui .card h3,
 body.v5-ui .section-title{
