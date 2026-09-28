@@ -2,7 +2,19 @@
 
 WebApp local-first để tạo, quản lý, tái sử dụng và in bảng báo giá A4 cho Tùng Gia Bảo.
 
-## Trạng thái hiện tại — V6.25 Interaction Component States
+## Trạng thái hiện tại — V6.26 Status & Feedback Semantics
+
+V6.26 tiếp tục U3 theo Hiến pháp UI/UX: chuẩn hóa Neutral/Info/Success/Warning/Danger cho badge, chip và feedback state.
+
+- Shared feedback semantic tokens.
+- Studio status badge + quick-fill chips dùng cùng state contract.
+- Content Workspace chip dùng cùng state contract.
+- Success/Warning affordances bắt đầu bỏ màu trạng thái hard-code.
+- Có `scripts/status-feedback.test.mjs` chống regression.
+- Package: **6.26.0**.
+- PWA cache: **pricereport-shell-v626-status-feedback**.
+
+## Trạng thái trước — V6.25 Interaction Component States
 
 V6.25 tiếp tục U3 theo Hiến pháp UI/UX: chuẩn hóa IconButton, focus và disabled states trên chính component hiện có.
 
