@@ -400,7 +400,7 @@ export async function listPriceReportDevices(database: D1Database) {
   const rows = await database.prepare(
     `SELECT device_id, display_code, public_jwk_json, device_type, platform, browser, display_name, label, status, edit_enabled,
             created_at, updated_at, last_seen_at, approved_at, approved_by, blocked_at
-       FROM kt_devices ORDER BY created_at DESC LIMIT 500`,
+       FROM kt_devices ORDER BY created_at DESC`,
   ).all<DeviceRow>();
   return rows.results.map(publicDevice);
 }

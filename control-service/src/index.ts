@@ -1,3 +1,4 @@
+import { deletePendingRegistration, PendingDeviceDeletionError } from "./pending-device-deletion";
 import {
   PriceReportDeviceError,
   executePriceReportDeviceCommand,
@@ -256,6 +257,7 @@ async function controlRoute(request: Request, env: Env, url: URL) {
           deviceRegistry: ready,
           deviceRegistration: ready && appOriginReady,
           deviceApproval: ready,
+          deviceDelete: ready,
           deviceUnblock: ready,
           deviceEditPermission: ready,
           deviceMetadata: ready,
@@ -270,6 +272,7 @@ async function controlRoute(request: Request, env: Env, url: URL) {
         endpoints: {
           devices: "/api/control/devices",
           deviceCommands: "/api/control/device-commands",
+          deviceDeletions: "/api/control/device-deletions",
           audit: "/api/control/audit",
           deviceRegister: "/api/device/register",
           deviceChallenge: "/api/device/challenge",
@@ -286,6 +289,20 @@ async function controlRoute(request: Request, env: Env, url: URL) {
       const database = requireDatabase(env);
       const devices = await listPriceReportDevices(database);
       return json(request, env, { ok: true, application: TOKEN_APP, devices });
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/control/device-deletions") {
+      if (identity.role !== "owner") throw new PriceReportDeviceError("Chỉ Chủ hệ thống được xóa hồ sơ đăng ký.", 403, "OWNER_REQUIRED");
+      const database = requireDatabase(env);
+      try {
+        const result = await deletePendingRegistration(database, "kt_devices", await body(request));
+        if (!result.alreadyAbsent) await database.prepare("INSERT INTO kt_audit_log (actor, action, target, detail_json) VALUES (?, ?, ?, ?)")
+          .bind(identity.actor, "pending_device_deleted", result.deviceId, JSON.stringify({ deviceCode: result.deviceCode, controlDeviceId: identity.controlDeviceId })).run();
+        return json(request, env, result);
+      } catch (error) {
+        if (error instanceof PendingDeviceDeletionError) throw new PriceReportDeviceError(error.message, error.status, error.code);
+        throw error;
+      }
     }
 
     if (request.method === "POST" && url.pathname === "/api/control/device-commands") {
