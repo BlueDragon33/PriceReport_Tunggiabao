@@ -481,3 +481,12 @@ CI #246:
 - DOM integration/migration: **39/39 PASS**
 - Smoke: **PASS** — 267 IDs, 82 bindings, 23 preview targets
 - Production build: **PASS**
+
+
+## Operational sovereignty
+
+This repository adopts **Universal Constitution 1.2.0** at Blueprint Level **B3**.
+
+Quotation/report creation remains local-first and exportable. Google Drive is an optional archive/sync provider. Google Sheets is an optional catalog/report projection, not an undocumented transactional database; sync/version/conflict behavior must be explicit. Basic business workflows must not require a paid provider.
+
+Canonical dependency posture: `.blueprint/dependency-budget.json`.
