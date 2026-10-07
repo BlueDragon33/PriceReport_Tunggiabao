@@ -124,3 +124,19 @@ test("KT automation is behavior, not metadata only", async () => {
   assert.match(automation, /unixepoch\(created_at\)/);
   assert.match(automation, /status='blocked'/);
 });
+
+
+test("PriceReport publishes a first-class Universal Management Contract without credential", async () => {
+  const worker = await source("../src/index.ts");
+  assert.match(worker, /schema: "application-management\.contract\/v1"/);
+  assert.match(worker, /url\.pathname === "\/api\/application-management\/contract"/);
+  assert.match(worker, /deviceAutoApproval: true/);
+  assert.match(worker, /deviceAutoBlockPending: true/);
+  assert.match(worker, /automationIdempotentCommands: true/);
+  assert.match(worker, /automationOptimisticConcurrency: true/);
+  assert.match(worker, /automation: "\/api\/control\/automation"/);
+  assert.match(worker, /credentialRequired: true/);
+  const routeIndex = worker.indexOf('url.pathname === "/api/application-management/contract"');
+  const controlIndex = worker.indexOf('url.pathname.startsWith("/api/control/")');
+  assert.ok(routeIndex >= 0 && controlIndex > routeIndex, "Universal contract must be reachable before protected control routing");
+});

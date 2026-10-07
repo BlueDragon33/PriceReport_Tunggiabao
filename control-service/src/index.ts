@@ -176,6 +176,49 @@ async function databaseReady(env: Env) {
   }
 }
 
+function universalContractManifest() {
+  return {
+    schema: "application-management.contract/v1",
+    protocol: CONTROL_PROTOCOL,
+    application: {
+      id: TOKEN_APP,
+      name: "Báo giá Tùng Gia Bảo",
+      category: "Kế toán",
+    },
+    capabilities: {
+      deviceRegistry: true,
+      deviceApproval: true,
+      deviceBlock: true,
+      deviceUnblock: true,
+      deviceEditPermission: true,
+      deviceIdempotentCommands: true,
+      optimisticConcurrency: true,
+      deviceAutoApproval: true,
+      deviceAutoBlockPending: true,
+      automationIdempotentCommands: true,
+      automationOptimisticConcurrency: true,
+      sessions: true,
+      audit: true,
+      contentReview: false,
+      payments: false,
+      reports: false,
+      webLaunch: false,
+    },
+    policy: {
+      remoteAdminReady: true,
+      credentialRequired: true,
+      localFirst: false,
+      productionRuntimeReady: true,
+    },
+    endpoints: {
+      status: "/api/control/status",
+      devices: "/api/control/devices",
+      deviceCommands: "/api/control/device-commands",
+      automation: "/api/control/automation",
+    },
+  };
+}
+
 async function body(request: Request) {
   const parsed = await request.json().catch(() => null);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -367,6 +410,10 @@ export default {
         return new Response(null, { status: 204, headers: { ...securityHeaders(), ...controlCors(request, env) } });
       }
       return new Response(null, { status: 204, headers: securityHeaders() });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/application-management/contract") {
+      return json(request, env, universalContractManifest(), 200, "none");
     }
 
     if (url.pathname === "/health") {
