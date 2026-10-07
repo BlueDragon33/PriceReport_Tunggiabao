@@ -136,7 +136,9 @@ test("PriceReport publishes a first-class Universal Management Contract without 
   assert.match(worker, /automationOptimisticConcurrency: true/);
   assert.match(worker, /automation: "\/api\/control\/automation"/);
   assert.match(worker, /credentialRequired: true/);
-  const routeIndex = worker.indexOf('url.pathname === "/api/application-management/contract"');
-  const controlIndex = worker.indexOf('url.pathname.startsWith("/api/control/")');
-  assert.ok(routeIndex >= 0 && controlIndex > routeIndex, "Universal contract must be reachable before protected control routing");
+  const fetchStart = worker.indexOf("export default {");
+  const fetchBlock = worker.slice(fetchStart);
+  const routeIndex = fetchBlock.indexOf('url.pathname === "/api/application-management/contract"');
+  const controlIndex = fetchBlock.lastIndexOf('url.pathname.startsWith("/api/control/")');
+  assert.ok(fetchStart >= 0 && routeIndex >= 0 && controlIndex > routeIndex, "Universal contract must be reachable before protected control routing");
 });
