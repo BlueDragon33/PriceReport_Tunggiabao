@@ -36,9 +36,15 @@ jobs:
     steps:
       - name: Require explicit deployment confirmation
         working-directory: .
+        env:
+          DEPLOY_CONFIRM: ${{ inputs.confirm }}
         run: |
           set -euo pipefail
-          test "${{ inputs.confirm }}" = "DEPLOY_KT_CONTROL"
+          CONFIRM="$(printf '%s' "$DEPLOY_CONFIRM" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [[ "$CONFIRM" != "DEPLOY_KT_CONTROL" ]]; then
+            echo "::error::Xác nhận không hợp lệ. Hãy nhập DEPLOY_KT_CONTROL (khoảng trắng đầu/cuối được bỏ qua)."
+            exit 1
+          fi
 
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v7
@@ -50,9 +56,15 @@ jobs:
       - name: Validate production configuration
         run: |
           set -euo pipefail
+          missing=()
           for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID PRICE_REPORT_CONTROL_D1_DATABASE_ID PRICE_REPORT_CONTROL_SERVICE_SECRET PRICE_REPORT_CONTROL_ORIGIN PRICE_REPORT_APP_ORIGIN APPLICATION_MANAGEMENT_ORIGIN; do
-            if [[ -z "${!key:-}" ]]; then echo "::error::$key is required"; exit 1; fi
+            [[ -n "${!key:-}" ]] || missing+=("$key")
           done
+          if (( ${#missing[@]} )); then
+            echo "::error::PriceReport Control Production chưa được cấu hình đầy đủ: ${missing[*]}"
+            echo "::error::Có thể dùng workflow bootstrap trung tâm trong BlueDragon33/Application-Management thay vì sao chép thủ công các secret/variable."
+            exit 1
+          fi
           if [[ ${#PRICE_REPORT_CONTROL_SERVICE_SECRET} -lt 32 ]]; then echo "::error::PRICE_REPORT_CONTROL_SERVICE_SECRET must be >=32 chars"; exit 1; fi
           case "$PRICE_REPORT_CONTROL_ORIGIN" in https://*) ;; *) echo "::error::PRICE_REPORT_CONTROL_ORIGIN must be HTTPS"; exit 1;; esac
 
