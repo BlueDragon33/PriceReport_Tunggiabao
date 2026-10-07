@@ -142,3 +142,13 @@ test("PriceReport publishes a first-class Universal Management Contract without 
   const controlIndex = fetchBlock.lastIndexOf('url.pathname.startsWith("/api/control/")');
   assert.ok(fetchStart >= 0 && routeIndex >= 0 && controlIndex > routeIndex, "Universal contract must be reachable before protected control routing");
 });
+
+
+test("automation idempotency ledger is checked before optimistic-concurrency state", async () => {
+  const automation = await source("../src/automation-store.ts");
+  const priorIndex = automation.indexOf("const prior = await commandRow(database, commandId)");
+  const currentIndex = automation.indexOf("const current = await readPriceReportAutomationPolicy(database)", priorIndex);
+  const conflictIndex = automation.indexOf("if (!expectedMatches(current, expected, desired))", priorIndex);
+  assert.ok(priorIndex >= 0 && currentIndex > priorIndex && conflictIndex > priorIndex);
+  assert.match(automation.slice(priorIndex, currentIndex), /replayed: true/);
+});

@@ -142,11 +142,11 @@ export async function executePriceReportAutomationCommand(
   }
   const expected = record(payload.expected);
   const desired = record(payload.desired);
-  const current = await readPriceReportAutomationPolicy(database);
-  if (!expectedMatches(current, expected, desired)) {
-    throw new PriceReportDeviceError("Automation policy đã thay đổi trước khi lệnh được áp dụng.", 409, "AUTOMATION_STATE_CONFLICT");
-  }
-  const next = desiredPolicy(current, desired);
+  const requested = {
+    ...("autoApproveDevices" in desired ? { autoApproveDevices: desired.autoApproveDevices } : {}),
+    ...("autoBlockPendingDevices" in desired ? { autoBlockPendingDevices: desired.autoBlockPendingDevices } : {}),
+    ...("pendingBlockAfterHours" in desired ? { pendingBlockAfterHours: normalizeHours(desired.pendingBlockAfterHours) } : {}),
+  };
   const canonicalPayload = JSON.stringify({
     operation: "set-device-automation",
     expected: {
@@ -154,7 +154,7 @@ export async function executePriceReportAutomationCommand(
       ...("autoBlockPendingDevices" in desired ? { autoBlockPendingDevices: expected.autoBlockPendingDevices } : {}),
       ...("pendingBlockAfterHours" in desired ? { pendingBlockAfterHours: normalizeHours(expected.pendingBlockAfterHours) } : {}),
     },
-    desired: next,
+    desired: requested,
   });
   const payloadHash = await sha256Hex(canonicalPayload);
 
@@ -168,6 +168,12 @@ export async function executePriceReportAutomationCommand(
     }
     throw new PriceReportDeviceError("Lệnh automation cùng commandId đang được xử lý.", 409, "COMMAND_IN_PROGRESS");
   }
+
+  const current = await readPriceReportAutomationPolicy(database);
+  if (!expectedMatches(current, expected, desired)) {
+    throw new PriceReportDeviceError("Automation policy đã thay đổi trước khi lệnh được áp dụng.", 409, "AUTOMATION_STATE_CONFLICT");
+  }
+  const next = desiredPolicy(current, desired);
 
   const executionNonce = crypto.randomUUID();
   await database.prepare(
