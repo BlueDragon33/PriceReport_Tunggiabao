@@ -1,5 +1,10 @@
 import { deletePendingRegistration, PendingDeviceDeletionError } from "./pending-device-deletion";
 import {
+  enforcePriceReportAutomation,
+  executePriceReportAutomationCommand,
+  readPriceReportAutomationPolicy,
+} from "./automation-store";
+import {
   PriceReportDeviceError,
   executePriceReportDeviceCommand,
   issuePriceReportDeviceChallenge,
@@ -162,6 +167,8 @@ async function databaseReady(env: Env) {
     await env.DB.prepare("SELECT challenge_id FROM kt_device_challenges LIMIT 1").first();
     await env.DB.prepare("SELECT session_hash FROM kt_device_sessions LIMIT 1").first();
     await env.DB.prepare("SELECT command_id FROM kt_control_commands LIMIT 1").first();
+    await env.DB.prepare("SELECT id FROM kt_automation_policy LIMIT 1").first();
+    await env.DB.prepare("SELECT command_id FROM kt_automation_commands LIMIT 1").first();
     await env.DB.prepare("SELECT id FROM kt_audit_log LIMIT 1").first();
     return true;
   } catch {
@@ -193,9 +200,14 @@ async function publicDeviceRoute(request: Request, env: Env, url: URL) {
   try {
     requireAppOrigin(request, env);
     const database = requireDatabase(env);
+    await enforcePriceReportAutomation(database);
 
     if (request.method === "POST" && url.pathname === "/api/device/register") {
-      const device = await registerPriceReportDevice(database, await body(request));
+      const automation = await readPriceReportAutomationPolicy(database);
+      const device = await registerPriceReportDevice(database, await body(request), {
+        autoApprove: automation.autoApproveDevices,
+        approvedBy: "automation:registration",
+      });
       return json(request, env, { ok: true, application: TOKEN_APP, device }, 200, "app");
     }
     if (request.method === "POST" && url.pathname === "/api/device/challenge") {
@@ -263,6 +275,10 @@ async function controlRoute(request: Request, env: Env, url: URL) {
           deviceMetadata: ready,
           deviceIdempotentCommands: ready,
           optimisticConcurrency: ready,
+          deviceAutoApproval: ready,
+          deviceAutoBlockPending: ready,
+          automationIdempotentCommands: ready,
+          automationOptimisticConcurrency: ready,
           accessAndEditSeparated: ready,
           audit: ready,
           p256DeviceIdentity: ready,
@@ -272,6 +288,7 @@ async function controlRoute(request: Request, env: Env, url: URL) {
         endpoints: {
           devices: "/api/control/devices",
           deviceCommands: "/api/control/device-commands",
+          automation: "/api/control/automation",
           deviceDeletions: "/api/control/device-deletions",
           audit: "/api/control/audit",
           deviceRegister: "/api/device/register",
@@ -287,8 +304,22 @@ async function controlRoute(request: Request, env: Env, url: URL) {
 
     if (request.method === "GET" && url.pathname === "/api/control/devices") {
       const database = requireDatabase(env);
+      await enforcePriceReportAutomation(database);
       const devices = await listPriceReportDevices(database);
       return json(request, env, { ok: true, application: TOKEN_APP, devices });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/control/automation") {
+      const database = requireDatabase(env);
+      const automation = await readPriceReportAutomationPolicy(database);
+      return json(request, env, { ok: true, application: TOKEN_APP, automation });
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/control/automation") {
+      const database = requireDatabase(env);
+      const command = await executePriceReportAutomationCommand(database, identity, await body(request));
+      await enforcePriceReportAutomation(database);
+      return json(request, env, { ok: true, application: TOKEN_APP, ...command });
     }
 
     if (request.method === "POST" && url.pathname === "/api/control/device-deletions") {

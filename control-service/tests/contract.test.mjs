@@ -57,9 +57,17 @@ test("KT command ledger is idempotent and compare-and-set protected", async () =
   assert.match(store, /replayed: true/);
 });
 
-test("D1 owns KT registry challenge session command and audit tables", async () => {
-  const migration = await source("../migrations/0001_device_control.sql");
-  for (const table of ["kt_devices","kt_device_challenges","kt_device_sessions","kt_control_commands","kt_audit_log"]) {
+test("D1 owns KT registry, automation, command and audit tables", async () => {
+  const migration = (await source("../migrations/0001_device_control.sql")) + "\n" + (await source("../migrations/0002_automation_policy.sql"));
+  for (const table of [
+    "kt_devices",
+    "kt_device_challenges",
+    "kt_device_sessions",
+    "kt_control_commands",
+    "kt_automation_policy",
+    "kt_automation_commands",
+    "kt_audit_log",
+  ]) {
     assert.match(migration, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
   }
 });
@@ -71,6 +79,11 @@ test("control status only advertises live capabilities when D1/app origin are re
   assert.match(worker, /deviceApproval: ready/);
   assert.match(worker, /deviceIdempotentCommands: ready/);
   assert.match(worker, /optimisticConcurrency: ready/);
+  assert.match(worker, /deviceAutoApproval: ready/);
+  assert.match(worker, /deviceAutoBlockPending: ready/);
+  assert.match(worker, /automationIdempotentCommands: ready/);
+  assert.match(worker, /automationOptimisticConcurrency: ready/);
+  assert.match(worker, /automation: "\/api\/control\/automation"/);
   assert.match(worker, /p256ChallengeProof: ready && appOriginReady/);
   assert.match(worker, /deviceRegistry: \{ owner: "PriceReport_Tunggiabao", namespace: "KT-" \}/);
   assert.match(worker, /applicationManagementOriginConfigured/);
@@ -82,4 +95,32 @@ test("local worker config uses an isolated D1 binding", async () => {
   assert.equal(config.main, "src/index.ts");
   assert.equal(config.d1_databases?.[0]?.binding, "DB");
   assert.equal(config.d1_databases?.[0]?.migrations_dir, "migrations");
+});
+
+
+test("KT automation policy is client-owned, idempotent and compare-and-set protected", async () => {
+  const worker = await source("../src/index.ts");
+  const automation = await source("../src/automation-store.ts");
+  assert.match(worker, /GET" && url\.pathname === "\/api\/control\/automation"/);
+  assert.match(worker, /POST" && url\.pathname === "\/api\/control\/automation"/);
+  assert.match(automation, /operation !== "set-device-automation"/);
+  assert.match(automation, /AUTOMATION_STATE_CONFLICT/);
+  assert.match(automation, /COMMAND_ID_PAYLOAD_MISMATCH/);
+  assert.match(automation, /COMMAND_IN_PROGRESS/);
+  assert.match(automation, /WHERE id=1 AND revision=\?/);
+  assert.match(automation, /AUTOMATION_READBACK_MISMATCH/);
+  assert.match(automation, /replayed: true/);
+});
+
+test("KT automation is behavior, not metadata only", async () => {
+  const worker = await source("../src/index.ts");
+  const devices = await source("../src/device-store.ts");
+  const automation = await source("../src/automation-store.ts");
+  assert.match(worker, /enforcePriceReportAutomation\(database\)/);
+  assert.match(worker, /autoApprove: automation\.autoApproveDevices/);
+  assert.match(devices, /initialStatus: PriceReportDeviceStatus = options\.autoApprove \? "approved" : "pending"/);
+  assert.match(devices, /device_auto_approved/);
+  assert.match(automation, /pending_device_auto_blocked/);
+  assert.match(automation, /unixepoch\(created_at\)/);
+  assert.match(automation, /status='blocked'/);
 });

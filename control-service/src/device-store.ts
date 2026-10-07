@@ -208,7 +208,11 @@ async function revokeDeviceSessions(database: D1Database, deviceId: string, acto
   return Number(result.meta.changes ?? 0);
 }
 
-export async function registerPriceReportDevice(database: D1Database, payload: Record<string, unknown>) {
+export async function registerPriceReportDevice(
+  database: D1Database,
+  payload: Record<string, unknown>,
+  options: { autoApprove?: boolean; approvedBy?: string } = {},
+) {
   const key = await canonicalPublicJwk(payload.publicJwk ?? payload.publicKey);
   const deviceId = await sha256Hex(key.canonical);
   const displayCode = displayCodeFor(deviceId);
@@ -219,11 +223,33 @@ export async function registerPriceReportDevice(database: D1Database, payload: R
   const displayName = text(payload.displayName, 120) || null;
   const label = text(payload.label, 100) || null;
 
-  await database.prepare(
+  const initialStatus: PriceReportDeviceStatus = options.autoApprove ? "approved" : "pending";
+  const approvedBy = options.autoApprove ? text(options.approvedBy, 160) || "automation" : null;
+  const inserted = await database.prepare(
     `INSERT OR IGNORE INTO kt_devices
-       (device_id, display_code, public_jwk_json, device_type, platform, browser, display_name, label, status, edit_enabled, last_seen_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)`,
-  ).bind(deviceId, displayCode, JSON.stringify(key.jwk), deviceType, platform, browser, displayName, label, now).run();
+       (device_id, display_code, public_jwk_json, device_type, platform, browser, display_name, label,
+        status, edit_enabled, last_seen_at, approved_at, approved_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, CASE WHEN ?='approved' THEN CURRENT_TIMESTAMP ELSE NULL END, ?)`,
+  ).bind(
+    deviceId,
+    displayCode,
+    JSON.stringify(key.jwk),
+    deviceType,
+    platform,
+    browser,
+    displayName,
+    label,
+    initialStatus,
+    now,
+    initialStatus,
+    approvedBy,
+  ).run();
+  if (options.autoApprove && Number(inserted.meta.changes ?? 0) === 1) {
+    await audit(database, approvedBy ?? "automation", "device_auto_approved", deviceId, {
+      deviceCode: displayCode,
+      source: "registration-policy",
+    });
+  }
 
   await database.prepare(
     `UPDATE kt_devices

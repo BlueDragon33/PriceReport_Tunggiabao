@@ -45,3 +45,16 @@ Application Management must use the same control origin and `PRICE_REPORT_CONTRO
 `PRICE_REPORT_CONTROL_ORIGIN` may be stored as a variable on the protected `price-report-control-production` GitHub Environment. The control-service deployment therefore forwards that verified value explicitly to the Pages `workflow_dispatch` input `control_origin`. The Pages workflow prefers the forwarded input and only falls back to the repository variable for ordinary pushes/manual runs.
 
 Production health also requires `applicationManagementOriginConfigured=true` before the Device Gate can be enabled. This prevents a partially configured control service from being advertised as remotely manageable.
+
+
+## Universal automation policy
+
+KT Control Service owns its own automation state in D1. Application Management never stores this as authoritative client state.
+
+- `GET /api/control/automation` reads current policy.
+- `POST /api/control/automation` accepts `operation=set-device-automation`, `commandId`, `expected`, and `desired`.
+- Commands are idempotent through `kt_automation_commands`.
+- State changes use revision compare-and-set and are read back before success.
+- `autoApproveDevices` applies only when a **new** KT device registry row is created.
+- `autoBlockPendingDevices` preserves the KT registry and changes expired pending rows to `blocked` after 24/168/720 hours.
+- Quotation/customer data never enters this automation path.

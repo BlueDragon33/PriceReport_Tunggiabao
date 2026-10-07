@@ -47,7 +47,8 @@
     "remoteAuditApi": "optional-managed-deployment",
     "p256DeviceIdentity": "optional-managed-mode",
     "revocableSessions": "optional-managed-mode",
-    "deviceAccessGate": "available-but-disabled-in-standalone"
+    "deviceAccessGate": "available-but-disabled-in-standalone",
+    "automationPolicy": "optional-managed-deployment"
   },
   "policy": {
     "applicationManagementMayInventOperationsWithoutBackend": false,
@@ -70,7 +71,9 @@
       "idempotencyKey": "commandId",
       "optimisticConcurrency": "expectedStatus",
       "blockRevokesSessions": true,
-      "registryPreservedOnBlock": true
+      "registryPreservedOnBlock": true,
+      "automationIdempotencyKey": "commandId",
+      "automationOptimisticConcurrency": "expected"
     },
     "endpoints": {
       "status": "/api/control/status",
@@ -81,7 +84,8 @@
       "challenge": "/api/device/challenge",
       "verify": "/api/device/verify",
       "heartbeat": "/api/device/heartbeat",
-      "deviceStatus": "/api/device/status"
+      "deviceStatus": "/api/device/status",
+      "automation": "/api/control/automation"
     },
     "rollout": "standalone"
   },
