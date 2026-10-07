@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0.0",
+  "policyId": "blueprint-os:universal-century-grade",
+  "policyVersion": "1.2.0",
+  "projectId": "project:pricereport-tunggiabao",
+  "blueprintLevel": "B3",
+  "posture": "LOCAL_BUSINESS_CORE_WITH_OPTIONAL_SYNC",
+  "complianceState": "MIGRATION_REQUIRED",
+  "canonicalAuthority": {
+    "quotationsAndReports": "application-owned-versioned-business-state",
+    "catalogAndReferenceTables": "local-or-explicitly-synced-projection",
+    "drive": "optional-file-backup",
+    "sheets": "optional-human-readable-projection-not-hidden-transaction-db"
+  },
+  "dependencies": [
+    {
+      "id": "local-app-runtime",
+      "class": "LOCAL_CORE",
+      "costClass": "local-free",
+      "purpose": "create/edit/export quotations and reports",
+      "dataBoundary": "local business data",
+      "offlineBehavior": "core quotation/report creation remains available",
+      "exitPath": "portable JSON/CSV/XLSX/PDF or documented export"
+    },
+    {
+      "id": "google-drive",
+      "class": "OPTIONAL_SYNC",
+      "costClass": "free-or-optional-paid",
+      "purpose": "optional backup/archive and cross-device file transfer",
+      "dataBoundary": "versioned exports/files only",
+      "offlineBehavior": "local work continues; sync pauses",
+      "exitPath": "ordinary portable files"
+    },
+    {
+      "id": "google-sheets",
+      "class": "OPTIONAL_SYNC",
+      "costClass": "free-or-optional-paid",
+      "purpose": "optional catalog/report projection and human editing",
+      "dataBoundary": "non-secret business tables with explicit sync/version rules",
+      "offlineBehavior": "local canonical state remains usable",
+      "exitPath": "CSV/XLSX/JSON import/export"
+    },
+    {
+      "id": "google-apps-script",
+      "class": "OPTIONAL_SYNC",
+      "costClass": "free-or-optional-paid",
+      "purpose": "optional low-frequency sync/notification automation",
+      "dataBoundary": "least-privilege business payloads only",
+      "offlineBehavior": "queue/manual sync",
+      "exitPath": "replaceable webhook/sync adapter"
+    },
+    {
+      "id": "hosted-runtime",
+      "class": "OPTIONAL_PUBLISH",
+      "costClass": "free-tier-or-optional-paid",
+      "purpose": "optional remote/mobile access",
+      "dataBoundary": "application business state per deployment policy",
+      "offlineBehavior": "local app remains usable",
+      "exitPath": "provider-neutral export and local runtime"
+    }
+  ],
+  "forbidden": [
+    "google-sheets-as-undocumented-transactional-authority",
+    "silent-last-write-wins-overwrite-without-version-conflict-policy",
+    "credentials-or-session-secrets-in-drive-or-sheets",
+    "mandatory-paid-provider-for-basic-quotation-creation",
+    "cloud-only-business-state-without-portable-export"
+  ],
+  "migrationBlockers": [
+    "Define canonical local/versioned business state and sync conflict policy.",
+    "Prove export/import for quotations/catalog/report data.",
+    "Keep Sheets as explicit projection/sync target rather than hidden database."
+  ],
+  "productionAuthority": "separate-explicit-release-gate"
+}
