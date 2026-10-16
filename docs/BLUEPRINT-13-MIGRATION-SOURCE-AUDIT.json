@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "application-constitution-source-adoption",
+  "status": "MIGRATION_REQUIRED_SOURCE_CANDIDATE",
+  "projectId": "project:pricereport-tunggiabao",
+  "blueprintLevel": "B3",
+  "baselineSha": "26d69f07e67730f1f9f2fe7326aa78466714c91f",
+  "centralPolicy": {
+    "repository": "BlueDragon33/Software-Blueprint-Hub",
+    "version": "1.3.0",
+    "newRatification": false
+  },
+  "sourceScope": [
+    ".blueprint/constitution-adoption.json",
+    ".blueprint/dependency-budget.json",
+    "README.md"
+  ],
+  "existingMigrationBlockersMustRemainAtLeast": 3,
+  "coreLocalDependency": "local-app-runtime",
+  "criticalForbidden": [
+    "google-sheets-as-undocumented-transactional-authority",
+    "silent-last-write-wins-overwrite-without-version-conflict-policy",
+    "cloud-only-business-state-without-portable-export"
+  ],
+  "pendingProductEvidence": [
+    "Offline quotation create/edit/export in real browser with network denied",
+    "Local transaction save/restart/restore, with conflict/version semantics",
+    "No credentials/secrets leak to optional Google Sheets/Drive"
+  ],
+  "truth": {
+    "sourceContractReviewOnly": true,
+    "appOfflineRuntime": "UNVERIFIED",
+    "userAcceptance": "UNVERIFIED",
+    "independentReview": "PENDING",
+    "productionAuthorized": false,
+    "mergeIsNotPublish": true,
+    "nativeRuntimeNotTouched": true
+  }
+}
