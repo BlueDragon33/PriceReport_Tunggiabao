@@ -485,8 +485,13 @@ CI #246:
 
 ## Operational sovereignty
 
-This repository adopts **Universal Constitution 1.2.0** at Blueprint Level **B3**.
+This repository adopts **Universal Constitution 1.3.0** at Blueprint Level **B3**.
 
 Quotation/report creation remains local-first and exportable. Google Drive is an optional archive/sync provider. Google Sheets is an optional catalog/report projection, not an undocumented transactional database; sync/version/conflict behavior must be explicit. Basic business workflows must not require a paid provider.
 
 Canonical dependency posture: `.blueprint/dependency-budget.json`.
+
+
+## Giới hạn nghiệm thu Blueprint 1.3
+
+Kế thừa chính sách tại nguồn và CI không đồng nghĩa rằng ứng dụng đã được nghiệm thu offline. Hồ sơ kiểm định: `docs/BLUEPRINT-13-MIGRATION-SOURCE-AUDIT.json`; trạng thái các migration blockers hiện giữ `MIGRATION_REQUIRED`. Không publish online từ merge/CI; quyền Production yêu cầu cổng phê duyệt riêng.
