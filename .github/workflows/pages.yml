@@ -1,10 +1,13 @@
 name: Deploy webapp to GitHub Pages
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
+      enable_online_release:
+        description: "Offline development default; future online release requires explicit owner opt-in"
+        required: true
+        default: false
+        type: boolean
       control_origin:
         description: "Verified KT Control origin forwarded by the production deploy workflow"
         required: false
@@ -21,6 +24,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ inputs.enable_online_release == true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
