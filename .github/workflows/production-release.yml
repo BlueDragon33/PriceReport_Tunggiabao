@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      enable_online_release:
+        type: boolean
+        required: true
+        default: false
+        description: "Future owner-authorized online release only; offline default"
 
 permissions:
   contents: read
@@ -44,7 +50,7 @@ jobs:
 
   deploy:
     name: Production publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && inputs.enable_online_release == true && github.ref == 'refs/heads/main'
     needs: verify
     runs-on: ubuntu-latest
     environment:
