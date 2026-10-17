@@ -12,11 +12,9 @@ import { promisify } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 const exec=promisify(execFile);
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
-// Production's locked Wrangler 4.92.0 cannot run compatibility_date 2026-09-22.
-// This QA-only CLI is isolated from the repo lockfile and user runtime.
-const QA_CLI=join(ROOT,".wrangler-qa-runtime","node_modules","wrangler","bin","wrangler.js");
-if(!existsSync(QA_CLI))throw Error("QA_PINNED_COMPATIBLE_WRANGLER_NOT_INSTALLED");
-const WRANGLER=QA_CLI;
+// Use the repository's npm-ci pinned Wrangler, never an alternate QA CLI.
+const WRANGLER=join(ROOT,"node_modules","wrangler","bin","wrangler.js");
+if(!existsSync(WRANGLER))throw Error("LOCKED_WRANGLER_NOT_INSTALLED");
 const DB="price-report-control-local-db";
 async function sparePort() {
  const server=createServer();
