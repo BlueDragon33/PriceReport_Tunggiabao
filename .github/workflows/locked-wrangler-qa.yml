@@ -23,7 +23,7 @@ jobs:
           node-version: '22.13.0'
           package-manager-cache: false
       - name: Regenerate pinned lockfile without Git write privileges
-        run: npm install --package-lock-only --save-dev --save-exact --ignore-scripts --no-audit --no-fund wrangler@4.151.1
+        run: npm install --package-lock-only --save-dev --save-exact --ignore-scripts --no-audit --no-fund wrangler@4.151.1 @cloudflare/workers-types@5.20261016.1
       - name: Validate newly resolved package-lock by real install and Worker CI
         run: |
           npm ci --no-audit --no-fund
