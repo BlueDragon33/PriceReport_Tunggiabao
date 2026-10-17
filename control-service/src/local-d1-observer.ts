@@ -32,7 +32,7 @@ export function createLocalD1Observer(serviceId: string) {
         if (typeof value !== "function") return value;
         if (["run", "first", "all", "raw"].includes(String(property))) {
           return (...args: unknown[]) =>
-            observed(() => Reflect.apply(value, target, args));
+            observed(() => Reflect.apply(value, target, args) as Promise<unknown>);
         }
         return value.bind(target);
       },
