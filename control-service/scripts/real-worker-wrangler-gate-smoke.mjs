@@ -2,6 +2,7 @@
 // All persistent storage is disposable and no application mutation route is used.
 import assert from "node:assert/strict";
 import { spawn, execFile } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createServer } from "node:net";
@@ -24,6 +25,8 @@ async function sparePort() {
 }
 const store=await mkdtemp(join(tmpdir(),"control-worker-real-"));
 const port=await sparePort();
+const gateProof=randomBytes(36).toString("base64url");
+const gateHeaders={"x-local-ops-ingress-proof":gateProof};
 let processChild=null, logs="";
 try {
   const args=[WRANGLER,"d1","migrations","apply",DB,"--local","--config","wrangler.local.jsonc",
@@ -31,7 +34,8 @@ try {
   await exec(process.execPath,args,{cwd:ROOT,windowsHide:true,timeout:90000,maxBuffer:3*1024*1024,
     env:{...process.env,CI:"1",WRANGLER_SEND_METRICS:"false"}});
   processChild=spawn(process.execPath,[WRANGLER,"dev","--local","--config","wrangler.local.jsonc",
-    "--ip","127.0.0.1","--port",String(port),"--persist-to",store],{
+    "--ip","127.0.0.1","--port",String(port),"--persist-to",store,
+    "--var","LOCAL_OPS_GATEWAY_REQUIRED:1","--var","LOCAL_OPS_INGRESS_PROOF:"+gateProof],{
     cwd:ROOT,stdio:["ignore","pipe","pipe"],windowsHide:true,
     env:{...process.env,CI:"1",WRANGLER_SEND_METRICS:"false",NO_COLOR:"1"}
   });
@@ -43,24 +47,26 @@ try {
       throw Error("REAL_WORKER_EARLY_EXIT: "+logs.slice(-1500));
     try{
       const r=await fetch("http://127.0.0.1:"+port+"/health",
-        {signal:AbortSignal.timeout(1200)});
+        {headers:gateHeaders,signal:AbortSignal.timeout(1200)});
       if(r.ok){health=await r.json();if(health.databaseReady===true)break;}
     }catch {}
     await sleep(300);
   }
   assert.equal(health?.databaseReady,true,"real Worker must query migrated local D1");
   const url="http://127.0.0.1:"+port;
+  assert.equal((await fetch(url+"/health")).status,403,"untrusted direct backend must be denied");
+  assert.equal((await fetch(url+"/health",{headers:{"x-local-ops-ingress-proof":"wrong"}})).status,403);
   const p=await fetch(url+"/_local/ops/drain-preflight",{method:"POST",
-    headers:{"authorization":"Bearer "+"x".repeat(40)},signal:AbortSignal.timeout(5000)});
+    headers:{"authorization":"Bearer "+"x".repeat(40),...gateHeaders},signal:AbortSignal.timeout(5000)});
   assert.equal(p.status,503,"real Worker MUST refuse shutdown preflight");
   const denial=await p.json();
   assert.equal(denial.code,"WORKER_ISOLATE_D1_DRAIN_UNVERIFIED");
   assert.equal(denial.autoRestartAllowed,false);
-  const contract=await fetch(url+"/api/application-management/contract",{signal:AbortSignal.timeout(5000)});
+  const contract=await fetch(url+"/api/application-management/contract",{headers:gateHeaders,signal:AbortSignal.timeout(5000)});
   assert.equal(contract.status,200,"existing real Worker management contract unchanged");
   console.log(JSON.stringify({result:"REAL_CONTROL_WORKER_LOCAL_D1_GATE_PASS",database:DB,
     platform:process.platform,realWorkerHealthD1:true,realWorkerContract:true,
-    realWorkerDrainPreflightStatus:503,globalIsolateDrain:"UNVERIFIED",
+    realWorkerDrainPreflightStatus:503,directBackend403:true,managedGateProofRequired:true,globalIsolateDrain:"UNVERIFIED",
     gracefulWranglerExit:"NOT_VERIFIED",productionDataTouched:false,
     deployPerformed:false,autoRestartApproved:false}));
 } catch(error) {
