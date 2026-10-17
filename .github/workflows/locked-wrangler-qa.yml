@@ -30,4 +30,4 @@ jobs:
           npm run gate
       - name: Emit gzipped lockfile for audited readback
         run: |
-          node --input-type=module -e "import fs from 'node:fs'; import zlib from 'node:zlib'; import crypto from 'node:crypto'; const p=fs.readFileSync('package-lock.json'); console.log('LOCK_JSON_BYTES='+p.length); console.log('LOCK_SHA256='+crypto.createHash('sha256').update(p).digest('hex')); console.log('LOCKFILE_GZIP_BASE64_BEGIN'); console.log(zlib.gzipSync(p).toString('base64')); console.log('LOCKFILE_GZIP_BASE64_END');"
+          node --input-type=module -e "import fs from 'node:fs'; import zlib from 'node:zlib'; import crypto from 'node:crypto'; const p=fs.readFileSync('package-lock.json'); console.log('LOCK_JSON_BYTES='+p.length); console.log('LOCK_SHA256='+crypto.createHash('sha256').update(p).digest('hex')); console.log('LOCKFILE_GZIP_BASE64_BEGIN'); console.log(p.toString('base64')); console.log('LOCKFILE_GZIP_BASE64_END');"
