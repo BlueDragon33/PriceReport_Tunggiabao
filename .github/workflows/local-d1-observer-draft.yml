@@ -40,9 +40,11 @@ jobs:
         run: npm test
       - name: Verify actual disposable Wrangler local D1 subprocess persistence
         run: node scripts/local-d1-write-readback-smoke.mjs
-      - name: Actual application Worker with migrated local D1 and shutdown HTTP 503
-        run: node scripts/real-worker-wrangler-gate-smoke.mjs
-      - name: Verify no online deploy (dry-run only)
+      - name: Verify locked production Wrangler source (dry-run only)
         run: npm run build
+      - name: Install test-only Wrangler 4.151.1 into isolated directory (locked package files unchanged)
+        run: npm install --prefix .wrangler-qa-runtime --no-save --no-package-lock --no-audit --no-fund wrangler@4.151.1
+      - name: Actual application Worker with migrated local D1 and shutdown HTTP 503 (QA CLI)
+        run: node scripts/real-worker-wrangler-gate-smoke.mjs
       - name: Evidence scope
         run: echo "Only isolated local D1 and per-Worker-isolate tracking. Global multi-isolate drain, Windows Wrangler child exit and production acceptance remain BLOCKED."

@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { spawn, execFile } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { resolve, dirname, join } from "node:path";
@@ -11,7 +12,11 @@ import { promisify } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 const exec=promisify(execFile);
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
-const WRANGLER=join(ROOT,"node_modules/wrangler/bin/wrangler.js");
+// Production's locked Wrangler 4.92.0 cannot run compatibility_date 2026-09-22.
+// This QA-only CLI is isolated from the repo lockfile and user runtime.
+const QA_CLI=join(ROOT,".wrangler-qa-runtime","node_modules","wrangler","bin","wrangler.js");
+if(!existsSync(QA_CLI))throw Error("QA_PINNED_COMPATIBLE_WRANGLER_NOT_INSTALLED");
+const WRANGLER=QA_CLI;
 const DB="price-report-control-local-db";
 async function sparePort() {
  const server=createServer();
