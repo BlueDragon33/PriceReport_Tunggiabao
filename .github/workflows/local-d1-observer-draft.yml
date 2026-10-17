@@ -1,0 +1,48 @@
+name: Offline D1 Observer Draft Validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'control-service/src/local-d1-observer.ts'
+      - 'control-service/src/index.ts'
+      - 'control-service/src/automation-contract.ts'
+      - 'control-service/tests/local-d1-observer.test.mjs'
+      - 'control-service/scripts/local-d1-write-readback-smoke.mjs'
+      - 'control-service/scripts/real-worker-wrangler-gate-smoke.mjs'
+      - '.github/workflows/local-d1-observer-draft.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-d1:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: control-service
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.13.0'
+          package-manager-cache: false
+      - name: Install pinned local tools
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck actual Worker with D1 observer
+        run: npm run typecheck
+      - name: Control-service regression
+        run: npm test
+      - name: Verify actual disposable Wrangler local D1 subprocess persistence
+        run: node scripts/local-d1-write-readback-smoke.mjs
+      - name: Verify locked production Wrangler source (dry-run only)
+        run: npm run build
+      - name: Actual application Worker with locked Wrangler, local D1 and HTTP 503
+        run: node scripts/real-worker-wrangler-gate-smoke.mjs
+      - name: Evidence scope
+        run: echo "Only isolated local D1 and per-Worker-isolate tracking. Global multi-isolate drain, Windows Wrangler child exit and production acceptance remain BLOCKED."

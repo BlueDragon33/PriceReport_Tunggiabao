@@ -1,3 +1,5 @@
+import { createLocalD1Observer } from "./local-d1-observer";
+import { verifyManagedIngress } from "./local-ingress-guard";
 import { deletePendingRegistration, PendingDeviceDeletionError } from "./pending-device-deletion";
 import {
   enforcePriceReportAutomation,
@@ -398,8 +400,15 @@ async function controlRoute(request: Request, env: Env, url: URL) {
   }
 }
 
+const localD1Observer = createLocalD1Observer("PRICE-CONTROL");
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, incomingEnv: Env): Promise<Response> {
+    const denied = await verifyManagedIngress(request, incomingEnv as typeof incomingEnv & Parameters<typeof verifyManagedIngress>[1]);
+    if (denied) return denied;
+    if (new URL(request.url).pathname === "/_local/ops/drain-preflight")
+      return localD1Observer.blockedPreflight();
+    return localD1Observer.trackFetch(incomingEnv, async env => {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
@@ -432,5 +441,6 @@ export default {
     if (url.pathname.startsWith("/api/device/")) return await publicDeviceRoute(request, env, url);
     if (url.pathname.startsWith("/api/control/")) return await controlRoute(request, env, url);
     return json(request, env, { ok: false, code: "NOT_FOUND" }, 404, "none");
+    });
   },
 };
