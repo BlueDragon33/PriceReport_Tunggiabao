@@ -49,8 +49,9 @@ test("owning PriceReport production code uses revision CAS and SQL readback",()=
 
 test("disposable D1 is preserved if child exit cannot be confirmed",()=>{
   assert.match(qa,/const qaProcessExited=!child\|\|child\.exitCode!==null\|\|child\.signalCode!==null/);
-  assert.match(qa,/if\(qaProcessExited\)\{/);
-  assert.match(qa,/QA_STORAGE_PRESERVED_PROCESS_EXIT_UNVERIFIED/);
+  assert.match(qa,/qaCleanupVerified=qaProcessExited&&descendantsExited&&portsReleased/);
+  assert.match(qa,/if\(qaCleanupVerified\)\{/);
+  assert.match(qa,/QA_STORAGE_PRESERVED_SHUTDOWN_UNVERIFIED/);
 });
 
 test("QA proves idempotent retry and rejects a stale expected state",()=>{
@@ -59,4 +60,12 @@ test("QA proves idempotent retry and rejects a stale expected state",()=>{
   assert.match(qa,/const stale=await fetch/);
   assert.match(qa,/assert\.equal\(stale\.status,409\)/);
   assert.match(qa,/assert\.equal\(afterConflict\.revision,independent\.revision\)/);
+});
+
+test("Windows cleanup needs two descendant snapshots plus both localhost port releases",()=>{
+  assert.match(qa,/descendantsBeforeStop=descendantsOf\(await windowsProcesses\(\),child\.pid\)/);
+  assert.match(qa,/const one=await windowsProcesses\(\);processSnapshotsChecked\+\+/);
+  assert.match(qa,/const two=await windowsProcesses\(\);processSnapshotsChecked\+\+/);
+  assert.match(qa,/const portsReleased=await portReleased\(backend\)&&await portReleased\(frontWanted\)/);
+  assert.match(qa,/globalD1Drain:"BLOCKED",nativeCliGracefulAck:false/);
 });
