@@ -185,8 +185,14 @@ try{
   if(proxy)await new Promise(ok=>proxy.close(ok));
   if(child&&child.exitCode===null&&child.signalCode===null){
     const exited=new Promise(ok=>child.once("exit",ok));
-    child.kill("SIGTERM"); // Disposable QA-only teardown, no runtime shutdown authorization
+    child.kill("SIGTERM"); // Disposable QA-only teardown; NOT graceful ACK.
     await Promise.race([exited,sleep(12000)]);
   }
-  await rm(storage,{recursive:true,force:true,maxRetries:6,retryDelay:350});
+  const qaProcessExited=!child||child.exitCode!==null||child.signalCode!==null;
+  if(qaProcessExited){
+    await rm(storage,{recursive:true,force:true,maxRetries:6,retryDelay:350});
+  }else{
+    // Do not delete the disposable D1 while its source Worker may still write.
+    console.error("QA_STORAGE_PRESERVED_PROCESS_EXIT_UNVERIFIED",storage);
+  }
 }
