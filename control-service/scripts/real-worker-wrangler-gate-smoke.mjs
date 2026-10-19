@@ -122,16 +122,18 @@ try{
     autoBlockPendingDevices:!before.autoBlockPendingDevices,
     pendingBlockAfterHours:before.pendingBlockAfterHours===24?168:24,
   };
+  const commandId=randomUUID();
+  const commandPayload={
+    operation:"set-device-automation",commandId,
+    expected:{
+      autoApproveDevices:before.autoApproveDevices,
+      autoBlockPendingDevices:before.autoBlockPendingDevices,
+      pendingBlockAfterHours:before.pendingBlockAfterHours,
+    },
+    desired,
+  };
   const mutation=await fetch(publicUrl+"/api/control/automation",{
-    method:"POST",headers,body:JSON.stringify({
-      operation:"set-device-automation",commandId:randomUUID(),
-      expected:{
-        autoApproveDevices:before.autoApproveDevices,
-        autoBlockPendingDevices:before.autoBlockPendingDevices,
-        pendingBlockAfterHours:before.pendingBlockAfterHours,
-      },
-      desired,
-    }),
+    method:"POST",headers,body:JSON.stringify(commandPayload),
   });
   assert.equal(mutation.status,200,"temporary source D1 mutation");
   const response=(await mutation.json()).automation;
@@ -144,6 +146,22 @@ try{
   const independent=(await observed.json()).automation;
   for(const field of Object.keys(desired))assert.equal(independent[field],desired[field]);
   assert.equal(independent.revision,response.revision);
+
+  // Idempotent replay must not apply the mutation twice.
+  const replay=await fetch(publicUrl+"/api/control/automation",{
+    method:"POST",headers,body:JSON.stringify(commandPayload),
+  });
+  assert.equal(replay.status,200);
+  assert.equal((await replay.json()).replayed,true);
+  // A new command built from a stale revision must be refused.
+  const stale=await fetch(publicUrl+"/api/control/automation",{
+    method:"POST",headers,body:JSON.stringify({...commandPayload,commandId:randomUUID()}),
+  });
+  assert.equal(stale.status,409);
+  const unchanged=await fetch(publicUrl+"/api/control/automation",{headers});
+  const afterConflict=(await unchanged.json()).automation;
+  assert.equal(afterConflict.revision,independent.revision);
+  for(const field of Object.keys(desired))assert.equal(afterConflict[field],desired[field]);
 
   await new Promise(ok=>proxy.close(ok));
   proxy=null;
@@ -173,6 +191,7 @@ try{
     directBackend403:true,proxy200:true,shutdownPreflight503:true,
     secretInArgv:false,secretInProcessEnv:false,secretFileACLProtected:true,
     realSourceWorkerAutomationWrite:true,independentPolicyGet:true,
+    replayIdempotencyChecked:true,staleRevisionRejected:true,
     persistedAutomationAfterWorkerExit:true,
     checkedFields:["autoApproveDevices","autoBlockPendingDevices","pendingBlockAfterHours","revision"],
     protectionScope:"other-user ACL; same-user process inspection not proven",
