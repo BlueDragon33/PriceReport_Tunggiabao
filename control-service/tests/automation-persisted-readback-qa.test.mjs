@@ -69,3 +69,11 @@ test("Windows cleanup needs two descendant snapshots plus both localhost port re
   assert.match(qa,/const portsReleased=await portReleased\(backend\)&&await portReleased\(frontWanted\)/);
   assert.match(qa,/globalD1Drain:"BLOCKED",nativeCliGracefulAck:false/);
 });
+
+test("PASS receipt cannot appear before Windows disposable QA cleanup proof",()=>{
+  assert.match(qa,/verifiedProductReceipt=\{result:"SOURCE_WORKER_PRIVATE_DOTENV_GATE_PASS"/);
+  assert.match(qa,/if\(qaCleanupVerified\)\{[\s\S]*?if\(verifiedProductReceipt\) \{[\s\S]*?console\.log\(JSON\.stringify/);
+  assert.doesNotMatch(qa,/console\.log\(JSON\.stringify\(\{result:"SOURCE_WORKER_PRIVATE_DOTENV_GATE_PASS"/);
+  assert.match(qa,/descendantProcessTreeScope:"captured PID descendants only; not global isolate census"/);
+  assert.match(qa,/descendantsExited=Boolean\(!child\|\|descendantsBeforeStop!==null\)/);
+});
