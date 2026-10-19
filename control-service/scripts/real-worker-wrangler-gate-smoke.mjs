@@ -108,11 +108,73 @@ try{
   assert.equal((await blocked.json()).autoRestartAllowed,false);
   assert.equal((await fetch(base+"/health")).status,403);
   assert.equal(child.spawnargs.join(" ").includes(secret),false);
+  assert.equal(child.spawnargs.join(" ").includes(controlSecret),false);
+
+  // Use the normal authenticated owner API against ONLY disposable D1.
+  const headers={authorization:"Bearer "+controlSecret,
+    "x-control-role":"owner","x-control-actor":qaActor,"content-type":"application/json"};
+  const pre=await fetch(publicUrl+"/api/control/automation",{headers});
+  assert.equal(pre.status,200,"temporary PriceReport policy GET");
+  const before=(await pre.json()).automation;
+  assert.ok(Number.isSafeInteger(before.revision)&&before.revision>=1);
+  const desired={
+    autoApproveDevices:!before.autoApproveDevices,
+    autoBlockPendingDevices:!before.autoBlockPendingDevices,
+    pendingBlockAfterHours:before.pendingBlockAfterHours===24?168:24,
+  };
+  const mutation=await fetch(publicUrl+"/api/control/automation",{
+    method:"POST",headers,body:JSON.stringify({
+      operation:"set-device-automation",commandId:randomUUID(),
+      expected:{
+        autoApproveDevices:before.autoApproveDevices,
+        autoBlockPendingDevices:before.autoBlockPendingDevices,
+        pendingBlockAfterHours:before.pendingBlockAfterHours,
+      },
+      desired,
+    }),
+  });
+  assert.equal(mutation.status,200,"temporary source D1 mutation");
+  const response=(await mutation.json()).automation;
+  for(const field of Object.keys(desired))assert.equal(response[field],desired[field]);
+  assert.equal(response.revision,before.revision+1);
+
+  // Independent GET rather than reusing the mutation's response object.
+  const observed=await fetch(publicUrl+"/api/control/automation",{headers});
+  assert.equal(observed.status,200);
+  const independent=(await observed.json()).automation;
+  for(const field of Object.keys(desired))assert.equal(independent[field],desired[field]);
+  assert.equal(independent.revision,response.revision);
+
+  await new Promise(ok=>proxy.close(ok));
+  proxy=null;
+  const termination=new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>reject(Error("QA_WRANGLER_PROCESS_EXIT_TIMEOUT")),15000);
+    child.once("exit",()=>{clearTimeout(timer);resolve();});
+  });
+  child.kill("SIGTERM"); // Disposable QA-only child; NOT native graceful CLI ACK.
+  await termination;
+  const lookup=await exec(process.execPath,[WRANGLER,"d1","execute",DB,
+    "--local","--config",config,"--persist-to",persist,
+    "--command","SELECT auto_approve_devices, auto_block_pending_devices, pending_block_after_hours, revision FROM kt_automation_policy WHERE id=1",
+    "--json"],{
+    cwd:ROOT,windowsHide:true,timeout:80000,maxBuffer:2*1024*1024,
+    env:{...process.env,CI:"1",WRANGLER_SEND_METRICS:"false"}});
+  const jsonStart=lookup.stdout.indexOf("[");
+  assert.ok(jsonStart>=0,"independent D1 local subprocess JSON");
+  const rows=JSON.parse(lookup.stdout.slice(jsonStart));
+  const row=rows.flatMap(item=>item.results??[])[0];
+  assert.equal(row?.auto_approve_devices,desired.autoApproveDevices?1:0);
+  assert.equal(row?.auto_block_pending_devices,desired.autoBlockPendingDevices?1:0);
+  assert.equal(row?.pending_block_after_hours,desired.pendingBlockAfterHours);
+  assert.equal(row?.revision,independent.revision);
   // Logs can contain binding values from Wrangler; never surface them.
   console.log(JSON.stringify({result:"SOURCE_WORKER_PRIVATE_DOTENV_GATE_PASS",
     platform:process.platform,database:DB,realD1Health:true,realWorkerContract:true,
     directBackend403:true,proxy200:true,shutdownPreflight503:true,
     secretInArgv:false,secretInProcessEnv:false,secretFileACLProtected:true,
+    realSourceWorkerAutomationWrite:true,independentPolicyGet:true,
+    persistedAutomationAfterWorkerExit:true,
+    checkedFields:["autoApproveDevices","autoBlockPendingDevices","pendingBlockAfterHours","revision"],
     protectionScope:"other-user ACL; same-user process inspection not proven",
     globalD1Drain:"BLOCKED",gracefulWindowsExit:"BLOCKED",userD1Touched:false}));
 } catch(e){
