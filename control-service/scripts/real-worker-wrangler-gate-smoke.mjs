@@ -22,6 +22,34 @@ async function portAvailable(){
   const sock=createTcp();await new Promise((ok,no)=>sock.once("error",no).listen(0,"127.0.0.1",ok));
   const p=sock.address().port;await new Promise(ok=>sock.close(ok));return p;
 }
+async function portReleased(port){
+  const sock=createTcp();
+  try {
+    await new Promise((ok,no)=>sock.once("error",no).listen(port,"127.0.0.1",ok));
+    return true;
+  }catch{return false;}
+  finally {if(sock.listening)await new Promise(ok=>sock.close(ok));}
+}
+async function windowsProcesses(){
+  if(process.platform!=="win32")return [];
+  const {stdout}=await exec("powershell.exe",[
+    "-NoProfile","-NonInteractive","-Command",
+    "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId | ConvertTo-Json -Compress"
+  ],{timeout:15000,windowsHide:true,maxBuffer:2*1024*1024});
+  const parsed=JSON.parse(stdout);
+  const rows=Array.isArray(parsed)?parsed:[parsed];
+  return rows.map(item=>({pid:Number(item.ProcessId),parent:Number(item.ParentProcessId)}));
+}
+function descendantsOf(rows,parentPid){
+  const found=new Set(),pending=[parentPid];
+  while(pending.length){
+    const id=pending.pop();
+    for(const row of rows)if(row.parent===id&&!found.has(row.pid)){
+      found.add(row.pid);pending.push(row.pid);
+    }
+  }
+  return found;
+}
 async function limitAccess(dir,file){
   await chmod(dir,0o700);await chmod(file,0o600);
   if(process.platform==="win32"){
@@ -42,6 +70,8 @@ const varsFile=join(storage,".dev.vars");
 const backend=await portAvailable();
 const frontWanted=await portAvailable();
 let child,proxy,log="";
+let descendantsBeforeStop=null;
+let qaCleanupVerified=false;
 try{
   const runtime={
     ...SOURCE_CONFIG,name:"qa-"+SOURCE_CONFIG.name,
@@ -169,6 +199,9 @@ try{
     const timer=setTimeout(()=>reject(Error("QA_WRANGLER_PROCESS_EXIT_TIMEOUT")),15000);
     child.once("exit",()=>{clearTimeout(timer);resolve();});
   });
+  if(process.platform==="win32"){
+    descendantsBeforeStop=descendantsOf(await windowsProcesses(),child.pid);
+  }
   child.kill("SIGTERM"); // Disposable QA-only child; NOT native graceful CLI ACK.
   await termination;
   const lookup=await exec(process.execPath,[WRANGLER,"d1","execute",DB,
@@ -208,10 +241,31 @@ try{
     await Promise.race([exited,sleep(12000)]);
   }
   const qaProcessExited=!child||child.exitCode!==null||child.signalCode!==null;
-  if(qaProcessExited){
+  let descendantsExited=process.platform!=="win32";
+  let processSnapshotsChecked=0;
+  if(process.platform==="win32"){
+    try{
+      // Two independent read-only WMI snapshots; never signal a captured child.
+      if(descendantsBeforeStop===null && child){
+        descendantsBeforeStop=descendantsOf(await windowsProcesses(),child.pid);
+      }
+      const one=await windowsProcesses();processSnapshotsChecked++;
+      await sleep(150);
+      const two=await windowsProcesses();processSnapshotsChecked++;
+      const live=new Set([...one,...two].map(item=>item.pid));
+      descendantsExited=[...descendantsBeforeStop].every(pid=>!live.has(pid));
+    }catch{descendantsExited=false;}
+  }
+  const portsReleased=await portReleased(backend)&&await portReleased(frontWanted);
+  qaCleanupVerified=qaProcessExited&&descendantsExited&&portsReleased;
+  if(qaCleanupVerified){
     await rm(storage,{recursive:true,force:true,maxRetries:6,retryDelay:350});
   }else{
-    // Do not delete the disposable D1 while its source Worker may still write.
-    console.error("QA_STORAGE_PRESERVED_PROCESS_EXIT_UNVERIFIED",storage);
+    // Preserve disposable D1 on any uncertain Windows child / port / exit receipt.
+    console.error("QA_STORAGE_PRESERVED_SHUTDOWN_UNVERIFIED",JSON.stringify({
+      storage,qaProcessExited,descendantsExited,portsReleased,processSnapshotsChecked,
+      globalD1Drain:"BLOCKED",nativeCliGracefulAck:false,
+    }));
+    process.exitCode=1;
   }
 }
