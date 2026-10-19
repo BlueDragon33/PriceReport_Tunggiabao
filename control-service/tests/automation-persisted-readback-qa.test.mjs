@@ -13,7 +13,8 @@ test("real source Worker QA uses only disposable local D1 and owner credentials"
   assert.doesNotMatch(qa,/--remote/);
 });
 test("QA writes all three supported fields with real owner command and expected values",()=>{
-  assert.match(qa,/operation:"set-device-automation",commandId:randomUUID\(\)/);
+  assert.match(qa,/operation:"set-device-automation",commandId/);
+  assert.match(qa,/const commandId=randomUUID\(\)/);
   assert.match(qa,/autoApproveDevices:!before\.autoApproveDevices/);
   assert.match(qa,/autoBlockPendingDevices:!before\.autoBlockPendingDevices/);
   assert.match(qa,/pendingBlockAfterHours:before\.pendingBlockAfterHours===24\?168:24/);
@@ -50,4 +51,12 @@ test("disposable D1 is preserved if child exit cannot be confirmed",()=>{
   assert.match(qa,/const qaProcessExited=!child\|\|child\.exitCode!==null\|\|child\.signalCode!==null/);
   assert.match(qa,/if\(qaProcessExited\)\{/);
   assert.match(qa,/QA_STORAGE_PRESERVED_PROCESS_EXIT_UNVERIFIED/);
+});
+
+test("QA proves idempotent retry and rejects a stale expected state",()=>{
+  assert.match(qa,/const replay=await fetch\(publicUrl\+"\/api\/control\/automation"/);
+  assert.match(qa,/assert\.equal\(\(await replay\.json\(\)\)\.replayed,true\)/);
+  assert.match(qa,/const stale=await fetch/);
+  assert.match(qa,/assert\.equal\(stale\.status,409\)/);
+  assert.match(qa,/assert\.equal\(afterConflict\.revision,independent\.revision\)/);
 });
