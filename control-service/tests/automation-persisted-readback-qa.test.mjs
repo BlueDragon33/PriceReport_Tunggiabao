@@ -45,3 +45,9 @@ test("owning PriceReport production code uses revision CAS and SQL readback",()=
   assert.match(store,/const updated = await readPriceReportAutomationPolicy\(database\)/);
   assert.match(store,/AUTOMATION_READBACK_MISMATCH/);
 });
+
+test("disposable D1 is preserved if child exit cannot be confirmed",()=>{
+  assert.match(qa,/const qaProcessExited=!child\|\|child\.exitCode!==null\|\|child\.signalCode!==null/);
+  assert.match(qa,/if\(qaProcessExited\)\{/);
+  assert.match(qa,/QA_STORAGE_PRESERVED_PROCESS_EXIT_UNVERIFIED/);
+});
