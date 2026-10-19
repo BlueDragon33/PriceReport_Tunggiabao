@@ -3,7 +3,7 @@
 // QA integration is NOT cross-isolate drain/Windows graceful-stop approval.
 import assert from "node:assert/strict";
 import { spawn, execFile } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, chmod, readFile, rm } from "node:fs/promises";
 import { createServer as createTcp } from "node:net";
 import { createServer as createHttp, request as httpRequest } from "node:http";
@@ -35,6 +35,8 @@ async function limitAccess(dir,file){
 }
 const storage=await mkdtemp(join(tmpdir(),"real-wrangler-private-gate-"));
 const secret= randomBytes(48).toString("base64url");
+const controlSecret=randomBytes(48).toString("base64url");
+const qaActor="qa-"+randomBytes(10).toString("hex")+"@example.invalid";
 const config=join(storage,"wrangler.qa.json");
 const varsFile=join(storage,".dev.vars");
 const backend=await portAvailable();
@@ -50,7 +52,8 @@ try{
   };
   await writeFile(config,JSON.stringify(runtime,null,2)+"\n",{mode:0o600});
   await writeFile(varsFile,
-    'LOCAL_OPS_GATEWAY_REQUIRED="1"\nLOCAL_OPS_INGRESS_PROOF="'+secret+'"\n',
+    'LOCAL_OPS_GATEWAY_REQUIRED="1"\nLOCAL_OPS_INGRESS_PROOF="'+secret+'"\n'
+      +'PRICE_REPORT_CONTROL_SERVICE_SECRET="'+controlSecret+'"\n',
     {mode:0o600,flag:"wx"});
   await limitAccess(storage,varsFile);
   const persist=join(storage,"d1");
@@ -65,6 +68,7 @@ try{
   child=spawn(process.execPath,args,{cwd:ROOT,stdio:["ignore","pipe","pipe"],windowsHide:true,
     env:{...process.env,CI:"1",WRANGLER_SEND_METRICS:"false",NO_COLOR:"1"}});
   assert.equal(child.spawnargs.join(" ").includes(secret),false);
+  assert.equal(child.spawnargs.join(" ").includes(controlSecret),false);
   child.stdout.on("data",d=>{log=(log+String(d)).slice(-15000)});
   child.stderr.on("data",d=>{log=(log+String(d)).slice(-15000)});
   const base="http://127.0.0.1:"+backend;
@@ -112,8 +116,9 @@ try{
     protectionScope:"other-user ACL; same-user process inspection not proven",
     globalD1Drain:"BLOCKED",gracefulWindowsExit:"BLOCKED",userD1Touched:false}));
 } catch(e){
-  console.error("SOURCE_WORKER_PRIVATE_GATE_ERROR",String(e).replaceAll(secret,"[REDACTED]"),
-    log.replaceAll(secret,"[REDACTED]").slice(-900));throw e;
+  console.error("SOURCE_WORKER_PRIVATE_GATE_ERROR",
+    String(e).replaceAll(secret,"[REDACTED]").replaceAll(controlSecret,"[REDACTED]"),
+    log.replaceAll(secret,"[REDACTED]").replaceAll(controlSecret,"[REDACTED]").slice(-900));throw e;
 }finally{
   if(proxy)await new Promise(ok=>proxy.close(ok));
   if(child&&child.exitCode===null&&child.signalCode===null){
