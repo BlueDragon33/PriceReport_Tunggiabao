@@ -72,6 +72,7 @@ const frontWanted=await portAvailable();
 let child,proxy,log="";
 let descendantsBeforeStop=null;
 let qaCleanupVerified=false;
+let verifiedProductReceipt=null;
 try{
   const runtime={
     ...SOURCE_CONFIG,name:"qa-"+SOURCE_CONFIG.name,
@@ -219,7 +220,7 @@ try{
   assert.equal(row?.pending_block_after_hours,desired.pendingBlockAfterHours);
   assert.equal(row?.revision,independent.revision);
   // Logs can contain binding values from Wrangler; never surface them.
-  console.log(JSON.stringify({result:"SOURCE_WORKER_PRIVATE_DOTENV_GATE_PASS",
+  verifiedProductReceipt={result:"SOURCE_WORKER_PRIVATE_DOTENV_GATE_PASS",
     platform:process.platform,database:DB,realD1Health:true,realWorkerContract:true,
     directBackend403:true,proxy200:true,shutdownPreflight503:true,
     secretInArgv:false,secretInProcessEnv:false,secretFileACLProtected:true,
@@ -228,7 +229,7 @@ try{
     persistedAutomationAfterWorkerExit:true,
     checkedFields:["autoApproveDevices","autoBlockPendingDevices","pendingBlockAfterHours","revision"],
     protectionScope:"other-user ACL; same-user process inspection not proven",
-    globalD1Drain:"BLOCKED",gracefulWindowsExit:"BLOCKED",userD1Touched:false}));
+    globalD1Drain:"BLOCKED",gracefulWindowsExit:"BLOCKED",userD1Touched:false};
 } catch(e){
   console.error("SOURCE_WORKER_PRIVATE_GATE_ERROR",
     String(e).replaceAll(secret,"[REDACTED]").replaceAll(controlSecret,"[REDACTED]"),
@@ -246,20 +247,31 @@ try{
   if(process.platform==="win32"){
     try{
       // Two independent read-only WMI snapshots; never signal a captured child.
-      if(descendantsBeforeStop===null && child){
+      if(descendantsBeforeStop===null && child
+          && child.exitCode===null && child.signalCode===null){
         descendantsBeforeStop=descendantsOf(await windowsProcesses(),child.pid);
       }
       const one=await windowsProcesses();processSnapshotsChecked++;
       await sleep(150);
       const two=await windowsProcesses();processSnapshotsChecked++;
       const live=new Set([...one,...two].map(item=>item.pid));
-      descendantsExited=[...descendantsBeforeStop].every(pid=>!live.has(pid));
+      descendantsExited=Boolean(!child||descendantsBeforeStop!==null)
+        && [...(descendantsBeforeStop??[])].every(pid=>!live.has(pid));
     }catch{descendantsExited=false;}
   }
   const portsReleased=await portReleased(backend)&&await portReleased(frontWanted);
   qaCleanupVerified=qaProcessExited&&descendantsExited&&portsReleased;
   if(qaCleanupVerified){
     await rm(storage,{recursive:true,force:true,maxRetries:6,retryDelay:350});
+    if(verifiedProductReceipt) {
+      console.log(JSON.stringify({
+        ...verifiedProductReceipt,
+        qaPortsReleased:true,
+        capturedDescendantsExited:descendantsExited,
+        descendantProcessTreeScope:"captured PID descendants only; not global isolate census",
+        processSnapshotsChecked,
+      }));
+    }
   }else{
     // Preserve disposable D1 on any uncertain Windows child / port / exit receipt.
     console.error("QA_STORAGE_PRESERVED_SHUTDOWN_UNVERIFIED",JSON.stringify({
