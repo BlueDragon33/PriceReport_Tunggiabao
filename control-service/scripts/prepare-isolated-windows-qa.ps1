@@ -10,7 +10,8 @@ $control = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $qa = (Resolve-Path -LiteralPath (Join-Path $control '..')).Path
 $head = (& git -C $qa rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'BLOCKED_QA_GIT_HEAD' }
-$branch = (& git -C $qa branch --show-current).Trim()
+[string]$branchOutput = & git -C $qa branch --show-current
+$branch = $branchOutput.Trim()
 if ($LASTEXITCODE -ne 0 -or $branch -ne '') { throw 'BLOCKED_QA_NOT_DETACHED' }
 
 $expected = (Get-Content -LiteralPath (Join-Path $control 'package-lock.json') -Raw |
