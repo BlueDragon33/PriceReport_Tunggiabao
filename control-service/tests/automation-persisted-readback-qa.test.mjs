@@ -77,3 +77,11 @@ test("PASS receipt cannot appear before Windows disposable QA cleanup proof",()=
   assert.match(qa,/descendantProcessTreeScope:"captured PID descendants only; not global isolate census"/);
   assert.match(qa,/descendantsExited=Boolean\(!child\|\|descendantsBeforeStop!==null\)/);
 });
+
+test("source smoke checks pinned installed workerd before temporary D1 or Worker starts",()=>{
+  assert.match(qa,/runWorkerdReadOnlyPreflight\(ROOT\)/);
+  assert.match(qa,/QA_BLOCKED_WORKERD_COMPAT_PRECHECK/);
+  assert.ok(qa.indexOf("runWorkerdReadOnlyPreflight(ROOT)") <
+    qa.indexOf('const storage=await mkdtemp'));
+  assert.match(qa,/process\.exit\(2\)/);
+});
