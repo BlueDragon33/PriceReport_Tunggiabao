@@ -76,7 +76,15 @@ if ($null -ne $existing) {
     # Quarantine by moving, NEVER deleting. Path is unique and remains
     # entirely under the already validated isolated QA worktree.
     $quarantineRoot = Join-Path $qa '_dependency_quarantine'
-    New-Item -ItemType Directory -Force -Path $quarantineRoot | Out-Null
+    $priorQuarantine = Get-Item -LiteralPath $quarantineRoot -Force -ErrorAction SilentlyContinue
+    if ($null -ne $priorQuarantine -and
+        (-not $priorQuarantine.PSIsContainer -or
+         ($priorQuarantine.Attributes -band [IO.FileAttributes]::ReparsePoint))) {
+      throw 'BLOCKED_QA_QUARANTINE_NOT_LOCAL_DIRECTORY'
+    }
+    if ($null -eq $priorQuarantine) {
+      New-Item -ItemType Directory -Path $quarantineRoot -ErrorAction Stop | Out-Null
+    }
     $quarantine = Join-Path $quarantineRoot ('node_modules-' + [guid]::NewGuid().ToString('N'))
     if (Test-Path -LiteralPath $quarantine) { throw 'BLOCKED_QA_QUARANTINE_COLLISION' }
     Move-Item -LiteralPath $modules -Destination $quarantine -ErrorAction Stop
