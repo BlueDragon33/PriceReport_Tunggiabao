@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) { throw 'BLOCKED_QA_GIT_HEAD' }
 $branch = $branchOutput.Trim()
 if ($LASTEXITCODE -ne 0 -or $branch -ne '') { throw 'BLOCKED_QA_NOT_DETACHED' }
 
-# PowerShell 5.1 ConvertFrom-Json rejects valid npm package-lock.json
+# PowerShell 5.1's native JSON conversion rejects valid npm package-lock.json
 # because lock.packages contains an empty-string root key. Let Node parse JSON.
 $metadataScript = Join-Path $control 'scripts\read-qa-lock-metadata.mjs'
 $metadata = @(& node $metadataScript $control)
