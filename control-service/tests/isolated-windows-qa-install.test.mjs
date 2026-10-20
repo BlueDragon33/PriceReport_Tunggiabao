@@ -9,7 +9,10 @@ test("dependencies install only inside detached price-p0 QA worktree",()=>{
   assert.match(script,/BLOCKED_QA_NOT_DETACHED/);
   assert.match(script,/E:\\BaumanWeb\\_qa\\price-p0-\*/);
   assert.match(script,/BLOCKED_SHARED_NODE_MODULES_JUNCTION/);
-  assert.match(script,/BLOCKED_EXISTING_QA_DEPENDENCIES_DO_NOT_OVERWRITE/);
+  assert.match(script,/QA_DEPENDENCIES_REUSED_VERIFIED/);
+  assert.match(script,/QA_OLD_DEPENDENCIES_PRESERVED/);
+  assert.match(script,/BLOCKED_QA_MODULES_NOT_DIRECTORY/);
+  assert.match(script,/BLOCKED_QA_DEPENDENCIES_QUARANTINE_FAILED/);
   assert.match(script,/Push-Location \$control/);
   assert.match(script,/& npm\.cmd @npmArgs/);
 });
@@ -42,4 +45,25 @@ test("cannot silently kill processes or delete old retained D1; primary checkout
   assert.match(script,/Get-CimInstance Win32_Process/);
   assert.match(script,/QA_ISOLATED_DEPENDENCIES_READY/);
   assert.doesNotMatch(script,/(?:Stop-Process|Remove-Item|taskkill|git clean|git stash|git checkout|wrangler deploy|--remote)/i);
+});
+
+test("existing QA deps are reused only after native workerd compatibility succeeds",()=>{
+  assert.match(script,/\$reuseQaDependencies = \$false/);
+  assert.match(script,/\$existingPreflight = \$LASTEXITCODE/);
+  assert.match(script,/if \(\$existingPreflight -eq 0\)/);
+  assert.match(script,/\$reuseQaDependencies = \$true/);
+  assert.match(script,/if \(-not \$reuseQaDependencies\) \{/);
+});
+test("stale QA deps are moved under QA quarantine, never deleted or overwritten",()=>{
+  assert.match(script,/Join-Path \$qa '_dependency_quarantine'/);
+  assert.match(script,/Move-Item -LiteralPath \$modules -Destination \$quarantine -ErrorAction Stop/);
+  assert.match(script,/if \(Test-Path -LiteralPath \$quarantine\)/);
+  assert.match(script,/\$existing\.Attributes -band \[IO\.FileAttributes\]::ReparsePoint/);
+  assert.doesNotMatch(script,/Remove-Item|del\s+.*node_modules|rmdir\s+.*node_modules/mi);
+});
+test("stale runtime check precedes any QA dependency relocation or npm ci",()=>{
+  const runtime=script.indexOf("BLOCKED_STALE_QA_RUNTIME");
+  const quarantine=script.indexOf("Move-Item -LiteralPath $modules");
+  const ci=script.indexOf("& npm.cmd @npmArgs");
+  assert.ok(runtime>=0&&runtime<quarantine&&quarantine<ci);
 });
