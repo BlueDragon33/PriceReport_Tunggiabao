@@ -14,18 +14,22 @@ if ($LASTEXITCODE -ne 0) { throw 'BLOCKED_QA_GIT_HEAD' }
 $branch = $branchOutput.Trim()
 if ($LASTEXITCODE -ne 0 -or $branch -ne '') { throw 'BLOCKED_QA_NOT_DETACHED' }
 
-$expected = (Get-Content -LiteralPath (Join-Path $control 'package-lock.json') -Raw |
-  ConvertFrom-Json)
-$lockedWrangler = $expected.packages.'node_modules/wrangler'.version
-$lockedWorkerd = $expected.packages.'node_modules/workerd'.version
-$lockedNative = $expected.packages.'node_modules/@cloudflare/workerd-windows-64'.version
+# PowerShell 5.1 ConvertFrom-Json rejects valid npm package-lock.json
+# because lock.packages contains an empty-string root key. Let Node parse JSON.
+$metadataScript = Join-Path $control 'scripts\read-qa-lock-metadata.mjs'
+$metadata = @(& node $metadataScript $control)
+if ($LASTEXITCODE -ne 0 -or $metadata.Count -ne 4) {
+  throw 'BLOCKED_QA_LOCKFILE_METADATA_READ'
+}
+$lockedWrangler = $metadata[0]
+$lockedWorkerd = $metadata[1]
+$lockedNative = $metadata[2]
+$lockedCompatibilityDate = $metadata[3]
 if ($lockedWrangler -ne '4.151.1' -or $lockedWorkerd -ne '1.20261012.1' -or
     $lockedNative -ne $lockedWorkerd) {
   throw 'BLOCKED_LOCKED_VERSIONS_UNEXPECTED'
 }
-$source = Get-Content -LiteralPath (Join-Path $control 'wrangler.local.jsonc') -Raw |
-  ConvertFrom-Json
-if ($source.compatibility_date -ne '2026-09-22') {
+if ($lockedCompatibilityDate -ne '2026-09-22') {
   throw 'BLOCKED_CONFIG_COMPATIBILITY_DATE_CHANGED'
 }
 
