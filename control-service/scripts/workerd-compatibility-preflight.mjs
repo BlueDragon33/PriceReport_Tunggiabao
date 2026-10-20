@@ -1,7 +1,8 @@
 // Read-only preflight. Never starts Wrangler/Worker, installs packages or touches D1.
 import {execFile} from "node:child_process";
 import {readFile} from "node:fs/promises";
-import {join} from "node:path";
+import {join,resolve} from "node:path";
+import {pathToFileURL} from "node:url";
 import {promisify} from "node:util";
 
 const execute=promisify(execFile);
@@ -83,7 +84,7 @@ export async function runWorkerdReadOnlyPreflight(root,{platform=process.platfor
   });
 }
 
-if(process.argv[1]&&import.meta.url===new URL("file://"+process.argv[1].replaceAll("\\","/")).href){
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
   const root=process.cwd();
   const result=await runWorkerdReadOnlyPreflight(root);
   console.log(JSON.stringify(result,null,2));
