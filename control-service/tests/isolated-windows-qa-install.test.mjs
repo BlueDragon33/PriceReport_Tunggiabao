@@ -67,3 +67,9 @@ test("stale runtime check precedes any QA dependency relocation or npm ci",()=>{
   const ci=script.indexOf("& npm.cmd @npmArgs");
   assert.ok(runtime>=0&&runtime<quarantine&&quarantine<ci);
 });
+
+test("quarantine root cannot be a symlink/junction or external path",()=>{
+  assert.match(script,/BLOCKED_QA_QUARANTINE_NOT_LOCAL_DIRECTORY/);
+  assert.match(script,/\$priorQuarantine\.Attributes -band \[IO\.FileAttributes\]::ReparsePoint/);
+  assert.match(script,/New-Item -ItemType Directory -Path \$quarantineRoot -ErrorAction Stop/);
+});
