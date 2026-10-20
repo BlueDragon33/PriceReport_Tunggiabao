@@ -12,12 +12,19 @@ import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
+import {runWorkerdReadOnlyPreflight} from "./workerd-compatibility-preflight.mjs";
 
 const exec=promisify(execFile);
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const WRANGLER=join(ROOT,"node_modules","wrangler","bin","wrangler.js");
 const SOURCE_CONFIG=JSON.parse(await readFile(join(ROOT,"wrangler.local.jsonc"),"utf8"));
 const DB=SOURCE_CONFIG.d1_databases[0].database_name;
+const compatibility=await runWorkerdReadOnlyPreflight(ROOT);
+if(compatibility.status!=="PREFLIGHT_COMPATIBLE_NOT_RUNTIME_QA"){
+  console.error("QA_BLOCKED_WORKERD_COMPAT_PRECHECK",JSON.stringify(compatibility));
+  // No D1 directory, secrets, Wrangler process or temporary ports exist yet.
+  process.exit(2);
+}
 async function portAvailable(){
   const sock=createTcp();await new Promise((ok,no)=>sock.once("error",no).listen(0,"127.0.0.1",ok));
   const p=sock.address().port;await new Promise(ok=>sock.close(ok));return p;
