@@ -13,13 +13,14 @@ const releaseDate=/\b(20\d{2}-\d{2}-\d{2})\b/;
 export function evaluateWorkerdCompatibility(input) {
   const {requiredDate,expectedWrangler,expectedWorkerd,
     installedWrangler,installedWorkerd,installedWindowsBinary,
-    windowsNativePackageVersion,platform,architecture,binaryOutput,binaryError}=input;
+    windowsNativePackageVersion,platform,architecture,binaryOutput,binaryError,binaryOverrideActive}=input;
   const issues=[];
   const runtimeDate=typeof binaryOutput==="string"
     ? binaryOutput.match(releaseDate)?.[1]??null:null;
   if(!/^20\d{2}-\d{2}-\d{2}$/.test(requiredDate??""))
     issues.push("INVALID_SOURCE_COMPATIBILITY_DATE");
   if(!expectedWrangler||!expectedWorkerd)issues.push("MISSING_LOCKED_VERSIONS");
+  if(binaryOverrideActive)issues.push("WORKERD_BINARY_OVERRIDE_UNVERIFIED");
   if(expectedWrangler!==installedWrangler)issues.push("WRANGLER_LOCK_MISMATCH");
   if(expectedWorkerd!==installedWorkerd)issues.push("WORKERD_LOCK_MISMATCH");
   if(platform==="win32"){
@@ -81,6 +82,7 @@ export async function runWorkerdReadOnlyPreflight(root,{platform=process.platfor
     installedWrangler:versions[0],installedWorkerd:versions[1],
     windowsNativePackageVersion:versions[2],
     platform,architecture,installedWindowsBinary,binaryOutput,binaryError,
+    binaryOverrideActive:Boolean(process.env.WORKERD_BINARY_PATH || process.env.MINIFLARE_WORKERD_PATH),
   });
 }
 
