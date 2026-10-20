@@ -36,15 +36,6 @@ if ($lockedCompatibilityDate -ne '2026-09-22') {
 if ($qa -notlike 'E:\BaumanWeb\_qa\price-p0-*') {
   throw 'BLOCKED_QA_WORKTREE_LOCATION'
 }
-$junction = Get-Item -LiteralPath (Join-Path $control 'node_modules') -Force -ErrorAction SilentlyContinue
-if ($null -ne $junction -and
-    ($junction.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
-  throw 'BLOCKED_SHARED_NODE_MODULES_JUNCTION'
-}
-if ($null -ne $junction) {
-  throw 'BLOCKED_EXISTING_QA_DEPENDENCIES_DO_NOT_OVERWRITE'
-}
-
 # Do not start any Worker while an earlier disposable QA Node/workerd process
 # might still be alive. No process kill and no cleanup of retained evidence.
 $stale = @(Get-CimInstance Win32_Process | Where-Object {
@@ -58,6 +49,40 @@ if ($stale.Count -gt 0) {
 }
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
   throw 'BLOCKED_NPM_MISSING'
+}
+
+# Retry-safe local dependency recovery: never remove a shared junction,
+# silently overwrite existing QA packages or touch retained D1 evidence.
+$modules = Join-Path $control 'node_modules'
+$existing = Get-Item -LiteralPath $modules -Force -ErrorAction SilentlyContinue
+$reuseQaDependencies = $false
+if ($null -ne $existing) {
+  if (-not $existing.PSIsContainer) { throw 'BLOCKED_QA_MODULES_NOT_DIRECTORY' }
+  if ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+    throw 'BLOCKED_SHARED_NODE_MODULES_JUNCTION'
+  }
+  # Keep a proven exact-lock QA install. A matching package.json alone
+  # is not enough: the native executable's observed release date is checked.
+  Push-Location $control
+  try {
+    & node scripts/workerd-compatibility-preflight.mjs
+    $existingPreflight = $LASTEXITCODE
+  } finally { Pop-Location }
+  if ($existingPreflight -eq 0) {
+    Write-Host 'QA_DEPENDENCIES_REUSED_VERIFIED'
+    $reuseQaDependencies = $true
+  } else {
+    # Existing QA dependency folder may contain a partial npm ci result.
+    # Quarantine by moving, NEVER deleting. Path is unique and remains
+    # entirely under the already validated isolated QA worktree.
+    $quarantineRoot = Join-Path $qa '_dependency_quarantine'
+    New-Item -ItemType Directory -Force -Path $quarantineRoot | Out-Null
+    $quarantine = Join-Path $quarantineRoot ('node_modules-' + [guid]::NewGuid().ToString('N'))
+    if (Test-Path -LiteralPath $quarantine) { throw 'BLOCKED_QA_QUARANTINE_COLLISION' }
+    Move-Item -LiteralPath $modules -Destination $quarantine -ErrorAction Stop
+    if (Test-Path -LiteralPath $modules) { throw 'BLOCKED_QA_DEPENDENCIES_QUARANTINE_FAILED' }
+    Write-Host "QA_OLD_DEPENDENCIES_PRESERVED: $quarantine"
+  }
 }
 
 $cache = Join-Path $qa '_npm_cache'
@@ -74,8 +99,10 @@ Write-Host "QA_SHA: $head"
 Write-Host "QA_FOLDER: $qa"
 Push-Location $control
 try {
-  & npm.cmd @npmArgs
-  if ($LASTEXITCODE -ne 0) { throw "BLOCKED_QA_NPM_CI_EXIT_$LASTEXITCODE" }
+  if (-not $reuseQaDependencies) {
+    & npm.cmd @npmArgs
+    if ($LASTEXITCODE -ne 0) { throw "BLOCKED_QA_NPM_CI_EXIT_$LASTEXITCODE" }
+  }
   & node scripts/workerd-compatibility-preflight.mjs
   $preflightExit = $LASTEXITCODE
   Write-Host "COMPATIBILITY_PREFLIGHT_EXIT: $preflightExit"
