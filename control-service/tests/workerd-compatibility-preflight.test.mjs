@@ -65,3 +65,7 @@ test("preflight does not mutate source config, npm packages, D1 or running proce
   assert.match(helper,/execute\(exe,\["--version"\]/);
   assert.match(helper,/sourceConfigUnchanged:true/);
 });
+
+test("external workerd binary override cannot bypass pinned native executable validation",()=>{
+  assert.ok(evaluate({binaryOverrideActive:true}).issues.includes("WORKERD_BINARY_OVERRIDE_UNVERIFIED"));
+});
